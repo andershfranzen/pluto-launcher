@@ -17,5 +17,13 @@ object ModeResolver {
         heightDp: Int,
         controllerConnected: Boolean,
         appearance: HandheldAppearance,
-    ): LauncherMode = TODO()
+    ): LauncherMode {
+        if (heightDp >= widthDp) return LauncherMode.PHONE
+        val handheld = when (appearance) {
+            HandheldAppearance.ALWAYS -> true
+            HandheldAppearance.AUTOMATIC -> controllerConnected
+            HandheldAppearance.NEVER -> false
+        }
+        return if (handheld) LauncherMode.HANDHELD else LauncherMode.LANDSCAPE
+    }
 }
