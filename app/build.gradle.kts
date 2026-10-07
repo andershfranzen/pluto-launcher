@@ -68,6 +68,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
+    // DataStore pulls serialization 1.7.3, which the app classpath then pins for androidTest;
+    // room-testing's schema bundles need 1.8.x (AbstractMethodError otherwise).
+    implementation(libs.kotlinx.serialization.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
