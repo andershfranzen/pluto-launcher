@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -159,12 +160,17 @@ private fun ActionRouting(
     actions: Flow<LauncherAction>,
 ) {
     val currentState by rememberUpdatedState(state)
-    LaunchedEffect(actions, vm, focus) {
+    // Back goes through the Activity's dispatcher so nested dialogs inside a layer (BackHandler)
+    // close first; MainActivity's own callback falls back to vm.back().
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    LaunchedEffect(actions, vm, focus, backDispatcher) {
         actions.collect { action ->
             if (focus.handle(action)) return@collect
             val top = currentState.session.topLayer
+            // Onboarding sits above everything; launcher shortcuts would open layers hidden beneath it.
+            if (top == Layer.Onboarding && action != LauncherAction.Back) return@collect
             when (action) {
-                LauncherAction.Back -> vm.back()
+                LauncherAction.Back -> if (backDispatcher != null) backDispatcher.onBackPressed() else vm.back()
                 LauncherAction.Search -> {
                     if (top == Layer.Drawer) {
                         vm.setSearchActive(true)
@@ -207,10 +213,10 @@ private fun LauncherContent(state: LauncherUiState, vm: LauncherViewModel, focus
         previousCount[0] = count
     }
 
-    // Compose from the topmost full-screen layer upwards, but never more than the top two.
+    // Compose from the topmost full-screen layer upwards; anything beneath it is hidden anyway.
     val fullScreenIndex = layers.indexOfLast { it.isFullScreen }
-    val firstComposed = maxOf(fullScreenIndex, layers.size - 2, 0)
-    val showBase = fullScreenIndex < 0 && layers.size <= 2
+    val firstComposed = maxOf(fullScreenIndex, 0)
+    val showBase = fullScreenIndex < 0
 
     Box(Modifier.fillMaxSize()) {
         if (showBase) {
@@ -227,7 +233,9 @@ private fun LauncherContent(state: LauncherUiState, vm: LauncherViewModel, focus
             val isTop = index == layers.lastIndex
             key(Layer.encode(layer)) {
                 CompositionLocalProvider(LocalFocusInert provides !isTop) {
-                    if (!layer.isFullScreen) DismissScrim(onDismiss = { if (isTop) vm.back() })
+                    // The overlay sheets (AppActions, CategoryMembership, MoveToFolder) draw their own
+                    // ModalPanel scrim; only the folder view relies on the root's scrim.
+                    if (layer is Layer.FolderLayer) DismissScrim(onDismiss = { if (isTop) vm.back() })
                     LayerContent(layer, state, vm)
                 }
             }

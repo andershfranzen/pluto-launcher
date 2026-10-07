@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
  *   PORTRAIT -> USER_PORTRAIT, LANDSCAPE -> USER_LANDSCAPE (both directions),
  *   LANDSCAPE_WHEN_CONTROLLER -> USER_LANDSCAPE while a controller is connected, else USER.
  *   Only affects the launcher window, never the foreground app.
- * - onResume: catalog.refresh(), controllers.refresh(), vm.onResume(HomeRole.isDefaultHome()).
+ * - onResume: vm.onResume(HomeRole.isDefaultHome()), which refreshes catalog and controllers.
  * - onPause / onWindowFocusChanged(false): router.reset().
  *
  * Touch takeover is detected inside Compose (pointer input on the root), so no touch
@@ -68,8 +68,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        container.catalog.start()
-        container.controllers.start()
+        // The catalog and controller monitor are started/stopped by LauncherViewModel (init/onCleared).
 
         onBackPressedDispatcher.addCallback(
             this,
@@ -145,8 +144,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        container.catalog.refresh()
-        container.controllers.refresh()
+        // vm.onResume refreshes the catalog and controllers.
         vm.onResume(HomeRole.isDefaultHome(this))
     }
 
@@ -168,12 +166,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         router.reset()
-        // Only stop the app-scoped listeners when the launcher is really going away,
-        // not when a configuration change slips through and recreates the activity.
-        if (!isChangingConfigurations) {
-            container.catalog.stop()
-            container.controllers.stop()
-        }
         super.onDestroy()
     }
 }
