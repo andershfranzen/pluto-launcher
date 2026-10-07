@@ -1,6 +1,34 @@
 package dev.pluto.launcher
 
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.os.Bundle
+import android.view.KeyEvent
+import android.view.MotionEvent
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import dev.pluto.launcher.input.ControllerInputRouter
+import dev.pluto.launcher.input.LauncherAction
+import dev.pluto.launcher.model.RotationPreference
+import dev.pluto.launcher.system.HomeRole
+import dev.pluto.launcher.ui.LauncherRoot
+import dev.pluto.launcher.ui.LauncherViewModel
+import dev.pluto.launcher.ui.LocalControllerRouter
+import dev.pluto.launcher.ui.components.LocalIconCache
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 /**
  * The Home activity.
@@ -18,5 +46,134 @@ import androidx.activity.ComponentActivity
  *   Only affects the launcher window, never the foreground app.
  * - onResume: catalog.refresh(), controllers.refresh(), vm.onResume(HomeRole.isDefaultHome()).
  * - onPause / onWindowFocusChanged(false): router.reset().
+ *
+ * Touch takeover is detected inside Compose (pointer input on the root), so no touch
+ * plumbing is needed here. Configuration changes are handled in-process (see manifest).
  */
-class MainActivity : ComponentActivity()
+class MainActivity : ComponentActivity() {
+    private val container: AppContainer
+        get() = (application as LauncherApplication).container
+
+    private val vm: LauncherViewModel by viewModels {
+        viewModelFactory {
+            initializer { LauncherViewModel(container, createSavedStateHandle()) }
+        }
+    }
+
+    /** Controller actions for LauncherRoot; buffered so a burst of input never blocks dispatch. */
+    private val actions = MutableSharedFlow<LauncherAction>(extraBufferCapacity = 64)
+    private val router = ControllerInputRouter { actions.tryEmit(it) }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+
+        container.catalog.start()
+        container.controllers.start()
+
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                // At home vm.back() returns false and we deliberately do nothing:
+                // a launcher must stay visible rather than finish.
+                override fun handleOnBackPressed() {
+                    vm.back()
+                }
+            },
+        )
+
+        observeState()
+
+        setContent {
+            CompositionLocalProvider(
+                LocalControllerRouter provides router,
+                LocalIconCache provides container.icons,
+            ) {
+                LauncherRoot(vm, actions)
+            }
+        }
+    }
+
+    private fun observeState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    vm.state.collect { router.settings = it.settings }
+                }
+                launch {
+                    vm.state
+                        .map { orientationFor(it.settings.rotation, it.controllerConnected) }
+                        .distinctUntilChanged()
+                        .collect { orientation ->
+                            if (requestedOrientation != orientation) requestedOrientation = orientation
+                        }
+                }
+                launch {
+                    // A removed controller must not leave a held direction repeating.
+                    var previous = 0
+                    container.controllers.controllers.collect { list ->
+                        if (list.size < previous) router.reset()
+                        previous = list.size
+                    }
+                }
+            }
+        }
+    }
+
+    private fun orientationFor(rotation: RotationPreference, controllerConnected: Boolean): Int =
+        when (rotation) {
+            RotationPreference.FOLLOW_SYSTEM -> ActivityInfo.SCREEN_ORIENTATION_USER
+            RotationPreference.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+            RotationPreference.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+            RotationPreference.LANDSCAPE_WHEN_CONTROLLER ->
+                if (controllerConnected) {
+                    ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_USER
+                }
+        }
+
+    override fun onNewIntent(intent: Intent) {
+        // Checked before super: the lifecycle tells us whether Home was pressed while we were
+        // already in front, or whether we're being brought back from another app.
+        val wasResumed = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val isHome = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)
+        if (isHome && wasResumed) vm.onHomePressed()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        container.catalog.refresh()
+        container.controllers.refresh()
+        vm.onResume(HomeRole.isDefaultHome(this))
+    }
+
+    override fun onPause() {
+        router.reset()
+        super.onPause()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus) router.reset()
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        router.onKeyEvent(event) || super.dispatchKeyEvent(event)
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean =
+        router.onGenericMotionEvent(event) || super.dispatchGenericMotionEvent(event)
+
+    override fun onDestroy() {
+        router.reset()
+        // Only stop the app-scoped listeners when the launcher is really going away,
+        // not when a configuration change slips through and recreates the activity.
+        if (!isChangingConfigurations) {
+            container.catalog.stop()
+            container.controllers.stop()
+        }
+        super.onDestroy()
+    }
+}
