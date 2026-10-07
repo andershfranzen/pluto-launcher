@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A Pluto-like dwarf planet: pale tan globe, dark reddish equatorial region,
+    bright heart-shaped plain, soft shadowed limb. Kept inside the 66dp safe zone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group>
+        <clip-path android:pathData="M54,54m-28,0a28,28 0,1 1,56 0a28,28 0,1 1,-56 0" />
+        <!-- Globe -->
+        <path android:pathData="M26,26h56v56h-56z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="radial"
+                    android:centerX="46"
+                    android:centerY="44"
+                    android:gradientRadius="40">
+                    <item android:offset="0" android:color="#FFF2DFC8" />
+                    <item android:offset="0.6" android:color="#FFD2AE8A" />
+                    <item android:offset="1" android:color="#FF9C7354" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Northern haze band -->
+        <path
+            android:fillColor="#40B98F6E"
+            android:pathData="M24,40C38,34 70,33 86,40L86,44C70,38 38,39 24,46Z" />
+        <!-- Dark equatorial region -->
+        <path
+            android:fillColor="#E0703A2B"
+            android:pathData="M24,58C30,52 38,52 45,55C50,57 53,61 51,66C48,71 40,73 30,71C27,70 25,69 24,68Z" />
+        <path
+            android:fillColor="#B0703A2B"
+            android:pathData="M70,70C74,67 80,66 86,67L86,74C80,75 74,74 70,70Z" />
+        <!-- Heart-shaped plain -->
+        <path
+            android:fillColor="#FFFBF4EA"
+            android:pathData="M63,69C54.5,62.5 53.5,54.5 58.5,52.6C61,51.7 63,53.2 63.6,55C64.6,52.6 67,51.3 69.6,52.4C74,54.4 72,62.5 63,69Z" />
+        <!-- Limb shadow (light from upper left) -->
+        <path android:pathData="M26,26h56v56h-56z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="radial"
+                    android:centerX="44"
+                    android:centerY="42"
+                    android:gradientRadius="44">
+                    <item android:offset="0" android:color="#00000000" />
+                    <item android:offset="0.62" android:color="#00000000" />
+                    <item android:offset="1" android:color="#8C0B0F24" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+</vector>

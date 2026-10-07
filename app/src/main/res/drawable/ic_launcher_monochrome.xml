@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon silhouette: globe with the heart cut out. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M54,54m-28,0a28,28 0,1 1,56 0a28,28 0,1 1,-56 0M63,69C54.5,62.5 53.5,54.5 58.5,52.6C61,51.7 63,53.2 63.6,55C64.6,52.6 67,51.3 69.6,52.4C74,54.4 72,62.5 63,69Z" />
+</vector>
