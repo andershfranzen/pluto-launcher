@@ -13,8 +13,16 @@ object ControllerClassifier {
      * [hasGamepadButtons] = device reports KEYCODE_BUTTON_A or BUTTON_B (InputDevice.hasKeys).
      * A device qualifies with SOURCE_GAMEPAD, or SOURCE_JOYSTICK together with gamepad buttons.
      */
-    fun isGameController(sources: Int, isVirtual: Boolean, hasGamepadButtons: Boolean): Boolean = TODO()
+    fun isGameController(sources: Int, isVirtual: Boolean, hasGamepadButtons: Boolean): Boolean {
+        if (isVirtual) return false
+        return sources.has(SOURCE_GAMEPAD) || (sources.has(SOURCE_JOYSTICK) && hasGamepadButtons)
+    }
 
     /** True when an event's source bits indicate it came from a gamepad/joystick rather than a keyboard. */
-    fun isControllerEventSource(eventSource: Int): Boolean = TODO()
+    fun isControllerEventSource(eventSource: Int): Boolean =
+        eventSource.has(SOURCE_GAMEPAD) || eventSource.has(SOURCE_JOYSTICK)
+
+    // Sources share class bits (SOURCE_CLASS_BUTTON is in KEYBOARD, DPAD and GAMEPAD),
+    // so a source is present only when *all* of its bits are set.
+    private fun Int.has(source: Int): Boolean = (this and source) == source
 }

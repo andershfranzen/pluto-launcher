@@ -10,6 +10,22 @@ import dev.pluto.launcher.input.MoveSource
  * same source are always allowed (their pacing is handled upstream).
  */
 class InputDeduper(private val windowMs: Long = 90) {
-    fun shouldEmit(direction: Direction, source: MoveSource, nowMs: Long): Boolean = TODO()
-    fun reset(): Unit = TODO()
+    private class Emitted(val source: MoveSource, val atMs: Long)
+
+    // Last emitted move per direction, so an unrelated move in between can't hide a duplicate.
+    private val lastByDirection = HashMap<Direction, Emitted>()
+
+    fun shouldEmit(direction: Direction, source: MoveSource, nowMs: Long): Boolean {
+        val last = lastByDirection[direction]
+        if (last != null && last.source != source && nowMs - last.atMs < windowMs) {
+            // Duplicate report of a move already emitted; keep the window anchored to the original.
+            return false
+        }
+        lastByDirection[direction] = Emitted(source, nowMs)
+        return true
+    }
+
+    fun reset() {
+        lastByDirection.clear()
+    }
 }
