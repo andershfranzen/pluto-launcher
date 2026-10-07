@@ -1,0 +1,158 @@
+package dev.pluto.launcher.ui.theme
+
+import android.os.Build
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import dev.pluto.launcher.data.prefs.LauncherSettings
+import dev.pluto.launcher.model.ThemePreference
+
+/** True when the user asked for reduced motion; skip non-essential animation. */
+val LocalReducedMotion = staticCompositionLocalOf { false }
+
+/** True when the launcher is currently rendered in its dark theme. */
+val LocalDarkTheme = staticCompositionLocalOf { true }
+
+/** Shared shape/size tokens so every surface feels like one product. */
+object PlutoDimens {
+    val PanelCorner = 24.dp
+    val TileCorner = 16.dp
+    val MinTouchTarget = 48.dp
+    const val PanelAlpha = 0.92f
+}
+
+// A calm, space-inspired fallback palette: deep navy night with pale tan accents echoing the Pluto icon.
+private val PlutoDark = darkColorScheme(
+    primary = Color(0xFFE9CBA7),
+    onPrimary = Color(0xFF3B2814),
+    primaryContainer = Color(0xFF5A4129),
+    onPrimaryContainer = Color(0xFFFFE6CC),
+    secondary = Color(0xFFBCC6EA),
+    onSecondary = Color(0xFF232E4F),
+    secondaryContainer = Color(0xFF3A4568),
+    onSecondaryContainer = Color(0xFFDDE3FF),
+    tertiary = Color(0xFFE7B3A3),
+    onTertiary = Color(0xFF452A20),
+    tertiaryContainer = Color(0xFF703A2B),
+    onTertiaryContainer = Color(0xFFFFDBD0),
+    background = Color(0xFF0B1022),
+    onBackground = Color(0xFFE4E3EC),
+    surface = Color(0xFF0B1022),
+    onSurface = Color(0xFFE4E3EC),
+    surfaceVariant = Color(0xFF2D3247),
+    onSurfaceVariant = Color(0xFFC5C6D8),
+    surfaceContainerLowest = Color(0xFF070B19),
+    surfaceContainerLow = Color(0xFF121831),
+    surfaceContainer = Color(0xFF161D38),
+    surfaceContainerHigh = Color(0xFF1F2643),
+    surfaceContainerHighest = Color(0xFF2A314F),
+    outline = Color(0xFF8E90A6),
+    outlineVariant = Color(0xFF444960),
+)
+
+private val PlutoLight = lightColorScheme(
+    primary = Color(0xFF7A5531),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFFFDCBC),
+    onPrimaryContainer = Color(0xFF2C1704),
+    secondary = Color(0xFF4A5684),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFDCE1FF),
+    onSecondaryContainer = Color(0xFF041542),
+    tertiary = Color(0xFF8E4A39),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFFFDBD1),
+    onTertiaryContainer = Color(0xFF3A0B02),
+    background = Color(0xFFFBF8F4),
+    onBackground = Color(0xFF1B1B21),
+    surface = Color(0xFFFBF8F4),
+    onSurface = Color(0xFF1B1B21),
+    surfaceVariant = Color(0xFFE6E1DA),
+    onSurfaceVariant = Color(0xFF4A4640),
+    surfaceContainerLowest = Color(0xFFFFFFFF),
+    surfaceContainerLow = Color(0xFFF6F1EB),
+    surfaceContainer = Color(0xFFF0EBE5),
+    surfaceContainerHigh = Color(0xFFEAE5DF),
+    surfaceContainerHighest = Color(0xFFE4DFD9),
+    outline = Color(0xFF7B766F),
+    outlineVariant = Color(0xFFCBC5BD),
+)
+
+/**
+ * Pluto's Material 3 theme. Dark/light follows [LauncherSettings.theme]; wallpaper-based
+ * dynamic colour is used on Android 12+, otherwise the Pluto palette. Text is scaled by
+ * [LauncherSettings.textScale] on top of the system font scale.
+ */
+@Composable
+fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
+    val dark = when (settings.theme) {
+        ThemePreference.SYSTEM -> isSystemInDarkTheme()
+        ThemePreference.DARK -> true
+        ThemePreference.LIGHT -> false
+    }
+    val context = LocalContext.current
+    val colorScheme: ColorScheme = remember(dark, context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        } else {
+            if (dark) PlutoDark else PlutoLight
+        }
+    }
+    val density = LocalDensity.current
+    val textScale = settings.textScale.coerceIn(LauncherSettings.TEXT_SCALE_RANGE)
+    val scaledDensity = remember(density, textScale) {
+        Density(density = density.density, fontScale = density.fontScale * textScale)
+    }
+    CompositionLocalProvider(
+        LocalDensity provides scaledDensity,
+        LocalReducedMotion provides settings.reducedMotion,
+        LocalDarkTheme provides dark,
+    ) {
+        MaterialTheme(colorScheme = colorScheme, content = content)
+    }
+}
+
+/** Full-screen contrast scrim over the system wallpaper (black in dark, white in light). */
+@Composable
+fun WallpaperScrim(settings: LauncherSettings, modifier: Modifier = Modifier) {
+    val alpha = settings.scrimAlpha.coerceIn(0f, LauncherSettings.SCRIM_MAX)
+    val base = if (LocalDarkTheme.current) Color.Black else Color.White
+    Box(modifier.fillMaxSize().background(base.copy(alpha = alpha)))
+}
+
+/**
+ * Text style for labels drawn directly on the wallpaper (clock, home tile labels):
+ * the theme's on-surface colour plus a soft shadow so it stays legible on any image.
+ */
+@Composable
+fun TextStyle.overWallpaper(): TextStyle {
+    val dark = LocalDarkTheme.current
+    return copy(
+        color = MaterialTheme.colorScheme.onSurface,
+        shadow = Shadow(
+            color = if (dark) Color.Black.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.85f),
+            offset = Offset(0f, 1.5f),
+            blurRadius = 6f,
+        ),
+    )
+}
