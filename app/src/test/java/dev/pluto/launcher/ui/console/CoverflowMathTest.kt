@@ -96,4 +96,19 @@ class CoverflowMathTest {
         assertEquals(-0.5f, CoverflowMath.dragDelta(card * CoverflowMath.FIRST_GAP / 2f, card), eps)
         assertEquals(0f, CoverflowMath.dragDelta(10f, 0f), eps)
     }
+
+    @Test
+    fun ghostSlotsFillShortShelvesOnly() {
+        assertEquals(IntRange.EMPTY, CoverflowMath.ghostSlots(0))
+        assertEquals(1..3, CoverflowMath.ghostSlots(1))
+        assertEquals(3..3, CoverflowMath.ghostSlots(3))
+        assertEquals(IntRange.EMPTY, CoverflowMath.ghostSlots(CoverflowMath.MIN_SLOTS))
+        assertEquals(IntRange.EMPTY, CoverflowMath.ghostSlots(20))
+    }
+
+    @Test
+    fun sideTiltKeepsIconsRound() {
+        // A side card keeps at least ~3/4 of its width (cos of the tilt): icons stay round.
+        assertTrue(kotlin.math.cos(Math.toRadians(CoverflowMath.SIDE_ANGLE.toDouble())) >= 0.76)
+    }
 }

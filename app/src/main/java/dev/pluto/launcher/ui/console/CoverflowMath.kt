@@ -19,8 +19,12 @@ object CoverflowMath {
      */
     const val SIDE_GAP = 0.44f
 
-    /** Tilt of every side card, degrees: shallow enough that side icons keep about 3/4 of their width (cos 42° ≈ 0.74). */
-    const val SIDE_ANGLE = 42f
+    /**
+     * Tilt of every side card, degrees. The whole card turns as one plane (the icon is part of
+     * it, never scaled on its own), and 38° keeps about 4/5 of its width (cos 38° ≈ 0.79), so
+     * a round icon still reads as round instead of an oval.
+     */
+    const val SIDE_ANGLE = 38f
 
     /** Scale of the first neighbour, and how much each further one shrinks. */
     const val SIDE_SCALE = 0.8f
@@ -99,6 +103,15 @@ object CoverflowMath {
         val hi = (maxOf(p, selected) + RADIUS).coerceAtMost(count - 1)
         return lo..hi
     }
+
+    /**
+     * A shelf with fewer cards than this still reads as a shelf: the empty places after its
+     * last card show faint placeholder ("ghost") slots.
+     */
+    const val MIN_SLOTS = 4
+
+    /** Indices of the ghost slots after the last of [count] cards (none for an empty or full shelf). */
+    fun ghostSlots(count: Int): IntRange = if (count in 1 until MIN_SLOTS) count until MIN_SLOTS else IntRange.EMPTY
 
     /** Touch drag: pixels to flow distance (dragging one first gap moves one card). Finger right = earlier cards. */
     fun dragDelta(dxPx: Float, cardWidthPx: Float): Float =
