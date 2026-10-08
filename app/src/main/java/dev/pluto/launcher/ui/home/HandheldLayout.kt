@@ -267,6 +267,13 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
 
     val emptyDefault = if (apps.isEmpty()) ID_EMPTY_ALL_APPS else null
     SideEffect { focus.setDefaultFocus(selectedCardId(stage, active) ?: emptyDefault ?: shelfTabId(active)) }
+    // Whenever touch takes over (or switches shelf), the next controller input returns to the
+    // selected card, never to whatever top-bar button the controller last visited.
+    LaunchedEffect(focus.inputMode, active, stage.selectedKey) {
+        if (focus.inputMode == InputMode.TOUCH) {
+            focus.rememberFocusTarget(selectedCardId(stage, active) ?: emptyDefault ?: shelfTabId(active))
+        }
+    }
 
     ConsoleFocusEffects(state, focus, switch, active, emptyDefault) { selectedCardId(stage, active) }
 

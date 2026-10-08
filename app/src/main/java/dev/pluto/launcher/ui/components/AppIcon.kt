@@ -338,9 +338,16 @@ fun AppTile(
  */
 @Composable
 fun TileLabel(text: String, modifier: Modifier = Modifier, dimmed: Boolean = false) {
-    val style = MaterialTheme.typography.labelMedium.overWallpaper().copy(textAlign = TextAlign.Center)
+    val base = MaterialTheme.typography.labelMedium
+    // The wallpaper shadow is a per-glyph blur redrawn every frame; on solid surfaces (drawer,
+    // folders) it is invisible but makes scrolling GPU-bound, so only labels on the wallpaper get it.
+    val styled = if (LocalLabelsOnWallpaper.current) base.overWallpaper() else base.copy(color = MaterialTheme.colorScheme.onSurface)
+    val style = styled.copy(textAlign = TextAlign.Center)
     Spacer(modifier.fillMaxWidth().then(TileLabelElement(text, style, if (dimmed) DimmedLabelAlpha else 1f)))
 }
+
+/** False inside opaque surfaces (drawer, folders) so tile labels skip the wallpaper text shadow. */
+val LocalLabelsOnWallpaper = staticCompositionLocalOf { true }
 
 /** Smallest fraction of the label's text size used to fit a long word on one line. */
 private const val MinLabelShrink = 0.7f

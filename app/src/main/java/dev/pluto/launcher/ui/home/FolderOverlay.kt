@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui.home
 
+import dev.pluto.launcher.ui.components.LocalLabelsOnWallpaper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -90,6 +91,13 @@ private fun folderAppId(folderId: Long, key: AppKey) = "folderview:$folderId:${k
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long) {
+    // Opaque surface: tile labels skip the wallpaper text shadow (see TileLabel).
+    CompositionLocalProvider(LocalLabelsOnWallpaper provides false) { FolderOverlayContent(state, vm, folderId) }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, folderId: Long) {
     val folderUi = state.folders[folderId]
     if (folderUi == null) {
         LaunchedEffect(folderId) { vm.back() }

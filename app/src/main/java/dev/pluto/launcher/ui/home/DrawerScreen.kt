@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.home
 
+import dev.pluto.launcher.ui.components.LocalLabelsOnWallpaper
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -187,6 +189,13 @@ private fun drawerAppId(key: AppKey) = "drawer:${key.encode()}"
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
+    // Opaque surface: tile labels skip the wallpaper text shadow (see TileLabel).
+    CompositionLocalProvider(LocalLabelsOnWallpaper provides false) { DrawerScreenContent(state, vm) }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
     val keyboard = LocalSoftwareKeyboardController.current
     val reveal = LocalDrawerReveal.current
