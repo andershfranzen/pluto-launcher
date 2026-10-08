@@ -151,6 +151,16 @@ internal class FocusRingAnimation {
 /** What a focused control hands to the overlay: its live coordinates and ring shape. */
 internal class FocusRingTarget(val shape: Shape, val visibility: () -> Float = { 1f }) {
     var coordinates: LayoutCoordinates? = null
+
+    /**
+     * True once layout has placed the control. A control composed this frame (a shelf switch,
+     * an opening layer) is attached before it is placed; its coordinates then point at its
+     * parent's corner, and the ring must not move there.
+     */
+    var placed: Boolean = false
+
+    /** When this control appeared; only fresh controls get the settle wait. */
+    val bornAt: Long = android.os.SystemClock.uptimeMillis()
 }
 
 /**
@@ -215,11 +225,21 @@ fun FocusRingOverlayHost(modifier: Modifier = Modifier, content: @Composable () 
  * The gliding ring itself. Must fill the area it overlays and be drawn above the content;
  * [LocalFocusRingOverlay] must provide [state] to the content.
  */
-/** Frames to wait for a newly composed target to be placed before the ring moves to it. */
-private const val MAX_PLACEMENT_FRAMES = 4
+/** Frames to wait at most for a new target to settle before the ring moves to it. */
+private const val MAX_SETTLE_FRAMES = 24
 
-/** Bounds of a node that is attached but not placed yet: pinned to the overlay's origin. */
-private fun Rect.isUnplaced(): Boolean = left == 0f && top == 0f
+/** Controls younger than this (a new shelf's cards, an opening layer) wait to settle first. */
+private const val FRESH_TARGET_MS = 400L
+
+/** Consecutive frames a target must hold still to count as settled. */
+private const val SETTLE_STILL_FRAMES = 2
+
+/** A move longer than this many target sizes fades in at the target instead of gliding. */
+private const val FAR_JUMP_FACTOR = 2.5f
+
+private fun Rect.isNear(other: Rect): Boolean =
+    kotlin.math.abs(left - other.left) < 1.5f && kotlin.math.abs(top - other.top) < 1.5f &&
+        kotlin.math.abs(width - other.width) < 1.5f && kotlin.math.abs(height - other.height) < 1.5f
 
 @Composable
 fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier) {
@@ -236,18 +256,30 @@ fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier
                     alpha.animateTo(0f, PlutoMotion.fadeOut())
                     return@coroutineScope
                 }
-                // A target composed this frame (a shelf switch, a layer that just opened) is
-                // attached before it is placed and reports bounds at the overlay's origin; gliding
-                // from those made the ring sweep in from the top-left corner. Wait for real bounds.
-                var bounds = holder.boundsOf(target)
-                var frames = 0
-                while ((bounds == null || bounds.isUnplaced()) && frames < MAX_PLACEMENT_FRAMES) {
+                // A target composed this frame (a shelf switch, a layer that just opened) can be
+                // attached before it is placed, and its first placement can be provisional (a
+                // stage laid out before it is sized puts its cards in a corner). Until the target
+                // holds still for two frames the ring keeps drawing where it was (holder.settled).
+                val fresh = android.os.SystemClock.uptimeMillis() - target.bornAt < FRESH_TARGET_MS
+                holder.settled = !fresh
+                var bounds: Rect? = if (fresh || !target.placed) null else holder.boundsOf(target)
+                var still = 0
+                var frames = if (fresh) 0 else MAX_SETTLE_FRAMES
+                while (frames < MAX_SETTLE_FRAMES) {
+                    val b = if (target.placed) holder.boundsOf(target) else null
+                    still = if (b != null && bounds != null && b.isNear(bounds)) still + 1 else 0
+                    bounds = b
+                    if (still >= SETTLE_STILL_FRAMES) break
                     withFrameNanos { }
-                    bounds = holder.boundsOf(target)
                     frames++
                 }
-                if (bounds != null && bounds.isUnplaced()) bounds = null
+                holder.settled = true
                 val last = holder.lastDrawn
+                // Far jumps (another shelf, another layer) fade in at the target instead of
+                // flying across the screen; neighbouring moves glide.
+                val far = bounds != null && last != null &&
+                    (bounds.center - last.center).getDistance() > maxOf(bounds.width, bounds.height) * FAR_JUMP_FACTOR
+                if (far) alpha.snapTo(0f)
                 val startDelta = when {
                     bounds == null -> Rect.Zero
                     last == null || alpha.value < 0.05f -> {
@@ -284,8 +316,8 @@ fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier
                 val a = alpha.value
                 val target = state.target
                 if (target != null) holder.shape = target.shape
-                // Until a new target is placed, keep drawing where the ring last was.
-                val live = target?.let(holder::boundsOf)?.takeUnless { it.isUnplaced() }
+                // Until a new target has settled, keep drawing where the ring last was.
+                val live = target?.takeIf { it.placed && holder.settled }?.let(holder::boundsOf)
                 val bounds = live ?: holder.lastBase
                 if (live != null) holder.lastBase = live
                 val shape = holder.shape
@@ -319,6 +351,8 @@ fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier
 
 private class OverlayHolder {
     var own: LayoutCoordinates? = null
+    /** False while a new target's position is still settling (see the target collector). */
+    var settled = true
     var lastDrawn: Rect? = null
     var lastBase: Rect? = null
     var shape: Shape? = null

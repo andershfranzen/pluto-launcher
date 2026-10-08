@@ -706,7 +706,7 @@ private class ControllerFocusableNode(
         // The gliding overlay only covers controls in its own window (not dialogs).
         overlay = currentValueOf(LocalFocusRingOverlay)?.takeIf { it.view === currentValueOf(LocalView) }
         overlayTarget = overlay?.let { FocusRingTarget(shape, currentValueOf(LocalFocusRingVisibility)) }
-            ?.also { it.coordinates = coordinates }
+            ?.also { it.coordinates = coordinates; it.placed = coordinates?.isAttached == true }
         link.controller = c
         register()
     }
@@ -738,6 +738,7 @@ private class ControllerFocusableNode(
                 overlayTarget?.let { overlay?.hide(it) }
                 overlayTarget = FocusRingTarget(shape, currentValueOf(LocalFocusRingVisibility)).also {
                     it.coordinates = coordinates
+                    it.placed = coordinates?.isAttached == true
                     if (wasShown) overlay?.show(it)
                 }
                 stopTracking()
@@ -818,6 +819,7 @@ private class ControllerFocusableNode(
         if (o != null && target != null) {
             if (show) {
                 target.coordinates = coordinates
+                target.placed = coordinates?.isAttached == true
                 o.show(target)
                 startTracking()
             } else {
@@ -838,6 +840,7 @@ private class ControllerFocusableNode(
             PositionTracker { coords ->
                 val target = overlayTarget ?: return@PositionTracker
                 target.coordinates = coords
+                target.placed = true
                 overlay?.moved(target)
             },
         )
@@ -879,6 +882,7 @@ private class ControllerFocusableNode(
     override fun onPlaced(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
         overlayTarget?.coordinates = coordinates
+        overlayTarget?.placed = true
     }
 
     // --- Drawing -------------------------------------------------------------------------
