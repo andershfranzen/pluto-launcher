@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -67,7 +70,7 @@ import dev.pluto.launcher.ui.console.ConsoleArtSize
 import dev.pluto.launcher.ui.console.ConsoleBackdrop
 import dev.pluto.launcher.ui.console.ConsoleFocusLinks
 import dev.pluto.launcher.ui.console.ConsoleLegend
-import dev.pluto.launcher.ui.console.ConsoleLegendCompact
+import dev.pluto.launcher.ui.console.ConsoleLegendEmpty
 import dev.pluto.launcher.ui.console.HeroEmphasis
 import dev.pluto.launcher.ui.console.ConsoleShelves
 import androidx.compose.ui.platform.LocalView
@@ -109,8 +112,6 @@ private const val FLOW_SURFACE = "hh:flow"
 private const val ID_HH_SEARCH = "hh:search"
 private const val ID_HH_ALL_APPS = "hh:allapps"
 private const val ID_HH_SETTINGS = "hh:settings"
-private const val ID_HH_OPEN = "hh:act:open"
-private const val ID_HH_OPTIONS = "hh:act:options"
 private const val ID_EMPTY_ALL_APPS = "hh:empty:allapps"
 private const val ID_EMPTY_CATEGORIES = "hh:empty:categories"
 
@@ -287,14 +288,18 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                 versions = { currentVersions },
                 modifier = Modifier.matchParentSize(),
             )
+            // Only vertical insets here: the stage and title are centred on the whole screen
+            // (a landscape camera cutout would otherwise push them off-centre); the top bar and
+            // legend take the horizontal insets themselves.
             Column(
                 Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.safeDrawing),
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical)),
             ) {
                 ConsoleTopBar(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                         .padding(start = 12.dp, end = 8.dp, top = 6.dp),
                     tabs = {
                         ShelfTabs(
@@ -376,7 +381,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             },
                             onTouchSelect = { index -> noteSelection(stage, active, index) },
                             upTarget = { links.activeTab() },
-                            downTarget = { links.openButton() },
+                            downTarget = { FocusRequester.Default },
                         )
                     }
                 }
@@ -391,64 +396,18 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             .padding(horizontal = 24.dp),
                     )
                 }
-                // Open / Options centred under the title, the legend at the end: on one row
-                // while they fit side by side (the stage keeps its height), else stacked.
-                ConsoleBottomRow(
-                    modifier = Modifier
+                // Open and Actions are part of the button legend (bottom right), not separate
+                // buttons: touch opens the centre card with a tap, actions with a long press.
+                Box(
+                    Modifier
                         .fillMaxWidth()
-                        // Clear of the navigation handle (not just its inset).
-                        .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = ConsoleBottomClearance),
-                    actions = {
-                        if (apps.isNotEmpty()) {
-                            ConsoleActions(
-                                links = links,
-                                upTarget = selectedCardFocus,
-                                hero = hero,
-                                openKey = if (hints) mapping.promptFor(ControllerAction.CONFIRM) else null,
-                                actionsKey = if (hints) mapping.promptFor(ControllerAction.ACTIONS) else null,
-                                onOpen = { stage.selectedEntry?.let { launch(stage, active, it) } },
-                                onOptions = { stage.selectedEntry?.let(::openActions) },
-                            )
-                        }
-                    },
-                    // Open and Actions carry their own button glyphs; the legend lists the rest.
-                    legend = { if (hints) ButtonLegend(mapping, if (apps.isNotEmpty()) ConsoleLegendCompact else ConsoleLegend) },
-                )
-            }
-        }
-    }
-}
-
-/** Places [actions] centred and [legend] at the end on one row when they don't overlap; otherwise on two rows. */
-@Composable
-private fun ConsoleBottomRow(
-    modifier: Modifier,
-    actions: @Composable () -> Unit,
-    legend: @Composable () -> Unit,
-) {
-    Layout(contents = listOf(actions, legend), modifier = modifier) { (actionsM, legendM), constraints ->
-        val width = constraints.maxWidth
-        val loose = constraints.copy(minWidth = 0, minHeight = 0)
-        val legendP = legendM.firstOrNull()?.measure(loose)
-        val actionsP = actionsM.firstOrNull()?.measure(loose)
-        val gap = 12.dp.roundToPx()
-        val legendW = legendP?.width ?: 0
-        val actionsW = actionsP?.width ?: 0
-        val limit = width - legendW - if (legendW > 0) gap else 0
-        val centred = (width - actionsW) / 2
-        val actionsX = if (centred + actionsW > limit) limit - actionsW else centred
-        val legendH = legendP?.height ?: 0
-        val actionsH = actionsP?.height ?: 0
-        if (actionsX >= 0) {
-            val height = maxOf(legendH, actionsH)
-            layout(width, height) {
-                actionsP?.place(actionsX, (height - actionsH) / 2)
-                legendP?.place(width - legendW, (height - legendH) / 2)
-            }
-        } else {
-            layout(width, actionsH + legendH) {
-                actionsP?.place(centred.coerceAtLeast(0), 0)
-                legendP?.place(width - legendW, actionsH)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = ConsoleBottomClearance)
+                        .heightIn(min = 40.dp),
+                    contentAlignment = Alignment.CenterEnd,
+                ) {
+                    if (hints) ButtonLegend(mapping, if (apps.isNotEmpty()) ConsoleLegend else ConsoleLegendEmpty)
+                }
             }
         }
     }
@@ -521,42 +480,6 @@ private fun ShelfPage(
         }
     }
 }
-
-/**
- * Open / Actions under the title (DOWN from the selected card). With a controller they show
- * its buttons ([openKey], [actionsKey]) instead of icons; they soften while focus is up in
- * the header, like the hero card.
- */
-@Composable
-private fun ConsoleActions(
-    links: ConsoleFocusLinks,
-    upTarget: () -> FocusRequester,
-    hero: HeroEmphasis,
-    openKey: String?,
-    actionsKey: String?,
-    onOpen: () -> Unit,
-    onOptions: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    DisposableEffect(links) {
-        links.openAttached = true
-        onDispose { links.openAttached = false }
-    }
-    val up = Modifier.focusProperties { up = upTarget() }
-    Row(
-        modifier.graphicsLayer { alpha = ACTIONS_IDLE_ALPHA + (1f - ACTIONS_IDLE_ALPHA) * hero.emphasis },
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        PlutoTextButton(
-            ID_HH_OPEN, "Open", onOpen, up.focusRequester(links.open),
-            icon = Icons.Outlined.PlayArrow, emphasized = true, keyHint = openKey,
-        )
-        PlutoTextButton(ID_HH_OPTIONS, "Actions", onOptions, up, icon = Icons.Outlined.MoreHoriz, keyHint = actionsKey)
-    }
-}
-
-/** Open / Actions while focus is up in the header. */
-private const val ACTIONS_IDLE_ALPHA = 0.6f
 
 /** Space between the bottom row and the navigation handle, on top of the system inset. */
 private val ConsoleBottomClearance = 20.dp

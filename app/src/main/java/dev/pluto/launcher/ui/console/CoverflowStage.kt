@@ -383,12 +383,14 @@ internal fun CoverflowStage(
         val width = constraints.maxWidth
         val height = if (constraints.hasBoundedHeight) constraints.maxHeight else (width * 0.4f).roundToInt()
         val clearance = ReflectionClearance.roundToPx()
-        val card = cardSizePx(width, height - clearance, density)
+        // Breathing room under the top bar: the flow never butts against the shelf tabs.
+        val headroom = StageHeadroom.roundToPx()
+        val card = cardSizePx(width, height - clearance - headroom, density)
         stage.cardWidthPx = card.toFloat()
         val fixed = Constraints.fixed(card, card)
         val placeables = measurables.map { it.measure(fixed) to (it.layoutId as? Int ?: 0) }
         // Card plus its reflection plus the clearance, centred: the mirror never reaches the title.
-        val top = ((height - clearance - card * (1f + STAGE_REFLECTION_SPACE)) / 2f).roundToInt().coerceAtLeast(0)
+        val top = headroom + ((height - headroom - clearance - card * (1f + STAGE_REFLECTION_SPACE)) / 2f).roundToInt().coerceAtLeast(0)
         layout(width, height) {
             // Placement only: reading the flow position here re-places cards each frame, no recomposition.
             val position = stage.position
@@ -403,6 +405,9 @@ internal fun CoverflowStage(
 }
 
 private const val ACCESSIBILITY_PAGE = 3
+
+/** Space kept free above the cards, below the top bar. */
+private val StageHeadroom = 28.dp
 
 /** Card side for a stage of [width] x [height] px: big and front-facing, bounded so neighbours stay visible. */
 private fun cardSizePx(width: Int, height: Int, density: Float): Int {

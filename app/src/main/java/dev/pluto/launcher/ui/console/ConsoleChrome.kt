@@ -103,8 +103,8 @@ val ConsoleLegend = listOf(
     LegendItem(ControllerAction.SETTINGS, "Settings"),
 )
 
-/** The legend beside Open / Actions, which show their own buttons. */
-val ConsoleLegendCompact = ConsoleLegend.filter { it.action != ControllerAction.CONFIRM && it.action != ControllerAction.ACTIONS }
+/** The legend on an empty shelf: nothing to open or act on. */
+val ConsoleLegendEmpty = ConsoleLegend.filter { it.action != ControllerAction.CONFIRM && it.action != ControllerAction.ACTIONS }
 
 internal const val TAB_ID_PREFIX = "hh:tab:"
 
@@ -115,11 +115,8 @@ internal fun shelfTabId(id: ShelfId): String = "$TAB_ID_PREFIX${id.key}"
 internal class ConsoleFocusLinks {
     val tabs = HashMap<String, FocusRequester>()
     var activeShelfKey: String? = null
-    val open = FocusRequester()
-    var openAttached = false
 
     fun activeTab(): FocusRequester = activeShelfKey?.let(tabs::get) ?: FocusRequester.Default
-    fun openButton(): FocusRequester = if (openAttached) open else FocusRequester.Default
 }
 
 // ---------------------------------------------------------------------------------------
