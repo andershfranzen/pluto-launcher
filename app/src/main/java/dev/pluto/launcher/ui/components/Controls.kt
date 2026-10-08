@@ -8,12 +8,12 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
@@ -55,7 +55,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -69,7 +68,9 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.Category
 import dev.pluto.launcher.ui.UserMessage
@@ -79,6 +80,9 @@ import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
+import dev.pluto.launcher.ui.theme.panelColor
+import dev.pluto.launcher.ui.theme.sheetRaisedColor
+import dev.pluto.launcher.ui.theme.sheetRimBrush
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -86,24 +90,30 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-/** Standard translucent panel used by sheets, drawers and menus. */
+/**
+ * Standard panel used by sheets, folders, the dock and menus: the brand-tinted surface
+ * ([panelColor]) with a faint light rim along its top edge, so every surface reads as one family.
+ */
 @Composable
 fun PlutoPanel(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val shape = RoundedCornerShape(PlutoDimens.PanelCorner)
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(PlutoDimens.PanelCorner),
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = PlutoDimens.PanelAlpha),
+        shape = shape,
+        color = panelColor(),
         contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(1.dp, sheetRimBrush()),
         content = content,
     )
 }
 
 /**
  * Icon button with a screen-reader [label]; when [showLabel] is true the label is also
- * shown next to the icon (pill style). Always at least 48dp.
+ * shown next to the icon (pill style). Always at least 48dp. [onSecondary] (optional) runs
+ * for a long press, the controller's X and an accessibility custom action named [secondaryLabel].
  */
 @Composable
 fun PlutoIconButton(
@@ -115,6 +125,8 @@ fun PlutoIconButton(
     showLabel: Boolean = false,
     onWallpaper: Boolean = false,
     onFocused: (() -> Unit)? = null,
+    onSecondary: (() -> Unit)? = null,
+    secondaryLabel: String? = null,
 ) {
     val shape = if (showLabel) RoundedCornerShape(24.dp) else CircleShape
     val background = if (onWallpaper) {
@@ -130,6 +142,8 @@ fun PlutoIconButton(
             .controllerFocusable(
                 id = id,
                 onActivate = onClick,
+                onSecondary = onSecondary,
+                secondaryLabel = secondaryLabel,
                 contentDescription = label,
                 shape = shape,
                 onFocused = onFocused,
@@ -227,7 +241,9 @@ fun KeyChip(name: String, modifier: Modifier = Modifier) {
 
 /**
  * Category tabs. Touch-selectable; L1/R1 switching is handled by the caller (VM).
- * The selected tab uses a filled shape plus an underline bar, not colour alone.
+ * Resting tabs are outlined chips; the selection is a filled pill that slides between them
+ * (one shared indicator drawn behind the row) with a bolder label, so the state is carried
+ * by shape and weight, not colour alone.
  * [prevKey] / [nextKey] optionally show the bound shoulder buttons at either end.
  */
 @Composable
@@ -284,9 +300,9 @@ fun CategoryTabs(
         }
     }
 
-    val baseColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)
+    val baseColor = sheetRaisedColor().copy(alpha = 0.72f)
+    val outlineColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
     val pillColor = MaterialTheme.colorScheme.primaryContainer
-    val pillBorder = MaterialTheme.colorScheme.primary
 
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (prevKey != null) {
@@ -299,26 +315,25 @@ fun CategoryTabs(
                 .padding(TabRowPadding)
                 .drawWithContent {
                     val corner = TabCorner.toPx()
-                    // Resting containers of every tab, then the sliding selection pill, then the labels.
+                    val border = TabBorder.toPx()
+                    val inset = border / 2f
+                    // Resting (outlined) chips, then the sliding selection pill, then the labels.
                     tabBounds.values.forEach { r ->
                         val radius = minOf(corner, r.height / 2f)
                         drawRoundRect(baseColor, r.topLeft, r.size, CornerRadius(radius, radius))
+                        drawRoundRect(
+                            color = outlineColor,
+                            topLeft = Offset(r.left + inset, r.top + inset),
+                            size = Size(r.width - border, r.height - border),
+                            cornerRadius = CornerRadius(radius - inset, radius - inset),
+                            style = Stroke(border),
+                        )
                     }
                     val a = indicatorAlpha.value
                     if (a > 0f && indicatorPlaced.value) {
                         val r = indicator.value
                         val radius = minOf(corner, r.height / 2f)
-                        val border = TabBorder.toPx()
-                        val inset = border / 2f
                         drawRoundRect(pillColor, r.topLeft, r.size, CornerRadius(radius, radius), alpha = a)
-                        drawRoundRect(
-                            color = pillBorder,
-                            topLeft = Offset(r.left + inset, r.top + inset),
-                            size = Size(r.width - border, r.height - border),
-                            cornerRadius = CornerRadius(radius - inset, radius - inset),
-                            style = Stroke(border),
-                            alpha = a,
-                        )
                     }
                     drawContent()
                 },
@@ -347,7 +362,7 @@ fun CategoryTabs(
 
 private val TabRowPadding = 4.dp
 private val TabCorner = 20.dp
-private val TabBorder = 2.dp
+private val TabBorder = 1.dp
 
 /** Space kept between a newly selected tab and the row's edge before scrolling to it. */
 private val TabScrollMargin = 24.dp
@@ -371,7 +386,6 @@ private fun CategoryTab(
         PlutoMotion.fadeIn(),
         label = "tabLabel",
     )
-    val underline = animateFloatAsState(if (isSelected) 1f else 0f, PlutoMotion.spatialFast(), label = "tabUnderline")
     val press = remember { MutableInteractionSource() }
     val currentOnBounds by rememberUpdatedState(onBounds)
     val currentOnGone by rememberUpdatedState(onGone)
@@ -399,7 +413,7 @@ private fun CategoryTab(
             )
             .semantics { selected = isSelected }
             .clip(shape)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -411,20 +425,6 @@ private fun CategoryTab(
             color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-        )
-        // The underline's space is always reserved, so selecting never changes tab geometry.
-        Spacer(Modifier.height(3.dp))
-        Box(
-            Modifier
-                .width(20.dp)
-                .height(3.dp)
-                .graphicsLayer {
-                    val u = underline.value
-                    alpha = u.coerceIn(0f, 1f)
-                    scaleX = 0.3f + 0.7f * u
-                }
-                .clip(RoundedCornerShape(2.dp))
-                .background(contentColor),
         )
     }
 }
@@ -528,13 +528,17 @@ private fun MessageBarContent(message: UserMessage, onDismiss: () -> Unit) {
     }
 }
 
-/** Centred empty-state block: a title, optional detail and optional actions. */
+/**
+ * Centred empty-state block: an optional [icon] on a small planet-and-orbit mark (a light
+ * illustration, decorative), a title, optional detail and optional actions.
+ */
 @Composable
 fun EmptyState(
     title: String,
     modifier: Modifier = Modifier,
     detail: String? = null,
     onWallpaper: Boolean = false,
+    icon: ImageVector? = null,
     actions: @Composable () -> Unit = {},
 ) {
     Column(
@@ -542,16 +546,41 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (icon != null) {
+            val disc = MaterialTheme.colorScheme.primaryContainer
+            val orbit = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+            Box(
+                Modifier
+                    .size(EmptyIllustrationSize)
+                    .drawBehind {
+                        val r = size.minDimension / 2f
+                        drawCircle(orbit, radius = r - 1.dp.toPx(), style = Stroke(1.5.dp.toPx()))
+                        drawCircle(disc, radius = r * 0.7f)
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(30.dp),
+                )
+            }
+        }
         val titleStyle = MaterialTheme.typography.titleMedium
-        Text(title, style = if (onWallpaper) titleStyle.overWallpaper() else titleStyle)
+        Text(title, style = if (onWallpaper) titleStyle.overWallpaper() else titleStyle, textAlign = TextAlign.Center)
         if (detail != null) {
             val detailStyle = MaterialTheme.typography.bodyMedium
             Text(
                 detail,
                 style = if (onWallpaper) detailStyle.overWallpaper() else detailStyle,
                 color = if (onWallpaper) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { actions() }
     }
 }
+
+/** Size of the empty-state mark (orbit ring and disc). */
+private val EmptyIllustrationSize = 88.dp

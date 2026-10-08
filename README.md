@@ -29,8 +29,9 @@ can be forced on or turned off in Settings.
   tile, category tabs, favourites row, Recent launches row, persistent button legend).
 - **App library** for the personal profile via `LauncherApps`; updates live on install,
   update, uninstall, suspend and unsuspend. App identity is component + user profile.
-- **Drawer and search**: alphabetical list, optional category filter, local search by name
-  or package that is case- and accent-insensitive, with an empty state and a Clear control.
+- **Drawer and search**: a full-height sheet (swipe up anywhere on home, the header's Search
+  button, or controller Y) with an alphabetical grid and an A–Z fast-scroll rail, optional
+  category filter, local search by name or package that is case- and accent-insensitive, with an empty state and a Clear control.
 - **Favourites and dock**: pin/unpin, up to five dock slots, shared by portrait and landscape.
 - **Folders**: create, rename, delete, reorder, move apps in and out. Deleting a folder never
   uninstalls anything.
@@ -48,9 +49,9 @@ can be forced on or turned off in Settings.
 - **Appearance**: system/light/dark theme, wallpaper contrast scrim, icon and text size
   (on top of Android's non-linear font scaling), reduced motion (removes scroll, ripple and
   switch animations; Android's "Remove animations" is honoured too).
-- **App actions by touch**: tap **Actions** in All apps and then an app, or use Edit home
-  (**Add favourite…**, **App actions…**). Pressing and holding an app is a shortcut to the
-  same menu; controllers use X.
+- **App actions by touch**: press and hold an app; without long press, tap **⋮** inside the
+  drawer's search pill and then an app, or use Edit home (**Add favourite…**, **App
+  actions…**). Controllers use X; screen readers offer an "App actions" action on every app.
 - **Accessibility**: screen-reader labels, 48 dp touch targets, no gesture-only or
   long-press-only actions, content beneath dialogs hidden from screen readers.
 - **First-run setup**: usable default layout, optional category setup, controller preview,

@@ -28,9 +28,16 @@ something.
 - **Debug builds are slow**: a debuggable build runs largely interpreted. On the reference
   phone the drawer's opening frame takes about 40 to 60 ms in a debug build and about
   15 to 20 ms (main thread) in a release build. Use a release build for daily use.
-- **Search frames that bring many apps back** (the first character, deleting the last one,
-  Clear) still compose most of the grid in one frame: about 130 to 150 ms in a debug
-  build. The change is animated, but that single frame is long.
+- **Search frames that bring many apps back** (deleting the last character, Clear) no
+  longer compose the grid in one frame: tiles already showing stay, and the returning ones
+  join 12 per frame, top first. Not yet re-measured on the phone after this change (the
+  drawer rework below); the targets in the profiling notes still apply.
+- **Drawer and tiles (rework, unmeasured)**: tiles are now a few nodes each (the label is
+  laid out once in its own measure pass instead of a BoxWithConstraints subcomposition, a
+  cached icon is one draw node, and a tile reads its window position only when activated);
+  categories share one grid; the search field recomposes on its own; the drawer no longer
+  composes inside a measure pass. These were built and unit-tested only; frame times on the
+  Nord 5 still need a release-build measurement.
 - **After rotation, closing a full-screen page or starting**, Pluto composes the closed
   drawer in the background once the screen has been idle for about 0.6 s. On a debug build
   the first of those frames takes about 100 ms. If you open the drawer before that, the
@@ -42,6 +49,22 @@ something.
   main-thread work.
 - **Reorder in Edit**: rows that swap places slide past each other, so for a moment one row
   passes over the other's controls.
+
+## Deliberate deviations from the product spec
+
+- **No "All apps" button on Phone and Landscape home.** The spec says "Swipe up or tap All
+  apps to open the drawer"; at the user's request the button (and the empty-home "All
+  apps" button) is gone. The drawer stays reachable without gestures in one action through
+  the header's **Search** button (it opens the drawer with the keyboard up), whose screen
+  reader action and long press named "All apps" open it without the keyboard, and through
+  controller Y. Swipe up anywhere on home still pulls the drawer up with the finger.
+- **The drawer's "Actions" toggle became a ⋮ inside the search pill.** At the user's request
+  the labelled header button is gone; long press (touch), X (controller) and the "App
+  actions" screen-reader action reach an app's actions. Because the spec requires no
+  long-press-only actions, the ⋮ (shown while the search field is empty) still turns on the
+  mode in which tapping an app opens its actions.
+- **The alphabet fast-scroll rail is touch-only** and hidden from screen readers: it is a
+  shortcut, and the grid itself remains fully reachable by scrolling, D-pad and TalkBack.
 
 ## Unsupported in 0.1
 

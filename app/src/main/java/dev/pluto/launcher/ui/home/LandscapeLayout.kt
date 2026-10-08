@@ -23,7 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.model.Organization
+import dev.pluto.launcher.ui.HomeTile
+import dev.pluto.launcher.ui.components.rememberEqual
+import androidx.compose.runtime.remember
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.ButtonLegend
@@ -55,7 +59,7 @@ internal fun sideDockIconSize(availableHeight: Dp, preferredIcon: Dp): Dp? {
 }
 
 /**
- * Landscape touch home: compact header (time, search, all apps, edit, settings), a wider
+ * Landscape touch home: compact header (time, search, edit, settings), a wider
  * vertically-scrolling favourites grid, and a dock at the side or bottom chosen from the
  * measured space (not the orientation). The side dock sizes its slots to the height left
  * below the header, so no slot is ever clipped or hidden behind a scroll.
@@ -64,13 +68,16 @@ internal fun sideDockIconSize(availableHeight: Dp, preferredIcon: Dp): Dp? {
 fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
     val iconSize = state.iconSize()
-    val gridKeys = state.homeTiles.map { it.id }
+    val tiles = rememberEqual(state.homeTiles)
+    val dock = rememberEqual(state.dock)
+    val gridKeys = remember(tiles) { tiles.map { it.id } }
+    val focusIds = remember(tiles) { tiles.map(::homeTileFocusId) }
     val gridState = rememberAnchoredGridState(HOME_SURFACE, state, gridKeys)
     ReportScrollAnchor(HOME_SURFACE, gridState, state, vm, gridKeys)
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
-    TrackFocusOrder(HOME_SURFACE, state.homeTiles.map(::homeTileFocusId)) { gridState.scrollToItem(it) }
-    TrackGridNavigation(HOME_SURFACE, gridState, state.homeTiles.map(::homeTileFocusId))
-    val defaultId = state.homeTiles.firstOrNull()?.let(::homeTileFocusId) ?: ID_ALL_APPS
+    TrackFocusOrder(HOME_SURFACE, focusIds) { gridState.scrollToItem(it) }
+    TrackGridNavigation(HOME_SURFACE, gridState, focusIds)
+    val defaultId = focusIds.firstOrNull() ?: ID_SEARCH
     SideEffect { focus.setDefaultFocus(defaultId) }
 
     BoxWithConstraints(
@@ -87,7 +94,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ClockHeader(Modifier.weight(1f), compact = true)
-                HomeToolbar(vm, includeAllApps = true)
+                HomeToolbar(vm)
             }
 
             // Measured below the header (and above the legend), so the dock choice uses the real space left.
@@ -95,14 +102,14 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 val sideIcon = if (shortWindow) sideDockIconSize(maxHeight, iconSize * 0.9f) else null
                 if (sideIcon != null) {
                     Row(Modifier.fillMaxSize()) {
-                        FavouritesGrid(state, vm, iconSize, gridState, Modifier.weight(1f).fillMaxHeight())
-                        VerticalDock(state, vm, sideIcon, Modifier.padding(end = 8.dp, top = 4.dp, bottom = 8.dp))
+                        FavouritesGrid(tiles, vm, iconSize, gridState, Modifier.weight(1f).fillMaxHeight())
+                        VerticalDock(dock, vm, sideIcon, Modifier.padding(end = 8.dp, top = 4.dp, bottom = 8.dp))
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {
-                        FavouritesGrid(state, vm, iconSize, gridState, Modifier.weight(1f).fillMaxWidth())
+                        FavouritesGrid(tiles, vm, iconSize, gridState, Modifier.weight(1f).fillMaxWidth())
                         HorizontalDock(
-                            state.dock, vm, iconSize,
+                            dock, vm, iconSize,
                             Modifier
                                 .align(Alignment.CenterHorizontally)
                                 .widthIn(max = 640.dp)
@@ -127,14 +134,14 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
 
 @Composable
 private fun FavouritesGrid(
-    state: LauncherUiState,
+    tiles: List<HomeTile>,
     vm: LauncherViewModel,
     iconSize: Dp,
     gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
     modifier: Modifier,
 ) {
     Box(modifier) {
-        if (state.homeTiles.isEmpty()) {
+        if (tiles.isEmpty()) {
             EmptyFavourites(vm, Modifier.align(Alignment.Center))
         } else {
             LazyVerticalGrid(
@@ -148,7 +155,7 @@ private fun FavouritesGrid(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(state.homeTiles, key = { it.id }) { tile ->
+                items(tiles, key = { it.id }, contentType = { if (it is HomeTile.App) "app" else "folder" }) { tile ->
                     HomeTileView(tile, iconSize, homeTileFocusId(tile), vm, plutoItem())
                 }
             }
@@ -161,7 +168,7 @@ private fun FavouritesGrid(
  * all five slots always fit the panel's bounded height; nothing scrolls or hides.
  */
 @Composable
-private fun VerticalDock(state: LauncherUiState, vm: LauncherViewModel, slotIconSize: Dp, modifier: Modifier = Modifier) {
+private fun VerticalDock(dock: List<AppEntry?>, vm: LauncherViewModel, slotIconSize: Dp, modifier: Modifier = Modifier) {
     PlutoPanel(modifier.fillMaxHeight()) {
         Column(
             Modifier
@@ -171,7 +178,7 @@ private fun VerticalDock(state: LauncherUiState, vm: LauncherViewModel, slotIcon
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             repeat(Organization.DOCK_SLOTS) { slot ->
-                DockSlot(slot, state.dock.getOrNull(slot), vm, slotIconSize)
+                DockSlot(slot, dock.getOrNull(slot), vm, slotIconSize)
             }
         }
     }

@@ -218,7 +218,7 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
 
                 if (apps.isEmpty()) {
                     Text(
-                        "This folder is empty. In All apps, tap Actions, choose an app and pick Move to folder….",
+                        "This folder is empty. In the app drawer, press and hold an app (or use ⋮ beside search), then pick Move to folder….",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp),
@@ -233,7 +233,7 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
                             .fillMaxWidth()
                             .weight(1f, fill = false),
                     ) {
-                        itemsIndexed(apps, key = { _, entry -> entry.key.encode() }) { index, entry ->
+                        itemsIndexed(apps, key = { _, entry -> entry.key.encode() }, contentType = { _, _ -> "app" }) { index, entry ->
                             val id = folderAppId(folderId, entry.key)
                             AppTile(
                                 entry = entry,
