@@ -1,8 +1,10 @@
 package dev.pluto.launcher
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.database.ContentObserver
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -31,11 +33,15 @@ import dev.pluto.launcher.ui.LauncherRoot
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.LocalControllerRouter
 import dev.pluto.launcher.ui.components.LocalIconCache
+import dev.pluto.launcher.ui.motion.LaunchSource
+import dev.pluto.launcher.ui.motion.LaunchSourceFactory
+import dev.pluto.launcher.ui.motion.LocalLaunchSourceFactory
 import dev.pluto.launcher.ui.theme.LauncherMotionDurationScale
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * The Home activity.
@@ -55,6 +61,8 @@ import kotlinx.coroutines.launch
  * - onResume: vm.onResume(HomeRole.isDefaultHome()), which refreshes catalog and controllers.
  * - onPause / onWindowFocusChanged(false): router.reset().
  *
+ * - App launches open out of the activated control (ActivityOptions scale-up from its
+ *   bounds), provided to Compose as [LocalLaunchSourceFactory].
  * - Compose runs under [LauncherMotionDurationScale] (window recomposer context), so the
  *   Reduce motion setting and Android's animator duration scale apply to every animation.
  *
@@ -116,11 +124,40 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalControllerRouter provides router,
                 LocalIconCache provides container.icons,
+                LocalLaunchSourceFactory provides launchSources,
             ) {
                 LauncherRoot(vm, actions)
             }
         }
         setContentView(view)
+    }
+
+    /**
+     * App launches open out of the activated control: [LaunchSource] from its window
+     * bounds. The decor view is the window's root, so window coordinates map onto it after
+     * subtracting its own window offset (zero in practice), and onto the screen by adding
+     * its screen position.
+     */
+    private val launchSources = LaunchSourceFactory { bounds, animate -> launchSourceFor(bounds, animate) }
+
+    private fun launchSourceFor(bounds: androidx.compose.ui.geometry.Rect, animate: Boolean): LaunchSource? {
+        if (bounds.isEmpty || !bounds.isFinite) return null
+        val decor = window?.decorView ?: return null
+        val inWindow = IntArray(2)
+        val onScreen = IntArray(2)
+        decor.getLocationInWindow(inWindow)
+        decor.getLocationOnScreen(onScreen)
+        val left = bounds.left.roundToInt() - inWindow[0]
+        val top = bounds.top.roundToInt() - inWindow[1]
+        val width = bounds.width.roundToInt().coerceAtLeast(1)
+        val height = bounds.height.roundToInt().coerceAtLeast(1)
+        val screen = Rect(left + onScreen[0], top + onScreen[1], left + onScreen[0] + width, top + onScreen[1] + height)
+        val options = if (animate) {
+            runCatching { ActivityOptions.makeScaleUpAnimation(decor, left, top, width, height).toBundle() }.getOrNull()
+        } else {
+            null
+        }
+        return LaunchSource(screen, options)
     }
 
     private fun readSystemAnimatorScale() {

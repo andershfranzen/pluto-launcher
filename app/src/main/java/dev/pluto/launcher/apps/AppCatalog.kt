@@ -10,6 +10,7 @@ import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
@@ -321,7 +322,7 @@ class AppCatalog(context: Context) {
         _apps.value?.firstOrNull { it.key == key }?.label ?: key.packageName
 
     /** Launches via LauncherApps.startMainActivity. Never throws; on failure triggers a refresh of that package. */
-    fun launch(key: AppKey, sourceBounds: Rect? = null): LaunchResult {
+    fun launch(key: AppKey, sourceBounds: Rect? = null, options: Bundle? = null): LaunchResult {
         val label = labelFor(key)
         val info = resolve(key)
         if (info == null) {
@@ -332,7 +333,14 @@ class AppCatalog(context: Context) {
             return LaunchResult.Failure("$label is paused right now.")
         }
         return try {
-            launcherApps.startMainActivity(info.componentName, myUser, sourceBounds, null)
+            try {
+                launcherApps.startMainActivity(info.componentName, myUser, sourceBounds, options)
+            } catch (e: IllegalArgumentException) {
+                // Defensive: an options bundle the platform rejects must not cost the launch.
+                if (options == null) throw e
+                Log.w(TAG, "Launch options rejected for $key; launching without animation", e)
+                launcherApps.startMainActivity(info.componentName, myUser, sourceBounds, null)
+            }
             LaunchResult.Success
         } catch (e: Exception) {
             // ActivityNotFoundException, SecurityException, IllegalStateException, ...
