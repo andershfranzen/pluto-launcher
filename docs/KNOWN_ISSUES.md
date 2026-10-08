@@ -61,7 +61,15 @@ something.
   (never below 48 dp); when even that does not fit (very large text or icons) the dock moves
   to the bottom instead.
 - **Search in landscape with the keyboard up**: category tabs, the hint text and the button
-  legend step aside and results show as icons only, so at least one row stays visible.
+  legend step aside and results show as icons only, so at least one row stays visible. At
+  the maximum Android font size (200%) on a phone-height landscape window the larger search
+  field leaves room for only part of that row (icons about half visible on the emulator);
+  hide the keyboard (Back or B) to browse the results.
+- **Very large text in Handheld mode**: when the category tabs do not all fit beside the
+  clock, the tab row scrolls sideways (the last tab can appear cut off at its edge) and the
+  selected app's name beside the button legend may be shortened with an ellipsis.
+- **Long app names at large text**: a tile label whose longest word is wider than the tile
+  is drawn up to 30% smaller so the word is not split; longer names are still ellipsized.
 - **Reduce motion** also affects Compose animations that are not strictly decorative (for
   example the switch thumb jumps instead of sliding). This is intended.
 - **Home role request**: if Android refuses the request without asking (an earlier "Don't

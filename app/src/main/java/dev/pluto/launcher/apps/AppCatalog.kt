@@ -122,7 +122,19 @@ class AppCatalog(context: Context) {
         }
     }
 
+    /**
+     * Number of owners that called [start] without a matching [stop]. Each MainActivity's
+     * ViewModel starts and stops the shared catalog, and two can briefly coexist (granting
+     * the Home role starts a fresh Home task while the old one is finishing), so the callback
+     * is only unregistered when the last owner stops.
+     */
+    private var owners = 0
+
     fun start() {
+        synchronized(this) {
+            owners++
+            if (owners > 1) return
+        }
         if (started) return
         started = true
         callbackRegistered = try {
@@ -140,6 +152,11 @@ class AppCatalog(context: Context) {
     @Volatile private var callbackRegistered = false
 
     fun stop() {
+        synchronized(this) {
+            if (owners == 0) return
+            owners--
+            if (owners > 0) return
+        }
         if (!started) return
         started = false
         dirty = true

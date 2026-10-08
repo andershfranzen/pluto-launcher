@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,7 +36,10 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -156,21 +160,52 @@ fun AppTile(
     }
 }
 
-/** Two-line, centred tile label readable over the wallpaper. Semantics come from the tile itself. */
+/**
+ * Two-line, centred tile label readable over the wallpaper. Semantics come from the tile itself.
+ *
+ * At enlarged text a single long word ("Settings", "Calendar") can be wider than the tile and
+ * would be broken mid-word. The label then shrinks just enough for its longest word to fit,
+ * but never below [MinLabelShrink] of the user's text size; anything longer still ellipsizes.
+ */
 @Composable
 fun TileLabel(text: String, modifier: Modifier = Modifier, dimmed: Boolean = false) {
-    Text(
-        text = text,
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis,
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.labelMedium.overWallpaper(),
-        modifier = modifier
-            .fillMaxWidth()
-            .alpha(if (dimmed) 0.6f else 1f)
-            .clearAndSetSemantics { },
-    )
+    val baseStyle = MaterialTheme.typography.labelMedium.overWallpaper()
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val maxWidthPx = constraints.maxWidth
+        val style = remember(text, baseStyle, maxWidthPx) {
+            val longest = text.split(' ').maxByOrNull { it.length }.orEmpty()
+            if (longest.isEmpty() || maxWidthPx <= 0 || maxWidthPx == Constraints.Infinity) {
+                baseStyle
+            } else {
+                val wordWidth = measurer.measure(longest, baseStyle, maxLines = 1, softWrap = false).size.width
+                if (wordWidth <= maxWidthPx) {
+                    baseStyle
+                } else {
+                    val factor = (maxWidthPx.toFloat() / wordWidth).coerceAtLeast(MinLabelShrink)
+                    baseStyle.copy(
+                        fontSize = baseStyle.fontSize * factor,
+                        lineHeight = if (baseStyle.lineHeight.isSpecified) baseStyle.lineHeight * factor else baseStyle.lineHeight,
+                    )
+                }
+            }
+        }
+        Text(
+            text = text,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            style = style,
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(if (dimmed) 0.6f else 1f)
+                .clearAndSetSemantics { },
+        )
+    }
 }
+
+/** Smallest fraction of the label's text size used to fit a long word on one line. */
+private const val MinLabelShrink = 0.7f
 
 /**
  * Folder tile: a rounded container previewing up to four member icons, with the folder

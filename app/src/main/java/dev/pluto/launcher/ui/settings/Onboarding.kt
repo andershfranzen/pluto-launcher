@@ -56,6 +56,15 @@ import dev.pluto.launcher.ui.overlay.rememberScreenFocus
 private enum class OnboardingStep { WELCOME, GAMES, CONTROLLER, HOME }
 
 /**
+ * Last onboarding step shown in this process. Granting the Home role makes Android start a
+ * fresh Home task (a new activity with no saved state), which would otherwise restart
+ * onboarding at step 1 right after the user confirmed the chooser.
+ */
+private object OnboardingProgress {
+    @Volatile var stepName: String = OnboardingStep.WELCOME.name
+}
+
+/**
  * Steps shown for the current state. Without any apps there is nothing to sort into Games,
  * and Pluto must not ask to become the Home app before it can show and launch apps.
  */
@@ -73,7 +82,7 @@ private fun stepsFor(state: LauncherUiState): List<OnboardingStep> {
 @Composable
 fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val steps = stepsFor(state)
-    var stepName by rememberSaveable { mutableStateOf(OnboardingStep.WELCOME.name) }
+    var stepName by rememberSaveable { mutableStateOf(OnboardingProgress.stepName) }
     val step = OnboardingStep.valueOf(stepName).takeIf { it in steps } ?: steps.first()
     val index = steps.indexOf(step)
     val isLast = index == steps.lastIndex
@@ -83,9 +92,11 @@ fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
 
     fun goTo(target: OnboardingStep) {
         stepName = target.name
+        OnboardingProgress.stepName = target.name
     }
 
     fun finish() {
+        OnboardingProgress.stepName = OnboardingStep.WELCOME.name
         vm.completeOnboarding()
         // The layer is closed here unless completing onboarding already removed it.
         if (vm.state.value.session.topLayer == Layer.Onboarding) vm.back()

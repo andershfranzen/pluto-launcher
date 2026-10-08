@@ -58,13 +58,26 @@ can be forced on or turned off in Settings.
 
 ## Screenshots
 
-_Screenshots will be added after hardware validation. No images are included yet._
+Taken on the Android 36 emulator (1080 x 2400, 420 dpi, gesture navigation) with a few
+favourites pinned and the dock filled. Hardware screenshots from the reference phone are
+still to come.
 
-- Phone mode (portrait): _to be added_
-- Landscape mode: _to be added_
-- Handheld mode with controller: _to be added_
-- Drawer with search: _to be added_
-- Settings and controller diagnostics: _to be added_
+| Phone mode (portrait) | All apps drawer |
+| --- | --- |
+| <img src="docs/screenshots/phone.png" alt="Phone mode: clock, favourites grid, All apps button and a five-slot dock" width="300"> | <img src="docs/screenshots/drawer.png" alt="All apps drawer with search field, category tabs and an alphabetical app grid" width="300"> |
+
+Landscape mode (touch): compact header, wider grid and a side dock.
+
+<img src="docs/screenshots/landscape.png" alt="Landscape mode with compact clock header, favourites grid and a vertical dock on the right" width="720">
+
+Handheld mode with a controller connected: category tabs, Favourites and Recent launches
+rows, the selected app (Calendar) and the button legend.
+
+<img src="docs/screenshots/handheld.png" alt="Handheld mode with L1/R1 category tabs, a focused Calendar tile and the A/X/Y/L1/R1/Start legend" width="720">
+
+Drawer in landscape:
+
+<img src="docs/screenshots/drawer-landscape.png" alt="All apps drawer in landscape with eight columns" width="720">
 
 ## Building
 

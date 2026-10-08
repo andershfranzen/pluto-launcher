@@ -32,8 +32,17 @@ class ControllerMonitor(context: Context) {
         override fun onInputDeviceChanged(deviceId: Int) = refresh()
     }
 
-    /** Registers the InputManager listener (idempotent). */
+    /**
+     * Owners that called [start] without a matching [stop]. Each MainActivity's ViewModel
+     * starts and stops this shared monitor, and two can briefly coexist (granting the Home
+     * role starts a fresh Home task while the old one finishes); the listener is only
+     * unregistered when the last owner stops, or attach/detach would go unnoticed.
+     */
+    private var owners = 0
+
+    /** Registers the InputManager listener (once, however many owners start it). */
     fun start() {
+        owners++
         if (!listening) {
             listening = true
             try {
@@ -46,7 +55,9 @@ class ControllerMonitor(context: Context) {
     }
 
     fun stop() {
-        if (!listening) return
+        if (owners == 0) return
+        owners--
+        if (owners > 0 || !listening) return
         listening = false
         try {
             inputManager.unregisterInputDeviceListener(listener)

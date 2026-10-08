@@ -371,6 +371,16 @@ private fun HandheldSelectionEffects(
                 target = recentId(s.recents[recentIndex].key)
                 scroll = { gridState.scrollIfHidden(currentHeaders.indexOf(KEY_RECENT_ROW)); recentState.scrollIfHidden(recentIndex) }
             }
+            // Selection came from another layout (no Handheld control remembered): prefer the
+            // rows at the top so entering Handheld never opens scrolled past Favourites.
+            !preferCategory && control == null && favIndex >= 0 -> {
+                target = favId(s.homeTiles[favIndex])
+                scroll = { gridState.scrollIfHidden(currentHeaders.indexOf(KEY_FAV_ROW)); favState.scrollIfHidden(favIndex) }
+            }
+            !preferCategory && control == null && recentIndex >= 0 -> {
+                target = recentId(s.recents[recentIndex].key)
+                scroll = { gridState.scrollIfHidden(currentHeaders.indexOf(KEY_RECENT_ROW)); recentState.scrollIfHidden(recentIndex) }
+            }
             catIndex >= 0 -> {
                 target = catId(s.categoryApps[catIndex].key)
                 scroll = { gridState.scrollIfHidden(currentHeaders.size + catIndex) }
