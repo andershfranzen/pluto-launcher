@@ -2,7 +2,6 @@ package dev.pluto.launcher.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,21 +12,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.AppEntry
+import dev.pluto.launcher.model.Organization
+import dev.pluto.launcher.ui.HomeTile
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
@@ -39,116 +41,112 @@ import dev.pluto.launcher.ui.components.PlutoIconButton
 import dev.pluto.launcher.ui.components.PlutoPanel
 import dev.pluto.launcher.ui.components.PlutoTextButton
 import dev.pluto.launcher.ui.components.activeMapping
+import dev.pluto.launcher.ui.components.rememberEqual
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
-import dev.pluto.launcher.model.Organization
-import dev.pluto.launcher.ui.motion.LocalDrawerReveal
 
 /**
- * Portrait home: clock and date, a toolbar (Search, Edit, Settings), the favourites grid,
- * an "All apps" button (swipe up works too) and the five-slot dock.
+ * Portrait home: clock and date, a toolbar (Search, Edit, Settings), the favourites grid and
+ * the five-slot dock. The drawer opens by swiping up anywhere (the panel follows the finger),
+ * by the Search button (one tap; its "All apps" accessibility action / long press opens the
+ * drawer without the keyboard) and by controller Y; there is no separate "All apps" button.
  */
 @Composable
 fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
-    val reveal = LocalDrawerReveal.current
-    val liftPx = rememberDensityPx(HandleLift)
     val iconSize = state.iconSize()
-    val gridKeys = state.homeTiles.map { it.id }
+    // Equal lists from a rebuilt state keep their instance, so the grid and dock below skip.
+    val tiles = rememberEqual(state.homeTiles)
+    val dock = rememberEqual(state.dock)
+    val gridKeys = remember(tiles) { tiles.map { it.id } }
+    val focusIds = remember(tiles) { tiles.map(::homeTileFocusId) }
     val gridState = rememberAnchoredGridState(HOME_SURFACE, state, gridKeys)
     ReportScrollAnchor(HOME_SURFACE, gridState, state, vm, gridKeys)
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
-    TrackFocusOrder(HOME_SURFACE, state.homeTiles.map(::homeTileFocusId)) { gridState.scrollToItem(it) }
-    TrackGridNavigation(HOME_SURFACE, gridState, state.homeTiles.map(::homeTileFocusId))
-    val defaultId = state.homeTiles.firstOrNull()?.let(::homeTileFocusId) ?: ID_ALL_APPS
+    TrackFocusOrder(HOME_SURFACE, focusIds) { gridState.scrollToItem(it) }
+    TrackGridNavigation(HOME_SURFACE, gridState, focusIds)
+    val defaultId = focusIds.firstOrNull() ?: ID_SEARCH
     SideEffect { focus.setDefaultFocus(defaultId) }
 
-    BoxWithConstraints(
+    Column(
         Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing),
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .swipeUpToOpenDrawer(vm),
     ) {
-        // 4 columns on ordinary phones, 5-6 on wide portrait windows; tiles grow with icon size.
-        val columns = (maxWidth / (iconSize + 36.dp)).toInt().coerceIn(3, 6)
-        Column(
+        Row(
             Modifier
-                .fillMaxSize()
-                .swipeUpToOpenDrawer(vm),
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.Top,
         ) {
-            Row(
+            ClockHeader(Modifier.weight(1f).padding(top = 8.dp))
+            HomeToolbar(vm)
+        }
+
+        PhoneFavourites(tiles, vm, iconSize, gridState, Modifier.weight(1f).fillMaxWidth())
+
+        HorizontalDock(
+            dock, vm, iconSize,
+            Modifier
+                .align(Alignment.CenterHorizontally)
+                .widthIn(max = 560.dp)
+                .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
+        )
+
+        if (showControllerHints(state, focus)) {
+            ButtonLegend(
+                state.activeMapping(),
+                Legends.Home,
                 Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.Top,
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 8.dp, start = 12.dp, end = 12.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The portrait favourites grid: 4 columns on ordinary phones, 5-6 on wide portrait windows,
+ * chosen by the grid itself from its width (tiles grow with icon size).
+ */
+@Composable
+private fun PhoneFavourites(
+    tiles: List<HomeTile>,
+    vm: LauncherViewModel,
+    iconSize: Dp,
+    gridState: LazyGridState,
+    modifier: Modifier,
+) {
+    Box(modifier) {
+        if (tiles.isEmpty()) {
+            EmptyFavourites(vm, Modifier.align(Alignment.Center))
+        } else {
+            LazyVerticalGrid(
+                columns = AdaptiveCountCells(minCell = iconSize + 36.dp, minCount = 3, maxCount = 6, extra = 24.dp),
+                state = gridState,
+                // A grid that fits has nothing to scroll: let the surface's swipe-up see the drag
+                // directly instead of through the grid's scrollable (which drops travel on a busy frame).
+                userScrollEnabled = gridState.canScrollForward || gridState.canScrollBackward,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize(),
             ) {
-                ClockHeader(Modifier.weight(1f).padding(top = 8.dp))
-                HomeToolbar(vm)
-            }
-
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                if (state.homeTiles.isEmpty()) {
-                    EmptyFavourites(vm, Modifier.align(Alignment.Center))
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(columns),
-                        state = gridState,
-                        // A grid that fits has nothing to scroll: let the surface's swipe-up see the drag
-                        // directly instead of through the grid's scrollable (which drops travel on a busy frame).
-                        userScrollEnabled = gridState.canScrollForward || gridState.canScrollBackward,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        items(state.homeTiles, key = { it.id }) { tile ->
-                            HomeTileView(tile, iconSize, homeTileFocusId(tile), vm, plutoItem())
-                        }
-                    }
+                items(tiles, key = { it.id }, contentType = { if (it is HomeTile.App) "app" else "folder" }) { tile ->
+                    HomeTileView(tile, iconSize, homeTileFocusId(tile), vm, plutoItem())
                 }
-            }
-
-            PlutoIconButton(
-                id = ID_ALL_APPS,
-                icon = Icons.Outlined.KeyboardArrowUp,
-                label = "All apps",
-                onClick = { vm.openDrawer() },
-                showLabel = true,
-                onWallpaper = true,
-                onFocused = { vm.onControlFocused(ID_ALL_APPS) },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(vertical = 4.dp)
-                    // The handle rises and fades as the drawer is pulled up over it.
-                    .graphicsLayer {
-                        val p = reveal.progress
-                        translationY = -p * liftPx
-                        alpha = 1f - p
-                    },
-            )
-
-            HorizontalDock(
-                state.dock, vm, iconSize,
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .widthIn(max = 560.dp)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-            )
-
-            if (showControllerHints(state, focus)) {
-                ButtonLegend(
-                    state.activeMapping(),
-                    Legends.Home,
-                    Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 8.dp, start = 12.dp, end = 12.dp),
-                )
             }
         }
     }
 }
 
-/** Search, Edit and Settings as visible buttons (no long-press needed). */
+/**
+ * Search, Edit and Settings as visible buttons (no long-press needed). Search opens the
+ * drawer with the keyboard up; its "All apps" accessibility action (also a long press or X)
+ * opens the drawer without it.
+ */
 @Composable
-internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier, includeAllApps: Boolean = false) {
+internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         PlutoIconButton(
             id = ID_SEARCH,
@@ -157,20 +155,10 @@ internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier, i
             onClick = { vm.openDrawer(withSearch = true) },
             onWallpaper = true,
             onFocused = { vm.onControlFocused(ID_SEARCH) },
+            onSecondary = { vm.openDrawer() },
+            secondaryLabel = HomeText.ALL_APPS_ACTION,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
-        if (includeAllApps) {
-            PlutoIconButton(
-                id = ID_ALL_APPS,
-                icon = Icons.Outlined.KeyboardArrowUp,
-                label = "All apps",
-                onClick = { vm.openDrawer() },
-                showLabel = true,
-                onWallpaper = true,
-                onFocused = { vm.onControlFocused(ID_ALL_APPS) },
-                modifier = Modifier.padding(horizontal = 2.dp),
-            )
-        }
         PlutoIconButton(
             id = ID_EDIT,
             icon = Icons.Outlined.Edit,
@@ -192,9 +180,9 @@ internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier, i
     }
 }
 
-/** The five dock slots in a row, on a translucent panel. */
+/** The five dock slots in a row, on a panel. */
 @Composable
-internal fun HorizontalDock(dock: List<AppEntry?>, vm: LauncherViewModel, iconSize: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier) {
+internal fun HorizontalDock(dock: List<AppEntry?>, vm: LauncherViewModel, iconSize: Dp, modifier: Modifier = Modifier) {
     PlutoPanel(modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -216,9 +204,9 @@ internal fun EmptyFavourites(vm: LauncherViewModel, modifier: Modifier = Modifie
         title = "No favourites yet",
         detail = HomeText.EMPTY_FAVOURITES,
         onWallpaper = true,
+        icon = Icons.Outlined.Star,
         modifier = modifier,
     ) {
-        PlutoTextButton(id = "home:empty:edit", text = "Add favourite", onClick = { vm.openLayer(Layer.Edit) })
-        PlutoTextButton(id = "home:empty:allapps", text = "All apps", onClick = { vm.openDrawer() }, emphasized = true)
+        PlutoTextButton(id = "home:empty:edit", text = "Add favourite", onClick = { vm.openLayer(Layer.Edit) }, emphasized = true)
     }
 }

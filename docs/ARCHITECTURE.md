@@ -134,7 +134,7 @@ derived from available space and insets, never from orientation alone.
   (app key, `dock:2`, `folder:5`, `settings:theme`, ...). Touch click, Confirm and Enter run
   the same `onActivate`; the Actions button runs `onSecondary`, which is also exposed as an
   accessibility custom action and as a touch long-press shortcut. Touch also has visible
-  routes (the drawer's Actions toggle, Edit home's App actions…), so nothing depends on
+  routes (the drawer's ⋮ actions mode beside search, Edit home's App actions…), so nothing depends on
   long-press.
 - Movement uses Compose spatial focus search (`FocusManager.moveFocus`), so focus order
   follows on-screen geometry in each layout without per-layout tables.
@@ -244,3 +244,28 @@ are in place for the first real migration.
 - Platform exceptions (missing activities, removed profiles, SecurityException from
   LauncherApps) are caught at the `apps` / `system` boundary and turned into
   `LaunchResult.Failure` messages rather than crashes.
+
+### Grids, tiles and the drawer
+
+- **Tiles are cheap by construction.** `AppTile` is a column of two single-node children:
+  `AppIcon` draws a cached bitmap synchronously with one draw node (only an icon not yet
+  decoded gets state, a coroutine and a fade), and `TileLabel` lays its text out once in its
+  own measure pass with one shared `TextMeasurer` (whose cache also serves tiles scrolling
+  back into view). No `BoxWithConstraints`, no per-tile text measurer, no per-tile flow:
+  `IconCache.versions` is mirrored once into snapshot state. A tile reports its window
+  bounds to `OriginRegistry` only when it is activated (and keeps them current afterwards),
+  not on every scroll frame. Lazy items declare a `contentType` so compositions are reused.
+- **Narrow, stable inputs.** `LauncherUiState` is rebuilt on every change, so layouts pass
+  lists through `rememberEqual`: an equal new list keeps the previous instance and children
+  (grid, dock, chips) skip. The drawer's search bar reads only its own field state; the grid
+  reads only its list.
+- **The drawer** (`DrawerScreen`) is a full-height sheet: brand-tinted surface
+  (`ui/theme/Surfaces.kt`) with a light rim, a grab handle, a pinned search pill, category
+  chips with a sliding indicator, one `LazyVerticalGrid` for every category (switching swaps
+  its list, apps in both stay composed, the new list slides in from its side), an A–Z
+  `FastScrollRail`, and edge fades drawn in the sheet colour (no offscreen layer). Large
+  result changes (Clear) are fed in over frames (`ResultsFeed`), and heavy changes
+  cross-fade in place instead of sending tiles on long diagonals. Nothing composes inside a
+  measure pass: the keyboard-compact layout is a derived state of the window insets.
+- **Scroll anchors** are read when a grid comes to rest (or jumps, or reflows), never per
+  scroll frame.

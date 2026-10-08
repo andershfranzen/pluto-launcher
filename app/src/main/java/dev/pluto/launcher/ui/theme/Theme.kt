@@ -60,6 +60,12 @@ object PlutoDimens {
      */
     const val PanelAlpha = 1f
     const val TileBackdropAlpha = 0.92f
+
+    /**
+     * The drawer sheet is near-opaque: just enough to hint at the wallpaper behind the
+     * brand-tinted surface (a frosted look) without anything competing with text.
+     */
+    const val SheetAlpha = 0.97f
 }
 
 // A calm, space-inspired fallback palette: deep navy night with pale tan accents echoing the Pluto icon.

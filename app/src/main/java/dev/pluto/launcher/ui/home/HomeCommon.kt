@@ -50,6 +50,10 @@ import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.ui.unit.Density
 
 /*
  * Pieces shared by the Phone and Landscape home layouts. Both use the same focus ids
@@ -61,8 +65,11 @@ internal const val HOME_SURFACE = "home"
 
 /** Home copy shared by the layouts (inline for 0.1). */
 internal object HomeText {
-    const val EMPTY_FAVOURITES = "Tap Add favourite, or open All apps, tap Actions and choose an app. " +
-        "Pressing and holding an app also opens its actions."
+    const val EMPTY_FAVOURITES = "Swipe up or tap search to find apps, then pin favourites. " +
+        "Pressing and holding an app opens its actions; Add favourite works without gestures."
+
+    /** Accessibility custom action (on the home Search button) that opens the full drawer. */
+    const val ALL_APPS_ACTION = "All apps"
 }
 
 internal fun homeTileFocusId(tile: HomeTile): String = "home:${tile.id}"
@@ -247,6 +254,9 @@ internal fun rememberAnchoredGridState(surface: String, state: LauncherUiState, 
 /** What [ReportScrollAnchor] needs from one grid layout pass. */
 private data class GridAnchorSnapshot(val viewport: IntSize, val columns: Int, val firstLineKeys: List<Any?>)
 
+/** A resting grid's position and geometry: [ReportScrollAnchor] looks again only when this changes. */
+private data class GridRest(val firstIndex: Int, val viewport: IntSize, val columns: Int, val count: Int)
+
 /**
  * Keeps the logical scroll anchor (an item key) for [surface] in the session.
  *
@@ -271,12 +281,22 @@ internal fun ReportScrollAnchor(
     val anchor = remember(surface) { arrayOf(state.session.scrollAnchors[surface]) }
     LaunchedEffect(gridState, surface) {
         var geometry: Pair<IntSize, Int>? = null
+        // Nothing is read per frame while a scroll is in progress (only isScrollInProgress
+        // is observed then); the first line is looked at once the grid has come to rest,
+        // after a programmatic jump (first index changed), or after a reflow.
         snapshotFlow {
+            if (gridState.isScrollInProgress) return@snapshotFlow null
             val info = gridState.layoutInfo
-            val first = info.visibleItemsInfo.firstOrNull()
-            val line = if (first == null) emptyList() else info.visibleItemsInfo.filter { it.row == first.row }.map { it.key }
-            GridAnchorSnapshot(info.viewportSize, info.maxSpan, line)
+            GridRest(gridState.firstVisibleItemIndex, info.viewportSize, info.maxSpan, info.totalItemsCount)
         }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .map {
+                val info = gridState.layoutInfo
+                val first = info.visibleItemsInfo.firstOrNull()
+                val line = if (first == null) emptyList() else info.visibleItemsInfo.filter { it.row == first.row }.map { it.key }
+                GridAnchorSnapshot(info.viewportSize, info.maxSpan, line)
+            }
             .distinctUntilChanged()
             .collect { snap ->
                 if (snap.firstLineKeys.isEmpty()) return@collect
@@ -356,7 +376,8 @@ internal fun TrackGridNavigation(surface: String, gridState: LazyGridState, ids:
  * Swipe up anywhere on the home surface to pull the drawer up continuously: drags on
  * non-scrolling areas, and upward drag the favourites grid leaves over at its end. Releasing
  * past half way (or with an upward fling) opens it; otherwise LauncherRoot settles it back.
- * The visible "All apps" button keeps the drawer reachable without gestures.
+ * Without gestures the drawer is one tap away through the header's Search button (and its
+ * "All apps" accessibility action / long press), and controller Y.
  */
 @Composable
 internal fun Modifier.swipeUpToOpenDrawer(vm: LauncherViewModel): Modifier {
@@ -395,10 +416,35 @@ internal fun LauncherUiState.homeRestoreTarget(gridKeys: List<String>): Pair<Str
 }
 
 internal const val ID_SEARCH = "home:search"
-internal const val ID_ALL_APPS = "home:allapps"
 internal const val ID_EDIT = "home:edit"
 internal const val ID_SETTINGS = "home:settings"
-private val HOME_BUTTON_IDS = setOf(ID_SEARCH, ID_ALL_APPS, ID_EDIT, ID_SETTINGS)
+private val HOME_BUTTON_IDS = setOf(ID_SEARCH, ID_EDIT, ID_SETTINGS)
+
+/**
+ * Fixed column count chosen from the grid's own width (no BoxWithConstraints, so nothing is
+ * composed in the measure pass): as many [minCell]-wide columns as fit, within [minCount]..[maxCount].
+ * [extra] is width outside the grid's content (its content padding) that counts as available.
+ */
+internal class AdaptiveCountCells(
+    private val minCell: Dp,
+    private val minCount: Int,
+    private val maxCount: Int,
+    private val extra: Dp = 0.dp,
+) : GridCells {
+    override fun Density.calculateCrossAxisCellSizes(availableSize: Int, spacing: Int): List<Int> {
+        val count = ((availableSize + extra.roundToPx()) / minCell.roundToPx().coerceAtLeast(1)).coerceIn(minCount, maxCount)
+        val gridSize = availableSize - spacing * (count - 1)
+        val cell = gridSize / count
+        val remainder = gridSize % count
+        return List(count) { cell + if (it < remainder) 1 else 0 }
+    }
+
+    override fun equals(other: Any?): Boolean =
+        other is AdaptiveCountCells && other.minCell == minCell && other.minCount == minCount &&
+            other.maxCount == maxCount && other.extra == extra
+
+    override fun hashCode(): Int = ((minCell.hashCode() * 31 + minCount) * 31 + maxCount) * 31 + extra.hashCode()
+}
 
 /**
  * When a Phone/Landscape home (re)appears (first launch, rotation, closing a full-screen
