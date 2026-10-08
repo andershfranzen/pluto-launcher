@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.baselineprofile)
 }
 
 android {
@@ -50,6 +51,22 @@ kotlin {
     jvmToolchain(17)
 }
 
+/*
+ * Baseline + startup profiles (AOT-compile the launcher's hot paths at install instead of
+ * running them interpreted/JIT; startup profile drives R8's dex layout).
+ * Regenerate on an emulator or rooted device (API 33+ Google APIs images need no root):
+ *     ANDROID_SERIAL=emulator-5554 ./gradlew :app:generateBaselineProfile
+ * The generator (:baselineprofile) writes the .txt profiles to src/main/generated/baselineProfiles,
+ * which are committed; release builds then ship them and profileinstaller installs them.
+ * src/main/baseline-prof.txt holds broad hand-written rules that apply even before that.
+ */
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    saveInSrc = true
+    mergeIntoMain = true
+    dexLayoutOptimization = true
+}
+
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
     arg("room.generateKotlin", "true")
@@ -68,6 +85,9 @@ dependencies {
     // Composable names in Perfetto traces; no cost unless a trace is being recorded.
     implementation(libs.androidx.compose.runtime.tracing)
     implementation(libs.androidx.compose.material.icons.extended)
+    // Installs the shipped baseline profile on sideloaded/adb installs too (Play does it itself).
+    implementation(libs.androidx.profileinstaller)
+    "baselineProfile"(project(":baselineprofile"))
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

@@ -198,7 +198,13 @@ class AppCatalog(context: Context) {
     private suspend fun reload() = loadMutex.withLock {
         val locale = Locale.getDefault()
         val entries = try {
-            launcherApps.getActivityList(null, myUser).map { it.toEntry() }
+            val infos = launcherApps.getActivityList(null, myUser)
+            val entries = infos.map { it.toEntry() }
+            // Icon decoding reuses these instead of querying the system again per icon.
+            LauncherActivityInfos.replace(HashMap<AppKey, LauncherActivityInfo>(infos.size).also { map ->
+                infos.forEachIndexed { i, info -> map[entries[i].key] = info }
+            })
+            entries
         } catch (e: RuntimeException) {
             Log.w(TAG, "Couldn't query launchable activities", e)
             null

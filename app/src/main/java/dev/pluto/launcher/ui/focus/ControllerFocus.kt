@@ -1,72 +1,82 @@
 package dev.pluto.launcher.ui.focus
 
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusEventModifierNode
 import androidx.compose.ui.focus.FocusManager
-import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusProperties
+import androidx.compose.ui.focus.FocusPropertiesModifierNode
+import androidx.compose.ui.focus.FocusRequesterModifierNode
+import androidx.compose.ui.focus.FocusState
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.requestFocus
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.KeyInputModifierNode
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.GlobalPositionAwareModifierNode
+import androidx.compose.ui.node.LayoutAwareModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.ObserverModifierNode
+import androidx.compose.ui.node.SemanticsModifierNode
+import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.node.invalidateDraw
+import androidx.compose.ui.node.invalidateSemantics
+import androidx.compose.ui.node.observeReads
+import androidx.compose.ui.node.requireDensity
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.relocation.bringIntoView
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.input.Direction
 import dev.pluto.launcher.input.LauncherAction
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -104,7 +114,8 @@ enum class InputMode { TOUCH, CONTROLLER }
 class ControllerFocusController {
     /** A registered control. Callbacks are read through providers so they always see the latest lambdas. */
     private class Entry(
-        val requester: FocusRequester,
+        /** Requests focus on the control; false when it can't take focus now. */
+        val focus: () -> Boolean,
         val activate: () -> Unit,
         val secondary: () -> (() -> Unit)?,
     )
@@ -246,7 +257,7 @@ class ControllerFocusController {
     fun requestFocus(id: String): Boolean {
         val entry = registry[id] ?: return false
         return try {
-            entry.requester.requestFocus(FocusDirection.Enter)
+            entry.focus()
         } catch (e: IllegalStateException) {
             // Requester registered but its node is not attached (yet / any more).
             false
@@ -426,8 +437,8 @@ class ControllerFocusController {
 
     // --- Registration (used by the modifiers below) ------------------------
 
-    internal fun register(id: String, requester: FocusRequester, activate: () -> Unit, secondary: () -> (() -> Unit)?): Any {
-        val entry = Entry(requester, activate, secondary)
+    internal fun register(id: String, focus: () -> Boolean, activate: () -> Unit, secondary: () -> (() -> Unit)?): Any {
+        val entry = Entry(focus, activate, secondary)
         registry[id] = entry
         return entry
     }
@@ -553,6 +564,12 @@ private val BringIntoViewMargin = 12.dp
  * larger, fades out on blur or when touch takes over, and glides between controls when the
  * root enables [FocusRingOverlayHost]. [interactionSource] receives the touch press
  * interactions (e.g. for press-scale feedback).
+ *
+ * Implemented as one Modifier.Node (plus Compose's own focusable / clickable nodes): no
+ * composition work per control, no coroutine or effect per control until it is focused,
+ * registration in the controller on attach/detach, stable accessibility semantics (the
+ * custom action is only rebuilt when its label changes), and position tracking for the
+ * gliding ring only while this control carries it.
  */
 fun Modifier.controllerFocusable(
     id: String,
@@ -563,154 +580,330 @@ fun Modifier.controllerFocusable(
     shape: Shape = RoundedCornerShape(16.dp),
     onFocused: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
-): Modifier = composed {
-    val controller = LocalControllerFocus.current
-    val inert = LocalFocusInert.current
-    val showTouchSelection = LocalShowTouchSelection.current
-    val requester = remember { FocusRequester() }
-    val bringIntoView = remember { BringIntoViewRequester() }
-    val clickInteraction = interactionSource ?: remember { MutableInteractionSource() }
-    val scope = rememberCoroutineScope()
-    val currentActivate by rememberUpdatedState(onActivate)
-    val currentSecondary by rememberUpdatedState(onSecondary)
-    val currentOnFocused by rememberUpdatedState(onFocused)
-    var focused by remember { mutableStateOf(false) }
-    var size by remember { mutableStateOf(IntSize.Zero) }
-    val tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-    val selectionColor = MaterialTheme.colorScheme.primary
-    val marginPx = with(LocalDensity.current) { BringIntoViewMargin.toPx() }
-    val glow = MaterialTheme.colorScheme.primary
-    val ring = remember { FocusRingAnimation() }
-    // The gliding overlay only covers controls in its own window (not dialogs).
-    val overlay = LocalFocusRingOverlay.current?.takeIf { it.view === LocalView.current }
-    val visibility = LocalFocusRingVisibility.current
-    val overlayTarget = remember(overlay, shape, visibility) { overlay?.let { FocusRingTarget(shape, visibility) } }
-
-    LaunchedEffect(controller, overlay, overlayTarget) {
-        snapshotFlow { focused && controller.inputMode == InputMode.CONTROLLER }.collectLatest { show ->
-            if (overlay != null && overlayTarget != null) {
-                if (show) overlay.show(overlayTarget) else overlay.hide(overlayTarget)
-            }
-            ring.animateTo(show)
-        }
-    }
-    if (overlay != null && overlayTarget != null) {
-        DisposableEffect(overlay, overlayTarget) {
-            onDispose { overlay.hide(overlayTarget) }
-        }
-    }
-
-    DisposableEffect(controller, id) {
-        val token = controller.register(
-            id = id,
-            requester = requester,
-            activate = { currentActivate() },
-            secondary = { currentSecondary },
-        )
-        onDispose { controller.unregister(id, token) }
-    }
-
-    val activate = {
-        controller.noteActivated(id)
-        currentActivate()
-    }
-    val longPress: (() -> Unit)? = if (onSecondary == null) {
-        null
-    } else {
-        {
-            controller.noteActivated(id)
-            currentSecondary?.invoke()
-        }
-    }
-
-    this
-        .onSizeChanged { size = it }
-        .bringIntoViewRequester(bringIntoView)
-        .onFocusChanged { state ->
-            if (state.isFocused == focused) return@onFocusChanged
-            focused = state.isFocused
-            if (state.isFocused) {
-                controller.onFocused(id)
-                currentOnFocused?.invoke()
-                scope.launch {
-                    bringIntoView.bringIntoView(
-                        Rect(-marginPx, -marginPx, size.width + marginPx, size.height + marginPx),
-                    )
-                }
-            } else {
-                controller.onBlurred(id)
-            }
-        }
-        .focusRequester(requester)
-        .focusProperties { canFocus = !inert.value }
-        .onKeyEvent { event ->
-            // Keyboard Enter / centre behaves like A. Gamepad buttons arrive via the router instead.
-            if (event.key in ActivationKeys) {
-                if (event.type == KeyEventType.KeyUp) activate()
-                true
-            } else {
-                false
-            }
-        }
+): Modifier {
+    val link = ControlLink(id, onActivate, onSecondary, onFocused)
+    return this
+        .then(ControllerFocusableElement(link, shape, contentDescription, secondaryLabel))
         .focusable()
-        .semantics {
-            if (contentDescription != null) this.contentDescription = contentDescription
-            val secondary = onSecondary
-            if (secondary != null) {
-                customActions = listOf(
-                    CustomAccessibilityAction(secondaryLabel ?: "More actions") { secondary(); true },
+        // The clickable's own (touch-mode dependent) focus target is disabled; the focusable above owns focus.
+        .focusProperties(DisableFocus)
+        .clip(shape)
+        .combinedClickable(
+            interactionSource = interactionSource,
+            role = Role.Button,
+            onLongClickLabel = if (onSecondary != null) secondaryLabel ?: DEFAULT_SECONDARY_LABEL else null,
+            onLongClick = if (onSecondary != null) link::secondary else null,
+            onClick = link::activate,
+        )
+}
+
+private val DisableFocus: FocusProperties.() -> Unit = { canFocus = false }
+
+/** The theme's accent for focus tint, selection mark and glow, provided by [ProvideControllerFocus]. */
+internal val LocalFocusAccent = staticCompositionLocalOf { Color(0xFF6750A4) }
+
+private const val DEFAULT_SECONDARY_LABEL = "More actions"
+
+/**
+ * The per-call callbacks of one control, shared by its focus node and its clickable. The
+ * node keeps [controller] current, so a click notes the activation like Confirm does.
+ */
+private class ControlLink(
+    val id: String,
+    val onActivate: () -> Unit,
+    val onSecondary: (() -> Unit)?,
+    val onFocused: (() -> Unit)?,
+) {
+    var controller: ControllerFocusController? = null
+
+    fun activate() {
+        controller?.noteActivated(id)
+        onActivate()
+    }
+
+    fun secondary() {
+        controller?.noteActivated(id)
+        onSecondary?.invoke()
+    }
+}
+
+private class ControllerFocusableElement(
+    val link: ControlLink,
+    val shape: Shape,
+    val contentDescription: String?,
+    val secondaryLabel: String?,
+) : ModifierNodeElement<ControllerFocusableNode>() {
+    override fun create() = ControllerFocusableNode(link, shape, contentDescription, secondaryLabel)
+
+    override fun update(node: ControllerFocusableNode) = node.update(link, shape, contentDescription, secondaryLabel)
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "controllerFocusable"
+        properties["id"] = link.id
+    }
+
+    // A new link per call carries the newest callbacks; update() is cheap and only touches
+    // registration / semantics when the id or the label really changed.
+    override fun equals(other: Any?): Boolean =
+        other is ControllerFocusableElement && other.link === link && other.shape == shape &&
+            other.contentDescription == contentDescription && other.secondaryLabel == secondaryLabel
+
+    override fun hashCode(): Int = System.identityHashCode(link)
+}
+
+private class ControllerFocusableNode(
+    private var link: ControlLink,
+    private var shape: Shape,
+    private var label: String?,
+    private var secondaryLabel: String?,
+) : DelegatingNode(),
+    CompositionLocalConsumerModifierNode,
+    FocusEventModifierNode,
+    FocusPropertiesModifierNode,
+    FocusRequesterModifierNode,
+    KeyInputModifierNode,
+    SemanticsModifierNode,
+    DrawModifierNode,
+    LayoutAwareModifierNode,
+    ObserverModifierNode {
+
+    override val shouldAutoInvalidate: Boolean get() = false
+
+    private var controller: ControllerFocusController? = null
+    private var inert: FocusInert = FocusInert.None
+    private var token: Any? = null
+    private var focused = false
+    private var shown = false
+    private var size = IntSize.Zero
+    private var coordinates: LayoutCoordinates? = null
+    private var ring: FocusRingAnimation? = null
+    private var ringJob: Job? = null
+    private var overlay: FocusRingOverlayState? = null
+    private var overlayTarget: FocusRingTarget? = null
+    private var tracker: PositionTracker? = null
+    private var actions: List<CustomAccessibilityAction>? = null
+
+    override fun onAttach() {
+        val c = currentValueOf(LocalControllerFocus)
+        controller = c
+        inert = currentValueOf(LocalFocusInert)
+        // The gliding overlay only covers controls in its own window (not dialogs).
+        overlay = currentValueOf(LocalFocusRingOverlay)?.takeIf { it.view === currentValueOf(LocalView) }
+        overlayTarget = overlay?.let { FocusRingTarget(shape, currentValueOf(LocalFocusRingVisibility)) }
+            ?.also { it.coordinates = coordinates }
+        link.controller = c
+        register()
+    }
+
+    override fun onDetach() {
+        unregister()
+        stopTracking()
+        overlayTarget?.let { overlay?.hide(it) }
+        overlayTarget = null
+        overlay = null
+        ringJob = null
+        ring = null
+        shown = false
+        focused = false
+    }
+
+    fun update(link: ControlLink, shape: Shape, contentDescription: String?, secondaryLabel: String?) {
+        val old = this.link
+        this.link = link
+        link.controller = controller
+        if (isAttached && old.id != link.id) {
+            unregister()
+            register()
+        }
+        if (shape != this.shape) {
+            this.shape = shape
+            if (isAttached && overlay != null) {
+                val wasShown = overlayTarget?.let { overlay?.target === it } == true
+                overlayTarget?.let { overlay?.hide(it) }
+                overlayTarget = FocusRingTarget(shape, currentValueOf(LocalFocusRingVisibility)).also {
+                    it.coordinates = coordinates
+                    if (wasShown) overlay?.show(it)
+                }
+                stopTracking()
+                if (wasShown) startTracking()
+            }
+            invalidateDraw()
+        }
+        if (contentDescription != this.label || secondaryLabel != this.secondaryLabel ||
+            (old.onSecondary == null) != (link.onSecondary == null)
+        ) {
+            this.label = contentDescription
+            this.secondaryLabel = secondaryLabel
+            actions = null
+            invalidateSemantics()
+        }
+    }
+
+    private fun register() {
+        val c = controller ?: return
+        token = c.register(
+            id = link.id,
+            focus = ::focusNow,
+            activate = { link.onActivate() },
+            secondary = { link.onSecondary },
+        )
+    }
+
+    private fun unregister() {
+        val t = token ?: return
+        controller?.unregister(link.id, t)
+        token = null
+    }
+
+    private fun focusNow(): Boolean =
+        try {
+            isAttached && requestFocus()
+        } catch (e: IllegalStateException) {
+            false
+        }
+
+    // --- Focus --------------------------------------------------------------------------
+
+    override fun applyFocusProperties(focusProperties: FocusProperties) {
+        focusProperties.canFocus = !inert.value
+    }
+
+    override fun onFocusEvent(focusState: FocusState) {
+        if (focusState.isFocused == focused) return
+        focused = focusState.isFocused
+        val c = controller ?: return
+        if (focused) {
+            c.onFocused(link.id)
+            link.onFocused?.invoke()
+            val margin = with(requireDensity()) { BringIntoViewMargin.toPx() }
+            coroutineScope.launch {
+                bringIntoView {
+                    Rect(-margin, -margin, size.width + margin, size.height + margin)
+                }
+            }
+        } else {
+            c.onBlurred(link.id)
+        }
+        updateRing()
+    }
+
+    override fun onObservedReadsChanged() = updateRing()
+
+    /** Shows the ring while focused in controller mode; observes the input mode only while focused. */
+    private fun updateRing() {
+        if (!isAttached) return
+        val c = controller ?: return
+        var show = false
+        observeReads { show = focused && c.inputMode == InputMode.CONTROLLER }
+        if (show == shown) return
+        shown = show
+        val target = overlayTarget
+        val o = overlay
+        if (o != null && target != null) {
+            if (show) {
+                target.coordinates = coordinates
+                o.show(target)
+                startTracking()
+            } else {
+                o.hide(target)
+                stopTracking()
+            }
+        }
+        val r = ring ?: FocusRingAnimation().also { ring = it }
+        ringJob?.cancel()
+        ringJob = coroutineScope.launch { r.animateTo(show) }
+        invalidateDraw()
+    }
+
+    /** Reports moves to the overlay while it draws this control's ring (scrolling, reflow). */
+    private fun startTracking() {
+        if (tracker != null) return
+        tracker = delegate(
+            PositionTracker { coords ->
+                val target = overlayTarget ?: return@PositionTracker
+                target.coordinates = coords
+                overlay?.moved(target)
+            },
+        )
+    }
+
+    private fun stopTracking() {
+        val t = tracker ?: return
+        tracker = null
+        undelegate(t)
+    }
+
+    // --- Input, semantics, layout ----------------------------------------------------------
+
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        // Keyboard Enter / centre behaves like A. Gamepad buttons arrive via the router instead.
+        if (event.key !in ActivationKeys) return false
+        if (event.type == KeyEventType.KeyUp) link.activate()
+        return true
+    }
+
+    override fun onPreKeyEvent(event: KeyEvent): Boolean = false
+
+    override fun SemanticsPropertyReceiver.applySemantics() {
+        this@ControllerFocusableNode.label?.let { contentDescription = it }
+        if (link.onSecondary != null) {
+            customActions = actions ?: listOf(
+                CustomAccessibilityAction(this@ControllerFocusableNode.secondaryLabel ?: DEFAULT_SECONDARY_LABEL) {
+                    link.onSecondary?.invoke()
+                    true
+                },
+            ).also { actions = it }
+        }
+    }
+
+    override fun onRemeasured(size: IntSize) {
+        this.size = size
+    }
+
+    override fun onPlaced(coordinates: LayoutCoordinates) {
+        this.coordinates = coordinates
+        overlayTarget?.coordinates = coordinates
+    }
+
+    // --- Drawing -------------------------------------------------------------------------
+
+    override fun ContentDrawScope.draw() {
+        drawContent()
+        val c = controller ?: return
+        if (currentValueOf(LocalShowTouchSelection)) {
+            val controllerMode = c.inputMode == InputMode.CONTROLLER
+            if (!(focused && controllerMode) && !controllerMode && c.lastFocusedId == link.id) {
+                // Persistent, lighter selection mark while touch drives (no geometry change).
+                val width = TouchSelectionWidth.toPx()
+                drawRing(shape, expand = width / 2f, width = width, color = currentValueOf(LocalFocusAccent))
+            }
+        }
+        val alpha = ring?.alpha?.value ?: 0f
+        if (alpha > 0f) {
+            val primary = currentValueOf(LocalFocusAccent)
+            // Tonal container tint over the content (the focused control's "lift"), then a light
+            // inner and dark outer ring with a soft glow, all outside the bounds.
+            drawOutline(shape.createOutline(size, layoutDirection, this), primary.copy(alpha = 0.16f), alpha = alpha)
+            if (overlayTarget == null) {
+                val grow = (ring?.scale?.value ?: 1f) - 1f
+                drawFocusRing(
+                    shape = shape,
+                    topLeft = Offset.Zero,
+                    size = size,
+                    alpha = alpha,
+                    glow = primary,
+                    growX = size.width * grow / 2f,
+                    growY = size.height * grow / 2f,
                 )
             }
         }
-        .then(
-            if (overlayTarget != null) {
-                Modifier.onGloballyPositioned { coordinates ->
-                    overlayTarget.coordinates = coordinates
-                    overlay?.moved(overlayTarget)
-                }
-            } else {
-                Modifier
-            },
-        )
-        .drawWithContent {
-            val controllerMode = controller.inputMode == InputMode.CONTROLLER
-            val show = focused && controllerMode
-            drawContent()
-            if (!show && showTouchSelection && !controllerMode && controller.lastFocusedId == id) {
-                // Persistent, lighter selection mark while touch drives (no geometry change).
-                val width = TouchSelectionWidth.toPx()
-                drawRing(shape, expand = width / 2f, width = width, color = selectionColor)
-            }
-            val alpha = ring.alpha.value
-            if (alpha > 0f) {
-                // Tonal container tint over the content (the focused control's "lift"), then a light
-                // inner and dark outer ring with a soft glow, all outside the bounds.
-                drawOutline(shape.createOutline(this.size, layoutDirection, this), tint, alpha = alpha)
-                if (overlayTarget == null) {
-                    val grow = ring.scale.value - 1f
-                    drawFocusRing(
-                        shape = shape,
-                        topLeft = Offset.Zero,
-                        size = this.size,
-                        alpha = alpha,
-                        glow = glow,
-                        growX = this.size.width * grow / 2f,
-                        growY = this.size.height * grow / 2f,
-                    )
-                }
-            }
-        }
-        // The clickable's own (touch-mode dependent) focus target is disabled; the focusable above owns focus.
-        .focusProperties { canFocus = false }
-        .clip(shape)
-        .combinedClickable(
-            interactionSource = clickInteraction,
-            indication = LocalIndication.current,
-            role = Role.Button,
-            onLongClickLabel = if (longPress != null) secondaryLabel ?: "More actions" else null,
-            onLongClick = longPress,
-            onClick = activate,
-        )
+    }
+}
+
+/** Forwards global position changes; delegated only while the gliding ring follows a control. */
+private class PositionTracker(private val onMoved: (LayoutCoordinates) -> Unit) :
+    Modifier.Node(), GlobalPositionAwareModifierNode {
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) = onMoved(coordinates)
 }
 
 /**
@@ -722,32 +915,91 @@ fun Modifier.controllerFocusTarget(
     id: String,
     onActivate: () -> Unit = {},
     onFocused: (() -> Unit)? = null,
-): Modifier = composed {
-    val controller = LocalControllerFocus.current
-    val inert = LocalFocusInert.current
-    val requester = remember { FocusRequester() }
-    val currentActivate by rememberUpdatedState(onActivate)
-    val currentOnFocused by rememberUpdatedState(onFocused)
-    var focused by remember { mutableStateOf(false) }
+): Modifier = this then ControllerFocusTargetElement(ControlLink(id, onActivate, null, onFocused))
 
-    DisposableEffect(controller, id) {
-        val token = controller.register(id, requester, activate = { currentActivate() }, secondary = { null })
-        onDispose { controller.unregister(id, token) }
+private class ControllerFocusTargetElement(val link: ControlLink) : ModifierNodeElement<ControllerFocusTargetNode>() {
+    override fun create() = ControllerFocusTargetNode(link)
+
+    override fun update(node: ControllerFocusTargetNode) = node.update(link)
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "controllerFocusTarget"
+        properties["id"] = link.id
     }
 
-    this
-        .onFocusChanged { state ->
-            if (state.isFocused == focused) return@onFocusChanged
-            focused = state.isFocused
-            if (state.isFocused) {
-                controller.onFocused(id)
-                currentOnFocused?.invoke()
-            } else {
-                controller.onBlurred(id)
-            }
+    override fun equals(other: Any?): Boolean = other is ControllerFocusTargetElement && other.link === link
+    override fun hashCode(): Int = System.identityHashCode(link)
+}
+
+private class ControllerFocusTargetNode(private var link: ControlLink) :
+    Modifier.Node(),
+    CompositionLocalConsumerModifierNode,
+    FocusEventModifierNode,
+    FocusPropertiesModifierNode,
+    FocusRequesterModifierNode {
+
+    override val shouldAutoInvalidate: Boolean get() = false
+
+    private var controller: ControllerFocusController? = null
+    private var inert: FocusInert = FocusInert.None
+    private var token: Any? = null
+    private var focused = false
+
+    override fun onAttach() {
+        controller = currentValueOf(LocalControllerFocus)
+        inert = currentValueOf(LocalFocusInert)
+        link.controller = controller
+        register()
+    }
+
+    override fun onDetach() {
+        unregister()
+        focused = false
+    }
+
+    fun update(link: ControlLink) {
+        val old = this.link
+        this.link = link
+        link.controller = controller
+        if (isAttached && old.id != link.id) {
+            unregister()
+            register()
         }
-        .focusRequester(requester)
-        .focusProperties { canFocus = !inert.value }
+    }
+
+    private fun register() {
+        val c = controller ?: return
+        token = c.register(link.id, focus = ::focusNow, activate = { link.onActivate() }, secondary = { null })
+    }
+
+    private fun unregister() {
+        val t = token ?: return
+        controller?.unregister(link.id, t)
+        token = null
+    }
+
+    private fun focusNow(): Boolean =
+        try {
+            isAttached && requestFocus()
+        } catch (e: IllegalStateException) {
+            false
+        }
+
+    override fun applyFocusProperties(focusProperties: FocusProperties) {
+        focusProperties.canFocus = !inert.value
+    }
+
+    override fun onFocusEvent(focusState: FocusState) {
+        if (focusState.isFocused == focused) return
+        focused = focusState.isFocused
+        val c = controller ?: return
+        if (focused) {
+            c.onFocused(link.id)
+            link.onFocused?.invoke()
+        } else {
+            c.onBlurred(link.id)
+        }
+    }
 }
 
 /**
@@ -765,7 +1017,10 @@ fun ProvideControllerFocus(controller: ControllerFocusController, content: @Comp
         controller.attach(token)
         onDispose { controller.detach(token) }
     }
-    CompositionLocalProvider(LocalControllerFocus provides controller) {
+    CompositionLocalProvider(
+        LocalControllerFocus provides controller,
+        LocalFocusAccent provides MaterialTheme.colorScheme.primary,
+    ) {
         Box(Modifier.onFocusChanged { controller.setHasFocus(token, it.hasFocus) }, propagateMinConstraints = true) {
             content()
         }

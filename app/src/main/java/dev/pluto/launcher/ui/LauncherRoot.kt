@@ -139,7 +139,16 @@ import dev.pluto.launcher.ui.settings.OnboardingScreen
 import dev.pluto.launcher.ui.settings.SettingsScreen
 import dev.pluto.launcher.ui.theme.PlutoTheme
 import dev.pluto.launcher.ui.theme.WallpaperScrim
+import android.os.Looper
+import android.os.MessageQueue
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -164,7 +173,8 @@ internal fun Modifier.hiddenFromAccessibility(hidden: Boolean): Modifier =
  */
 @Composable
 fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
-    val state by vm.state.collectAsStateWithLifecycle()
+    // Snapshot state written together with the live session (see LauncherViewModel.uiState).
+    val state by vm.uiState
     val focus = remember { ControllerFocusController() }
     val context = LocalContext.current
     val iconCache = remember(context) { (context.applicationContext as LauncherApplication).container.icons }
@@ -228,7 +238,15 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                 // One focus ring that glides between controls (instead of a ring per control
                 // cross-fading), drawn above every layer of the launcher window.
                 FocusRingOverlayHost {
-                BoxWithConstraints(
+                // The window size is known in composition (LocalWindowInfo, updated on the
+                // configuration change before the rotation frame), so the layout for it is
+                // composed in the composition phase, not inside a measure pass as a top-level
+                // BoxWithConstraints subcomposition would.
+                val density = LocalDensity.current
+                val windowPx = LocalWindowInfo.current.containerSize
+                val widthDp = (windowPx.width / density.density).toInt()
+                val heightDp = (windowPx.height / density.density).toInt()
+                Box(
                     Modifier
                         .fillMaxSize()
                         .pointerInput(focus) {
@@ -248,9 +266,9 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                             false
                         },
                 ) {
-                    val widthDp = maxWidth.value.toInt()
-                    val heightDp = maxHeight.value.toInt()
-                    LaunchedEffect(widthDp, heightDp) { vm.onWindowSizeChanged(widthDp, heightDp) }
+                    LaunchedEffect(widthDp, heightDp) {
+                        if (widthDp > 0 && heightDp > 0) vm.onWindowSizeChanged(widthDp, heightDp)
+                    }
                     // Same rule and inputs as the view model, resolved synchronously for this frame.
                     val mode = remember(widthDp, heightDp, state.controllerConnected, state.settings.handheldAppearance) {
                         ModeResolver.resolve(widthDp, heightDp, state.controllerConnected, state.settings.handheldAppearance)
@@ -287,31 +305,49 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
 }
 
 /**
- * Decodes app icons ahead of need, in the background once the launcher is idle, at the sizes
- * the current presentation will show next (folders and the drawer, Handheld rows and tiles,
- * onboarding lists), so surfaces entering with motion (a folder growing open, a category
- * page sliding in, an onboarding step) never show blank placeholders that pop in mid-move.
+ * Decodes app icons ahead of need, in the background, at every size the current
+ * presentation can show (home and the drawer, Handheld rows and tiles, onboarding and edit
+ * lists), so no surface entering with motion (a folder growing open, a category page
+ * sliding in, the drawer) ever shows placeholders that pop in. What is on home (grid and
+ * dock) goes first, right away; the rest of the catalog follows once the launcher is idle.
  */
 @Composable
 private fun PrewarmIcons(state: LauncherUiState, cache: dev.pluto.launcher.apps.IconCache) {
     val density = LocalDensity.current
-    val sizes = buildList {
-        add(state.iconSize())
-        if (state.mode == LauncherMode.HANDHELD || state.controllerConnected) {
-            val handheld = state.iconSize(base = 68.dp)
-            add(handheld)
-            add(handheld * 0.85f)
+    val handheldPossible = state.mode == LauncherMode.HANDHELD || state.controllerConnected
+    val baseSize = state.iconSize()
+    val sizes = remember(baseSize, handheldPossible, density) {
+        buildList {
+            add(baseSize)
+            if (handheldPossible) {
+                val handheld = state.iconSize(base = 68.dp)
+                add(handheld)
+                add(handheld * 0.85f)
+            }
+            // Onboarding and Edit lists.
+            add(36.dp)
+        }.map { with(density) { it.roundToPx() } }.distinct()
+    }
+    val all = state.allApps
+    val home = state.homeTiles
+    val dock = state.dock
+    LaunchedEffect(all, home, dock, sizes) {
+        val first = buildList {
+            dock.forEach { if (it != null) add(it.key) }
+            home.forEach { tile ->
+                when (tile) {
+                    is HomeTile.App -> add(tile.entry.key)
+                    is HomeTile.FolderTile -> tile.folder.apps.forEach { add(it.key) }
+                }
+            }
         }
-        if (Layer.Onboarding in state.session.layers || Layer.Edit in state.session.layers) add(36.dp)
-    }.map { with(density) { it.roundToPx() } }.distinct()
-    val keys = state.allApps.map { it.key }
-    LaunchedEffect(keys, sizes) {
+        cache.prefetch(first, sizes.take(1))
         delay(ICON_PREWARM_DELAY_MS)
-        for (size in sizes) for (key in keys) cache.load(key, size)
+        cache.prefetch(all.map { it.key }, sizes)
     }
 }
 
-private const val ICON_PREWARM_DELAY_MS = 800L
+private const val ICON_PREWARM_DELAY_MS = 300L
 
 /**
  * Routes controller actions: the focus layer first, then launcher-level shortcuts.
@@ -546,14 +582,15 @@ private fun LauncherContent(
     val drawerVisible by remember(reveal) { derivedStateOf { reveal.isVisible } }
 
     // The closed drawer is kept composed ("parked") once things are idle: after the first
-    // frames, and again a moment after a full-screen page closed or the window changed size
-    // (rotation), so parking never adds to those transitions' own work.
-    val windowSize = LocalWindowInfo.current.containerSize
-    val parkKey = ParkKey(layers.any { it.kind.coversBelow }, windowSize.width, windowSize.height)
+    // frames, and again a moment after a full-screen page closed, so parking never adds to
+    // those transitions' own work. A window size change (rotation) keeps it composed: it is
+    // only laid out again, later, at idle (see ParkedSizeHold).
+    val parkKey = ParkKey(layers.any { it.kind.coversBelow })
     var parkedFor by remember { mutableStateOf<ParkKey?>(null) }
     LaunchedEffect(parkKey) {
         if (parkKey.covered) return@LaunchedEffect
         delay(DRAWER_PARK_DELAY_MS)
+        awaitMainIdle()
         withFrameNanos { }
         parkedFor = parkKey
     }
@@ -604,7 +641,7 @@ private fun LauncherContent(
                         .consumeWindowInsets(HomeImeInsets)
                         .beneathMotion(beneath, reveal, rtl, panelTopPx),
                 ) {
-                    ModeCrossfade(mode, landscapeWindow, state, vm)
+                    ModeCrossfade(mode, landscapeWindow, rememberHomeView(state), vm)
                 }
             }
         }
@@ -672,58 +709,150 @@ private val HomeImeInsets: WindowInsets
 private val DrawerPanelTopClearance = 8.dp + 24.dp
 
 /** What decides whether the closed drawer may stay composed. */
-private data class ParkKey(val covered: Boolean, val width: Int, val height: Int)
+private data class ParkKey(val covered: Boolean)
 
 /** Idle time before the closed drawer is (re)composed off screen. */
 private const val DRAWER_PARK_DELAY_MS = 600L
 
 /**
- * While the drawer is parked (closed, off screen) it sees [state] only after it has stopped
- * changing for a moment, so browsing home (selection, L1/R1 categories) never recomposes the
- * hidden drawer in the same frames. Unparking hands it the current state at once.
+ * Suspends until the main thread's message queue is idle (no pending input, frames or
+ * messages), so background composition steps start between bursts of work, not inside one.
+ */
+private suspend fun awaitMainIdle() = suspendCancellableCoroutine { cont ->
+    val queue = Looper.getMainLooper().queue
+    val handler = MessageQueue.IdleHandler {
+        if (cont.isActive) cont.resume(Unit)
+        false
+    }
+    queue.addIdleHandler(handler)
+    cont.invokeOnCancellation { queue.removeIdleHandler(handler) }
+}
+
+/**
+ * Home's view of [state]: the same instance until something home can show changed. The
+ * drawer's search results are not part of home, so typing in the drawer never recomposes
+ * home beneath it (the session is live in both, so home's effects always read it current).
+ */
+@Composable
+private fun rememberHomeView(state: LauncherUiState): LauncherUiState {
+    val held = remember { arrayOf(state) }
+    val prev = held[0]
+    if (prev !== state && (prev.drawerApps === state.drawerApps || prev.copy(drawerApps = state.drawerApps) != state)) {
+        held[0] = state
+    }
+    return held[0]
+}
+
+/**
+ * While the drawer is parked (closed, off screen) it is given a frozen copy of the state
+ * that follows the live one only once it has stopped changing for a while
+ * ([PARKED_CATCH_UP_MS] and an idle main thread), so browsing home (selection, L1/R1
+ * categories, layers) never recomposes the hidden drawer in the same frames; a newer change
+ * restarts the wait (input aborts a pending catch-up). Unparking hands it the live state.
  *
- * Composing the parked drawer is spread over frames: its results grow by [PARK_CHUNK] tiles
- * per frame (tiles it already shows are kept), so parking never costs one long frame.
+ * Catching up is spread over frames: the first step applies everything except new tiles
+ * (tiles it already shows are kept), then the results grow by [PARK_CHUNK] tiles every
+ * other frame, so the parked drawer never costs one long frame.
  */
 @Composable
 private fun rememberParkedState(state: LauncherUiState, parked: Boolean): LauncherUiState {
-    val held = remember { arrayOf(if (parked) state.withDrawerApps(PARK_CHUNK) else state) }
+    val held = remember { arrayOf(if (parked) state.frozen().withDrawerApps(0) else state) }
+    val target = remember { arrayOf(if (parked) state.frozen() else null) }
     val growing = remember { booleanArrayOf(parked) }
     val catchUp = remember { mutableIntStateOf(0) }
     catchUp.intValue // recompose when a parked update lands
     if (!parked) {
         held[0] = state
+        target[0] = null
         growing[0] = false
-    } else if (held[0] !== state) {
-        LaunchedEffect(state) {
-            if (!growing[0]) delay(PARKED_CATCH_UP_MS)
-            growing[0] = true
-            val apps = state.drawerApps
-            val shown = held[0].drawerApps
-            var common = 0
-            while (common < shown.size && common < apps.size && shown[common].key == apps[common].key) common++
-            var n = maxOf(common, PARK_CHUNK)
-            while (true) {
-                held[0] = if (n >= apps.size) state else state.withDrawerApps(n)
-                catchUp.intValue++
-                if (n >= apps.size) break
-                withFrameNanos { }
-                withFrameNanos { }
-                n += PARK_CHUNK
-            }
-            growing[0] = false
+        return state
+    }
+    // Just parked (the drawer finished closing): stop following the live session.
+    if (held[0].sessionSource !is FixedSession) held[0] = held[0].frozen()
+    val pending = target[0]
+    if (pending == null || !parkedEquivalent(pending, state)) target[0] = state.frozen()
+    val goal = target[0]!!
+    LaunchedEffect(goal) {
+        val current = held[0]
+        if (!growing[0] && parkedEquivalent(current, goal) && current.drawerApps.size == goal.drawerApps.size) {
+            return@LaunchedEffect
         }
+        if (!growing[0]) {
+            delay(PARKED_CATCH_UP_MS)
+            awaitMainIdle()
+        }
+        growing[0] = true
+        val apps = goal.drawerApps
+        val shown = held[0].drawerApps
+        var n = 0
+        while (n < shown.size && n < apps.size && shown[n].key == apps[n].key) n++
+        while (true) {
+            held[0] = if (n >= apps.size) goal else goal.withDrawerApps(n)
+            catchUp.intValue++
+            if (n >= apps.size) break
+            withFrameNanos { }
+            withFrameNanos { }
+            n += PARK_CHUNK
+        }
+        growing[0] = false
     }
     return held[0]
+}
+
+/**
+ * True when the parked drawer would show the same for [a] and [b]: equal lists and settings,
+ * same search and category. Layer changes elsewhere (a folder, a page) don't matter to it.
+ */
+private fun parkedEquivalent(a: LauncherUiState, b: LauncherUiState): Boolean {
+    if (a === b) return true
+    val sa = a.session
+    val sb = b.session
+    return sa.searchText == sb.searchText &&
+        sa.searchActive == sb.searchActive &&
+        sa.activeCategoryId == sb.activeCategoryId &&
+        a.copy(sessionSource = b.sessionSource) == b
 }
 
 private fun LauncherUiState.withDrawerApps(count: Int): LauncherUiState =
     if (drawerApps.size <= count) this else copy(drawerApps = drawerApps.take(count))
 
-private const val PARKED_CATCH_UP_MS = 500L
+private const val PARKED_CATCH_UP_MS = 1200L
 
 /** Tiles the parked drawer adds per step while it is composed in the background. */
-private const val PARK_CHUNK = 6
+private const val PARK_CHUNK = 3
+
+/**
+ * Keeps the parked drawer laid out at its previous size after the window changed size
+ * (rotation) until the launcher is idle again: it is invisible, and re-measuring it (and
+ * re-composing its size-dependent parts) inside the rotation frame would only add to that
+ * frame. Opening the drawer releases it at once.
+ */
+@Stable
+private class ParkedSizeHold {
+    private var held: Constraints? = null
+    private var releasing: Job? = null
+
+    /** Bumped when the hold ends, so the layout runs again with the real constraints. */
+    val released = mutableIntStateOf(0)
+
+    fun constraintsFor(incoming: Constraints, parked: Boolean, scope: CoroutineScope): Constraints {
+        val h = held
+        if (!parked || h == null || h == incoming) {
+            held = incoming
+            return incoming
+        }
+        if (releasing?.isActive != true) {
+            releasing = scope.launch {
+                delay(DRAWER_PARK_DELAY_MS)
+                awaitMainIdle()
+                withFrameNanos { }
+                held = null
+                released.intValue++
+            }
+        }
+        return h
+    }
+}
 
 @Composable
 private fun LayerFrame(
@@ -754,9 +883,21 @@ private fun LayerFrame(
     val active = present && isTop
     // A leaving layer keeps showing the state it had when it left (e.g. Edit keeps its
     // selection expanded while it fades out instead of collapsing mid-exit).
+    // The session is live, so the session it had is remembered too (read while present, so
+    // this frame follows every session change until it leaves) and frozen into its state.
     val lastPresentState = remember { arrayOf(state) }
-    if (present) lastPresentState[0] = state
-    val layerState = if (present || entry.kind == LayerKind.DRAWER) state else lastPresentState[0]
+    val lastPresentSession = remember { arrayOf(state.session) }
+    val leavingState = remember { arrayOfNulls<LauncherUiState>(1) }
+    if (present) {
+        lastPresentState[0] = state
+        lastPresentSession[0] = state.session
+        leavingState[0] = null
+    }
+    val layerState = if (present || entry.kind == LayerKind.DRAWER) {
+        state
+    } else {
+        leavingState[0] ?: lastPresentState[0].withSession(lastPresentSession[0]).also { leavingState[0] = it }
+    }
     // A leaving layer's BackHandlers must not intercept Back while it animates out.
     val lifecycleOwner = LocalLifecycleOwner.current
     val inertBack = remember(lifecycleOwner) { InertBackDispatcherOwner(lifecycleOwner) }
@@ -798,15 +939,21 @@ private fun LayerFrame(
                             },
                     )
                     val hidden = remember(reveal) { derivedStateOf { reveal.progress <= 0f && !reveal.isDragging } }
+                    val sizeHold = remember { ParkedSizeHold() }
+                    val holdScope = rememberCoroutineScope()
                     Box(
                         Modifier
                             .fillMaxSize()
                             // Fully closed: laid out just below the window, so the parked drawer
                             // never takes touches meant for home (changes twice per open/close).
                             .layout { measurable, constraints ->
-                                val placeable = measurable.measure(constraints)
-                                layout(placeable.width, placeable.height) {
-                                    placeable.place(0, if (hidden.value) placeable.height else 0)
+                                sizeHold.released.intValue // re-measure when a size hold ends
+                                val isHidden = hidden.value
+                                val placeable = measurable.measure(sizeHold.constraintsFor(constraints, parked && isHidden, holdScope))
+                                val width = constraints.constrainWidth(placeable.width)
+                                val height = constraints.constrainHeight(placeable.height)
+                                layout(width, height) {
+                                    placeable.place(0, if (isHidden) maxOf(height, placeable.height) else 0)
                                 }
                             }
                             .drawMotion {
@@ -912,6 +1059,9 @@ private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, 
                 // The drawer's opaque panel hides everything below its top edge (plus its
                 // rounded corners); only the strip above it is drawn.
                 if (d > 0f) clipBottom = LayerMotion.drawerOffset(d, height) + panelTopPx
+                // Receded home stays translucent for as long as the drawer is open: no
+                // full-window offscreen buffer for it (only the strip above the panel shows).
+                modulateAlpha = beneath.covers.isEmpty()
             }
             val covers = beneath.covers
             if (covers.isNotEmpty()) {
@@ -955,21 +1105,30 @@ private fun ModeCrossfade(mode: LauncherMode, landscapeWindow: Boolean, state: L
         label = "mode",
     ) { shown ->
         val leaving = transition.targetState == EnterExitState.PostExit
-        // Rotation: the outgoing layout was built for the other orientation; never draw it.
-        if (!(leaving && shown.landscape != target.landscape)) {
-            // The outgoing layout is visual only: no focus, not read by screen readers.
-            CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
-                Box(Modifier.fillMaxSize().hiddenFromAccessibility(leaving)) {
-                    when (shown.mode) {
-                        LauncherMode.PHONE -> PhoneLayout(state, vm)
-                        LauncherMode.LANDSCAPE -> LandscapeLayout(state, vm)
-                        LauncherMode.HANDHELD -> HandheldLayout(state, vm)
-                    }
+        // Rotation: the outgoing layout was built for the other orientation; never measure or
+        // draw it. It stays composed until AnimatedContent drops it a frame later, so disposing
+        // its whole tree is not added to the rotation frame itself.
+        val stale = leaving && shown.landscape != target.landscape
+        // The outgoing layout is visual only: no focus, not read by screen readers.
+        CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
+            Box(
+                Modifier
+                    .then(if (stale) SkipLayout else Modifier)
+                    .fillMaxSize()
+                    .hiddenFromAccessibility(leaving),
+            ) {
+                when (shown.mode) {
+                    LauncherMode.PHONE -> PhoneLayout(state, vm)
+                    LauncherMode.LANDSCAPE -> LandscapeLayout(state, vm)
+                    LauncherMode.HANDHELD -> HandheldLayout(state, vm)
                 }
             }
         }
     }
 }
+
+/** Takes the minimum size and neither measures, places nor draws its content. */
+private val SkipLayout = Modifier.layout { _, constraints -> layout(constraints.minWidth, constraints.minHeight) {} }
 
 private const val MODE_ENTER_SCALE = 0.97f
 

@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.node.DrawModifierNode
@@ -32,6 +33,14 @@ class MotionFrame internal constructor() {
      */
     var clipBottom = Float.POSITIVE_INFINITY
 
+    /**
+     * Apply [alpha] to each drawing operation instead of to an offscreen copy of the whole
+     * surface. Much cheaper for a large surface that stays translucent for a long time (home
+     * receded under the open drawer); overlapping content inside shows through itself
+     * slightly, which is invisible on a dimmed, receding background.
+     */
+    var modulateAlpha = false
+
     /** Size of the surface in px and the density, for size-relative motion. */
     var width = 0f
         internal set
@@ -48,6 +57,7 @@ class MotionFrame internal constructor() {
         scaleY = 1f
         transformOrigin = TransformOrigin.Center
         clipBottom = Float.POSITIVE_INFINITY
+        modulateAlpha = false
         this.width = width
         this.height = height
         this.density = density
@@ -121,6 +131,8 @@ private class DrawMotionNode(var block: MotionFrame.() -> Unit) : Modifier.Node(
         val l = layer ?: requireGraphicsContext().createGraphicsLayer().also { layer = it }
         l.record { this@drawFrame.drawContent() }
         l.alpha = frame.alpha.coerceAtMost(1f)
+        val strategy = if (frame.modulateAlpha) CompositingStrategy.ModulateAlpha else CompositingStrategy.Auto
+        if (l.compositingStrategy != strategy) l.compositingStrategy = strategy
         l.translationX = frame.translationX
         l.translationY = frame.translationY
         l.scaleX = frame.scaleX
