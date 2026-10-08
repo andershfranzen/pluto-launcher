@@ -139,6 +139,9 @@ private fun FavouritesGrid(
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = iconSize + 44.dp),
                 state = gridState,
+                // A grid that fits has nothing to scroll: let the surface's swipe-up see the drag
+                // directly instead of through the grid's scrollable (which drops travel on a busy frame).
+                userScrollEnabled = gridState.canScrollForward || gridState.canScrollBackward,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),

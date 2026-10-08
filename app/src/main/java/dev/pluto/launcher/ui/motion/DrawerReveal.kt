@@ -108,7 +108,7 @@ class DrawerRevealState(initiallyOpen: Boolean = false) {
 
     private companion object {
         /** Drawer heights per second needed to count as a fling. */
-        const val FLING_THRESHOLD = 1.2f
+        const val FLING_THRESHOLD = 0.6f
     }
 }
 

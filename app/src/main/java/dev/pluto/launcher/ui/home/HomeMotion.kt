@@ -17,7 +17,6 @@ import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
-import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.runtime.Composable
@@ -35,8 +34,8 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.VelocityTracker1D
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -78,6 +77,42 @@ internal class RevealDragDriver(private val reveal: DrawerRevealState, private v
     private var releasePending = false
     private var releaseVelocity = 0f
 
+    // Nested-scroll drags: our own velocity estimate, because a list's fling velocity can
+    // arrive as zero when input was delayed (its tracker then treats the pointer as stopped).
+    private val nestedTracker = VelocityTracker1D(isDataDifferential = true)
+
+    // Last few nested deltas, for when input arrives too sparsely for either tracker (both
+    // read widely spaced samples as a stopped finger) but the finger was clearly moving.
+    private val sampleTimes = LongArray(SAMPLES)
+    private val sampleDeltas = FloatArray(SAMPLES)
+    private var sampleCount = 0
+
+    private fun recordSample(time: Long, dy: Float) {
+        val i = sampleCount % SAMPLES
+        sampleTimes[i] = time
+        sampleDeltas[i] = dy
+        sampleCount++
+    }
+
+    /** Average upward speed over the recent samples, or 0 if the finger had paused. */
+    private fun recentAverageVelocityUp(): Float {
+        val n = minOf(sampleCount, SAMPLES)
+        if (n < 2) return 0f
+        val newest = sampleTimes[(sampleCount - 1) % SAMPLES]
+        if (android.os.SystemClock.uptimeMillis() - newest > PAUSE_MS) return 0f
+        val oldestIndex = (sampleCount - n) % SAMPLES
+        val span = (newest - sampleTimes[oldestIndex]).coerceAtLeast(1L)
+        var sum = 0f
+        // The oldest sample's delta happened before its timestamp's interval starts.
+        for (k in 1 until n) sum += sampleDeltas[(sampleCount - n + k) % SAMPLES]
+        return -sum * 1000f / span
+    }
+
+    private companion object {
+        const val SAMPLES = 4
+        const val PAUSE_MS = 100L
+    }
+
     var travelPx = 1f
     var onReleased: (Boolean) -> Unit = {}
 
@@ -89,6 +124,8 @@ internal class RevealDragDriver(private val reveal: DrawerRevealState, private v
         if (active) return
         active = true
         releasePending = false
+        nestedTracker.resetTracking()
+        sampleCount = 0
         reveal.beginDrag()
     }
 
@@ -159,7 +196,11 @@ internal class RevealDragDriver(private val reveal: DrawerRevealState, private v
 
         override suspend fun onPreFling(available: Velocity): Velocity {
             if (!active) return Velocity.Zero
-            release(-available.y)
+            var own = -nestedTracker.calculateVelocity()
+            if (own == 0f && available.y == 0f) own = recentAverageVelocityUp()
+            val list = -available.y
+            // Prefer whichever estimate is stronger; both are positive when moving up.
+            release(if (kotlin.math.abs(own) > kotlin.math.abs(list)) own else list)
             return available
         }
     }
@@ -168,6 +209,9 @@ internal class RevealDragDriver(private val reveal: DrawerRevealState, private v
     private fun consumeIntoReveal(dy: Float): Offset {
         val taken = if (dy < 0f) -minOf(-dy, roomUp()) else minOf(dy, roomDown())
         if (taken == 0f) return Offset.Zero
+        val now = android.os.SystemClock.uptimeMillis()
+        nestedTracker.addDataPoint(now, dy)
+        recordSample(now, dy)
         dragBy(-taken)
         return Offset(0f, taken)
     }
@@ -217,15 +261,41 @@ internal fun Modifier.revealDrag(driver: RevealDragDriver, opening: Boolean): Mo
             tracker.addPointerInputChange(drag)
             driver.start()
             driver.dragBy(-overSlop)
+            // Follows the pointer by absolute position rather than per-event deltas, and
+            // includes the final (up) event: when the main thread stalls (e.g. the drawer's
+            // first composition), the remaining movement can arrive merged with the up event,
+            // which verticalDrag never reports, so a quick swipe used to lose most of its travel.
+            var lastY = drag.position.y
             var ended = false
+            var upMoved = false
+            var upTime = drag.uptimeMillis
             try {
-                ended = verticalDrag(drag.id) { change ->
-                    tracker.addPointerInputChange(change)
-                    driver.dragBy(-change.positionChange().y)
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull { it.id == drag.id } ?: break
+                    val dy = change.position.y - lastY
+                    // Velocity from moves only (as verticalDrag does): an up event can arrive late
+                    // after a stall, and the tracker would then read the finger as stopped.
+                    if (change.pressed) tracker.addPointerInputChange(change)
+                    lastY = change.position.y
+                    if (dy != 0f) driver.dragBy(-dy)
                     change.consume()
+                    if (!change.pressed) {
+                        ended = true
+                        upMoved = dy != 0f
+                        upTime = change.uptimeMillis
+                        break
+                    }
                 }
             } finally {
-                driver.release(if (ended) -tracker.calculateVelocity().y else 0f)
+                var velocityUp = if (ended) -tracker.calculateVelocity().y else 0f
+                if (ended && upMoved && velocityUp == 0f) {
+                    // The finger was still moving when it lifted, but the tracker saw too few
+                    // samples (stalled frame): fall back to the gesture's average speed.
+                    val dt = (upTime - down.uptimeMillis).coerceAtLeast(1L)
+                    velocityUp = (down.position.y - lastY) * 1000f / dt
+                }
+                driver.release(velocityUp)
             }
         }
     }

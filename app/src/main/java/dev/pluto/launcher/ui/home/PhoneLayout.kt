@@ -89,6 +89,9 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(columns),
                         state = gridState,
+                        // A grid that fits has nothing to scroll: let the surface's swipe-up see the drag
+                        // directly instead of through the grid's scrollable (which drops travel on a busy frame).
+                        userScrollEnabled = gridState.canScrollForward || gridState.canScrollBackward,
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
