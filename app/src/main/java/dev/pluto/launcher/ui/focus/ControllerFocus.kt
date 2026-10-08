@@ -12,6 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +33,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -49,6 +52,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -58,6 +63,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.input.Direction
 import dev.pluto.launcher.input.LauncherAction
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import androidx.compose.ui.input.InputMode as ComposeInputMode
 
@@ -425,11 +431,6 @@ val LocalFocusInert = compositionLocalOf { false }
  */
 val LocalShowTouchSelection = compositionLocalOf { false }
 
-/** Outer (dark) and inner (light) focus ring colours; the pair reads on any wallpaper. */
-private val FocusRingDark = Color(0xFF070A18)
-private val FocusRingLight = Color(0xFFFFFFFF)
-private val FocusRingInnerWidth = 3.dp
-private val FocusRingOuterWidth = 2.dp
 private val TouchSelectionWidth = 2.dp
 
 /** Extra clearance requested around a focused control when scrolling it into view. */
@@ -442,6 +443,11 @@ private val BringIntoViewMargin = 12.dp
  * visible route) and is exposed as an accessibility custom action. [contentDescription]
  * becomes the screen-reader label.
  * Minimum touch target 48dp is the caller's layout responsibility (tiles are larger).
+ *
+ * The focus ring animates (see FocusRing.kt): it fades in while settling from slightly
+ * larger, fades out on blur or when touch takes over, and glides between controls when the
+ * root enables [FocusRingOverlayHost]. [interactionSource] receives the touch press
+ * interactions (e.g. for press-scale feedback).
  */
 fun Modifier.controllerFocusable(
     id: String,
@@ -451,13 +457,14 @@ fun Modifier.controllerFocusable(
     contentDescription: String? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     onFocused: (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource? = null,
 ): Modifier = composed {
     val controller = LocalControllerFocus.current
     val inert = LocalFocusInert.current
     val showTouchSelection = LocalShowTouchSelection.current
     val requester = remember { FocusRequester() }
     val bringIntoView = remember { BringIntoViewRequester() }
-    val clickInteraction = remember { MutableInteractionSource() }
+    val clickInteraction = interactionSource ?: remember { MutableInteractionSource() }
     val scope = rememberCoroutineScope()
     val currentActivate by rememberUpdatedState(onActivate)
     val currentSecondary by rememberUpdatedState(onSecondary)
@@ -467,6 +474,25 @@ fun Modifier.controllerFocusable(
     val tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
     val selectionColor = MaterialTheme.colorScheme.primary
     val marginPx = with(LocalDensity.current) { BringIntoViewMargin.toPx() }
+    val glow = MaterialTheme.colorScheme.primary
+    val ring = remember { FocusRingAnimation() }
+    // The gliding overlay only covers controls in its own window (not dialogs).
+    val overlay = LocalFocusRingOverlay.current?.takeIf { it.view === LocalView.current }
+    val overlayTarget = remember(overlay, shape) { overlay?.let { FocusRingTarget(shape) } }
+
+    LaunchedEffect(controller, overlay, overlayTarget) {
+        snapshotFlow { focused && controller.inputMode == InputMode.CONTROLLER }.collectLatest { show ->
+            if (overlay != null && overlayTarget != null) {
+                if (show) overlay.show(overlayTarget) else overlay.hide(overlayTarget)
+            }
+            ring.animateTo(show)
+        }
+    }
+    if (overlay != null && overlayTarget != null) {
+        DisposableEffect(overlay, overlayTarget) {
+            onDispose { overlay.hide(overlayTarget) }
+        }
+    }
 
     DisposableEffect(controller, id) {
         val token = controller.register(
@@ -530,6 +556,16 @@ fun Modifier.controllerFocusable(
                 )
             }
         }
+        .then(
+            if (overlayTarget != null) {
+                Modifier.onGloballyPositioned { coordinates ->
+                    overlayTarget.coordinates = coordinates
+                    overlay?.moved(overlayTarget)
+                }
+            } else {
+                Modifier
+            },
+        )
         .drawWithContent {
             val controllerMode = controller.inputMode == InputMode.CONTROLLER
             val show = focused && controllerMode
@@ -539,13 +575,23 @@ fun Modifier.controllerFocusable(
                 val width = TouchSelectionWidth.toPx()
                 drawRing(shape, expand = width / 2f, width = width, color = selectionColor)
             }
-            if (show) {
-                // Container tint over the content, then a light inner and dark outer ring outside the bounds.
-                drawOutline(shape.createOutline(this.size, layoutDirection, this), tint)
-                val inner = FocusRingInnerWidth.toPx()
-                val outer = FocusRingOuterWidth.toPx()
-                drawRing(shape, expand = inner / 2f, width = inner, color = FocusRingLight)
-                drawRing(shape, expand = inner + outer / 2f, width = outer, color = FocusRingDark)
+            val alpha = ring.alpha.value
+            if (alpha > 0f) {
+                // Tonal container tint over the content (the focused control's "lift"), then a light
+                // inner and dark outer ring with a soft glow, all outside the bounds.
+                drawOutline(shape.createOutline(this.size, layoutDirection, this), tint, alpha = alpha)
+                if (overlayTarget == null) {
+                    val grow = ring.scale.value - 1f
+                    drawFocusRing(
+                        shape = shape,
+                        topLeft = Offset.Zero,
+                        size = this.size,
+                        alpha = alpha,
+                        glow = glow,
+                        growX = this.size.width * grow / 2f,
+                        growY = this.size.height * grow / 2f,
+                    )
+                }
             }
         }
         // The clickable's own (touch-mode dependent) focus target is disabled; the focusable above owns focus.

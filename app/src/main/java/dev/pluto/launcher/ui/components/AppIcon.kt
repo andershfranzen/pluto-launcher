@@ -1,7 +1,10 @@
 package dev.pluto.launcher.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,7 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
@@ -47,6 +52,9 @@ import dev.pluto.launcher.apps.IconCache
 import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.ui.FolderUi
 import dev.pluto.launcher.ui.focus.controllerFocusable
+import dev.pluto.launcher.ui.motion.LocalOriginRegistry
+import dev.pluto.launcher.ui.motion.PlutoMotion
+import dev.pluto.launcher.ui.motion.reportOrigin
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
 import kotlinx.coroutines.CancellationException
@@ -71,29 +79,61 @@ fun AppIcon(entry: AppEntry, size: Dp, modifier: Modifier = Modifier) {
     }.collectAsState(initial = cache.versionOf(packageName))
     // peek() is a cheap memory-cache lookup; decoding only ever happens in load() off the main thread.
     var bitmap by remember(entry.key, sizePx, version) { mutableStateOf(safePeek(cache, entry, sizePx)) }
+    // A cached icon shows at once; only an icon that had to be loaded fades in over the placeholder.
+    // Kept across version bumps (app updates) so a re-load of a visible icon does not flash.
+    val reveal = remember(entry.key, sizePx) { Animatable(if (bitmap != null) 1f else 0f) }
     LaunchedEffect(entry.key, sizePx, version) {
-        if (bitmap == null) bitmap = safeLoad(cache, entry, sizePx)
+        if (bitmap == null) {
+            val loaded = safeLoad(cache, entry, sizePx)
+            if (loaded != null) {
+                bitmap = loaded
+                reveal.animateTo(1f, PlutoMotion.fadeIn())
+            }
+        }
     }
+    // Suspended / disabled apps dim smoothly when their availability changes.
+    val enabledAlpha = animateFloatAsState(if (entry.isEnabled) 1f else 0.5f, PlutoMotion.fadeIn(), label = "iconDim")
     val image = bitmap
-    if (image != null) {
-        Image(
-            bitmap = image,
-            contentDescription = null,
-            colorFilter = if (entry.isEnabled) null else DesaturateFilter,
-            modifier = modifier.size(size).alpha(if (entry.isEnabled) 1f else 0.5f),
-        )
-    } else {
+    if (image == null) {
         IconPlaceholder(size, modifier)
+        return
     }
+    val placeholderColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = PlaceholderAlpha)
+    Image(
+        bitmap = image,
+        contentDescription = null,
+        colorFilter = if (entry.isEnabled) null else DesaturateFilter,
+        modifier = modifier
+            .size(size)
+            .drawBehind {
+                // The placeholder fades out underneath while the icon fades in (no extra node).
+                val r = reveal.value
+                if (r < 1f) {
+                    val radius = this.size.minDimension * PlaceholderCorner
+                    drawRoundRect(placeholderColor, cornerRadius = CornerRadius(radius, radius), alpha = 1f - r)
+                }
+            }
+            .graphicsLayer {
+                val r = reveal.value
+                alpha = enabledAlpha.value * r
+                // Settles from slightly smaller as it fades in (visual only).
+                val s = 0.92f + 0.08f * r
+                scaleX = s
+                scaleY = s
+            },
+    )
 }
+
+private const val PlaceholderAlpha = 0.6f
+private const val PlaceholderCorner = 0.3f
 
 @Composable
 private fun IconPlaceholder(size: Dp, modifier: Modifier = Modifier) {
     Box(
         modifier
             .size(size)
-            .clip(RoundedCornerShape(size * 0.3f))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+            .clip(RoundedCornerShape(size * PlaceholderCorner))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = PlaceholderAlpha)),
     )
 }
 
@@ -137,8 +177,12 @@ fun AppTile(
     onFocused: (() -> Unit)? = null,
     actionsOnTap: Boolean = false,
 ) {
+    val press = remember { MutableInteractionSource() }
     Column(
         modifier
+            // Unscaled bounds: launches and folders grow out of the tile's resting rectangle.
+            .reportOrigin(LocalOriginRegistry.current, focusId)
+            .pressScale(press)
             .defaultMinSize(minWidth = PlutoDimens.MinTouchTarget, minHeight = PlutoDimens.MinTouchTarget)
             .controllerFocusable(
                 id = focusId,
@@ -148,6 +192,7 @@ fun AppTile(
                 contentDescription = appContentDescription(entry) + if (actionsOnTap) ", opens app actions" else "",
                 shape = RoundedCornerShape(PlutoDimens.TileCorner),
                 onFocused = onFocused,
+                interactionSource = press,
             )
             .padding(horizontal = 4.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -170,6 +215,7 @@ fun AppTile(
 @Composable
 fun TileLabel(text: String, modifier: Modifier = Modifier, dimmed: Boolean = false) {
     val baseStyle = MaterialTheme.typography.labelMedium.overWallpaper()
+    val labelAlpha = animateFloatAsState(if (dimmed) 0.6f else 1f, PlutoMotion.fadeIn(), label = "labelDim")
     val measurer = rememberTextMeasurer()
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val maxWidthPx = constraints.maxWidth
@@ -198,7 +244,7 @@ fun TileLabel(text: String, modifier: Modifier = Modifier, dimmed: Boolean = fal
             style = style,
             modifier = Modifier
                 .fillMaxWidth()
-                .alpha(if (dimmed) 0.6f else 1f)
+                .graphicsLayer { alpha = labelAlpha.value }
                 .clearAndSetSemantics { },
         )
     }
@@ -222,6 +268,7 @@ fun FolderTile(
     showLabel: Boolean = true,
     onFocused: (() -> Unit)? = null,
 ) {
+    val press = remember { MutableInteractionSource() }
     val count = folder.apps.size
     val description = "Folder ${folder.folder.name}, " + when (count) {
         0 -> "empty"
@@ -230,6 +277,8 @@ fun FolderTile(
     }
     Column(
         modifier
+            .reportOrigin(LocalOriginRegistry.current, focusId)
+            .pressScale(press)
             .defaultMinSize(minWidth = PlutoDimens.MinTouchTarget, minHeight = PlutoDimens.MinTouchTarget)
             .controllerFocusable(
                 id = focusId,
@@ -239,6 +288,7 @@ fun FolderTile(
                 contentDescription = description,
                 shape = RoundedCornerShape(PlutoDimens.TileCorner),
                 onFocused = onFocused,
+                interactionSource = press,
             )
             .padding(horizontal = 4.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
