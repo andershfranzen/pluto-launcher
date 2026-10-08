@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Pluto"
 include(":app")
+include(":baselineprofile")

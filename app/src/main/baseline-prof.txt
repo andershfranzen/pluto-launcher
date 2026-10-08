@@ -1,0 +1,8 @@
+# Hand-written baseline profile rules, merged with the generated profile
+# (src/main/generated/baselineProfiles, from ./gradlew :app:generateBaselineProfile).
+#
+# The launcher is small and nearly all of its code runs on some hot path (composition of
+# home, drawer, focus, motion), so all of it is compiled ahead of time at install rather
+# than interpreted until the JIT catches up.
+HSPLdev/pluto/launcher/**->**(**)**
+Ldev/pluto/launcher/**;

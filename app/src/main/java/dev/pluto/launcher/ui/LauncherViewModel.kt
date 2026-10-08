@@ -3,6 +3,8 @@ package dev.pluto.launcher.ui
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -98,7 +101,36 @@ class LauncherViewModel(
             container.settings.settings.catch { e -> onStorageFailure("settings", e) }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val state: StateFlow<LauncherUiState> = run {
+    /**
+     * The session as published to the UI: snapshot state, updated on the main thread together
+     * with the state whose lists were derived from it, so the UI never sees a category or
+     * search text that doesn't match the lists. Session-only changes (layers, search
+     * activation, edit selection) are published at once without a new [state].
+     */
+    private val liveSession = LiveSession(session.value)
+
+    /** Selection / focus / scroll memory (never part of a state emission). */
+    private val memory: SessionMemory get() = session.value.memory
+
+    private val _state = MutableStateFlow(LauncherUiState(sessionSource = liveSession))
+
+    /**
+     * The launcher's state. A new value only when something shown changed: session changes
+     * reach readers through [LauncherUiState.session] (snapshot state) instead.
+     */
+    val state: StateFlow<LauncherUiState> = _state.asStateFlow()
+
+    private val _uiState = mutableStateOf(_state.value)
+
+    /**
+     * [state] as Compose state, written in the same main-thread step as the live session,
+     * so a composition always sees lists and session that belong together. Read this in
+     * composition rather than collecting [state].
+     */
+    val uiState: State<LauncherUiState> get() = _uiState
+
+    init {
+        SessionSaver.install(savedState) { session.value }
         val builder = LauncherStateBuilder()
         // Null until organisation and settings have both loaded (or forever after a storage error).
         val library = combine(
@@ -117,11 +149,26 @@ class LauncherViewModel(
         ) { controllers, otherProfiles, window, (msg, error), defaultHome ->
             EnvironmentInputs(controllers, otherProfiles, window, msg, defaultHome, error)
         }
-        combine(library, environment, session) { lib, env, sess ->
-            if (lib == null) builder.notLoaded(env, sess) else builder.build(lib, env, sess)
+        // Only the session's content inputs (search text, category) rebuild the lists.
+        val contentSession = session.distinctUntilChanged { a, b -> a.sameContentInputs(b) }
+        viewModelScope.launch(Dispatchers.Main.immediate) {
+            combine(library, environment, contentSession) { lib, env, sess ->
+                val built = if (lib == null) builder.notLoaded(env, sess, liveSession) else builder.build(lib, env, sess, liveSession)
+                built to sess
+            }
+                .flowOn(Dispatchers.Default)
+                .collect { (built, sess) -> publish(built, sess) }
         }
-            .flowOn(Dispatchers.Default)
-            .stateIn(viewModelScope, SharingStarted.Eagerly, LauncherUiState())
+    }
+
+    /** Publishes [built] (derived from [derivedFrom]) together with the matching session. */
+    private fun publish(built: LauncherUiState, derivedFrom: SessionState) {
+        // The newest session if its content inputs match these lists, else the one they came from
+        // (a newer search or category is still being built and will follow).
+        val current = session.value
+        liveSession.value = if (current.sameContentInputs(derivedFrom)) current else derivedFrom
+        _state.value = built
+        _uiState.value = built
     }
 
     init {
@@ -242,10 +289,19 @@ class LauncherViewModel(
     }
 
     // --- Selection / focus memory ------------------------------------------
-    fun onAppSelected(key: AppKey?) = updateSession { it.copy(selectedApp = key) }
-    fun onControlFocused(controlId: String?) = updateSession { it.copy(focusedControlId = controlId) }
-    fun onScrollAnchor(surface: String, itemId: String?) = updateSession { s ->
-        s.copy(scrollAnchors = if (itemId == null) s.scrollAnchors - surface else s.scrollAnchors + (surface to itemId))
+    // Written on every focus move / scrolled line: memory only, no state rebuild or emission,
+    // and nothing persisted until the system saves instance state (SessionSaver.install).
+    fun onAppSelected(key: AppKey?) {
+        if (memory.selectedApp != key) memory.selectedApp = key
+    }
+
+    fun onControlFocused(controlId: String?) {
+        memory.focusedControlId = controlId
+    }
+
+    /** Records the first visible item of [surface] (read back when the surface is recreated, e.g. after rotation). */
+    fun onScrollAnchor(surface: String, itemId: String?) {
+        memory.setScrollAnchor(surface, itemId)
     }
     fun setEditSelection(id: String?) = updateSession { it.copy(editSelection = id) }
 
@@ -579,7 +635,7 @@ class LauncherViewModel(
                 } else {
                     FocusAnchor.resolve(prev.visible, lists.visible, selected)
                 }
-                updateSession { s -> if (s.selectedApp == selected) s.copy(selectedApp = replacement) else s }
+                if (memory.selectedApp == selected) memory.selectedApp = replacement
             }
     }
 
@@ -603,11 +659,18 @@ class LauncherViewModel(
         }
     }
 
+    /**
+     * Applies a session change. When its content inputs (search text, category) match what the
+     * UI currently shows, it is published at once (a layer opening reaches the next frame
+     * without a background round trip); otherwise it is published with the rebuilt lists.
+     * Persisted lazily (SessionSaver.install).
+     */
     private fun updateSession(transform: (SessionState) -> SessionState) {
         val before = session.value
-        session.value = transform(before)
-        val after = session.value
-        if (after != before) SessionSaver.save(savedState, after)
+        val after = transform(before)
+        if (after == before) return
+        session.value = after
+        if (after.sameContentInputs(liveSession.value)) liveSession.value = after
     }
 
     private fun postMessage(text: String) {
