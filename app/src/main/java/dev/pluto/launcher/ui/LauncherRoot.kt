@@ -619,7 +619,7 @@ private fun LauncherContent(
 
     LayerPredictiveBack(
         top = slots.getOrNull(topIndex)?.let { host.entries[it.key] },
-        drawerSearchActive = state.session.searchActive,
+        drawerSearchActive = state.session.searchText.isNotEmpty(),
         reveal = reveal,
         vm = vm,
     )
@@ -1137,8 +1137,8 @@ private const val MODE_ENTER_SCALE = 0.97f
  * drawer slides down part way, a page slides toward the end edge, ...); releasing commits
  * Back through the ViewModel, cancelling springs the layer back. Registered before the
  * layers' own BackHandlers, so those (rename, search, nested dialogs) keep priority.
- * Disabled where Back doesn't close the layer: onboarding, and the drawer while searching
- * (Back clears the search first); MainActivity's callback handles those as before.
+ * Disabled where Back doesn't close the layer: onboarding, and the drawer while a query is
+ * typed (Back clears the query first); MainActivity's callback handles those as before.
  */
 @Composable
 private fun LayerPredictiveBack(

@@ -47,6 +47,14 @@ something.
 - With an accessibility service enabled (for example a gesture app), Compose also updates
   accessibility information after large changes such as opening the drawer, which adds
   main-thread work.
+- **Polish round 1 (unmeasured on the phone)**: search swaps no longer let a kept tile
+  jump into a cell whose old tile is still fading (it gets a fresh grid key and fades in
+  after SWAP_MS); tile labels are centred; drawer content fades in from 5% of the reveal;
+  Back with an empty search field closes the drawer after the keyboard; console mode is a
+  dark immersive stage (70% scrim, dark scheme, status bar hidden, solid white selected
+  tab, shorter reflection kept clear of the title, sequenced shelf switches); the clock
+  follows the system minute tick. The phone was locked during this round, so T1–T7 are
+  still to be measured on a release build there.
 - **Reorder in Edit**: rows that swap places slide past each other, so for a moment one row
   passes over the other's controls.
 

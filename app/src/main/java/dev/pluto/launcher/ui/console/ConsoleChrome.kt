@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -74,6 +75,7 @@ import dev.pluto.launcher.ui.components.LegendItem
 import dev.pluto.launcher.ui.components.pressScale
 import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.motion.PlutoMotion
+import dev.pluto.launcher.ui.theme.ConsoleScrimAlpha
 import dev.pluto.launcher.ui.theme.LocalDarkTheme
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
@@ -239,18 +241,20 @@ private fun ShelfTab(
         links.tabs[id.key] = requester
         onDispose { if (links.tabs[id.key] === requester) links.tabs.remove(id.key) }
     }
+    // Switch/PS5 style: the selected shelf is a solid light pill with dark text; the others
+    // are just their light text.
     val container by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
+        if (isSelected) Color.White else Color.Transparent,
         PlutoMotion.fadeIn(),
         label = "shelfTab",
     )
     val content by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+        if (isSelected) Color(0xFF14161C) else Color.White.copy(alpha = 0.72f),
         PlutoMotion.fadeIn(),
         label = "shelfTabText",
     )
     val press = remember { MutableInteractionSource() }
-    Column(
+    Box(
         Modifier
             .onPlaced { c ->
                 val x = c.positionInParent().x.roundToInt()
@@ -271,23 +275,15 @@ private fun ShelfTab(
             .clip(TabShape)
             .drawBehind { drawRect(container) }
             .padding(horizontal = 16.dp, vertical = 7.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             title,
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium),
+            // One weight for every tab: selecting never changes the tab's width.
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
             color = content,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.size(width = 1.dp, height = 3.dp))
-        // The underline's space is always reserved: selecting never changes tab geometry.
-        Spacer(
-            Modifier
-                .size(width = 20.dp, height = 3.dp)
-                .graphicsLayer { alpha = if (isSelected) 1f else 0f }
-                .clip(RoundedCornerShape(2.dp))
-                .background(content),
         )
     }
 }
@@ -427,6 +423,9 @@ internal fun ConsoleBackdrop(stage: () -> CoverflowState?, artPx: Int, versions:
         modifier
             .graphicsLayer { }
             .drawBehind {
+                // An immersive stage: the wallpaper recedes behind a dark scrim, the spotlight
+                // in the selected app's colour sits on top of it.
+                drawRect(Color.Black.copy(alpha = ConsoleScrimAlpha))
                 val c = glow.value
                 if (c.alpha <= 0f) return@drawBehind
                 val center = Offset(size.width / 2f, size.height * 0.46f)

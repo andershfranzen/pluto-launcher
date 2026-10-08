@@ -64,7 +64,12 @@ import dev.pluto.launcher.ui.console.ConsoleBackdrop
 import dev.pluto.launcher.ui.console.ConsoleFocusLinks
 import dev.pluto.launcher.ui.console.ConsoleLegend
 import dev.pluto.launcher.ui.console.ConsoleShelves
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import dev.pluto.launcher.ui.console.ConsoleTitle
+import dev.pluto.launcher.ui.theme.ConsoleTheme
 import dev.pluto.launcher.ui.console.ConsoleTopBar
 import dev.pluto.launcher.ui.console.ControllerBattery
 import dev.pluto.launcher.ui.console.CoverflowStage
@@ -104,6 +109,9 @@ private const val SELECTION_COMMIT_DELAY_MS = 400L
 /** How far a switching flow slides, as a fraction of the stage width. */
 private const val SHELF_SLIDE = 0.25f
 
+/** Shelf switch progress at which the outgoing page has faded out and the incoming one begins. */
+private const val SHELF_HANDOVER = 0.45f
+
 /**
  * Controller-first landscape layout ("console mode") as a Coverflow.
  *
@@ -122,6 +130,31 @@ private const val SHELF_SLIDE = 0.25f
  */
 @Composable
 fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
+    HideStatusBarWhileShown()
+    ConsoleTheme { HandheldStage(state, vm) }
+}
+
+/**
+ * Console mode is immersive: the status bar (a second clock above Pluto's own) is hidden
+ * while it shows and comes back with a swipe from the edge; it returns when the mode ends.
+ * The navigation bar is left alone so system gestures behave as everywhere else.
+ */
+@Composable
+private fun HideStatusBarWhileShown() {
+    val view = LocalView.current
+    if (view.isInEditMode) return
+    DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+            ?: (view.context as? android.content.ContextWrapper)?.baseContext?.let { it as? android.app.Activity }?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller?.hide(WindowInsetsCompat.Type.statusBars())
+        onDispose { controller?.show(WindowInsetsCompat.Type.statusBars()) }
+    }
+}
+
+@Composable
+private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
     val icons = LocalIconCache.current
     val launcher = LocalAppLauncher.current
@@ -261,10 +294,11 @@ fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
                     },
                     buttons = {
                         val down = Modifier.focusProperties { down = selectedCardFocus() }
+                        // Borderless on the dark stage: quieter than the shelf tabs.
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, down, onWallpaper = true)
-                            PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, down, onWallpaper = true)
-                            PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, down, onWallpaper = true)
+                            PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, down)
+                            PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, down)
+                            PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, down)
                         }
                     },
                 )
@@ -495,11 +529,13 @@ private class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
 
     val incomingMotion = PageMotion(
         offset = { direction * (1f - progress) * SHELF_SLIDE },
-        alpha = { progress * 1.6f },
+        // Sequenced, never overlapping: the outgoing page is gone (progress 0.45) before
+        // the incoming one starts to show.
+        alpha = { (progress - SHELF_HANDOVER) / (1f - SHELF_HANDOVER) * 1.6f },
     )
     val outgoingMotion = PageMotion(
         offset = { -direction * progress * SHELF_SLIDE },
-        alpha = { 1f - progress * 2.2f },
+        alpha = { 1f - progress / SHELF_HANDOVER },
     )
 }
 

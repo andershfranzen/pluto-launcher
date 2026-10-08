@@ -147,7 +147,8 @@ private fun PhoneFavourites(
  */
 @Composable
 internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+    // Separate discs with a clear gap, not a touching chain.
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         PlutoIconButton(
             id = ID_SEARCH,
             icon = Icons.Outlined.Search,
@@ -157,7 +158,6 @@ internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier) {
             onFocused = { vm.onControlFocused(ID_SEARCH) },
             onSecondary = { vm.openDrawer() },
             secondaryLabel = HomeText.ALL_APPS_ACTION,
-            modifier = Modifier.padding(horizontal = 2.dp),
         )
         PlutoIconButton(
             id = ID_EDIT,
@@ -166,7 +166,6 @@ internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier) {
             onClick = { vm.openLayer(Layer.Edit) },
             onWallpaper = true,
             onFocused = { vm.onControlFocused(ID_EDIT) },
-            modifier = Modifier.padding(horizontal = 2.dp),
         )
         PlutoIconButton(
             id = ID_SETTINGS,
@@ -175,7 +174,6 @@ internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier) {
             onClick = { vm.openLayer(Layer.Settings) },
             onWallpaper = true,
             onFocused = { vm.onControlFocused(ID_SETTINGS) },
-            modifier = Modifier.padding(horizontal = 2.dp),
         )
     }
 }

@@ -225,7 +225,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
 
     // Opened by a button or the controller: the first rows stagger in. Pulled up by a finger
     // the content is already on screen, so it stays put.
-    val stagger = rememberStagger(animate = isTop && !reveal.isDragging, stepMs = 30, maxSlots = 5)
+    val stagger = rememberStagger(animate = isTop && !reveal.isDragging, stepMs = 24, maxSlots = 5)
     val staggerFrame = remember { StaggerFrame() }
     val wasTop = remember { booleanArrayOf(isTop) }
     if (isTop != wasTop[0]) {
@@ -357,7 +357,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
     Box(
         Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
             .padding(top = SheetTopGap),
     ) {
         Column(
@@ -365,7 +365,8 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 .fillMaxSize()
                 .background(sheet, sheetShape)
                 .border(1.dp, sheetRimBrush(), sheetShape)
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                // The sheet runs edge to edge; cutout and side system bars pad its content.
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
                 .revealDrag(closeDriver, opening = false),
         ) {
             if (!compact) SheetHandle(Modifier.align(Alignment.CenterHorizontally))
@@ -392,6 +393,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }
 
             // The keyboard rising in a short window folds the chips away; they unfold with it.
+            val queryTyped = session.searchText.isNotEmpty()
             AnimatedVisibility(visible = categories.size > 1 && !compact, enter = ExpandIn, exit = ShrinkOut) {
                 CategoryTabs(
                     categories = categories,
@@ -400,7 +402,12 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     idPrefix = CHIP_PREFIX,
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 2.dp)
-                        .graphicsLayer { alpha = revealFade(reveal.progress, start = 0.35f) },
+                        .graphicsLayer {
+                            // Travels with the sheet from its first frames; quieter while a
+                            // query is typed (the search runs in the selected category).
+                            alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) *
+                                (if (queryTyped) QUERY_CHIP_ALPHA else 1f)
+                        },
                 )
             }
 
@@ -421,6 +428,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                         iconSize = tileIcon,
                         compact = compact,
                         heavyChange = feed.heavy,
+                        itemKey = feed::itemKey,
                         actionsMode = actionsMode,
                         stagger = stagger,
                         staggerFrame = staggerFrame,
@@ -463,6 +471,10 @@ private fun rememberShortWindow(): State<Boolean> {
         }
     }
 }
+
+/** The sheet never shows without its header: content starts fading in almost at once. */
+private const val CONTENT_FADE_START = 0.05f
+private const val QUERY_CHIP_ALPHA = 0.55f
 
 /** 0 until the drawer is [start] of the way open, then rising to 1 by the time it is fully open. */
 private fun revealFade(progress: Float, start: Float): Float = ((progress - start) / (1f - start)).coerceIn(0f, 1f)
@@ -507,7 +519,7 @@ private fun DrawerSearchBar(
         Modifier
             .fillMaxWidth()
             .padding(start = 4.dp, end = 12.dp, top = if (compact) 2.dp else 4.dp, bottom = 4.dp)
-            .graphicsLayer { alpha = revealFade(reveal.progress, start = 0.25f) },
+            .graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", onClose)
@@ -538,8 +550,8 @@ private fun DrawerSearchBar(
                         .shadow(if (focused) 3.dp else 1.dp, pillShape, clip = false)
                         .background(sheetRaisedColor(), pillShape)
                         .border(
-                            width = if (focused) 2.dp else 1.dp,
-                            color = if (focused) scheme.primary else scheme.outlineVariant.copy(alpha = 0.6f),
+                            width = 1.dp,
+                            color = if (focused) scheme.primary.copy(alpha = 0.55f) else scheme.outlineVariant.copy(alpha = 0.6f),
                             shape = pillShape,
                         )
                         .padding(start = 16.dp, end = 4.dp),
@@ -614,6 +626,7 @@ private fun DrawerGrid(
     iconSize: Dp,
     compact: Boolean,
     heavyChange: Boolean,
+    itemKey: (AppKey) -> Any,
     actionsMode: Boolean,
     stagger: Stagger,
     staggerFrame: StaggerFrame,
@@ -648,7 +661,7 @@ private fun DrawerGrid(
             }
             .edgeFades(gridState, fadeColor),
     ) {
-        itemsIndexed(apps, key = { _, entry -> drawerAppId(entry.key) }, contentType = { _, _ -> "app" }) { index, entry ->
+        itemsIndexed(apps, key = { _, entry -> itemKey(entry.key) }, contentType = { _, _ -> "app" }) { index, entry ->
             val id = drawerAppId(entry.key)
             AppTile(
                 entry = entry,
@@ -711,6 +724,28 @@ private class ResultsFeed(initial: List<AppEntry>) {
     var heavy = false
     var keep: Set<AppKey>? = null
 
+    /**
+     * Grid-key generation per app. On a heavy change tiles do not glide (placementSpec is
+     * null), so a kept tile that has to move to another cell gets a fresh key: its old
+     * cell fades out with the departing tiles and it fades in at its new cell only after
+     * SWAP_MS, so no cell ever shows two tiles at once.
+     */
+    private val generations = HashMap<AppKey, Int>()
+    private var generation = 0
+
+    fun itemKey(key: AppKey): Any {
+        val g = generations[key] ?: return drawerAppId(key)
+        return "${drawerAppId(key)}#$g"
+    }
+
+    /** Called on a heavy change, before [set], with the list shown so far and the new lists. */
+    fun rekeyMoved(previous: List<AppEntry>, first: List<AppEntry>, final: List<AppEntry>) {
+        val moved = movedKeys(previous, first, final)
+        if (moved.isEmpty()) return
+        generation++
+        for (key in moved) generations[key] = generation
+    }
+
     /** Read in composition: subscribes to the frame-by-frame growth. */
     val shown: List<AppEntry>
         get() {
@@ -735,13 +770,15 @@ private fun rememberResultsFeed(results: List<AppEntry>, spread: Boolean): Resul
         val before = previous.mapTo(HashSet(previous.size)) { it.key }
         val kept = results.count { it.key in before }
         feed.heavy = kept * 2 < maxOf(previous.size, results.size)
-        if (!spread || results.size - kept <= RESULT_CHUNK) {
+        val first = if (!spread || results.size - kept <= RESULT_CHUNK) {
             feed.keep = null
-            feed.set(results, notify = false)
+            results
         } else {
             feed.keep = before
-            feed.set(partialResults(results, before, RESULT_CHUNK), notify = false)
+            partialResults(results, before, RESULT_CHUNK)
         }
+        if (feed.heavy) feed.rekeyMoved(previous, first, results)
+        feed.set(first, notify = false)
     }
     val target = feed.target
     LaunchedEffect(target) {
@@ -756,6 +793,21 @@ private fun rememberResultsFeed(results: List<AppEntry>, spread: Boolean): Resul
         feed.keep = null
     }
     return feed
+}
+
+/**
+ * Apps present before and after a change whose cell differs from their previous one, either
+ * in the first list shown ([first], possibly partial) or in the [final] one. Between those
+ * two an app's index only grows monotonically, so an app equal in both never moves.
+ */
+internal fun movedKeys(previous: List<AppEntry>, first: List<AppEntry>, final: List<AppEntry>): Set<AppKey> {
+    if (previous.isEmpty()) return emptySet()
+    val oldIndex = HashMap<AppKey, Int>(previous.size * 2)
+    previous.forEachIndexed { i, e -> oldIndex[e.key] = i }
+    val moved = HashSet<AppKey>()
+    first.forEachIndexed { i, e -> oldIndex[e.key]?.let { if (it != i) moved.add(e.key) } }
+    if (final !== first) final.forEachIndexed { i, e -> oldIndex[e.key]?.let { if (it != i) moved.add(e.key) } }
+    return moved
 }
 
 /** [results] with every app in [keep] and the first [budget] others, in order. */

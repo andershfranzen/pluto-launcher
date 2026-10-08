@@ -183,6 +183,29 @@ fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
     }
 }
 
+/**
+ * Console (handheld) mode is an immersive dark stage whatever the app theme: the dark
+ * colour scheme (dynamic on Android 12+) and light text, over [ConsoleScrimAlpha] of black.
+ * Only the console's own content is wrapped; layers above it keep the user's theme.
+ */
+@Composable
+fun ConsoleTheme(content: @Composable () -> Unit) {
+    if (LocalDarkTheme.current) {
+        content()
+        return
+    }
+    val context = LocalContext.current
+    val scheme = remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) dynamicDarkColorScheme(context) else PlutoDark
+    }
+    CompositionLocalProvider(LocalDarkTheme provides true) {
+        MaterialTheme(colorScheme = scheme, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes, content = content)
+    }
+}
+
+/** Black over the wallpaper behind the console stage. */
+const val ConsoleScrimAlpha = 0.7f
+
 private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()

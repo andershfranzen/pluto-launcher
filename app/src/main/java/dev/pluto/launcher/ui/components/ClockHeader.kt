@@ -1,5 +1,9 @@
 package dev.pluto.launcher.ui.components
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.text.format.DateFormat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -40,7 +44,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.overWallpaper
-import kotlinx.coroutines.delay
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Date
 import java.util.Locale
 
@@ -52,11 +58,31 @@ import java.util.Locale
 fun rememberMinuteClock(): Long {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner) {
+    val appContext = LocalContext.current.applicationContext
+    LaunchedEffect(lifecycleOwner, appContext) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (true) {
-                now = System.currentTimeMillis()
-                delay(60_000L - now % 60_000L + 20L)
+            // The delay loop runs on uptime, which stalls while the device sleeps; the
+            // system's own minute tick and clock/time-zone changes keep it in step with the
+            // status bar. Each one re-aligns the loop to the next minute boundary.
+            val wake = Channel<Unit>(Channel.CONFLATED)
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    wake.trySend(Unit)
+                }
+            }
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_TIME_TICK)
+                addAction(Intent.ACTION_TIME_CHANGED)
+                addAction(Intent.ACTION_TIMEZONE_CHANGED)
+            }
+            ContextCompat.registerReceiver(appContext, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+            try {
+                while (true) {
+                    now = System.currentTimeMillis()
+                    withTimeoutOrNull(60_000L - now % 60_000L + 20L) { wake.receive() }
+                }
+            } finally {
+                appContext.unregisterReceiver(receiver)
             }
         }
     }

@@ -22,6 +22,24 @@ class DrawerResultsTest {
     }
 
     @Test
+    fun heavyChangeMovesOnlyKeptAppsThatChangeCell() {
+        // "c" -> "cl": Calendar, Camera, Chrome, Clock -> Clock, Calculator (search order).
+        val calendar = app("Calendar"); val camera = app("Camera"); val chrome = app("Chrome")
+        val clock = app("Clock"); val calculator = app("Calculator")
+        val before = listOf(calendar, camera, chrome, clock)
+        val after = listOf(clock, calculator)
+        // Clock would land in Calendar's cell while Calendar fades out: it must be re-keyed.
+        assertEquals(setOf(clock.key), movedKeys(before, after, after))
+        // An app keeping its cell is left alone.
+        assertEquals(emptySet<AppKey>(), movedKeys(listOf(clock, camera), listOf(clock, calculator), listOf(clock, calculator)))
+        // A move only in the partially grown first list still counts.
+        val first = listOf(calendar, clock)
+        val final = listOf(calendar, camera, chrome, clock)
+        assertEquals(setOf(clock.key), movedKeys(listOf(calendar, app("x"), app("y"), clock), first, final))
+        assertEquals(emptySet<AppKey>(), movedKeys(emptyList(), after, after))
+    }
+
+    @Test
     fun adaptiveCountCellsFitsColumnsWithinBounds() {
         val density = Density(1f)
         val cells = AdaptiveCountCells(minCell = 88.dp, minCount = 3, maxCount = 6, extra = 24.dp)

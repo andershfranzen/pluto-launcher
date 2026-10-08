@@ -4,6 +4,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
@@ -188,7 +194,7 @@ class IconCache(context: Context) {
         if (key.userSerial != mySerial) return null
         return try {
             val info = LauncherActivityInfos.get(key) ?: query(key) ?: return null
-            val bitmap = info.getBadgedIcon(0).toBitmap(sizePx, sizePx)
+            val bitmap = rasterize(info.getBadgedIcon(0), sizePx)
             // Start the GPU upload on the RenderThread now rather than in the first frame that draws it.
             bitmap.prepareToDraw()
             bitmap.asImageBitmap()
@@ -198,6 +204,28 @@ class IconCache(context: Context) {
             null
         }
     }
+
+    /**
+     * Adaptive icons come masked to the system shape. A legacy (non-adaptive) icon would be
+     * its raw, often square art among round icons, so it sits on a light circular plate at
+     * [LEGACY_ICON_SCALE] of the size instead (as Pixel Launcher does).
+     */
+    private fun rasterize(drawable: Drawable, sizePx: Int): Bitmap {
+        if (drawable is AdaptiveIconDrawable || isAdaptiveWithBadge(drawable)) return drawable.toBitmap(sizePx, sizePx)
+        val out = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(out)
+        val half = sizePx / 2f
+        canvas.drawCircle(half, half, half, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = LEGACY_PLATE_COLOR })
+        val inner = (sizePx * LEGACY_ICON_SCALE).toInt().coerceAtLeast(1)
+        val inset = (sizePx - inner) / 2
+        drawable.setBounds(inset, inset, inset + inner, inset + inner)
+        drawable.draw(canvas)
+        return out
+    }
+
+    /** A work-profile badge wraps the icon in a LayerDrawable whose first layer is the real icon. */
+    private fun isAdaptiveWithBadge(drawable: Drawable): Boolean =
+        drawable is LayerDrawable && drawable.numberOfLayers > 0 && drawable.getDrawable(0) is AdaptiveIconDrawable
 
     /** Fallback when the catalog has not (yet) seen the activity: one binder query. */
     private fun query(key: AppKey): LauncherActivityInfo? {
@@ -213,6 +241,10 @@ class IconCache(context: Context) {
 
         /** Background decodes at once: enough to fill a screen quickly, few enough not to starve the UI. */
         const val DECODE_PARALLELISM = 3
+
+        /** Legacy icon art on its plate, as a fraction of the icon size. */
+        const val LEGACY_ICON_SCALE = 0.7f
+        const val LEGACY_PLATE_COLOR = 0xFFF4F4F6.toInt()
 
         fun cacheBytes(): Int =
             (Runtime.getRuntime().maxMemory() / 16).coerceIn(4L * 1024 * 1024, Int.MAX_VALUE.toLong()).toInt()

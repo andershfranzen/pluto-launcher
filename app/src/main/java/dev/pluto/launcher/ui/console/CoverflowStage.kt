@@ -75,10 +75,14 @@ private val CardShape = RoundedCornerShape(26.dp)
 private const val CARD_CORNER_FRACTION = 0.15f
 private const val ICON_INSET_FRACTION = 0.13f
 private const val REFLECTION_GAP_FRACTION = 0.04f
-private const val REFLECTION_FRACTION = 0.42f
+/** Must match ConsoleArt's reflection bitmap fraction. */
+private const val REFLECTION_FRACTION = ConsoleArtCache.REFLECTION_FRACTION
 
-/** Room under the card for its reflection, in card heights. */
-private const val STAGE_REFLECTION_SPACE = 0.30f
+/** Room under the card for its reflection, in card heights: the whole gap and mirror. */
+private const val STAGE_REFLECTION_SPACE = REFLECTION_GAP_FRACTION + REFLECTION_FRACTION
+
+/** Clear space between the end of the reflection and whatever sits under the stage (the title). */
+private val ReflectionClearance = 12.dp
 
 /** Milder perspective than the default camera (side cards stay readable). */
 private const val CAMERA_DISTANCE = 14f
@@ -336,11 +340,13 @@ internal fun CoverflowStage(
     ) { measurables, constraints ->
         val width = constraints.maxWidth
         val height = if (constraints.hasBoundedHeight) constraints.maxHeight else (width * 0.4f).roundToInt()
-        val card = cardSizePx(width, height, density)
+        val clearance = ReflectionClearance.roundToPx()
+        val card = cardSizePx(width, height - clearance, density)
         stage.cardWidthPx = card.toFloat()
         val fixed = Constraints.fixed(card, card)
         val placeables = measurables.map { it.measure(fixed) to (it.layoutId as? Int ?: 0) }
-        val top = ((height - card * (1f + STAGE_REFLECTION_SPACE)) / 2f).roundToInt().coerceAtLeast(0)
+        // Card plus its reflection plus the clearance, centred: the mirror never reaches the title.
+        val top = ((height - clearance - card * (1f + STAGE_REFLECTION_SPACE)) / 2f).roundToInt().coerceAtLeast(0)
         layout(width, height) {
             // Placement only: reading the flow position here re-places cards each frame, no recomposition.
             val position = stage.position
@@ -427,7 +433,8 @@ private fun CoverCard(
                 val reflectionFace = Brush.verticalGradient(
                     listOf(base.copy(alpha = 0.30f), Color.Transparent),
                     startY = h + gap,
-                    endY = h + gap + reflectionH,
+                    // Gone well before the reflection's end.
+                    endY = h + gap + reflectionH * 0.7f,
                 )
                 val inset = (w * ICON_INSET_FRACTION).roundToInt()
                 val iconSide = (w - inset * 2).roundToInt().coerceAtLeast(1)

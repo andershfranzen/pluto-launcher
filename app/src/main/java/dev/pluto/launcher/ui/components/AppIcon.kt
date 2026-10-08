@@ -430,7 +430,7 @@ private fun MeasureScope.layoutLabel(
     measurer: TextMeasurer,
     density: Density,
 ): TextLayoutResult {
-    val constraints = if (maxWidth == Constraints.Infinity) Constraints() else Constraints(maxWidth = maxWidth)
+    val constraints = if (maxWidth == Constraints.Infinity) Constraints() else Constraints(minWidth = maxWidth, maxWidth = maxWidth)
     fun measure(s: TextStyle) = measurer.measure(
         text = text,
         style = s,

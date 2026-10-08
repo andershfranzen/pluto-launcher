@@ -93,7 +93,7 @@ object ConsoleArtCache {
         }
         canvas.drawBitmap(soft, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
         val fade = Paint().apply {
-            shader = LinearGradient(0f, 0f, 0f, h.toFloat(), 0x8C000000.toInt(), 0x00000000, Shader.TileMode.CLAMP)
+            shader = LinearGradient(0f, 0f, 0f, h * 0.7f, 0x8C000000.toInt(), 0x00000000, Shader.TileMode.CLAMP)
             xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
         }
         canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), fade)
@@ -106,7 +106,8 @@ object ConsoleArtCache {
     private fun cacheKey(key: AppKey, sizePx: Int, version: Int) = "$sizePx|$version|${key.encode()}"
 
     private const val SAMPLE = 16
-    private const val REFLECTION_FRACTION = 0.42f
+    /** Depth of the reflection in icon heights (short, so it stays clear of the title). */
+    const val REFLECTION_FRACTION = 0.26f
 
     private fun cacheBytes(): Int =
         (Runtime.getRuntime().maxMemory() / 12).coerceIn(4L * 1024 * 1024, 48L * 1024 * 1024).toInt()
