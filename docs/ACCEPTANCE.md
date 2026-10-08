@@ -76,5 +76,5 @@ These do not replace the hardware tests above, but should pass before any run:
 
 ```sh
 ./gradlew testDebugUnitTest            # mode resolution, search, organisation rules, input repeat, dedupe
-./gradlew connectedDebugAndroidTest    # Room migrations and instrumented UI tests
+ANDROID_SERIAL=emulator-5554 ./gradlew connectedDebugAndroidTest    # emulator only: uninstalls the app (and its data) afterwards
 ```

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="216" height="216" role="img" aria-label="Pluto logo">
+  <defs>
+    <radialGradient id="space" cx="40" cy="36" r="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#26305C"/>
+      <stop offset="1" stop-color="#0B0F24"/>
+    </radialGradient>
+    <radialGradient id="globe" cx="46" cy="44" r="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F2DFC8"/>
+      <stop offset="0.6" stop-color="#D2AE8A"/>
+      <stop offset="1" stop-color="#9C7354"/>
+    </radialGradient>
+    <radialGradient id="limb" cx="44" cy="42" r="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B0F24" stop-opacity="0"/>
+      <stop offset="0.62" stop-color="#0B0F24" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0B0F24" stop-opacity="0.55"/>
+    </radialGradient>
+    <clipPath id="planet"><circle cx="54" cy="54" r="28"/></clipPath>
+    <clipPath id="tile"><rect width="108" height="108" rx="24"/></clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect width="108" height="108" fill="url(#space)"/>
+    <g fill="#fff">
+      <circle cx="27" cy="24" r="0.9" opacity="0.8"/><circle cx="80" cy="22" r="0.7" opacity="0.6"/>
+      <circle cx="86" cy="78" r="0.8" opacity="0.7"/><circle cx="22" cy="80" r="0.6" opacity="0.5"/>
+      <circle cx="68" cy="88" r="0.6" opacity="0.6"/><circle cx="38" cy="90" r="0.5" opacity="0.5"/>
+    </g>
+    <g clip-path="url(#planet)">
+      <rect x="26" y="26" width="56" height="56" fill="url(#globe)"/>
+      <path d="M24,40C38,34 70,33 86,40L86,44C70,38 38,39 24,46Z" fill="#B98F6E" opacity="0.25"/>
+      <path d="M24,58C30,52 38,52 45,55C50,57 53,61 51,66C48,71 40,73 30,71C27,70 25,69 24,68Z" fill="#703A2B" opacity="0.88"/>
+      <path d="M70,70C74,67 80,66 86,67L86,74C80,75 74,74 70,70Z" fill="#703A2B" opacity="0.69"/>
+      <path d="M63,69C54.5,62.5 53.5,54.5 58.5,52.6C61,51.7 63,53.2 63.6,55C64.6,52.6 67,51.3 69.6,52.4C74,54.4 72,62.5 63,69Z" fill="#FBF4EA"/>
+      <rect x="26" y="26" width="56" height="56" fill="url(#limb)"/>
+    </g>
+  </g>
+</svg>

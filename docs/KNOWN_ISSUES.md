@@ -155,3 +155,16 @@ something.
   restores it.
 - Database migrations are tested only for the current schema (version 1); there is no
   migration history yet to exercise.
+
+## Console mode (Coverflow) polish still to do
+
+- After touching a shelf tab, the next D-pad press can land on the top bar (search / all
+  apps / settings) instead of the Coverflow, and a thin focus outline can stay on that
+  button in touch mode.
+- Side cards at the current tilt squash round icons into ovals, card faces vary in tone,
+  and the reflection shows a grey dome under round icons.
+- The selected card looks the same whether or not the Coverflow has focus; console mode has
+  no white-only focus style yet.
+- Short shelves have no placeholder ("ghost") cards, and the empty-shelf text is small.
+- Frame times for held D-pad traversal and L1/R1 shelf switches have not been measured on
+  the reference phone yet.
