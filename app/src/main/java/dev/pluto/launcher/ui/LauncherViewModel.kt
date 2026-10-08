@@ -20,8 +20,11 @@ import dev.pluto.launcher.domain.FocusAnchor
 import dev.pluto.launcher.domain.Reorder
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.model.HomeItem
+import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.model.Organization
 import dev.pluto.launcher.model.ReorderOp
+import dev.pluto.launcher.ui.console.ConsoleShelves
+import dev.pluto.launcher.ui.console.ShelfId
 import dev.pluto.launcher.ui.state.EnvironmentInputs
 import dev.pluto.launcher.ui.state.LauncherStateBuilder
 import dev.pluto.launcher.ui.state.LibraryInputs
@@ -281,12 +284,68 @@ class LauncherViewModel(
     fun previousCategory() = stepCategory(-1)
 
     private fun stepCategory(delta: Int) {
+        if (stepShelfIfHandheld(delta)) return
         val current = state.value
         val categories = current.categories
         if (categories.isEmpty()) return
         val index = categories.indexOf(current.activeCategory).coerceAtLeast(0)
         selectCategory(categories[Math.floorMod(index + delta, categories.size)].id)
     }
+
+    // --- Handheld shelves ----------------------------------------------------
+    // Console (Coverflow) shelves: Recent launches, Favourites, then the categories. The active
+    // shelf is session state (rotation + process death); each shelf remembers its own selected
+    // app by identity in a plain map (never observed, so D-pad steps emit nothing).
+
+    private val shelfSelections = HashMap<String, AppKey>().apply {
+        val shelves = savedState.get<Array<String>>(KEY_SHELF_SEL_SHELVES).orEmpty()
+        val apps = savedState.get<Array<String>>(KEY_SHELF_SEL_APPS).orEmpty()
+        shelves.zip(apps).forEach { (shelf, app) -> AppKey.decode(app)?.let { put(shelf, it) } }
+    }
+
+    init {
+        // Through updateSession so the live (published) session sees the restored shelf too.
+        savedState.get<String>(KEY_SHELF)?.let { shelf -> updateSession { it.copy(handheldShelf = shelf) } }
+    }
+
+    /** Makes [shelf] the active Handheld shelf (tabs, L1/R1). */
+    fun selectShelf(shelf: ShelfId) {
+        savedState[KEY_SHELF] = shelf.key
+        updateSession { s -> if (s.handheldShelf == shelf.key) s else s.copy(handheldShelf = shelf.key) }
+    }
+
+    /** The app [shelf] last had selected, if any. */
+    fun shelfSelection(shelf: ShelfId): AppKey? = shelfSelections[shelf.key]
+
+    /** Remembers [key] as [shelf]'s selected app. Cheap and unobserved: safe on every D-pad step. */
+    fun rememberShelfSelection(shelf: ShelfId, key: AppKey) {
+        if (shelfSelections.put(shelf.key, key) == key) return
+        savedState[KEY_SHELF_SEL_SHELVES] = shelfSelections.keys.toTypedArray()
+        savedState[KEY_SHELF_SEL_APPS] = shelfSelections.keys.map { shelfSelections.getValue(it).encode() }.toTypedArray()
+    }
+
+    /** The shelf Handheld shows for [ui]: the saved one while it exists, else the default landing shelf. */
+    fun activeShelf(ui: LauncherUiState): ShelfId {
+        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled)
+        val default = ConsoleShelves.defaultShelf(
+            order = order,
+            recentsNonEmpty = ui.recents.isNotEmpty(),
+            favouritesNonEmpty = ConsoleShelves.favouriteApps(ui.homeTiles).isNotEmpty(),
+            allCategoryId = ui.categories.firstOrNull { it.isAll }?.id,
+        )
+        return ConsoleShelves.resolve(ShelfId.decode(ui.session.handheldShelf), order, default)
+    }
+
+    /** L1/R1 on the Handheld home (no layer open) step through shelves, wrapping. */
+    private fun stepShelfIfHandheld(delta: Int): Boolean {
+        val ui = state.value
+        if (ui.mode != LauncherMode.HANDHELD || ui.session.layers.isNotEmpty()) return false
+        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled)
+        val next = ConsoleShelves.step(order, activeShelf(ui), delta) ?: return false
+        selectShelf(next)
+        return true
+    }
+    // --- end Handheld shelves ------------------------------------------------
 
     // --- Selection / focus memory ------------------------------------------
     // Written on every focus move / scrolled line: memory only, no state rebuild or emission,
@@ -731,6 +790,9 @@ class LauncherViewModel(
 
     companion object {
         private const val TAG = "LauncherViewModel"
+        private const val KEY_SHELF = "handheld.shelf"
+        private const val KEY_SHELF_SEL_SHELVES = "handheld.shelfSelection.shelves"
+        private const val KEY_SHELF_SEL_APPS = "handheld.shelfSelection.apps"
         private const val DEFAULT_FOLDER_NAME = "Folder"
         private const val DEFAULT_CATEGORY_NAME = "New category"
         private const val DOCK_FULL_MESSAGE = "Dock is full. Remove an app from the dock first."

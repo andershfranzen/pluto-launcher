@@ -85,6 +85,10 @@ data class SessionState(
     val editSelection: String? = null,
     /** Selection, focus and scroll memory: one shared instance per ViewModel (compared by identity). */
     val memory: SessionMemory = SessionMemory(),
+    // --- Handheld shelves
+    /** Active Handheld (console) shelf, ShelfId.key ("recent", "fav", "cat:<id>"); null = default landing shelf. */
+    val handheldShelf: String? = null,
+    // --- end Handheld shelves
 ) {
     val topLayer: Layer? get() = layers.lastOrNull()
 

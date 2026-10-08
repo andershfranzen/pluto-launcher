@@ -1,0 +1,443 @@
+package dev.pluto.launcher.ui.console
+
+import android.hardware.BatteryState
+import android.os.Build
+import android.view.InputDevice
+import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BatteryAlert
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.BatteryStd
+import androidx.compose.material.icons.outlined.SportsEsports
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import dev.pluto.launcher.data.prefs.ControllerAction
+import dev.pluto.launcher.ui.components.KeyChip
+import dev.pluto.launcher.ui.components.LegendItem
+import dev.pluto.launcher.ui.components.pressScale
+import dev.pluto.launcher.ui.focus.controllerFocusable
+import dev.pluto.launcher.ui.motion.PlutoMotion
+import dev.pluto.launcher.ui.theme.LocalDarkTheme
+import dev.pluto.launcher.ui.theme.PlutoDimens
+import dev.pluto.launcher.ui.theme.overWallpaper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
+
+/** The console's legend: shoulder buttons switch shelves here. */
+val ConsoleLegend = listOf(
+    LegendItem(ControllerAction.CONFIRM, "Open"),
+    LegendItem(ControllerAction.ACTIONS, "Actions"),
+    LegendItem(ControllerAction.SEARCH, "Search"),
+    LegendItem(ControllerAction.PREV_CATEGORY, "Shelf"),
+    LegendItem(ControllerAction.NEXT_CATEGORY, "Shelf"),
+    LegendItem(ControllerAction.SETTINGS, "Settings"),
+)
+
+internal fun shelfTabId(id: ShelfId): String = "hh:tab:${id.key}"
+
+/** Focus targets the console links explicitly (the flow's overlapping cards defeat spatial search). */
+@Stable
+internal class ConsoleFocusLinks {
+    val tabs = HashMap<String, FocusRequester>()
+    var activeShelfKey: String? = null
+    val open = FocusRequester()
+    var openAttached = false
+
+    fun activeTab(): FocusRequester = activeShelfKey?.let(tabs::get) ?: FocusRequester.Default
+    fun openButton(): FocusRequester = if (openAttached) open else FocusRequester.Default
+}
+
+// ---------------------------------------------------------------------------------------
+// Top bar
+// ---------------------------------------------------------------------------------------
+
+private val MinInlineTabsWidth = 320.dp
+private val HeaderGap = 12.dp
+
+/**
+ * Header with the shelf tabs, the status cluster (clock, controller battery) and the icon
+ * buttons. The buttons always keep their 48dp targets; the status gets what is left. The
+ * tabs share the row only while they fit (or get at least [MinInlineTabsWidth] to scroll
+ * in); otherwise, e.g. at large text sizes, they move to their own full-width row below.
+ */
+@Composable
+internal fun ConsoleTopBar(
+    modifier: Modifier,
+    tabs: @Composable () -> Unit,
+    status: @Composable () -> Unit,
+    buttons: @Composable () -> Unit,
+) {
+    Layout(contents = listOf(tabs, status, buttons), modifier = modifier) { (tabsM, statusM, buttonsM), constraints ->
+        val width = constraints.maxWidth
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val gap = HeaderGap.roundToPx()
+        val buttonsP = buttonsM.first().measure(loose)
+        val statusP = statusM.first().measure(loose.copy(maxWidth = (width - buttonsP.width - gap).coerceAtLeast(0)))
+        val tabsMeasurable = tabsM.first()
+        val inlineWidth = width - buttonsP.width - statusP.width - gap * 2
+        val tabsWanted = tabsMeasurable.maxIntrinsicWidth(constraints.maxHeight.takeIf { it != Int.MAX_VALUE } ?: 0)
+        val inline = inlineWidth > 0 && inlineWidth >= minOf(tabsWanted, MinInlineTabsWidth.roundToPx())
+        val tabsP = tabsMeasurable.measure(loose.copy(maxWidth = if (inline) inlineWidth else width))
+        if (inline) {
+            val height = maxOf(tabsP.height, statusP.height, buttonsP.height)
+            layout(width, height) {
+                tabsP.place(0, (height - tabsP.height) / 2)
+                statusP.place(width - buttonsP.width - gap - statusP.width, (height - statusP.height) / 2)
+                buttonsP.place(width - buttonsP.width, (height - buttonsP.height) / 2)
+            }
+        } else {
+            val top = maxOf(statusP.height, buttonsP.height)
+            layout(width, top + tabsP.height) {
+                statusP.place(0, (top - statusP.height) / 2)
+                buttonsP.place(width - buttonsP.width, (top - buttonsP.height) / 2)
+                tabsP.place(0, top)
+            }
+        }
+    }
+}
+
+/**
+ * The shelf tabs: Recent launches · Favourites · categories. Touch or L1/R1; the selected
+ * tab is a filled pill with bold text and an underline (not colour alone). The selected tab
+ * scrolls into view. Down goes to the flow's selected card ([downTarget]).
+ */
+@Composable
+internal fun ShelfTabs(
+    shelves: List<Pair<ShelfId, String>>,
+    active: ShelfId,
+    onSelect: (ShelfId) -> Unit,
+    links: ConsoleFocusLinks,
+    downTarget: () -> FocusRequester,
+    prevKey: String?,
+    nextKey: String?,
+    modifier: Modifier = Modifier,
+) {
+    val scroll = rememberScrollState()
+    val bounds = remember { HashMap<String, IntRangeHolder>() }
+    links.activeShelfKey = active.key
+    val marginPx = with(LocalDensity.current) { TabScrollMargin.roundToPx() }
+    LaunchedEffect(active, scroll) {
+        // Once the tab is placed, centre it when it isn't comfortably visible.
+        withFrameNanos { }
+        val b = bounds[active.key] ?: return@LaunchedEffect
+        val viewport = scroll.viewportSize
+        if (viewport <= 0) return@LaunchedEffect
+        if (b.start < scroll.value + marginPx || b.end > scroll.value + viewport - marginPx) {
+            val to = ((b.start + b.end) / 2 - viewport / 2).coerceIn(0, scroll.maxValue)
+            scroll.animateScrollTo(to, PlutoMotion.spatial())
+        }
+    }
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (prevKey != null) KeyChip(prevKey, Modifier.padding(horizontal = 4.dp))
+        Row(
+            Modifier
+                .weight(1f, fill = false)
+                .horizontalScroll(scroll)
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            shelves.forEachIndexed { index, (id, title) ->
+                key(id.key) {
+                    ShelfTab(
+                        id = id,
+                        title = title,
+                        position = "${index + 1} of ${shelves.size}",
+                        isSelected = id == active,
+                        onClick = { onSelect(id) },
+                        links = links,
+                        downTarget = downTarget,
+                        onBounds = { start, end -> bounds[id.key] = IntRangeHolder(start, end) },
+                    )
+                }
+            }
+        }
+        if (nextKey != null) KeyChip(nextKey, Modifier.padding(horizontal = 4.dp))
+    }
+}
+
+internal data class IntRangeHolder(val start: Int, val end: Int)
+
+private val TabShape = RoundedCornerShape(20.dp)
+
+/** Space kept between the selected tab and the row's edge before scrolling to it. */
+private val TabScrollMargin = 24.dp
+
+@Composable
+private fun ShelfTab(
+    id: ShelfId,
+    title: String,
+    position: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    links: ConsoleFocusLinks,
+    downTarget: () -> FocusRequester,
+    onBounds: (Int, Int) -> Unit,
+) {
+    val requester = remember { FocusRequester() }
+    DisposableEffect(id.key, requester) {
+        links.tabs[id.key] = requester
+        onDispose { if (links.tabs[id.key] === requester) links.tabs.remove(id.key) }
+    }
+    val container by animateColorAsState(
+        if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
+        PlutoMotion.fadeIn(),
+        label = "shelfTab",
+    )
+    val content by animateColorAsState(
+        if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+        PlutoMotion.fadeIn(),
+        label = "shelfTabText",
+    )
+    val press = remember { MutableInteractionSource() }
+    Column(
+        Modifier
+            .onPlaced { c ->
+                val x = c.positionInParent().x.roundToInt()
+                onBounds(x, x + c.size.width)
+            }
+            .pressScale(press, pressedScale = 0.95f)
+            .defaultMinSize(minHeight = PlutoDimens.MinTouchTarget)
+            .focusRequester(requester)
+            .focusProperties { down = downTarget() }
+            .controllerFocusable(
+                id = shelfTabId(id),
+                onActivate = onClick,
+                contentDescription = "$title shelf, $position",
+                shape = TabShape,
+                interactionSource = press,
+            )
+            .semantics { selected = isSelected }
+            .clip(TabShape)
+            .drawBehind { drawRect(container) }
+            .padding(horizontal = 16.dp, vertical = 7.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            title,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium),
+            color = content,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.size(width = 1.dp, height = 3.dp))
+        // The underline's space is always reserved: selecting never changes tab geometry.
+        Spacer(
+            Modifier
+                .size(width = 20.dp, height = 3.dp)
+                .graphicsLayer { alpha = if (isSelected) 1f else 0f }
+                .clip(RoundedCornerShape(2.dp))
+                .background(content),
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+// Status: controller battery
+// ---------------------------------------------------------------------------------------
+
+/**
+ * The controller's battery level (InputDevice.batteryState, API 31+), only when the
+ * controller reports one; hidden otherwise. Polled once a minute while the launcher is started,
+ * off the main thread (the query is a binder call).
+ */
+@Composable
+internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier) {
+    if (deviceId == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    var reading by remember(deviceId) { mutableStateOf<BatteryReading?>(null) }
+    val lifecycle = LocalLifecycleOwner.current
+    LaunchedEffect(deviceId, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                reading = withContext(Dispatchers.IO) { readBattery(deviceId) }
+                delay(BATTERY_POLL_MS)
+            }
+        }
+    }
+    val r = reading ?: return
+    val icon = when {
+        r.charging -> Icons.Outlined.BatteryChargingFull
+        r.percent <= 15 -> Icons.Outlined.BatteryAlert
+        else -> Icons.Outlined.BatteryStd
+    }
+    val spoken = "Controller battery ${r.percent} percent" + if (r.charging) ", charging" else ""
+    Row(
+        modifier.clearAndSetSemantics { contentDescription = spoken },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Outlined.SportsEsports, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
+        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
+        Text("${r.percent}%", style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
+    }
+}
+
+private data class BatteryReading(val percent: Int, val charging: Boolean)
+
+private const val BATTERY_POLL_MS = 60_000L
+
+@RequiresApi(Build.VERSION_CODES.S)
+private fun readBattery(deviceId: Int): BatteryReading? = try {
+    val state = InputDevice.getDevice(deviceId)?.batteryState
+    val capacity = state?.capacity ?: Float.NaN
+    if (state == null || !state.isPresent || capacity.isNaN() || capacity < 0f) {
+        null
+    } else {
+        BatteryReading((capacity * 100f).roundToInt().coerceIn(0, 100), state.status == BatteryState.STATUS_CHARGING)
+    }
+} catch (e: RuntimeException) {
+    null
+}
+
+// ---------------------------------------------------------------------------------------
+// Title under the stage, ambient backdrop
+// ---------------------------------------------------------------------------------------
+
+private data class TitleText(val title: String, val subtitle: String)
+
+/**
+ * The selected app's name, large, with the shelf and position under it. Reads the
+ * selection itself, so a D-pad step recomposes only this (a quick crossfade; every new name
+ * simply retargets, nothing queues). Screen readers get the same from the focused card.
+ */
+@Composable
+internal fun ConsoleTitle(stage: CoverflowState?, subtitle: String, modifier: Modifier = Modifier) {
+    val entry = stage?.selectedEntry
+    val count = stage?.count ?: 0
+    val text = if (entry == null) {
+        TitleText("", subtitle)
+    } else {
+        TitleText(entry.label, "$subtitle · ${stage.selectedIndex + 1} of $count")
+    }
+    AnimatedContent(
+        targetState = text,
+        transitionSpec = {
+            fadeIn(tween(PlutoMotion.SHORT_MS, easing = PlutoMotion.EmphasizedDecelerate)) togetherWith
+                fadeOut(tween(PlutoMotion.SHORT_MS / 2, easing = PlutoMotion.EmphasizedAccelerate)) using null
+        },
+        contentAlignment = Alignment.Center,
+        label = "consoleTitle",
+        modifier = modifier.clearAndSetSemantics { },
+    ) { t ->
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                t.title,
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                t.subtitle,
+                style = MaterialTheme.typography.bodyMedium.overWallpaper(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+/**
+ * Ambient glow behind the stage, tinted from the selected app's icon colour and crossfading
+ * on change. Animated and drawn without recomposition (snapshotFlow into an Animatable, read
+ * in draw), in its own layer so the redraw stays local.
+ */
+@Composable
+internal fun ConsoleBackdrop(stage: () -> CoverflowState?, artPx: Int, versions: () -> Map<String, Int>, modifier: Modifier = Modifier) {
+    val dark = LocalDarkTheme.current
+    val neutral = MaterialTheme.colorScheme.primary
+    val glow = remember { Animatable(Color.Transparent) }
+    LaunchedEffect(glow, artPx) {
+        snapshotFlow {
+            val s = stage()
+            s?.artTick
+            val entry = s?.selectedEntry
+            if (entry == null) {
+                null
+            } else {
+                ConsoleArtCache.peek(entry.key, artPx, versions()[entry.packageName] ?: 0)?.color
+            }
+        }.collectLatest { color ->
+            val target = color?.let { Color(it) } ?: neutral.copy(alpha = 0.5f)
+            glow.animateTo(target, tween(PlutoMotion.LONG_MS, easing = PlutoMotion.Standard))
+        }
+    }
+    val strength = if (dark) 0.55f else 0.38f
+    Spacer(
+        modifier
+            .graphicsLayer { }
+            .drawBehind {
+                val c = glow.value
+                if (c.alpha <= 0f) return@drawBehind
+                val center = Offset(size.width / 2f, size.height * 0.46f)
+                val radius = maxOf(size.width, size.height) * 0.55f
+                drawRect(
+                    Brush.radialGradient(
+                        colors = listOf(c.copy(alpha = c.alpha * strength), c.copy(alpha = c.alpha * strength * 0.35f), Color.Transparent),
+                        center = center,
+                        radius = radius,
+                    ),
+                )
+            },
+    )
+}
