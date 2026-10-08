@@ -218,7 +218,8 @@ fun MoveToFolderDialog(key: AppKey, state: LauncherUiState, vm: LauncherViewMode
             title = entry?.label?.let { "${OverlayText.MOVE_TITLE}: $it" } ?: OverlayText.MOVE_TITLE,
             idPrefix = "movefolder",
             onDismiss = { vm.back() },
-            trapFocus = isTop && !naming,
+            trapFocus = isTop,
+            dialogOpen = naming,
             leading = entry?.let { { AppIcon(it, 40.dp) } },
             actions = {
                 PlutoButton("movefolder:cancel", KitText.CANCEL, { vm.back() }, style = ButtonStyle.TEXT)

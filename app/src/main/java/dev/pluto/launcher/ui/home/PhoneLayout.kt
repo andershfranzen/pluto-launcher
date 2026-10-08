@@ -50,8 +50,9 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
     val iconSize = state.iconSize()
     val gridKeys = state.homeTiles.map { it.id }
     val gridState = rememberAnchoredGridState(HOME_SURFACE, state, gridKeys)
-    ReportScrollAnchor(HOME_SURFACE, gridState, vm)
+    ReportScrollAnchor(HOME_SURFACE, gridState, state, vm, gridKeys)
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
+    TrackFocusOrder(HOME_SURFACE, state.homeTiles.map(::homeTileFocusId)) { gridState.scrollToItem(it) }
     val defaultId = state.homeTiles.firstOrNull()?.let(::homeTileFocusId) ?: ID_ALL_APPS
     SideEffect { focus.setDefaultFocus(defaultId) }
 
@@ -198,10 +199,11 @@ internal fun HorizontalDock(state: LauncherUiState, vm: LauncherViewModel, iconS
 internal fun EmptyFavourites(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     EmptyState(
         title = "No favourites yet",
-        detail = "Open All apps, choose an app's Actions, then Pin to home.",
+        detail = HomeText.EMPTY_FAVOURITES,
         onWallpaper = true,
         modifier = modifier,
     ) {
+        PlutoTextButton(id = "home:empty:edit", text = "Add favourite", onClick = { vm.openLayer(Layer.Edit) })
         PlutoTextButton(id = "home:empty:allapps", text = "All apps", onClick = { vm.openDrawer() }, emphasized = true)
     }
 }

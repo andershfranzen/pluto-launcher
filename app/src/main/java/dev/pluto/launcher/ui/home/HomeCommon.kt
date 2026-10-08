@@ -4,15 +4,19 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +34,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.AppKey
@@ -40,7 +45,10 @@ import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.AppTile
 import dev.pluto.launcher.ui.components.FolderTile
 import dev.pluto.launcher.ui.focus.ControllerFocusController
+import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.ui.focus.InputMode
+import dev.pluto.launcher.ui.focus.LocalControllerFocus
+import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.controllerFocusable
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -52,15 +60,28 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 internal const val HOME_SURFACE = "home"
 
+/** Home copy shared by the layouts (inline for 0.1). */
+internal object HomeText {
+    const val EMPTY_FAVOURITES = "Tap Add favourite, or open All apps, tap Actions and choose an app. " +
+        "Pressing and holding an app also opens its actions."
+}
+
 internal fun homeTileFocusId(tile: HomeTile): String = "home:${tile.id}"
 internal fun dockFocusId(slot: Int): String = "dock:$slot"
 
 /** Base icon size for home tiles, scaled by the user's icon-size setting. */
 internal fun LauncherUiState.iconSize(base: Dp = 52.dp): Dp = base * settings.iconScale
 
-/** Shows controller hints only while a controller is connected and actually driving. */
-internal fun showControllerHints(state: LauncherUiState, focus: ControllerFocusController): Boolean =
-    state.controllerConnected && focus.inputMode == InputMode.CONTROLLER
+/**
+ * Shows controller hints while a controller is connected and driving. Handheld mode is
+ * controller-first: its legend stays visible whenever a controller is connected, even
+ * after a touch, and disappears as soon as the controller is removed.
+ */
+internal fun showControllerHints(
+    state: LauncherUiState,
+    focus: ControllerFocusController,
+    mode: LauncherMode? = null,
+): Boolean = state.controllerConnected && (mode == LauncherMode.HANDHELD || focus.inputMode == InputMode.CONTROLLER)
 
 /** A home favourites tile (app or folder) wired to the view model. */
 @Composable
@@ -185,14 +206,99 @@ internal fun rememberAnchoredGridState(surface: String, state: LauncherUiState, 
     return gridState
 }
 
-/** Reports the first visible item's key as the logical scroll anchor for [surface]. */
+/** What [ReportScrollAnchor] needs from one grid layout pass. */
+private data class GridAnchorSnapshot(val viewport: IntSize, val columns: Int, val firstLineKeys: List<Any?>)
+
+/**
+ * Keeps the logical scroll anchor (an item key) for [surface] in the session.
+ *
+ * A lazy grid always starts its first line at a line boundary, so after a reflow (rotation,
+ * window resize, a different column count) its first visible item is an *earlier* item
+ * than the anchor. Adopting that item as the new anchor would drift the list towards the
+ * top on every rotation. So:
+ * - the anchor only changes when it is no longer on the first visible line (the user or a
+ *   focus move really scrolled), and
+ * - a geometry change scrolls the grid back to the anchor's line instead of re-reporting.
+ */
 @Composable
-internal fun ReportScrollAnchor(surface: String, gridState: LazyGridState, vm: LauncherViewModel) {
+internal fun ReportScrollAnchor(
+    surface: String,
+    gridState: LazyGridState,
+    state: LauncherUiState,
+    vm: LauncherViewModel,
+    itemKeys: List<String>,
+) {
     val currentVm by rememberUpdatedState(vm)
+    val currentKeys by rememberUpdatedState(itemKeys)
+    val anchor = remember(surface) { arrayOf(state.session.scrollAnchors[surface]) }
     LaunchedEffect(gridState, surface) {
-        snapshotFlow { gridState.layoutInfo.visibleItemsInfo.firstOrNull()?.key as? String }
+        var geometry: Pair<IntSize, Int>? = null
+        snapshotFlow {
+            val info = gridState.layoutInfo
+            val first = info.visibleItemsInfo.firstOrNull()
+            val line = if (first == null) emptyList() else info.visibleItemsInfo.filter { it.row == first.row }.map { it.key }
+            GridAnchorSnapshot(info.viewportSize, info.maxSpan, line)
+        }
+            .distinctUntilChanged()
+            .collect { snap ->
+                if (snap.firstLineKeys.isEmpty()) return@collect
+                val newGeometry = snap.viewport to snap.columns
+                val previousGeometry = geometry
+                geometry = newGeometry
+                val current = anchor[0]
+                if (previousGeometry != null && previousGeometry != newGeometry) {
+                    // Reflow: restore the closest valid position (the anchor's line), never re-anchor.
+                    val index = current?.let(currentKeys::indexOf) ?: -1
+                    if (index >= 0 && !snap.firstLineKeys.contains(current)) gridState.scrollToItem(index)
+                    return@collect
+                }
+                if (current != null && snap.firstLineKeys.contains(current)) return@collect
+                val key = snap.firstLineKeys.first() as? String ?: return@collect
+                anchor[0] = key
+                currentVm.onScrollAnchor(surface, key)
+            }
+    }
+}
+
+/** Lazy row/column state that starts at the persisted logical anchor for [surface]. */
+@Composable
+internal fun rememberAnchoredListState(surface: String, state: LauncherUiState, itemKeys: List<String>): LazyListState {
+    val initialIndex = remember(surface) {
+        state.session.scrollAnchors[surface]?.let(itemKeys::indexOf)?.takeIf { it >= 0 } ?: 0
+    }
+    return rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+}
+
+/** Reports the first visible item's key of a single-line lazy list as the anchor for [surface]. */
+@Composable
+internal fun ReportListScrollAnchor(surface: String, listState: LazyListState, vm: LauncherViewModel) {
+    val currentVm by rememberUpdatedState(vm)
+    LaunchedEffect(listState, surface) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.key as? String }
             .distinctUntilChanged()
             .collect { key -> if (key != null) currentVm.onScrollAnchor(surface, key) }
+    }
+}
+
+/**
+ * Reports the on-screen order of a list's focus ids to the focus controller, so a control
+ * that vanishes (uninstall, hide, unpin, move to folder) hands focus to its nearest
+ * surviving neighbour. [scrollTo] scrolls the list so an off-screen neighbour is composed.
+ */
+@Composable
+internal fun TrackFocusOrder(surface: String, ids: List<String>, scrollTo: (suspend (Int) -> Unit)? = null) {
+    val focus = LocalControllerFocus.current
+    val inert by rememberUpdatedState(LocalFocusInert.current)
+    SideEffect { focus.setOrder(surface, ids, scrollTo) }
+    DisposableEffect(focus, surface) { onDispose { focus.clearScroller(surface) } }
+    val firstRun = remember { booleanArrayOf(true) }
+    LaunchedEffect(ids) {
+        if (firstRun[0]) {
+            firstRun[0] = false
+            return@LaunchedEffect
+        }
+        withFrameNanos { }
+        if (!inert) focus.followVanished(surface)
     }
 }
 
@@ -279,8 +385,9 @@ private val HOME_BUTTON_IDS = setOf(ID_SEARCH, ID_ALL_APPS, ID_EDIT, ID_SETTINGS
 
 /**
  * When a Phone/Landscape home (re)appears (first launch, rotation, closing a full-screen
- * layer) restore focus to the remembered control / selected app. Skipped when something
- * else (e.g. the layer-close restore in LauncherRoot) already placed focus.
+ * layer) or a controller is connected, restore focus to the remembered control / selected
+ * app. Skipped when something else (e.g. the layer-close restore in LauncherRoot) already
+ * placed focus.
  */
 @Composable
 internal fun RestoreHomeFocusEffect(
@@ -291,7 +398,7 @@ internal fun RestoreHomeFocusEffect(
 ) {
     val currentState by rememberUpdatedState(state)
     val currentKeys by rememberUpdatedState(gridKeys)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(state.controllerConnected) {
         withFrameNanos { }
         val s = currentState
         if (s.session.layers.isNotEmpty() || focus.focusedId != null) return@LaunchedEffect

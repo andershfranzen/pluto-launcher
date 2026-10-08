@@ -233,6 +233,9 @@ class LauncherViewModel(
     fun openAppInfo(key: AppKey) = systemAction("open app info") { container.catalog.openAppInfo(key) }
     fun requestUninstall(key: AppKey) = systemAction("request uninstall") { container.catalog.requestUninstall(key) }
 
+    /** Shows a short, readable message (e.g. guidance after a declined system dialog). */
+    fun showMessage(text: String) = postMessage(text)
+
     fun dismissMessage(id: Long) {
         message.update { current -> if (current?.id == id) null else current }
     }

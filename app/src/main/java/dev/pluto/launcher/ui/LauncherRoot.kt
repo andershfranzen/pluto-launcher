@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -41,12 +43,14 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.pluto.launcher.LauncherApplication
 import dev.pluto.launcher.R
+import dev.pluto.launcher.domain.ModeResolver
 import dev.pluto.launcher.input.ControllerInputRouter
 import dev.pluto.launcher.input.LauncherAction
 import dev.pluto.launcher.model.LauncherMode
@@ -88,10 +92,19 @@ private val Layer.isFullScreen: Boolean
     }
 
 /**
+ * Hides content beneath a modal layer or dialog from screen readers. Focus is already
+ * blocked there through [LocalFocusInert]; this keeps TalkBack from reading or activating it.
+ */
+internal fun Modifier.hiddenFromAccessibility(hidden: Boolean): Modifier =
+    if (hidden) clearAndSetSemantics { } else this
+
+/**
  * Top-level composable. Applies theme + wallpaper scrim, measures the window
- * (calls vm.onWindowSizeChanged), picks Phone / Landscape / Handheld layout from
- * state.mode, renders the layer stack above it, the message snackbar, and routes
- * [LauncherAction]s collected from [actions] through the focus controller and VM.
+ * (calls vm.onWindowSizeChanged), picks Phone / Landscape / Handheld layout for the
+ * measured window in the same frame (the view model's state.mode follows asynchronously,
+ * which would otherwise show the previous mode's layout stretched for a frame or more),
+ * renders the layer stack above it, the message snackbar, and routes [LauncherAction]s
+ * collected from [actions] through the focus controller and VM.
  */
 @Composable
 fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
@@ -99,6 +112,18 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     val focus = remember { ControllerFocusController() }
     val context = LocalContext.current
     val iconCache = remember(context) { (context.applicationContext as LauncherApplication).container.icons }
+
+    // Controller attach / detach switches the presentation immediately (before the new mode's
+    // layout restores focus): controller ring and hints on attach, touch presentation on
+    // removal with the current control kept as the selection.
+    val connectedBefore = remember { booleanArrayOf(false) }
+    SideEffect {
+        val connected = state.controllerConnected
+        if (connected != connectedBefore[0]) {
+            connectedBefore[0] = connected
+            if (connected) focus.onControllerConnected() else focus.onControllerDisconnected()
+        }
+    }
 
     CompositionLocalProvider(LocalIconCache provides iconCache) {
         PlutoTheme(state.settings) {
@@ -126,12 +151,16 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                     val widthDp = maxWidth.value.toInt()
                     val heightDp = maxHeight.value.toInt()
                     LaunchedEffect(widthDp, heightDp) { vm.onWindowSizeChanged(widthDp, heightDp) }
+                    // Same rule and inputs as the view model, resolved synchronously for this frame.
+                    val mode = remember(widthDp, heightDp, state.controllerConnected, state.settings.handheldAppearance) {
+                        ModeResolver.resolve(widthDp, heightDp, state.controllerConnected, state.settings.handheldAppearance)
+                    }
 
                     WallpaperScrim(state.settings)
                     if (state.loading) {
                         LoadingPlaceholder()
                     } else {
-                        LauncherContent(state, vm, focus)
+                        LauncherContent(state, mode, vm, focus)
                     }
 
                     MessageBar(
@@ -151,7 +180,11 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     ActionRouting(state, vm, focus, actions)
 }
 
-/** Routes controller actions: the focus layer first, then launcher-level shortcuts. */
+/**
+ * Routes controller actions: the focus layer first, then launcher-level shortcuts.
+ * Back closes the soft keyboard first (like system Back does), then search, dialogs and layers.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ActionRouting(
     state: LauncherUiState,
@@ -160,6 +193,8 @@ private fun ActionRouting(
     actions: Flow<LauncherAction>,
 ) {
     val currentState by rememberUpdatedState(state)
+    val imeVisible by rememberUpdatedState(WindowInsets.isImeVisible)
+    val keyboard by rememberUpdatedState(LocalSoftwareKeyboardController.current)
     // Back goes through the Activity's dispatcher so nested dialogs inside a layer (BackHandler)
     // close first; MainActivity's own callback falls back to vm.back().
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -170,7 +205,12 @@ private fun ActionRouting(
             // Onboarding sits above everything; launcher shortcuts would open layers hidden beneath it.
             if (top == Layer.Onboarding && action != LauncherAction.Back) return@collect
             when (action) {
-                LauncherAction.Back -> if (backDispatcher != null) backDispatcher.onBackPressed() else vm.back()
+                LauncherAction.Back -> when {
+                    // The controller's Back never reaches the IME, so close the keyboard here first.
+                    imeVisible && keyboard != null -> keyboard?.hide()
+                    backDispatcher != null -> backDispatcher.onBackPressed()
+                    else -> vm.back()
+                }
                 LauncherAction.Search -> {
                     if (top == Layer.Drawer) {
                         vm.setSearchActive(true)
@@ -180,18 +220,29 @@ private fun ActionRouting(
                     }
                 }
                 LauncherAction.Settings -> if (top != Layer.Settings) vm.openLayer(Layer.Settings)
-                // Category switching only means something while browsing (home or drawer).
-                LauncherAction.PrevCategory -> if (top == null || top == Layer.Drawer) vm.previousCategory()
-                LauncherAction.NextCategory -> if (top == null || top == Layer.Drawer) vm.nextCategory()
+                // Category switching only where categories are visible: Handheld home and the drawer.
+                // Phone/Landscape home shows no tabs, so a press there would filter the drawer unseen.
+                LauncherAction.PrevCategory -> if (currentState.browsingCategories()) vm.previousCategory()
+                LauncherAction.NextCategory -> if (currentState.browsingCategories()) vm.nextCategory()
                 else -> Unit
             }
         }
     }
 }
 
+private fun LauncherUiState.browsingCategories(): Boolean {
+    val top = session.topLayer
+    return top == Layer.Drawer || (top == null && mode == LauncherMode.HANDHELD)
+}
+
 /** Base layout plus the visible part of the layer stack, with focus bookkeeping for layers. */
 @Composable
-private fun LauncherContent(state: LauncherUiState, vm: LauncherViewModel, focus: ControllerFocusController) {
+private fun LauncherContent(
+    state: LauncherUiState,
+    mode: LauncherMode,
+    vm: LauncherViewModel,
+    focus: ControllerFocusController,
+) {
     val layers = state.session.layers
     val scope = rememberCoroutineScope()
 
@@ -207,7 +258,9 @@ private fun LauncherContent(state: LauncherUiState, vm: LauncherViewModel, focus
             repeat(before - count) { focus.popLayer()?.let { restoreId = it } }
             val id = restoreId
             if (id != null && focus.inputMode == InputMode.CONTROLLER) {
-                scope.launch { focus.requestFocusWhenReady(id) }
+                // The opener may have vanished meanwhile (hidden, unpinned, moved into a folder):
+                // then its nearest surviving neighbour takes focus, not the top of the screen.
+                scope.launch { focus.focusOrNeighbour(id) }
             }
         }
         previousCount[0] = count
@@ -220,11 +273,14 @@ private fun LauncherContent(state: LauncherUiState, vm: LauncherViewModel, focus
 
     Box(Modifier.fillMaxSize()) {
         if (showBase) {
-            CompositionLocalProvider(LocalFocusInert provides layers.isNotEmpty()) {
-                when (state.mode) {
-                    LauncherMode.PHONE -> PhoneLayout(state, vm)
-                    LauncherMode.LANDSCAPE -> LandscapeLayout(state, vm)
-                    LauncherMode.HANDHELD -> HandheldLayout(state, vm)
+            val covered = layers.isNotEmpty()
+            CompositionLocalProvider(LocalFocusInert provides covered) {
+                Box(Modifier.fillMaxSize().hiddenFromAccessibility(covered)) {
+                    when (mode) {
+                        LauncherMode.PHONE -> PhoneLayout(state, vm)
+                        LauncherMode.LANDSCAPE -> LandscapeLayout(state, vm)
+                        LauncherMode.HANDHELD -> HandheldLayout(state, vm)
+                    }
                 }
             }
         }
@@ -233,10 +289,12 @@ private fun LauncherContent(state: LauncherUiState, vm: LauncherViewModel, focus
             val isTop = index == layers.lastIndex
             key(Layer.encode(layer)) {
                 CompositionLocalProvider(LocalFocusInert provides !isTop) {
-                    // The overlay sheets (AppActions, CategoryMembership, MoveToFolder) draw their own
-                    // ModalPanel scrim; only the folder view relies on the root's scrim.
-                    if (layer is Layer.FolderLayer) DismissScrim(onDismiss = { if (isTop) vm.back() })
-                    LayerContent(layer, state, vm)
+                    Box(Modifier.fillMaxSize().hiddenFromAccessibility(!isTop)) {
+                        // The overlay sheets (AppActions, CategoryMembership, MoveToFolder) draw their own
+                        // ModalPanel scrim; only the folder view relies on the root's scrim.
+                        if (layer is Layer.FolderLayer) DismissScrim(onDismiss = { if (isTop) vm.back() })
+                        LayerContent(layer, state, vm)
+                    }
                 }
             }
         }

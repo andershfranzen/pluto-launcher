@@ -108,6 +108,8 @@ fun appContentDescription(entry: AppEntry): String =
  * Standard app tile: icon + label (max 2 lines, ellipsis), controller-focusable via
  * Modifier.controllerFocusable(id = entry.key.encode(), ...), min 48dp target.
  * Disabled (suspended) apps render dimmed with "(unavailable)" in the a11y label.
+ * [onActions] runs for X, a long press and the screen-reader action; [actionsOnTap] tells
+ * screen readers that a tap opens the actions (the drawer's Actions mode).
  */
 @Composable
 fun AppTile(
@@ -119,6 +121,7 @@ fun AppTile(
     focusId: String = entry.key.encode(),
     showLabel: Boolean = true,
     onFocused: (() -> Unit)? = null,
+    actionsOnTap: Boolean = false,
 ) {
     Column(
         modifier
@@ -128,7 +131,7 @@ fun AppTile(
                 onActivate = onLaunch,
                 onSecondary = onActions,
                 secondaryLabel = "App actions",
-                contentDescription = appContentDescription(entry),
+                contentDescription = appContentDescription(entry) + if (actionsOnTap) ", opens app actions" else "",
                 shape = RoundedCornerShape(PlutoDimens.TileCorner),
                 onFocused = onFocused,
             )

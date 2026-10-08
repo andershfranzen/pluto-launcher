@@ -31,6 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -79,8 +81,8 @@ private val REFUSED_KEYS = setOf(
     KeyEvent.KEYCODE_DPAD_DOWN_RIGHT,
 )
 
-/** Never consumed at all, so Android keeps handling them. */
-private val SYSTEM_KEYS = setOf(KeyEvent.KEYCODE_HOME, KeyEvent.KEYCODE_APP_SWITCH)
+/** Never consumed or captured, so Android keeps handling them (Home, Recents, controller Guide/Home). */
+private val SYSTEM_KEYS = ButtonMapping.SYSTEM_RESERVED_KEYS
 
 /** Non-gamepad keys in the defaults (system Back, Menu) that a remap keeps for its action. */
 private val PRESERVED_KEYS = setOf(ButtonMapping.KEYCODE_BACK, ButtonMapping.KEYCODE_MENU)
@@ -101,6 +103,25 @@ private fun ControllerInfo.mappingKey() = LauncherSettings.controllerMappingKey(
 private class Diagnostics {
     var lastKey by mutableStateOf<String?>(null)
     var axes by mutableStateOf<String?>(null)
+    /** Coarse stick summary for screen readers; changes only on dead-zone or direction changes. */
+    var stickSummary by mutableStateOf<String?>(null)
+}
+
+/** "centred", "up", "down-left", ... for a stick position, given the dead zone. */
+internal fun stickDirection(x: Float, y: Float, deadZone: Float): String {
+    if (hypot(x, y) < deadZone) return "centred"
+    val half = deadZone / 2f
+    val vertical = when {
+        y <= -half -> "up"
+        y >= half -> "down"
+        else -> null
+    }
+    val horizontal = when {
+        x <= -half -> "left"
+        x >= half -> "right"
+        else -> null
+    }
+    return listOfNotNull(vertical, horizontal).joinToString("-")
 }
 
 /** Connected controllers, live input diagnostics, dead zone/repeat tuning, button remapping. */
@@ -188,6 +209,8 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)
         val hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
         val inDeadZone = hypot(x, y) < settings.stickDeadZone
+        val summary = "Left stick ${stickDirection(x, y, settings.stickDeadZone)}, right stick ${stickDirection(rx, ry, settings.stickDeadZone)}"
+        if (summary != diagnostics.stickSummary) diagnostics.stickSummary = summary
         diagnostics.axes = "Left stick %+.2f, %+.2f%s\nRight stick %+.2f, %+.2f\nD-pad (hat) %+.0f, %+.0f".format(
             x, y, if (inDeadZone) " (dead zone)" else "", rx, ry, hatX, hatY,
         )
@@ -221,7 +244,8 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = SettingsText.CONTROLLER_TITLE,
         idPrefix = "controller",
         onClose = { vm.back() },
-        trapFocus = isTop && capturing == null,
+        trapFocus = isTop,
+        dialogOpen = capturing != null,
         overlay = {
             capturing?.let { action ->
                 CaptureDialog(
@@ -360,19 +384,34 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
     }
 }
 
+/**
+ * Last key and live axes. Only the last key is a (polite) live region: axis values change
+ * dozens of times per second and would flood a screen reader, so they expose a coarse
+ * direction summary instead, read when the user reaches it.
+ */
 @Composable
 private fun DiagnosticsPanel(diagnostics: Diagnostics) {
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .semantics { liveRegion = LiveRegionMode.Polite },
+            .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
         Text(SettingsText.LAST_KEY, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(diagnostics.lastKey ?: SettingsText.NO_KEY_YET, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            diagnostics.lastKey ?: SettingsText.NO_KEY_YET,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
         Spacer(Modifier.heightIn(min = 8.dp))
         Text(SettingsText.AXES, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(diagnostics.axes ?: SettingsText.NO_MOTION_YET, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+        val summary = diagnostics.stickSummary ?: SettingsText.NO_MOTION_YET
+        Text(
+            diagnostics.axes ?: SettingsText.NO_MOTION_YET,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.clearAndSetSemantics { contentDescription = summary },
+        )
     }
 }
 

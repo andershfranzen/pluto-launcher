@@ -46,6 +46,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -67,8 +68,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -78,6 +82,7 @@ import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
+import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.controllerFocusable
 import kotlin.math.roundToInt
 
@@ -105,7 +110,8 @@ internal fun Modifier.focusTrap(enabled: Boolean = true): Modifier =
 /**
  * Per-screen focus bookkeeping. Registers [ScreenFocus.defaultId] with the focus
  * controller and, in controller mode, moves focus there when the screen (or step)
- * appears. Nested dialogs call [returnFrom] when they close so focus goes back to the
+ * appears; in touch mode it is remembered so the first controller input lands there
+ * (e.g. inside a dialog opened by touch, never on the panel beneath it). Nested dialogs call [returnFrom] when they close so focus goes back to the
  * control that opened them.
  */
 @Stable
@@ -139,6 +145,8 @@ internal class ScreenFocus(private val controller: ControllerFocusController, de
                     withFrameNanos { }
                     if (controller.requestFocus(pending.id)) return@LaunchedEffect
                 }
+            } else {
+                controller.rememberFocusTarget(pending.id)
             }
         }
     }
@@ -210,7 +218,9 @@ private fun PanelHeader(title: String, closeId: String, onClose: () -> Unit, lea
 
 /**
  * A full-height layer (settings, edit, …): modal scrim plus a centred panel with a title
- * bar and Close button. [overlay] hosts nested dialogs above the panel.
+ * bar and Close button. [overlay] hosts nested dialogs above the panel; while one is open
+ * ([dialogOpen]) the panel underneath is inert for focus and hidden from screen readers,
+ * so neither a controller nor TalkBack can reach controls covered by the dialog.
  * The body scrolls vertically unless [scrollable] is false (for screens using lazy lists).
  */
 @Composable
@@ -219,12 +229,14 @@ internal fun LayerScaffold(
     idPrefix: String,
     onClose: () -> Unit,
     trapFocus: Boolean = true,
+    dialogOpen: Boolean = false,
     maxWidth: Dp = 720.dp,
     scrollable: Boolean = true,
     overlay: @Composable BoxScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Box(Modifier.fillMaxSize().focusTrap(trapFocus)) {
+    val covered = dialogOpen || LocalFocusInert.current
+    Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen)) {
         ModalScrim(onTap = null)
         Surface(
             modifier = Modifier
@@ -233,24 +245,27 @@ internal fun LayerScaffold(
                 .padding(12.dp)
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .then(if (covered) Modifier.clearAndSetSemantics { } else Modifier.semantics { paneTitle = title }),
             shape = PanelShape,
             color = panelColor(),
         ) {
-            Column {
-                PanelHeader(title, "$idPrefix:close", onClose, leading = null)
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                val body = Modifier.weight(1f).fillMaxWidth()
-                if (scrollable) {
-                    Column(
-                        body
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        content = content,
-                    )
-                } else {
-                    Column(body, content = content)
+            CompositionLocalProvider(LocalFocusInert provides covered) {
+                Column {
+                    PanelHeader(title, "$idPrefix:close", onClose, leading = null)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    val body = Modifier.weight(1f).fillMaxWidth()
+                    if (scrollable) {
+                        Column(
+                            body
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            content = content,
+                        )
+                    } else {
+                        Column(body, content = content)
+                    }
                 }
             }
         }
@@ -262,7 +277,8 @@ internal fun LayerScaffold(
  * A content-sized modal panel (sheet / dialog). When [interceptBack] is true (nested
  * dialogs inside a layer) system Back closes just this dialog via [onDismiss].
  * Tapping the scrim dismisses too. [scrollable] = false lets the caller host a lazy list
- * with Modifier.weight(1f, fill = false).
+ * with Modifier.weight(1f, fill = false). [dialogOpen]: a nested dialog is drawn above this
+ * panel, so its controls are inert for focus and hidden from screen readers.
  */
 @Composable
 internal fun ModalPanel(
@@ -271,6 +287,7 @@ internal fun ModalPanel(
     onDismiss: () -> Unit,
     trapFocus: Boolean = true,
     interceptBack: Boolean = false,
+    dialogOpen: Boolean = false,
     maxWidth: Dp = 560.dp,
     scrollable: Boolean = true,
     leading: (@Composable () -> Unit)? = null,
@@ -278,7 +295,8 @@ internal fun ModalPanel(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     if (interceptBack) BackHandler(onBack = onDismiss)
-    Box(Modifier.fillMaxSize().focusTrap(trapFocus)) {
+    val covered = dialogOpen || LocalFocusInert.current
+    Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen)) {
         ModalScrim(onTap = onDismiss)
         Surface(
             modifier = Modifier
@@ -286,27 +304,40 @@ internal fun ModalPanel(
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(16.dp)
                 .widthIn(max = maxWidth)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                // Announced as a pane; screen-reader traversal stays inside the dialog.
+                .then(
+                    if (covered) {
+                        Modifier.clearAndSetSemantics { }
+                    } else {
+                        Modifier.semantics {
+                            paneTitle = title
+                            isTraversalGroup = true
+                        }
+                    },
+                ),
             shape = PanelShape,
             color = panelColor(),
             tonalElevation = 2.dp,
         ) {
-            Column {
-                PanelHeader(title, "$idPrefix:close", onDismiss, leading)
-                val body = Modifier.weight(1f, fill = false).fillMaxWidth()
-                if (scrollable) {
-                    Column(
-                        body.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                        content = content,
-                    )
-                } else {
-                    Column(body, content = content)
-                }
-                if (actions != null) {
-                    ButtonBar(Modifier.padding(16.dp), content = actions)
-                } else {
-                    Spacer(Modifier.size(12.dp))
+            CompositionLocalProvider(LocalFocusInert provides covered) {
+                Column {
+                    PanelHeader(title, "$idPrefix:close", onDismiss, leading)
+                    val body = Modifier.weight(1f, fill = false).fillMaxWidth()
+                    if (scrollable) {
+                        Column(
+                            body.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                            content = content,
+                        )
+                    } else {
+                        Column(body, content = content)
+                    }
+                    if (actions != null) {
+                        ButtonBar(Modifier.padding(16.dp), content = actions)
+                    } else {
+                        Spacer(Modifier.size(12.dp))
+                    }
                 }
             }
         }
@@ -400,7 +431,8 @@ internal fun IconAction(id: String, icon: ImageVector, label: String, onClick: (
 
 /**
  * A full-width list row: optional leading icon or composable, a label with optional
- * supporting text, and an optional trailing composable (switch, checkbox…).
+ * supporting text, and an optional trailing composable (switch, checkbox…). A [selected]
+ * row gets a border and a check mark and is announced as selected.
  */
 @Composable
 internal fun ActionRow(
@@ -432,8 +464,11 @@ internal fun ActionRow(
                 shape = ControlShape,
                 onFocused = onFocused,
             )
+            // Selection is announced ("selected") and drawn with a border, not by colour alone.
+            .then(if (selected) Modifier.semantics { stateDescription = KitText.SELECTED } else Modifier)
             .clip(ControlShape)
             .background(if (selected) colors.secondaryContainer else Color.Transparent)
+            .then(if (selected) Modifier.border(BorderStroke(2.dp, colors.secondary), ControlShape) else Modifier)
             .alpha(if (enabled) 1f else 0.45f)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -462,6 +497,9 @@ internal fun ActionRow(
         if (trailing != null) {
             Spacer(Modifier.width(12.dp))
             trailing()
+        } else if (selected) {
+            Spacer(Modifier.width(12.dp))
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = colors.onSecondaryContainer, modifier = Modifier.size(20.dp))
         }
     }
 }

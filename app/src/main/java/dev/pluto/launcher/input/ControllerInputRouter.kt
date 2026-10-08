@@ -27,7 +27,8 @@ import kotlin.math.max
  * - Buttons map through settings.mappingFor(device): action fires on ACTION_UP of a key whose
  *   ACTION_DOWN was seen (prevents a launch carried over from a previous screen / app),
  *   except movement which fires on down. Long-press does not trigger anything.
- * - System Home / Recents (KEYCODE_HOME, KEYCODE_APP_SWITCH) are never consumed.
+ * - System Home / Recents (KEYCODE_HOME, KEYCODE_APP_SWITCH) and the controller's Guide/Home
+ *   button (KEYCODE_BUTTON_MODE, whose system fallback is HOME) are never consumed.
  * - [onRawKey], if set, receives every controller key-down before mapping (used by the
  *   remapping/diagnostics screen); if it returns true the event is consumed and not mapped.
  *
@@ -279,9 +280,10 @@ class ControllerInputRouter(private val onAction: (LauncherAction) -> Unit) {
         const val DUPLICATE_BUTTON_WINDOW_MS = 90L
 
         /** System-reserved keys the launcher must never swallow or remap. */
-        val NEVER_CONSUMED = setOf(
+        val NEVER_CONSUMED = ButtonMapping.SYSTEM_RESERVED_KEYS + setOf(
             KeyEvent.KEYCODE_HOME,
             KeyEvent.KEYCODE_APP_SWITCH,
+            KeyEvent.KEYCODE_BUTTON_MODE,
             KeyEvent.KEYCODE_POWER,
             KeyEvent.KEYCODE_VOLUME_UP,
             KeyEvent.KEYCODE_VOLUME_DOWN,

@@ -27,6 +27,23 @@ class ButtonMappingTest {
     }
 
     @Test
+    fun systemReservedKeysNeverMapToActions() {
+        // A mapping persisted before Guide/Home was reserved must not keep it bound.
+        val legacy = ButtonMapping(default.bindings + (ControllerAction.SEARCH to setOf(KEYCODE_BUTTON_Y, ButtonMapping.KEYCODE_BUTTON_MODE)))
+        assertNull(legacy.actionFor(ButtonMapping.KEYCODE_BUTTON_MODE))
+        assertNull(legacy.actionFor(ButtonMapping.KEYCODE_HOME))
+        assertNull(legacy.actionFor(ButtonMapping.KEYCODE_APP_SWITCH))
+        assertEquals(ControllerAction.SEARCH, legacy.actionFor(KEYCODE_BUTTON_Y))
+    }
+
+    @Test
+    fun decodeDropsSystemReservedKeys() {
+        val decoded = ButtonMapping.decode("SEARCH=100,110;BACK=97,3")
+        assertEquals(setOf(KEYCODE_BUTTON_Y), decoded.keysFor(ControllerAction.SEARCH))
+        assertEquals(setOf(KEYCODE_BUTTON_B), decoded.keysFor(ControllerAction.BACK))
+    }
+
+    @Test
     fun encodeDecodeRoundTrip() {
         assertEquals(default, ButtonMapping.decode(default.encode()))
         val custom = default.rebind(ControllerAction.CONFIRM, KEYCODE_BUTTON_B)

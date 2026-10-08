@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -51,7 +52,10 @@ fun rememberMinuteClock(): Long {
 
 /**
  * Compact time and date drawn over the wallpaper. Respects the system 12/24-hour setting
- * and locale. [compact] puts time and date on one line (landscape / handheld headers).
+ * and locale. [compact] puts time and an abbreviated date on one line (landscape / handheld
+ * headers). Texts never clip mid-glyph at large font sizes: they ellipsize, the compact
+ * date gives way first (it shrinks to nothing before the time does), and the full-size
+ * date may wrap to a second line.
  */
 @Composable
 fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false) {
@@ -65,19 +69,38 @@ fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false) {
     }
     val semanticsModifier = modifier.clearAndSetSemantics { contentDescription = "$time, $day" }
     if (compact) {
+        val shortDay = remember(now, locale) {
+            DateFormat.format(DateFormat.getBestDateTimePattern(locale, "EEEMMMd"), date).toString()
+        }
         Row(semanticsModifier, verticalAlignment = Alignment.CenterVertically) {
             Text(
                 time,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
                 maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.width(10.dp))
-            Text(day, style = MaterialTheme.typography.bodyMedium.overWallpaper(), maxLines = 1)
+            // Measured after the time (weight), so the date is what gives way when space is tight.
+            Text(
+                shortDay,
+                style = MaterialTheme.typography.bodyMedium.overWallpaper(),
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
         }
     } else {
         Column(semanticsModifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(time, style = MaterialTheme.typography.displayMedium.overWallpaper(), maxLines = 1)
-            Text(day, style = MaterialTheme.typography.titleMedium.overWallpaper())
+            Text(
+                time,
+                style = MaterialTheme.typography.displayMedium.overWallpaper(),
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(day, style = MaterialTheme.typography.titleMedium.overWallpaper(), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }

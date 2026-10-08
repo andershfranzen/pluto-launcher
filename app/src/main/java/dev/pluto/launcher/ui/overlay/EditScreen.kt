@@ -16,6 +16,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DriveFileRenameOutline
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.FolderOff
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.RemoveCircleOutline
 import androidx.compose.material.icons.rounded.SwapVert
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -77,7 +79,7 @@ private sealed interface EditTarget {
 }
 
 /** Nested dialogs of the edit screen; saved by name so they survive rotation. */
-private enum class EditDialog { MOVE_BEFORE, MOVE_AFTER, PICK_APP, RENAME_FOLDER, DELETE_FOLDER, NEW_FOLDER }
+private enum class EditDialog { MOVE_BEFORE, MOVE_AFTER, PICK_APP, PICK_FAVOURITE, RENAME_FOLDER, DELETE_FOLDER, NEW_FOLDER }
 
 private fun rowId(selectionId: String) = "edit:row:$selectionId"
 
@@ -122,7 +124,10 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val folders = orderedFolders(state)
 
     val firstRow = state.homeTiles.firstOrNull()?.let { rowId(it.id) } ?: rowId("${DOCK_PREFIX}0")
-    val screenFocus = rememberScreenFocus(firstRow)
+    // Opened with a preselected item (empty dock slot, folder, ...): start on it, or on its
+    // first control for an empty dock slot, instead of the top of the list.
+    val initialFocus = remember { initialFocusFor(target) }
+    val screenFocus = rememberScreenFocus(initialFocus ?: firstRow)
 
     fun openDialog(which: EditDialog, openerId: String) {
         dialogOpener = openerId
@@ -156,7 +161,8 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = OverlayText.EDIT_TITLE,
         idPrefix = "edit",
         onClose = { vm.back() },
-        trapFocus = isTop && dialog == null,
+        trapFocus = isTop,
+        dialogOpen = dialog != null,
         overlay = {
             when (dialog) {
                 EditDialog.MOVE_BEFORE, EditDialog.MOVE_AFTER -> if (target != null) {
@@ -189,10 +195,24 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 } else {
                     DismissNow(::closeDialog)
                 }
+                EditDialog.PICK_FAVOURITE -> AppPicker(
+                    state = state,
+                    title = OverlayText.CHOOSE_FAVOURITE,
+                    isCurrent = { key -> state.homeTiles.any { it is HomeTile.App && it.entry.key == key } },
+                    currentLabel = OverlayText.ON_HOME,
+                    onPick = { key ->
+                        dialog = null
+                        vm.pin(key)
+                        screenFocus.returnFrom("edit:addfav")
+                    },
+                    onDismiss = ::closeDialog,
+                )
                 EditDialog.PICK_APP -> if (target is EditTarget.Dock) {
                     AppPicker(
                         state = state,
-                        currentSlotApp = target.entry?.key,
+                        title = OverlayText.CHOOSE_APP,
+                        isCurrent = { it == target.entry?.key },
+                        currentLabel = null,
                         onPick = { key ->
                             dialog = null
                             vm.setDockSlot(target.slot, key)
@@ -264,6 +284,12 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
         BodyText(OverlayText.EDIT_INTRO)
         ButtonBar(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), arrangement = Arrangement.spacedBy(8.dp)) {
             PlutoButton(
+                "edit:addfav",
+                OverlayText.ADD_FAVOURITE,
+                { openDialog(EditDialog.PICK_FAVOURITE, "edit:addfav") },
+                icon = Icons.Rounded.Add,
+            )
+            PlutoButton(
                 "edit:newfolder",
                 OverlayText.NEW_FOLDER,
                 { openDialog(EditDialog.NEW_FOLDER, "edit:newfolder") },
@@ -312,9 +338,12 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                             openDialog(EditDialog.MOVE_AFTER, "edit:ctl:after")
                         }
                         when (tile) {
-                            is HomeTile.App -> EditControl("edit:ctl:unpin", OverlayText.UNPIN, Icons.Rounded.PushPin) {
-                                vm.unpin(tile.entry.key)
-                                dropSelection(controllerFocusAfterRemoval(state, index))
+                            is HomeTile.App -> {
+                                EditControl("edit:ctl:unpin", OverlayText.UNPIN, Icons.Rounded.PushPin) {
+                                    vm.unpin(tile.entry.key)
+                                    dropSelection(controllerFocusAfterRemoval(state, index))
+                                }
+                                AppActionsControl(tile.entry.key, vm)
                             }
                             is HomeTile.FolderTile -> {
                                 EditControl("edit:ctl:rename", OverlayText.RENAME_FOLDER, Icons.Rounded.DriveFileRenameOutline) {
@@ -372,6 +401,7 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                             vm.setDockSlot(slot, null)
                             screenFocus.focus(rowId(selectionId))
                         }
+                        AppActionsControl(entry.key, vm)
                     } else {
                         EditControl("edit:ctl:add", OverlayText.ADD_APP_TO_SLOT, Icons.Rounded.Add) {
                             openDialog(EditDialog.PICK_APP, "edit:ctl:add")
@@ -421,6 +451,7 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                                     val neighbour = folderUi.apps.getOrNull(index + 1) ?: folderUi.apps.getOrNull(index - 1)
                                     dropSelection(neighbour?.let { rowId(it.key.encode()) } ?: "edit:newfolder")
                                 }
+                                AppActionsControl(app.key, vm)
                             }
                         }
                     }
@@ -428,6 +459,22 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }
         }
     }
+}
+
+/** Opens the app's full App actions sheet (categories, folder, hide, app info) from Edit. */
+@Composable
+private fun AppActionsControl(key: AppKey, vm: LauncherViewModel) {
+    EditControl("edit:ctl:actions", OverlayText.APP_ACTIONS_ELLIPSIS, Icons.Rounded.MoreVert) {
+        vm.openLayer(Layer.AppActions(key))
+    }
+}
+
+/** Initial focus for a preselected item: the "Add app" control of an empty dock slot, else its row. */
+private fun initialFocusFor(target: EditTarget?): String? = when (target) {
+    null -> null
+    is EditTarget.Dock -> if (target.entry == null) "edit:ctl:add" else rowId("$DOCK_PREFIX${target.slot}")
+    is EditTarget.Home -> rowId(target.tile.id)
+    is EditTarget.FolderApp -> rowId(target.entry.key.encode())
 }
 
 /** Closes a dialog whose subject vanished (e.g. app uninstalled) after composition, not during it. */
@@ -510,18 +557,23 @@ private fun TargetPicker(
     }
 }
 
-/** Picker over every visible app, for filling a dock slot. Lazy because libraries can be large. */
+/**
+ * Picker over every visible app (filling a dock slot, adding a favourite). Lazy because
+ * libraries can be large. [isCurrent] apps are marked (selected row; [currentLabel] as text).
+ */
 @Composable
 private fun AppPicker(
     state: LauncherUiState,
-    currentSlotApp: AppKey?,
+    title: String,
+    isCurrent: (AppKey) -> Boolean,
+    currentLabel: String?,
     onPick: (AppKey) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val apps = state.apps
     rememberScreenFocus(apps.firstOrNull()?.let { "edit:pick:${it.key.encode()}" } ?: "edit:pick:cancel")
     ModalPanel(
-        title = OverlayText.CHOOSE_APP,
+        title = title,
         idPrefix = "edit:pick",
         onDismiss = onDismiss,
         interceptBack = true,
@@ -534,17 +586,16 @@ private fun AppPicker(
             LazyColumn(Modifier.weight(1f, fill = false).padding(horizontal = 12.dp)) {
                 items(apps, key = { it.key.encode() }) { app ->
                     val slot = state.dock.indexOfFirst { it?.key == app.key }
+                    val current = isCurrent(app.key)
                     ActionRow(
                         id = "edit:pick:${app.key.encode()}",
                         label = app.label,
-                        supporting = if (slot >= 0) "${OverlayText.DOCK_SECTION} · ${OverlayText.dockSlot(slot)}" else null,
+                        supporting = listOfNotNull(
+                            currentLabel?.takeIf { current },
+                            if (slot >= 0) "${OverlayText.DOCK_SECTION} · ${OverlayText.dockSlot(slot)}" else null,
+                        ).joinToString(" · ").ifEmpty { null },
                         leading = { AppIcon(app, 32.dp) },
-                        selected = app.key == currentSlotApp,
-                        trailing = if (app.key == currentSlotApp) {
-                            { Icon(Icons.Rounded.CheckCircle, contentDescription = null) }
-                        } else {
-                            null
-                        },
+                        selected = current,
                         onClick = { onPick(app.key) },
                     )
                 }

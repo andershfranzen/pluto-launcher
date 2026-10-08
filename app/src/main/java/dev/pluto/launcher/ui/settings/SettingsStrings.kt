@@ -65,6 +65,8 @@ internal object SettingsText {
     const val HOW_TO_SWITCH_BACK = "How to switch back: open Android Settings ▸ Apps ▸ Default apps ▸ Home app " +
         "and choose your previous launcher."
     const val OPEN_DEFAULT_APPS = "Open Default apps settings"
+    const val HOME_ROLE_DECLINED = "Pluto is not your Home app yet. You can choose it any time under " +
+        "Android Settings ▸ Apps ▸ Default apps ▸ Home app."
 
     const val PROFILES_NOTICE = "Work profile and Private Space apps are not shown in this version."
 
@@ -79,7 +81,8 @@ internal object SettingsText {
     const val HIDDEN_TITLE = "Hidden apps"
     const val HIDDEN_EXPLANATION = "Hiding only removes apps from Pluto's lists. It is not a security or privacy feature; " +
         "hidden apps can still be opened from Settings or other apps."
-    const val HIDDEN_EMPTY = "No hidden apps. Hide an app from its App actions menu."
+    const val HIDDEN_EMPTY = "No hidden apps. To hide one, open All apps, tap Actions, choose the app and pick Hide " +
+        "(or press and hold the app, or press X with a controller)."
     const val RESTORE = "Restore"
     const val RESTORE_ALL = "Restore all"
 
@@ -165,7 +168,7 @@ internal object SettingsText {
         "then reopen Pluto. Until apps appear, keep your current Home app."
     const val STEP_GAMES_TITLE = "Pick your games (optional)"
     const val STEP_GAMES_TEXT = "Apps you tick go into the Games category, which Handheld mode shows as its own tab. " +
-        "You can change this any time from an app's actions menu."
+        "You can change this any time from an app's actions: tap Actions in All apps, or press and hold an app."
     const val NO_GAMES_CATEGORY = "The Games category is not available. You can create categories later in Settings."
     fun gamesSelected(n: Int) = if (n == 1) "1 app in Games" else "$n apps in Games"
     const val STEP_CONTROLLER_TITLE = "Controller controls"

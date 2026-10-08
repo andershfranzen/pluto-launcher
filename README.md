@@ -45,10 +45,14 @@ can be forced on or turned off in Settings.
   repeat, duplicate key/axis suppression, remappable buttons (per controller), diagnostics.
 - **Rotation preference**: Follow system, Portrait, Landscape, or Landscape when a controller
   is connected. Applies to the launcher window only.
-- **Appearance**: system/light/dark theme, wallpaper contrast scrim, icon and text size,
-  reduced motion.
+- **Appearance**: system/light/dark theme, wallpaper contrast scrim, icon and text size
+  (on top of Android's non-linear font scaling), reduced motion (removes scroll, ripple and
+  switch animations; Android's "Remove animations" is honoured too).
+- **App actions by touch**: tap **Actions** in All apps and then an app, or use Edit home
+  (**Add favourite…**, **App actions…**). Pressing and holding an app is a shortcut to the
+  same menu; controllers use X.
 - **Accessibility**: screen-reader labels, 48 dp touch targets, no gesture-only or
-  long-press-only actions.
+  long-press-only actions, content beneath dialogs hidden from screen readers.
 - **First-run setup**: usable default layout, optional category setup, controller preview,
   then the system default-Home chooser.
 

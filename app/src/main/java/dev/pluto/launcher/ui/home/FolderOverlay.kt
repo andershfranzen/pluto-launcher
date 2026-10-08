@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -101,6 +102,17 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
         }
     }
 
+    fun cancelRename() {
+        draft = folderUi.folder.name
+        keyboard?.hide()
+        renaming = false
+        focus.requestFocus(FV_RENAME)
+    }
+
+    // Back (system or controller) cancels an in-place rename before it closes the folder.
+    BackHandler(enabled = renaming) { cancelRename() }
+    TrackFocusOrder("folder:$folderId", apps.map { folderAppId(folderId, it.key) })
+
     fun commitRename() {
         val name = draft.trim()
         if (name.isNotEmpty() && name != folderUi.folder.name) vm.renameFolder(folderId, name)
@@ -141,12 +153,7 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
                                 .controllerFocusTarget(FV_NAME_FIELD, onActivate = { keyboard?.show() }),
                         )
                         PlutoIconButton(FV_SAVE, Icons.Outlined.Check, "Save name", { commitRename() })
-                        PlutoIconButton(FV_CANCEL, Icons.Outlined.Close, "Cancel rename", {
-                            draft = folderUi.folder.name
-                            keyboard?.hide()
-                            renaming = false
-                            focus.requestFocus(FV_RENAME)
-                        })
+                        PlutoIconButton(FV_CANCEL, Icons.Outlined.Close, "Cancel rename", { cancelRename() })
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -178,7 +185,7 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
 
                 if (apps.isEmpty()) {
                     Text(
-                        "This folder is empty. Open an app's Actions and choose Move to folder to add it.",
+                        "This folder is empty. In All apps, tap Actions, choose an app and pick Move to folder….",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp),

@@ -60,6 +60,10 @@ window size, HomeRole ───┘          │                                 
   mirrored into `SavedStateHandle` so it survives process death. Layers are serialised with
   `Layer.encode` / `Layer.decode`; apps with `AppKey.encode`.
 - **Selection is by identity.** `selectedApp` is an `AppKey`, scroll anchors are item ids.
+  A grid's anchor changes only when it leaves the first visible line; after a reflow
+  (rotation, different column count) the grid scrolls back to the anchor's line, so
+  repeated rotation never drifts the list. The layout mode is resolved in the same frame as
+  the window size (`LauncherRoot`), so the previous mode's layout is never shown stretched.
   When an app list changes, `FocusAnchor.resolve` keeps the same item, or picks its nearest
   surviving neighbour (next first, then previous, expanding outward).
 - **Package changes**: `AppCatalog.packageEvents` emits `Removed` only for full uninstalls;
@@ -101,8 +105,10 @@ derived from available space and insets, never from orientation alone.
    not double-step.
 3. Buttons are mapped through `LauncherSettings.mappingFor(descriptor, vendor, product)`
    (per-controller override -> vendor/product -> default). Actions fire on key *up* after a
-   seen *down*, so a press carried over from another app is ignored. Home and Recents
-   (`KEYCODE_HOME`, `KEYCODE_APP_SWITCH`) are never consumed.
+   seen *down*, so a press carried over from another app is ignored. Home, Recents and the
+   controller Guide/Home button (`KEYCODE_HOME`, `KEYCODE_APP_SWITCH`, `KEYCODE_BUTTON_MODE`,
+   `ButtonMapping.SYSTEM_RESERVED_KEYS`) are never consumed, captured or mapped, so the
+   system's HOME fallback for the Guide button still fires.
 4. Actions flow into `LauncherRoot`, which gives Move / Confirm / Actions to the focus
    controller and Back / Search / Settings / category switching to the ViewModel.
 
@@ -111,15 +117,25 @@ derived from available space and insets, never from orientation alone.
 - Every focusable control uses `Modifier.controllerFocusable(id, ...)` with a stable id
   (app key, `dock:2`, `folder:5`, `settings:theme`, ...). Touch click, Confirm and Enter run
   the same `onActivate`; the Actions button runs `onSecondary`, which is also exposed as an
-  accessibility custom action, so nothing depends on long-press.
+  accessibility custom action and as a touch long-press shortcut. Touch also has visible
+  routes (the drawer's Actions toggle, Edit home's App actions…), so nothing depends on
+  long-press.
 - Movement uses Compose spatial focus search (`FocusManager.moveFocus`), so focus order
   follows on-screen geometry in each layout without per-layout tables.
 - Focus is drawn as a thick outline plus contrast change outside the tile bounds; tile
   geometry never changes, and shape/contrast carry the state, not colour alone.
 - `InputMode` switches to TOUCH on any touch; the focus outline hides but `lastFocusedId`
   is kept. The next controller movement restores that focus without moving or activating.
+- Controller attach switches to controller presentation (ring, hints) without moving or
+  activating anything; removal switches to touch presentation and keeps the current control
+  as the selection. Handheld keeps its button legend while a controller is connected and
+  outlines the selected tile while touch drives.
 - Layers: opening a layer pushes the opener's id (`pushLayer`); closing pops it so focus
-  returns to the control that opened the layer.
+  returns to the control that opened the layer. While a layer or nested dialog is on top,
+  the content beneath is focus-inert (`LocalFocusInert`) and hidden from accessibility.
+- Lists report their ordered focus ids per surface (`TrackFocusOrder` -> `FocusOrders`).
+  When the focused or remembered control vanishes (uninstall, hide, unpin, move to folder),
+  focus goes to its nearest surviving neighbour in the same list, never to the top.
 - Focused items are brought fully into view with content padding that clears the dock,
   keyboard and system bars.
 - The ViewModel remembers `selectedApp` / `focusedControlId` in `SessionState`, so focus

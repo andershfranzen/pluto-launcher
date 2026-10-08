@@ -98,9 +98,14 @@ Notes:
 
 - Buttons act when **released**, after a press that started in Pluto, so a button held while
   leaving a game does not launch something by accident. Long presses do nothing extra.
-- Back closes the keyboard, search, a dialog or a folder before returning to home; at home
-  Back keeps the launcher visible.
-- The system Home and Recents buttons are never remapped.
+- Back (including the controller's B) closes the keyboard, search, a dialog or a folder
+  before returning to home; at home Back keeps the launcher visible.
+- Shoulder buttons switch categories only where category tabs are shown (Handheld home and
+  All apps); on Phone and Landscape home they do nothing.
+- The system Home and Recents buttons, and the controller's Guide/Home button
+  (`KEYCODE_BUTTON_MODE`, which Android turns into Home), are never consumed or remapped.
+- Connecting a controller shows the focus ring and button hints at once; removing it switches
+  straight back to the touch presentation and keeps the selection.
 - Uninstall is never bound to a controller button.
 - Search opens the system keyboard; there is no on-screen controller keyboard yet.
 - Touching the screen takes over immediately and hides the focus outline. The next

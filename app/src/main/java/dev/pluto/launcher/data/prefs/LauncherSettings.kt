@@ -13,8 +13,12 @@ enum class ControllerAction { CONFIRM, BACK, ACTIONS, SEARCH, SETTINGS, PREV_CAT
  * Android name (e.g. "A" for KEYCODE_BUTTON_A) rather than assume physical labels.
  */
 data class ButtonMapping(val bindings: Map<ControllerAction, Set<Int>>) {
+    /**
+     * The action bound to [keyCode]. System-reserved keys (Home, Recents, the controller's
+     * Guide/Home button) never resolve, even if an older mapping persisted them.
+     */
     fun actionFor(keyCode: Int): ControllerAction? =
-        bindings.entries.firstOrNull { keyCode in it.value }?.key
+        if (keyCode in SYSTEM_RESERVED_KEYS) null else bindings.entries.firstOrNull { keyCode in it.value }?.key
 
     fun keysFor(action: ControllerAction): Set<Int> = bindings[action].orEmpty()
 
@@ -51,6 +55,13 @@ data class ButtonMapping(val bindings: Map<ControllerAction, Set<Int>>) {
         const val KEYCODE_BUTTON_R1 = 103
         const val KEYCODE_BUTTON_START = 108
         const val KEYCODE_BUTTON_SELECT = 109
+        const val KEYCODE_HOME = 3
+        const val KEYCODE_APP_SWITCH = 187
+        /** The controller's Guide / Home button; Android's fallback for it is HOME. */
+        const val KEYCODE_BUTTON_MODE = 110
+
+        /** Keys the system owns. They are never consumed, captured or bound to a launcher action. */
+        val SYSTEM_RESERVED_KEYS: Set<Int> = setOf(KEYCODE_HOME, KEYCODE_APP_SWITCH, KEYCODE_BUTTON_MODE)
 
         val DEFAULT = ButtonMapping(
             mapOf(
@@ -71,7 +82,10 @@ data class ButtonMapping(val bindings: Map<ControllerAction, Set<Int>>) {
             for (part in value.split(';')) {
                 val name = part.substringBefore('=', "")
                 val action = ControllerAction.entries.firstOrNull { it.name == name } ?: continue
-                parsed[action] = part.substringAfter('=', "").split(',').mapNotNull { it.trim().toIntOrNull() }.toSet()
+                parsed[action] = part.substringAfter('=', "").split(',')
+                    .mapNotNull { it.trim().toIntOrNull() }
+                    .filterNot { it in SYSTEM_RESERVED_KEYS }
+                    .toSet()
             }
             return ButtonMapping(ControllerAction.entries.associateWith { parsed[it] ?: DEFAULT.keysFor(it) })
         }

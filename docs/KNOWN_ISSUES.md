@@ -57,5 +57,19 @@ something.
   case Pluto falls back to vendor/product ID and then the default mapping.
 - **Ordinary keyboards never trigger Handheld mode**, by design. Unusual devices that report
   themselves only as keyboards with game buttons may not be recognised as controllers.
+- **Landscape dock**: on short landscape windows the side dock shrinks its slots to fit
+  (never below 48 dp); when even that does not fit (very large text or icons) the dock moves
+  to the bottom instead.
+- **Search in landscape with the keyboard up**: category tabs, the hint text and the button
+  legend step aside and results show as icons only, so at least one row stays visible.
+- **Reduce motion** also affects Compose animations that are not strictly decorative (for
+  example the switch thumb jumps instead of sliding). This is intended.
+- **Home role request**: if Android refuses the request without asking (an earlier "Don't
+  ask again"), Pluto opens Default apps settings instead; if you decline the dialog, Pluto
+  explains where to choose it later.
+- On the API 36 emulator, a Home key injected with `adb shell input keyevent HOME` while
+  Pluto is already in front does not always reach Pluto (`onNewIntent`), so open layers stay
+  open. This also happens without the 0.1 fixes; check it on hardware with the real Home
+  gesture/button.
 - Database migrations are tested only for the current schema (version 1); there is no
   migration history yet to exercise.

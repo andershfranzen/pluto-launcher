@@ -2,15 +2,20 @@ package dev.pluto.launcher
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.database.ContentObserver
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.createLifecycleAwareWindowRecomposer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.lifecycleScope
@@ -25,6 +30,7 @@ import dev.pluto.launcher.ui.LauncherRoot
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.LocalControllerRouter
 import dev.pluto.launcher.ui.components.LocalIconCache
+import dev.pluto.launcher.ui.theme.LauncherMotionDurationScale
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -47,6 +53,9 @@ import kotlinx.coroutines.launch
  * - onResume: vm.onResume(HomeRole.isDefaultHome()), which refreshes catalog and controllers.
  * - onPause / onWindowFocusChanged(false): router.reset().
  *
+ * - Compose runs under [LauncherMotionDurationScale] (window recomposer context), so the
+ *   Reduce motion setting and Android's animator duration scale apply to every animation.
+ *
  * Touch takeover is detected inside Compose (pointer input on the root), so no touch
  * plumbing is needed here. Configuration changes are handled in-process (see manifest).
  */
@@ -63,6 +72,10 @@ class MainActivity : ComponentActivity() {
     /** Controller actions for LauncherRoot; buffered so a burst of input never blocks dispatch. */
     private val actions = MutableSharedFlow<LauncherAction>(extraBufferCapacity = 64)
     private val router = ControllerInputRouter { actions.tryEmit(it) }
+    private val motionScale = LauncherMotionDurationScale()
+    private val animatorScaleObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) = readSystemAnimatorScale()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -83,7 +96,17 @@ class MainActivity : ComponentActivity() {
 
         observeState()
 
-        setContent {
+        readSystemAnimatorScale()
+        contentResolver.registerContentObserver(
+            Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE),
+            false,
+            animatorScaleObserver,
+        )
+
+        val view = ComposeView(this)
+        // Our own window recomposer so its coroutine context carries the launcher's motion scale.
+        view.setParentCompositionContext(view.createLifecycleAwareWindowRecomposer(motionScale, lifecycle))
+        view.setContent {
             CompositionLocalProvider(
                 LocalControllerRouter provides router,
                 LocalIconCache provides container.icons,
@@ -91,13 +114,23 @@ class MainActivity : ComponentActivity() {
                 LauncherRoot(vm, actions)
             }
         }
+        setContentView(view)
+    }
+
+    private fun readSystemAnimatorScale() {
+        motionScale.systemScale = runCatching {
+            Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+        }.getOrDefault(1f)
     }
 
     private fun observeState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    vm.state.collect { router.settings = it.settings }
+                    vm.state.collect {
+                        router.settings = it.settings
+                        motionScale.reducedMotion = it.settings.reducedMotion
+                    }
                 }
                 launch {
                     vm.state
@@ -165,6 +198,7 @@ class MainActivity : ComponentActivity() {
         router.onGenericMotionEvent(event) || super.dispatchGenericMotionEvent(event)
 
     override fun onDestroy() {
+        contentResolver.unregisterContentObserver(animatorScaleObserver)
         router.reset()
         super.onDestroy()
     }

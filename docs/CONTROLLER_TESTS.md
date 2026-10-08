@@ -56,7 +56,7 @@ Physical labels vary by vendor, so note what is printed on the button.
 | Right trigger (R2/RT) | none | _to be recorded on hardware_ | | | |
 | Start / Menu / Options | Settings (`BUTTON_START`) | _to be recorded on hardware_ | | | |
 | Select / Back / View | none | _to be recorded on hardware_ | | | |
-| Home / Guide / Logo | system (not consumed) | _to be recorded on hardware_ | | | |
+| Home / Guide / Logo | system (`BUTTON_MODE`, not consumed, cannot be remapped) | _to be recorded on hardware_ | | | |
 | Left stick click (L3) | none | _to be recorded on hardware_ | | | |
 | Right stick click (R3) | none | _to be recorded on hardware_ | | | |
 | D-pad up | Move up | _to be recorded on hardware_ | | | |

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.SettingsApplications
 import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material.icons.rounded.Work
@@ -33,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -76,7 +78,7 @@ fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val index = steps.indexOf(step)
     val isLast = index == steps.lastIndex
     val isTop = state.session.topLayer == Layer.Onboarding
-    val requestHomeRole = rememberHomeRoleRequest()
+    val requestHomeRole = rememberHomeRoleRequest(onDeclined = { vm.showMessage(SettingsText.HOME_ROLE_DECLINED) })
     val gamesCategory = state.categories.firstOrNull { it.builtIn == BuiltInCategory.GAMES }
 
     fun goTo(target: OnboardingStep) {
@@ -269,6 +271,13 @@ private fun HomeStep(state: LauncherUiState, requestHomeRole: () -> Unit) {
         BodyText(SettingsText.STEP_HOME_TEXT)
         ButtonBar(Modifier.padding(horizontal = 8.dp, vertical = 8.dp), arrangement = Arrangement.spacedBy(8.dp)) {
             PlutoButton("onboarding:sethome", SettingsText.SET_DEFAULT, requestHomeRole, icon = Icons.Rounded.Home, style = ButtonStyle.FILLED)
+            val context = LocalContext.current
+            PlutoButton(
+                "onboarding:defaultapps",
+                SettingsText.OPEN_DEFAULT_APPS,
+                { openDefaultAppsSettings(context) },
+                icon = Icons.Rounded.SettingsApplications,
+            )
         }
     }
     BodyText(SettingsText.HOW_TO_SWITCH_BACK)

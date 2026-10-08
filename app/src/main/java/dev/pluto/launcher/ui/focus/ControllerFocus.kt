@@ -1,7 +1,7 @@
 package dev.pluto.launcher.ui.focus
 
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -81,6 +81,12 @@ enum class InputMode { TOUCH, CONTROLLER }
  *   can restore focus to the control that opened the layer.
  * - Focused items scroll fully into view (bring-into-view) including clearance for
  *   docks / system bars, via content padding in each layout.
+ * - Controller connection: [onControllerConnected] switches to controller presentation
+ *   (without moving or activating anything); [onControllerDisconnected] switches back to
+ *   touch presentation and keeps the current control as the remembered selection.
+ * - Vanished controls: lists report their ordered ids per surface ([setOrder]); when the
+ *   remembered control no longer exists, focus goes to its nearest surviving neighbour
+ *   ([FocusOrders]) instead of the screen default.
  *
  * All members must be used from the main thread (they touch Compose focus).
  */
@@ -101,6 +107,8 @@ class ControllerFocusController {
     private val attachments = ArrayList<Attachment>()
     private val layerOpeners = ArrayList<String?>()
     private var defaultFocusId: String? = null
+    private val orders = FocusOrders()
+    private val scrollers = HashMap<String, suspend (Int) -> Unit>()
 
     private var _inputMode by mutableStateOf(InputMode.TOUCH)
     private var _focusedId by mutableStateOf<String?>(null)
@@ -132,6 +140,28 @@ class ControllerFocusController {
     }
 
     /**
+     * A controller was attached: show controller presentation (focus ring, hints) right away.
+     * Nothing is moved or activated; layouts restore focus to the selection themselves.
+     */
+    fun onControllerConnected() {
+        enterControllerMode()
+    }
+
+    /**
+     * The last controller was removed: switch to touch presentation immediately and keep the
+     * current control as the selection the next controller/keyboard input returns to.
+     */
+    fun onControllerDisconnected() {
+        rememberFocusTarget(_focusedId ?: _lastFocusedId)
+        if (_inputMode != InputMode.TOUCH) _inputMode = InputMode.TOUCH
+        try {
+            currentAttachment?.inputModeManager?.requestInputMode(ComposeInputMode.Touch)
+        } catch (e: RuntimeException) {
+            // Best effort only.
+        }
+    }
+
+    /**
      * A hardware keyboard navigation key (arrows / Tab) was pressed. Compose moves focus
      * itself; we only make the focus outline visible again.
      */
@@ -142,7 +172,8 @@ class ControllerFocusController {
     /**
      * Handles focus-level actions: Move, Confirm, Actions. Returns false for actions
      * the caller must handle itself (Back, Search, Settings, Prev/NextCategory), and for
-     * Confirm/Actions when nothing suitable is focused.
+     * Confirm/Actions when nothing suitable is focused. Every controller action switches to
+     * controller presentation (so hints appear), but only Move/Confirm/Actions touch focus.
      */
     fun handle(action: LauncherAction): Boolean = when (action) {
         is LauncherAction.Move -> {
@@ -186,7 +217,10 @@ class ControllerFocusController {
             }
         }
 
-        else -> false
+        else -> {
+            enterControllerMode()
+            false
+        }
     }
 
     /** Requests focus on a registered id. Returns false if not currently composed. */
@@ -226,6 +260,57 @@ class ControllerFocusController {
         if (id != null) _lastFocusedId = id
     }
 
+    /** True when a composable currently owns [id]. */
+    fun isRegistered(id: String): Boolean = id in registry
+
+    /**
+     * Records the on-screen order of the focus ids in one list ([surface]), and optionally how
+     * to scroll that list to an index so an off-screen neighbour can be composed and focused.
+     */
+    fun setOrder(surface: String, ids: List<String>, scrollTo: (suspend (Int) -> Unit)? = null) {
+        orders.set(surface, ids)
+        if (scrollTo != null) scrollers[surface] = scrollTo else scrollers.remove(surface)
+    }
+
+    /** Forgets how to scroll [surface] (its list left composition); the order is kept. */
+    fun clearScroller(surface: String) {
+        scrollers.remove(surface)
+    }
+
+    /**
+     * The id that stands in for [id]: [id] itself if it still exists in its list, else its
+     * nearest surviving neighbour. Null if [id] belongs to no known list.
+     */
+    fun replacementFor(id: String): String? = orders.replacementFor(id)?.id
+
+    /**
+     * Focuses [id], or, if it vanished, its nearest surviving neighbour in the same list
+     * (scrolling the list first when needed). Returns false when neither could be focused.
+     */
+    suspend fun focusOrNeighbour(id: String): Boolean {
+        if (requestFocus(id)) return true
+        val target = orders.replacementFor(id) ?: return requestFocusWhenReady(id)
+        if (target.id == id) {
+            // Still listed but not composed yet (layer just closed) or scrolled away.
+            if (requestFocusWhenReady(id, maxFrames = 3)) return true
+        } else if (requestFocus(target.id)) {
+            return true
+        }
+        if (target.index >= 0) scrollers[target.surface]?.invoke(target.index)
+        return requestFocusWhenReady(target.id)
+    }
+
+    /**
+     * After a list changed: if the remembered control in [surface] vanished while nothing
+     * holds focus, move controller focus to its nearest surviving neighbour.
+     */
+    suspend fun followVanished(surface: String) {
+        if (_inputMode != InputMode.CONTROLLER || _focusedId != null) return
+        val last = _lastFocusedId ?: return
+        if (last in registry || orders.surfaceOf(last) != surface) return
+        focusOrNeighbour(last)
+    }
+
     fun pushLayer(openerId: String?) {
         layerOpeners += openerId
     }
@@ -252,9 +337,14 @@ class ControllerFocusController {
         }
     }
 
-    /** Restores focus to the last meaningful control, the screen default, or the first focusable. */
+    /**
+     * Restores focus to the last meaningful control (or, if it vanished, its nearest surviving
+     * neighbour), the screen default, or the first focusable.
+     */
     private fun restoreFocus(): Boolean {
-        listOfNotNull(_lastFocusedId, defaultFocusId).distinct().forEach { if (requestFocus(it)) return true }
+        val last = _lastFocusedId
+        val neighbour = last?.takeIf { it !in registry }?.let(::replacementFor)
+        listOfNotNull(last, neighbour, defaultFocusId).distinct().forEach { if (requestFocus(it)) return true }
         val manager = currentAttachment?.focusManager ?: return false
         return try {
             manager.moveFocus(FocusDirection.Next) || manager.moveFocus(FocusDirection.Enter)
@@ -329,11 +419,18 @@ val LocalControllerFocus = staticCompositionLocalOf<ControllerFocusController> {
  */
 val LocalFocusInert = compositionLocalOf { false }
 
+/**
+ * True where the remembered selection should stay visible while touch is in control
+ * (Handheld mode): the selected control gets a thin outline instead of the controller ring.
+ */
+val LocalShowTouchSelection = compositionLocalOf { false }
+
 /** Outer (dark) and inner (light) focus ring colours; the pair reads on any wallpaper. */
 private val FocusRingDark = Color(0xFF070A18)
 private val FocusRingLight = Color(0xFFFFFFFF)
 private val FocusRingInnerWidth = 3.dp
 private val FocusRingOuterWidth = 2.dp
+private val TouchSelectionWidth = 2.dp
 
 /** Extra clearance requested around a focused control when scrolling it into view. */
 private val BringIntoViewMargin = 12.dp
@@ -341,8 +438,9 @@ private val BringIntoViewMargin = 12.dp
 /**
  * Makes a control controller-focusable and touch-clickable with identical behaviour.
  * [onActivate] runs for touch click, A/Confirm, Enter. [onSecondary] runs for the
- * X/Actions button and is also exposed as an accessibility custom action (no long-press
- * dependency). [contentDescription] becomes the screen-reader label.
+ * X/Actions button, a touch long press (a shortcut only: every screen also offers a
+ * visible route) and is exposed as an accessibility custom action. [contentDescription]
+ * becomes the screen-reader label.
  * Minimum touch target 48dp is the caller's layout responsibility (tiles are larger).
  */
 fun Modifier.controllerFocusable(
@@ -356,6 +454,7 @@ fun Modifier.controllerFocusable(
 ): Modifier = composed {
     val controller = LocalControllerFocus.current
     val inert = LocalFocusInert.current
+    val showTouchSelection = LocalShowTouchSelection.current
     val requester = remember { FocusRequester() }
     val bringIntoView = remember { BringIntoViewRequester() }
     val clickInteraction = remember { MutableInteractionSource() }
@@ -366,6 +465,7 @@ fun Modifier.controllerFocusable(
     var focused by remember { mutableStateOf(false) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     val tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+    val selectionColor = MaterialTheme.colorScheme.primary
     val marginPx = with(LocalDensity.current) { BringIntoViewMargin.toPx() }
 
     DisposableEffect(controller, id) {
@@ -381,6 +481,14 @@ fun Modifier.controllerFocusable(
     val activate = {
         controller.noteActivated(id)
         currentActivate()
+    }
+    val longPress: (() -> Unit)? = if (onSecondary == null) {
+        null
+    } else {
+        {
+            controller.noteActivated(id)
+            currentSecondary?.invoke()
+        }
     }
 
     this
@@ -423,8 +531,14 @@ fun Modifier.controllerFocusable(
             }
         }
         .drawWithContent {
-            val show = focused && controller.inputMode == InputMode.CONTROLLER
+            val controllerMode = controller.inputMode == InputMode.CONTROLLER
+            val show = focused && controllerMode
             drawContent()
+            if (!show && showTouchSelection && !controllerMode && controller.lastFocusedId == id) {
+                // Persistent, lighter selection mark while touch drives (no geometry change).
+                val width = TouchSelectionWidth.toPx()
+                drawRing(shape, expand = width / 2f, width = width, color = selectionColor)
+            }
             if (show) {
                 // Container tint over the content, then a light inner and dark outer ring outside the bounds.
                 drawOutline(shape.createOutline(this.size, layoutDirection, this), tint)
@@ -437,10 +551,12 @@ fun Modifier.controllerFocusable(
         // The clickable's own (touch-mode dependent) focus target is disabled; the focusable above owns focus.
         .focusProperties { canFocus = false }
         .clip(shape)
-        .clickable(
+        .combinedClickable(
             interactionSource = clickInteraction,
             indication = LocalIndication.current,
             role = Role.Button,
+            onLongClickLabel = if (longPress != null) secondaryLabel ?: "More actions" else null,
+            onLongClick = longPress,
             onClick = activate,
         )
 }

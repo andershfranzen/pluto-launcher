@@ -1,6 +1,7 @@
 package dev.pluto.launcher.ui.theme
 
 import android.os.Build
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -23,11 +24,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.data.prefs.LauncherSettings
 import dev.pluto.launcher.model.ThemePreference
 
-/** True when the user asked for reduced motion; skip non-essential animation. */
+/**
+ * True when the user asked for reduced motion; skip non-essential animation. Animations are
+ * already scaled to zero window-wide (see [LauncherMotionDurationScale]); read this for any
+ * motion that is not a Compose animation.
+ */
 val LocalReducedMotion = staticCompositionLocalOf { false }
 
 /** True when the launcher is currently rendered in its dark theme. */
@@ -101,7 +108,9 @@ private val PlutoLight = lightColorScheme(
 /**
  * Pluto's Material 3 theme. Dark/light follows [LauncherSettings.theme]; wallpaper-based
  * dynamic colour is used on Android 12+, otherwise the Pluto palette. Text is scaled by
- * [LauncherSettings.textScale] on top of the system font scale.
+ * [LauncherSettings.textScale] on top of the system font size, keeping Android 14+'s
+ * non-linear font scaling (large text grows less than small text). With reduced motion,
+ * press feedback is a static state layer instead of the animated ripple.
  */
 @Composable
 fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
@@ -121,15 +130,41 @@ fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
     val density = LocalDensity.current
     val textScale = settings.textScale.coerceIn(LauncherSettings.TEXT_SCALE_RANGE)
     val scaledDensity = remember(density, textScale) {
-        Density(density = density.density, fontScale = density.fontScale * textScale)
+        if (textScale == 1f) density else TextScaledDensity(density, textScale)
     }
+    val reducedMotion = settings.reducedMotion
     CompositionLocalProvider(
         LocalDensity provides scaledDensity,
-        LocalReducedMotion provides settings.reducedMotion,
+        LocalReducedMotion provides reducedMotion,
         LocalDarkTheme provides dark,
     ) {
-        MaterialTheme(colorScheme = colorScheme, content = content)
+        MaterialTheme(colorScheme = colorScheme) {
+            if (reducedMotion) {
+                CompositionLocalProvider(LocalIndication provides ReducedMotionIndication, content = content)
+            } else {
+                content()
+            }
+        }
     }
+}
+
+/**
+ * [base] with Pluto's text-size multiplier applied *after* the platform's sp -> dp
+ * conversion, so the system's (possibly non-linear) font scale curve is kept. Only the
+ * sp conversions change; [fontScale] reports the overall factor at 1sp for code that reads it.
+ */
+internal class TextScaledDensity(private val base: Density, private val textScale: Float) : Density {
+    override val density: Float get() = base.density
+    override val fontScale: Float get() = base.fontScale * textScale
+
+    override fun TextUnit.toDp(): Dp = with(base) { this@toDp.toDp() } * textScale
+
+    override fun Dp.toSp(): TextUnit = with(base) { (this@toSp / textScale).toSp() }
+
+    override fun equals(other: Any?): Boolean =
+        other is TextScaledDensity && other.base == base && other.textScale == textScale
+
+    override fun hashCode(): Int = 31 * base.hashCode() + textScale.hashCode()
 }
 
 /** Full-screen contrast scrim over the system wallpaper (black in dark, white in light). */

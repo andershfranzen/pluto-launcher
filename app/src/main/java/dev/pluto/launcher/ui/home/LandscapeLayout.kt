@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
@@ -34,14 +32,33 @@ import dev.pluto.launcher.ui.components.Legends
 import dev.pluto.launcher.ui.components.PlutoPanel
 import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
+import dev.pluto.launcher.ui.theme.PlutoDimens
 
-/** Below this content height the dock moves to the end side so the grid keeps its rows. */
+/** Below this window content height the dock may move to the end side so the grid keeps its rows. */
 private val SideDockMaxHeight = 480.dp
+
+/** Space around the side dock's slots: outer top/bottom padding plus the panel's inner padding. */
+private val SideDockVerticalPadding = 4.dp + 8.dp + 8.dp + 8.dp
+private val SideDockGap = 2.dp
+/** A dock slot is its icon plus the tile's 6dp top and bottom padding. */
+private val DockSlotPadding = 12.dp
+
+/**
+ * Icon size for the side dock's slots so all [Organization.DOCK_SLOTS] fit [availableHeight]
+ * without scrolling, or null when even 48dp touch targets would not fit (use the bottom dock).
+ */
+internal fun sideDockIconSize(availableHeight: Dp, preferredIcon: Dp): Dp? {
+    val slots = Organization.DOCK_SLOTS
+    val perSlot = (availableHeight - SideDockVerticalPadding - SideDockGap * (slots - 1)) / slots
+    if (perSlot < PlutoDimens.MinTouchTarget) return null
+    return minOf(preferredIcon, perSlot - DockSlotPadding)
+}
 
 /**
  * Landscape touch home: compact header (time, search, all apps, edit, settings), a wider
  * vertically-scrolling favourites grid, and a dock at the side or bottom chosen from the
- * measured space (not the orientation).
+ * measured space (not the orientation). The side dock sizes its slots to the height left
+ * below the header, so no slot is ever clipped or hidden behind a scroll.
  */
 @Composable
 fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
@@ -49,8 +66,9 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
     val iconSize = state.iconSize()
     val gridKeys = state.homeTiles.map { it.id }
     val gridState = rememberAnchoredGridState(HOME_SURFACE, state, gridKeys)
-    ReportScrollAnchor(HOME_SURFACE, gridState, vm)
+    ReportScrollAnchor(HOME_SURFACE, gridState, state, vm, gridKeys)
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
+    TrackFocusOrder(HOME_SURFACE, state.homeTiles.map(::homeTileFocusId)) { gridState.scrollToItem(it) }
     val defaultId = state.homeTiles.firstOrNull()?.let(::homeTileFocusId) ?: ID_ALL_APPS
     SideEffect { focus.setDefaultFocus(defaultId) }
 
@@ -59,7 +77,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        val sideDock = maxHeight < SideDockMaxHeight
+        val shortWindow = maxHeight < SideDockMaxHeight
         Column(Modifier.fillMaxSize().swipeUpToOpen { vm.openDrawer() }) {
             Row(
                 Modifier
@@ -71,20 +89,26 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 HomeToolbar(vm, includeAllApps = true)
             }
 
-            if (sideDock) {
-                Row(Modifier.weight(1f).fillMaxWidth()) {
-                    FavouritesGrid(state, vm, iconSize, gridState, Modifier.weight(1f).fillMaxHeight())
-                    VerticalDock(state, vm, iconSize, Modifier.padding(end = 8.dp, top = 4.dp, bottom = 8.dp))
+            // Measured below the header (and above the legend), so the dock choice uses the real space left.
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                val sideIcon = if (shortWindow) sideDockIconSize(maxHeight, iconSize * 0.9f) else null
+                if (sideIcon != null) {
+                    Row(Modifier.fillMaxSize()) {
+                        FavouritesGrid(state, vm, iconSize, gridState, Modifier.weight(1f).fillMaxHeight())
+                        VerticalDock(state, vm, sideIcon, Modifier.padding(end = 8.dp, top = 4.dp, bottom = 8.dp))
+                    }
+                } else {
+                    Column(Modifier.fillMaxSize()) {
+                        FavouritesGrid(state, vm, iconSize, gridState, Modifier.weight(1f).fillMaxWidth())
+                        HorizontalDock(
+                            state, vm, iconSize,
+                            Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .widthIn(max = 640.dp)
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        )
+                    }
                 }
-            } else {
-                FavouritesGrid(state, vm, iconSize, gridState, Modifier.weight(1f).fillMaxWidth())
-                HorizontalDock(
-                    state, vm, iconSize,
-                    Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .widthIn(max = 640.dp)
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                )
             }
 
             if (showControllerHints(state, focus)) {
@@ -128,19 +152,22 @@ private fun FavouritesGrid(
     }
 }
 
-/** Dock stacked vertically at the end edge; scrolls if text/icon scaling makes it taller than the window. */
+/**
+ * Dock stacked vertically at the end edge. [slotIconSize] comes from [sideDockIconSize], so
+ * all five slots always fit the panel's bounded height; nothing scrolls or hides.
+ */
 @Composable
-private fun VerticalDock(state: LauncherUiState, vm: LauncherViewModel, iconSize: Dp, modifier: Modifier = Modifier) {
+private fun VerticalDock(state: LauncherUiState, vm: LauncherViewModel, slotIconSize: Dp, modifier: Modifier = Modifier) {
     PlutoPanel(modifier.fillMaxHeight()) {
         Column(
             Modifier
-                .verticalScroll(rememberScrollState())
+                .fillMaxHeight()
                 .padding(horizontal = 6.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(SideDockGap, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             repeat(Organization.DOCK_SLOTS) { slot ->
-                DockSlot(slot, state, vm, iconSize * 0.9f)
+                DockSlot(slot, state, vm, slotIconSize)
             }
         }
     }

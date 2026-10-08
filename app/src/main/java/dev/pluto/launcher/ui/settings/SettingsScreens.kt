@@ -77,7 +77,7 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
     var dialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
     var dialogOpener by rememberSaveable { mutableStateOf<String?>(null) }
     val screenFocus = rememberScreenFocus("settings:theme:${ThemePreference.SYSTEM}")
-    val requestHomeRole = rememberHomeRoleRequest()
+    val requestHomeRole = rememberHomeRoleRequest(onDeclined = { vm.showMessage(SettingsText.HOME_ROLE_DECLINED) })
     val versionName = rememberVersionName()
     val isTop = state.session.topLayer == Layer.Settings
 
@@ -97,7 +97,8 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = SettingsText.SETTINGS,
         idPrefix = "settings",
         onClose = { vm.back() },
-        trapFocus = isTop && dialog == null,
+        trapFocus = isTop,
+        dialogOpen = dialog != null,
         overlay = {
             when (dialog) {
                 SettingsDialog.DISABLE_HISTORY -> ConfirmDialog(
@@ -384,7 +385,8 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = SettingsText.CATEGORIES_TITLE,
         idPrefix = "categories",
         onClose = { vm.back() },
-        trapFocus = isTop && dialogKind == null,
+        trapFocus = isTop,
+        dialogOpen = dialogKind != null,
         overlay = {
             val category = categories.firstOrNull { it.id == dialogCategoryId }
             if (dialogKind != null && dialogKind != CategoryDialogKind.ADD && category == null) {
