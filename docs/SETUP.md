@@ -16,18 +16,24 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 For daily use (and for any performance measurement) install the **release** build instead
 (`./gradlew :app:assembleRelease`, then `adb install -r app/build/outputs/apk/release/app-release.apk`).
-A sideloaded APK is only *verified* at install time (`dumpsys package dexopt` shows
-`status=verify, reason=install`): the baseline profile shipped inside it is applied later,
-by ProfileInstaller and the next background dexopt (usually overnight while charging).
-Until then startup and the first drawer frames partly run in the JIT. To apply the profile
-straight away:
+A plain `adb install` only *verifies* the app (`dumpsys package dexopt` shows
+`status=verify, reason=install`): the baseline profile shipped inside the APK is applied
+later, by ProfileInstaller on first launch and the next background dexopt (usually
+overnight while charging). Until then startup and the first drawer frames partly run in the
+JIT. To get profile-guided code at install time, install the APK together with the dex
+metadata file the release build writes next to it:
 
 ```sh
-adb shell cmd package compile -m speed-profile -f dev.pluto.launcher
+adb install-multiple -r app/build/outputs/apk/release/app-release.apk \
+    app/build/outputs/apk/release/baselineProfiles/0/app-release.dm   # Android 12 (API 31) and later
 ```
 
-Afterwards `dumpsys package dexopt` shows `status=speed-profile`. Measure cold start and
-first-frame timings after this step (and say so when reporting them).
+`dumpsys package dexopt` then shows `status=speed-profile, reason=install-dm` (use
+`baselineProfiles/1/` on Android 11; `output-metadata.json` lists which file is for which API).
+`adb shell cmd package compile -m speed-profile -f dev.pluto.launcher` does the same only
+after Pluto has run once since the install (before that the profile is empty and the app
+stays `verify`). Measure cold start and first-frame timings in the profiled state, and say so
+when reporting them.
 
 ## 2. First launch
 
