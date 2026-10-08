@@ -1,5 +1,13 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.AnimatedContent
 import dev.pluto.launcher.ui.components.LocalLabelsOnWallpaper
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.animation.AnimatedVisibility
@@ -144,6 +152,8 @@ private const val MAX_PENDING_ECHOES = 32
 
 /** Focus id of the drawer's search field; LauncherRoot focuses it for Y / Search. */
 const val DRAWER_SEARCH_ID = "drawer:search"
+private const val DR_SEARCH_OPEN = "drawer:searchopen"
+private const val DR_SEARCH_CLOSE = "drawer:searchclose"
 private const val DR_CLOSE = "drawer:close"
 private const val DR_CLEAR = "drawer:clear"
 private const val CHIP_PREFIX = "drawer:cat"
@@ -380,44 +390,76 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         ) {
             if (!compact) SheetHandle(Modifier.align(Alignment.CenterHorizontally))
 
-            DrawerSearchBar(
-                field = field,
-                compact = compact,
-                actionsMode = actionsMode,
-                reveal = reveal,
-                onTextChanged = vm::setSearchText,
-                onClose = { vm.back() },
-                onClear = { vm.clearSearch() },
-                onToggleActions = { actionsMode = !actionsMode },
-                onSearchAction = {
-                    keyboard?.hide()
-                    if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
-                },
-                onFieldActivated = { keyboard?.show() },
-                onFieldFocused = { if (!currentState.session.searchActive) vm.setSearchActive(true) },
-            )
+            // One row: back, then either the category chips or (while searching) the search
+            // field, which unfolds from the search button over the chips.
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp, end = 8.dp, top = if (compact) 2.dp else 4.dp, bottom = 4.dp)
+                    .graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", { vm.back() })
+                AnimatedContent(
+                    targetState = searchMode,
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterEnd,
+                    transitionSpec = {
+                        if (targetState) {
+                            // The field grows leftwards out of the search button; the chips give way.
+                            (expandHorizontally(PlutoMotion.spatialFast(), expandFrom = Alignment.End) + fadeIn(PlutoMotion.fadeIn()))
+                                .togetherWith(fadeOut(PlutoMotion.fadeOut()) + slideOutHorizontally(PlutoMotion.slideSpring) { -it / 6 })
+                        } else {
+                            (fadeIn(PlutoMotion.fadeIn()) + slideInHorizontally(PlutoMotion.slideSpring) { -it / 6 })
+                                .togetherWith(shrinkHorizontally(PlutoMotion.spatialFast(), shrinkTowards = Alignment.End) + fadeOut(PlutoMotion.fadeOut()))
+                        }.using(SizeTransform(clip = true))
+                    },
+                    label = "drawerHeader",
+                ) { searching ->
+                    if (searching) {
+                        DrawerSearchField(
+                            field = field,
+                            compact = compact,
+                            onTextChanged = vm::setSearchText,
+                            onClear = { vm.clearSearch() },
+                            onCollapse = {
+                                keyboard?.hide()
+                                vm.setSearchActive(false)
+                            },
+                            onSearchAction = {
+                                keyboard?.hide()
+                                if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
+                            },
+                            onFieldActivated = { keyboard?.show() },
+                            onFieldFocused = { if (!currentState.session.searchActive) vm.setSearchActive(true) },
+                        )
+                    } else if (categories.size > 1) {
+                        CategoryTabs(
+                            categories = categories,
+                            selected = activeCategory,
+                            onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
+                            idPrefix = CHIP_PREFIX,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        Spacer(Modifier.fillMaxWidth())
+                    }
+                }
+                if (!searchMode) {
+                    PlutoIconButton(DR_SEARCH_OPEN, Icons.Outlined.Search, "Search apps", { vm.setSearchActive(true) })
+                    if (!compact) {
+                        PlutoIconButton(
+                            id = DR_ACTIONS,
+                            icon = if (actionsMode) Icons.Outlined.Check else Icons.Outlined.MoreVert,
+                            label = if (actionsMode) DrawerText.ACTIONS_DONE else DrawerText.ACTIONS,
+                            onClick = { actionsMode = !actionsMode },
+                        )
+                    }
+                }
+            }
 
             AnimatedVisibility(visible = actionsMode && !compact, enter = ExpandIn, exit = ShrinkOut) {
                 ActionsModeBanner(onDone = { actionsMode = false })
-            }
-
-            // The keyboard rising in a short window folds the chips away; they unfold with it.
-            val queryTyped = session.searchText.isNotEmpty()
-            AnimatedVisibility(visible = categories.size > 1 && !compact, enter = ExpandIn, exit = ShrinkOut) {
-                CategoryTabs(
-                    categories = categories,
-                    selected = activeCategory,
-                    onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
-                    idPrefix = CHIP_PREFIX,
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 2.dp)
-                        .graphicsLayer {
-                            // Travels with the sheet from its first frames; quieter while a
-                            // query is typed (the search runs in the selected category).
-                            alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) *
-                                (if (queryTyped) QUERY_CHIP_ALPHA else 1f)
-                        },
-                )
             }
 
             Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -483,7 +525,6 @@ private fun rememberShortWindow(): State<Boolean> {
 
 /** The sheet never shows without its header: content starts fading in almost at once. */
 private const val CONTENT_FADE_START = 0.05f
-private const val QUERY_CHIP_ALPHA = 0.55f
 
 /** 0 until the drawer is [start] of the way open, then rising to 1 by the time it is fully open. */
 private fun revealFade(progress: Float, start: Float): Float = ((progress - start) / (1f - start)).coerceIn(0f, 1f)
@@ -501,21 +542,18 @@ private fun SheetHandle(modifier: Modifier = Modifier) {
 }
 
 /**
- * The drawer's search row: Close, then the search pill (leading glyph, the text field,
- * and one trailing control: Clear while there is text, else the ⋮ that toggles actions
- * mode). It reads only its own [field], so typing recomposes this row, not the grid.
- * It fades in as the drawer opens.
+ * The search field, shown in the header row while searching: a pill with the search icon,
+ * the text and one trailing control (Clear while there is text, else Close, which folds the
+ * field back into the search button and brings the category chips back). It reads only its
+ * own [field], so typing recomposes this row, not the grid.
  */
 @Composable
-private fun DrawerSearchBar(
+private fun DrawerSearchField(
     field: SearchField,
     compact: Boolean,
-    actionsMode: Boolean,
-    reveal: DrawerRevealState,
     onTextChanged: (String) -> Unit,
-    onClose: () -> Unit,
     onClear: () -> Unit,
-    onToggleActions: () -> Unit,
+    onCollapse: () -> Unit,
     onSearchAction: () -> Unit,
     onFieldActivated: () -> Unit,
     onFieldFocused: () -> Unit,
@@ -524,81 +562,66 @@ private fun DrawerSearchBar(
     val scheme = MaterialTheme.colorScheme
     val pillShape = CircleShape
     val value = field.value
-    Row(
-        Modifier
+    BasicTextField(
+        value = value,
+        onValueChange = { new -> field.onUserEdit(new)?.let(onTextChanged) },
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface),
+        cursorBrush = SolidColor(scheme.primary),
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.None,
+            autoCorrectEnabled = false,
+            imeAction = ImeAction.Search,
+        ),
+        keyboardActions = KeyboardActions(onSearch = { onSearchAction() }),
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, end = 12.dp, top = if (compact) 2.dp else 4.dp, bottom = 4.dp)
-            .graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", onClose)
-        BasicTextField(
-            value = value,
-            onValueChange = { new -> field.onUserEdit(new)?.let(onTextChanged) },
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface),
-            cursorBrush = SolidColor(scheme.primary),
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.None,
-                autoCorrectEnabled = false,
-                imeAction = ImeAction.Search,
+            .onFocusChanged { focused = it.isFocused }
+            .controllerFocusTarget(
+                id = DRAWER_SEARCH_ID,
+                onActivate = onFieldActivated,
+                onFocused = onFieldFocused,
             ),
-            keyboardActions = KeyboardActions(onSearch = { onSearchAction() }),
-            modifier = Modifier
-                .weight(1f)
-                .onFocusChanged { focused = it.isFocused }
-                .controllerFocusTarget(
-                    id = DRAWER_SEARCH_ID,
-                    onActivate = onFieldActivated,
-                    onFocused = onFieldFocused,
-                ),
-            decorationBox = { inner ->
-                Row(
-                    Modifier
-                        .heightIn(min = if (compact) 48.dp else 52.dp)
-                        .shadow(if (focused) 3.dp else 1.dp, pillShape, clip = false)
-                        .background(sheetRaisedColor(), pillShape)
-                        .border(
-                            width = 1.dp,
-                            color = if (focused) scheme.primary.copy(alpha = 0.55f) else scheme.outlineVariant.copy(alpha = 0.6f),
-                            shape = pillShape,
-                        )
-                        .padding(start = 16.dp, end = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        Icons.Outlined.Search,
-                        contentDescription = null,
-                        tint = if (focused) scheme.primary else scheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp),
+        decorationBox = { inner ->
+            Row(
+                Modifier
+                    .heightIn(min = if (compact) 48.dp else 52.dp)
+                    .background(sheetRaisedColor(), pillShape)
+                    .border(
+                        width = 1.dp,
+                        color = if (focused) scheme.primary.copy(alpha = 0.55f) else scheme.outlineVariant.copy(alpha = 0.6f),
+                        shape = pillShape,
                     )
-                    Spacer(Modifier.width(12.dp))
-                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                        if (value.text.isEmpty()) {
-                            Text(
-                                "Search apps",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = scheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        inner()
-                    }
-                    when {
-                        value.text.isNotEmpty() -> PlutoIconButton(DR_CLEAR, Icons.Outlined.Clear, "Clear search", onClear)
-                        !compact -> PlutoIconButton(
-                            id = DR_ACTIONS,
-                            icon = if (actionsMode) Icons.Outlined.Check else Icons.Outlined.MoreVert,
-                            label = if (actionsMode) DrawerText.ACTIONS_DONE else DrawerText.ACTIONS,
-                            onClick = onToggleActions,
+                    .padding(start = 16.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Outlined.Search,
+                    contentDescription = null,
+                    tint = if (focused) scheme.primary else scheme.onSurfaceVariant,
+                    modifier = Modifier.size(22.dp),
+                )
+                Spacer(Modifier.width(12.dp))
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    if (value.text.isEmpty()) {
+                        Text(
+                            "Search apps",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = scheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
-                        else -> Spacer(Modifier.width(12.dp))
                     }
+                    inner()
                 }
-            },
-        )
-    }
+                if (value.text.isNotEmpty()) {
+                    PlutoIconButton(DR_CLEAR, Icons.Outlined.Clear, "Clear search", onClear)
+                } else {
+                    PlutoIconButton(DR_SEARCH_CLOSE, Icons.Outlined.Close, "Close search", onCollapse)
+                }
+            }
+        },
+    )
 }
 
 /** Shown while tapping an app opens its actions instead of launching it. */

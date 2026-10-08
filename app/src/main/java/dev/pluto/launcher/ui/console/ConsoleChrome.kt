@@ -1,5 +1,12 @@
 package dev.pluto.launcher.ui.console
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import android.os.BatteryManager
+import android.content.IntentFilter
+import android.content.Intent
+import android.content.Context
+import android.content.BroadcastReceiver
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -147,25 +154,31 @@ internal fun ConsoleTopBar(
         val width = constraints.maxWidth
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val gap = HeaderGap.roundToPx()
-        val buttonsP = buttonsM.first().measure(loose)
-        val statusP = statusM.first().measure(loose.copy(maxWidth = (width - buttonsP.width - gap).coerceAtLeast(0)))
+        // Any slot may be empty (the console keeps its buttons at the bottom).
+        val buttonsP = buttonsM.firstOrNull()?.measure(loose)
+        val buttonsW = buttonsP?.width ?: 0
+        val buttonsGap = if (buttonsP != null) gap else 0
+        val statusP = statusM.firstOrNull()?.measure(loose.copy(maxWidth = (width - buttonsW - buttonsGap).coerceAtLeast(0)))
+        val statusW = statusP?.width ?: 0
         val tabsMeasurable = tabsM.first()
-        val inlineWidth = width - buttonsP.width - statusP.width - gap * 2
+        val inlineWidth = width - buttonsW - statusW - buttonsGap - gap
         val tabsWanted = tabsMeasurable.maxIntrinsicWidth(constraints.maxHeight.takeIf { it != Int.MAX_VALUE } ?: 0)
         val inline = inlineWidth > 0 && inlineWidth >= minOf(tabsWanted, MinInlineTabsWidth.roundToPx())
         val tabsP = tabsMeasurable.measure(loose.copy(maxWidth = if (inline) inlineWidth else width))
+        val statusH = statusP?.height ?: 0
+        val buttonsH = buttonsP?.height ?: 0
         if (inline) {
-            val height = maxOf(tabsP.height, statusP.height, buttonsP.height)
+            val height = maxOf(tabsP.height, statusH, buttonsH)
             layout(width, height) {
                 tabsP.place(0, (height - tabsP.height) / 2)
-                statusP.place(width - buttonsP.width - gap - statusP.width, (height - statusP.height) / 2)
-                buttonsP.place(width - buttonsP.width, (height - buttonsP.height) / 2)
+                statusP?.place(width - buttonsW - buttonsGap - statusW, (height - statusH) / 2)
+                buttonsP?.place(width - buttonsW, (height - buttonsH) / 2)
             }
         } else {
-            val top = maxOf(statusP.height, buttonsP.height)
+            val top = maxOf(statusH, buttonsH)
             layout(width, top + tabsP.height) {
-                statusP.place(0, (top - statusP.height) / 2)
-                buttonsP.place(width - buttonsP.width, (top - buttonsP.height) / 2)
+                statusP?.place(if (buttonsP == null) width - statusW else 0, (top - statusH) / 2)
+                buttonsP?.place(width - buttonsW, (top - buttonsH) / 2)
                 tabsP.place(0, top)
             }
         }
@@ -400,6 +413,51 @@ internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
         Text("${r.percent}%", style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
     }
+}
+
+/**
+ * The phone's own battery (console mode hides the status bar): level and charging state
+ * from the sticky ACTION_BATTERY_CHANGED broadcast, updated as it changes (no polling).
+ */
+@Composable
+internal fun PhoneBattery(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var reading by remember { mutableStateOf<BatteryReading?>(null) }
+    DisposableEffect(context) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context?, intent: Intent?) {
+                reading = intent?.let(::batteryFrom) ?: reading
+            }
+        }
+        val sticky = ContextCompat.registerReceiver(
+            context, receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        sticky?.let(::batteryFrom)?.let { reading = it }
+        onDispose { runCatching { context.unregisterReceiver(receiver) } }
+    }
+    val r = reading ?: return
+    val icon = when {
+        r.charging -> Icons.Outlined.BatteryChargingFull
+        r.percent <= 15 -> Icons.Outlined.BatteryAlert
+        else -> Icons.Outlined.BatteryStd
+    }
+    val spoken = "Phone battery ${r.percent} percent" + if (r.charging) ", charging" else ""
+    Row(
+        modifier.clearAndSetSemantics { contentDescription = spoken },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
+        Text("${r.percent}%", style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
+    }
+}
+
+private fun batteryFrom(intent: Intent): BatteryReading? {
+    val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+    val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+    if (level < 0 || scale <= 0) return null
+    val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+    val charging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+    return BatteryReading((level * 100f / scale).roundToInt().coerceIn(0, 100), charging)
 }
 
 private data class BatteryReading(val percent: Int, val charging: Boolean)

@@ -84,6 +84,7 @@ import dev.pluto.launcher.ui.console.ConsoleTitle
 import dev.pluto.launcher.ui.theme.ConsoleTheme
 import dev.pluto.launcher.ui.console.ConsoleTopBar
 import dev.pluto.launcher.ui.console.ControllerBattery
+import dev.pluto.launcher.ui.console.PhoneBattery
 import dev.pluto.launcher.ui.console.CoverflowStage
 import dev.pluto.launcher.ui.console.CoverflowState
 import dev.pluto.launcher.ui.console.PageMotion
@@ -324,25 +325,20 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             nextKey = if (hints) mapping.promptFor(ControllerAction.NEXT_CATEGORY) else null,
                         )
                     },
+                    // Top right: controller and phone battery, then the time and date.
                     status = {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            Modifier.padding(end = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
                             ControllerBattery(state.controllers.firstOrNull()?.deviceId)
+                            PhoneBattery()
                             ClockHeader(compact = true, quiet = true)
                         }
                     },
-                    buttons = {
-                        val down = Modifier.focusProperties { down = selectedCardFocus() }
-                        // Borderless on the dark stage: quieter than the shelf tabs.
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            val editable = pickableCategoryId(active, state)
-                            if (editable != null && apps.isNotEmpty()) {
-                                PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit ${shelf.title}", { vm.openLayer(Layer.ShelfPicker(editable)) }, down)
-                            }
-                            PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, down)
-                            PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, down)
-                            PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, down)
-                        }
-                    },
+                    // The launcher buttons live at the bottom right, beside the legend.
+                    buttons = {},
                 )
 
                 // The stage: the outgoing flow (while it slides away) under the active one.
@@ -420,10 +416,27 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                     Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                        .padding(start = 16.dp, end = 16.dp, top = if (hints) 8.dp else 0.dp, bottom = ConsoleBottomClearance),
+                        .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = ConsoleBottomClearance),
                     contentAlignment = Alignment.CenterEnd,
                 ) {
-                    if (hints) ButtonLegend(mapping, if (apps.isNotEmpty()) ConsoleLegend else ConsoleLegendEmpty)
+                    if (hints) {
+                        ButtonLegend(
+                            mapping,
+                            if (apps.isNotEmpty()) ConsoleLegend else ConsoleLegendEmpty,
+                            Modifier.align(Alignment.CenterStart),
+                        )
+                    }
+                    // Up from these returns to the selected card.
+                    val up = Modifier.focusProperties { up = selectedCardFocus() }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val editable = pickableCategoryId(active, state)
+                        if (editable != null && apps.isNotEmpty()) {
+                            PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit ${shelf.title}", { vm.openLayer(Layer.ShelfPicker(editable)) }, up)
+                        }
+                        PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, up)
+                        PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, up)
+                        PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, up)
+                    }
                 }
             }
         }
