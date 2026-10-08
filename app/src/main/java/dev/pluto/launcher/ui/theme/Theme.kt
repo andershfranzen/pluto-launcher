@@ -4,8 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,9 +18,11 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.geometry.Offset
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import dev.pluto.launcher.data.prefs.LauncherSettings
 import dev.pluto.launcher.model.ThemePreference
+import dev.pluto.launcher.ui.motion.PlutoMotion
 
 /**
  * True when the user asked for reduced motion; skip non-essential animation. Animations are
@@ -194,12 +197,16 @@ internal class TextScaledDensity(private val base: Density, private val textScal
     override fun hashCode(): Int = 31 * base.hashCode() + textScale.hashCode()
 }
 
-/** Full-screen contrast scrim over the system wallpaper (black in dark, white in light). */
+/**
+ * Full-screen contrast scrim over the system wallpaper (black in dark, white in light).
+ * Strength and theme changes glide instead of flashing; drawn in the draw phase only.
+ */
 @Composable
 fun WallpaperScrim(settings: LauncherSettings, modifier: Modifier = Modifier) {
     val alpha = settings.scrimAlpha.coerceIn(0f, LauncherSettings.SCRIM_MAX)
     val base = if (LocalDarkTheme.current) Color.Black else Color.White
-    Box(modifier.fillMaxSize().background(base.copy(alpha = alpha)))
+    val color by animateColorAsState(base.copy(alpha = alpha), PlutoMotion.effects(), label = "wallpaperScrim")
+    Box(modifier.fillMaxSize().drawBehind { drawRect(color) })
 }
 
 /**

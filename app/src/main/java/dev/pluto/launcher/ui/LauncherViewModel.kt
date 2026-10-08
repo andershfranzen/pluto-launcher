@@ -1,6 +1,7 @@
 package dev.pluto.launcher.ui
 
 import android.graphics.Rect
+import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -249,10 +250,15 @@ class LauncherViewModel(
     fun setEditSelection(id: String?) = updateSession { it.copy(editSelection = id) }
 
     // --- Launching ----------------------------------------------------------
-    fun launch(key: AppKey, sourceBounds: Rect? = null) {
+    /**
+     * Launches [key]. [sourceBounds] (screen coordinates) is the control the app opens from;
+     * [options] an ActivityOptions bundle with its opening animation (built by the activity,
+     * see LaunchSourceFactory), or null for the default window animation.
+     */
+    fun launch(key: AppKey, sourceBounds: Rect? = null, options: Bundle? = null) {
         viewModelScope.launch(Dispatchers.Main.immediate) {
             val result = try {
-                container.catalog.launch(key, sourceBounds)
+                container.catalog.launch(key, sourceBounds, options)
             } catch (e: Exception) {
                 Log.w(TAG, "launch failed for $key", e)
                 LaunchResult.Failure("That app couldn't be opened.")

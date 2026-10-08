@@ -22,8 +22,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
  *   drawer composed while [isVisible], so closing animates out before it disappears.
  */
 @Stable
-class DrawerRevealState {
-    private val anim = Animatable(0f)
+class DrawerRevealState(initiallyOpen: Boolean = false) {
+    private val anim = Animatable(if (initiallyOpen) 1f else 0f)
 
     val progress: Float get() = anim.value
 
@@ -36,9 +36,18 @@ class DrawerRevealState {
 
     private var pendingVelocity = 0f
 
+    /**
+     * Where the last [release] decided the drawer should go, until the next [settle],
+     * [snap] or [beginDrag]. Lets LauncherRoot head there at once, before the ViewModel's
+     * layer stack (which follows asynchronously) reflects the gesture's outcome.
+     */
+    var releaseTarget: Boolean? = null
+        private set
+
     fun beginDrag() {
         isDragging = true
         pendingVelocity = 0f
+        releaseTarget = null
     }
 
     /**
@@ -58,24 +67,42 @@ class DrawerRevealState {
     fun release(velocityPxPerSec: Float, travelPx: Float): Boolean {
         isDragging = false
         pendingVelocity = if (travelPx > 0f) velocityPxPerSec / travelPx else 0f
-        return when {
+        val open = when {
             pendingVelocity > FLING_THRESHOLD -> true
             pendingVelocity < -FLING_THRESHOLD -> false
             else -> anim.value >= 0.5f
         }
+        releaseTarget = open
+        return open
+    }
+
+    /**
+     * Ends a drag whose outcome is already decided (e.g. a predictive Back gesture that
+     * committed or was cancelled), without fling velocity.
+     */
+    fun endDrag(open: Boolean) {
+        isDragging = false
+        pendingVelocity = 0f
+        releaseTarget = open
     }
 
     /** Animates to open/closed (called by LauncherRoot when the Drawer layer appears or goes). */
     suspend fun settle(open: Boolean) {
         if (isDragging) return
-        val velocity = pendingVelocity
+        // A fresh fling velocity wins; otherwise keep the current motion's velocity so a
+        // re-settle (interrupted or retargeted) continues smoothly instead of stopping dead.
+        val velocity = if (pendingVelocity != 0f) pendingVelocity else anim.velocity
         pendingVelocity = 0f
-        anim.animateTo(if (open) 1f else 0f, PlutoMotion.spatial(), initialVelocity = velocity)
+        releaseTarget = null
+        val target = if (open) 1f else 0f
+        if (anim.value == target && !anim.isRunning) return
+        anim.animateTo(target, PlutoMotion.spatial(), initialVelocity = velocity)
     }
 
     /** Jumps without animation (e.g. restoring an open drawer after process death). */
     suspend fun snap(open: Boolean) {
         pendingVelocity = 0f
+        releaseTarget = null
         anim.snapTo(if (open) 1f else 0f)
     }
 
