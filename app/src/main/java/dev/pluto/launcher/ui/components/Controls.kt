@@ -184,8 +184,10 @@ fun PlutoTextButton(
     outline: Color? = null,
 ) {
     val shape = RoundedCornerShape(24.dp)
-    val container = if (emphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
-    val content = if (emphasized) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+    // Emphasis is a solid light pill with dark text (inverse colours): with a monochrome
+    // wallpaper the dynamic onPrimary is a mid-grey that reads as disabled on primary.
+    val container = if (emphasized) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.secondaryContainer
+    val content = if (emphasized) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSecondaryContainer
     val press = remember { MutableInteractionSource() }
     Row(
         modifier
@@ -311,7 +313,7 @@ fun CategoryTabs(
     }
 
     val outlineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
-    val pillColor = MaterialTheme.colorScheme.primaryContainer
+    val pillColor = MaterialTheme.colorScheme.inverseSurface
 
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (prevKey != null) {
@@ -392,7 +394,7 @@ private fun CategoryTab(
 ) {
     val shape = RoundedCornerShape(TabCorner)
     val contentColor by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+        if (isSelected) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface,
         PlutoMotion.fadeIn(),
         label = "tabLabel",
     )

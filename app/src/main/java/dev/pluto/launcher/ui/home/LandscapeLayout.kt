@@ -90,7 +90,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 8.dp, top = 6.dp),
+                    .padding(start = 20.dp, end = 16.dp, top = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ClockHeader(Modifier.weight(1f), compact = true)
@@ -103,7 +103,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 if (sideIcon != null) {
                     Row(Modifier.fillMaxSize()) {
                         FavouritesGrid(tiles, vm, iconSize, gridState, Modifier.weight(1f).fillMaxHeight())
-                        VerticalDock(dock, vm, sideIcon, Modifier.padding(end = 8.dp, top = 4.dp, bottom = 8.dp))
+                        VerticalDock(dock, vm, sideIcon, Modifier.padding(end = 16.dp, top = 4.dp, bottom = 8.dp))
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {

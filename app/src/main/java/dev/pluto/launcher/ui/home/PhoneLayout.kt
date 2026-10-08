@@ -76,7 +76,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
+                .padding(start = 20.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
             verticalAlignment = Alignment.Top,
         ) {
             ClockHeader(Modifier.weight(1f).padding(top = 8.dp))

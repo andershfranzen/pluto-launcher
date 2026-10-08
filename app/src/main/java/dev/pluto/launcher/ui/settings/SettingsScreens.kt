@@ -554,8 +554,9 @@ private fun XmbColorRow(selected: XmbColor, onSelect: (XmbColor) -> Unit) {
         Text(name, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         FlowRow(
             Modifier.padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            maxItemsInEachRow = 6,
         ) {
             XmbColor.entries.forEach { c ->
                 val isSelected = c == selected

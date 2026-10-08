@@ -431,12 +431,14 @@ private fun MeasureScope.sharedMeasurer(resolver: FontFamily.Resolver, density: 
 private const val LabelCacheSize = 256
 
 private fun MeasureScope.layoutLabel(
-    text: String,
+    rawText: String,
     style: TextStyle,
     maxWidth: Int,
     measurer: TextMeasurer,
     density: Density,
 ): TextLayoutResult {
+    // Names like "Brotato:Premium" break after the punctuation, never inside a word.
+    val text = withBreakOpportunities(rawText)
     val constraints = if (maxWidth == Constraints.Infinity) Constraints() else Constraints(minWidth = maxWidth, maxWidth = maxWidth)
     fun measure(s: TextStyle) = measurer.measure(
         text = text,
@@ -450,7 +452,7 @@ private fun MeasureScope.layoutLabel(
     )
     val first = measure(style)
     if (maxWidth == Constraints.Infinity || !mayHaveSplitWord(text, first)) return first
-    val longest = text.split(' ').maxByOrNull { it.length }.orEmpty()
+    val longest = text.split(' ', ZERO_WIDTH_SPACE).maxByOrNull { it.length }.orEmpty()
     if (longest.isEmpty()) return first
     val wordWidth = measurer.measure(
         text = longest,
@@ -469,6 +471,24 @@ private fun MeasureScope.layoutLabel(
         ),
     )
 }
+
+private const val ZERO_WIDTH_SPACE = '\u200B'
+
+/** Adds a break opportunity after ':', '-', '_', '/' and '.' that sit between letters. */
+internal fun withBreakOpportunities(text: String): String {
+    if (text.none { it in BREAK_AFTER }) return text
+    val out = StringBuilder(text.length + 4)
+    for (i in text.indices) {
+        val c = text[i]
+        out.append(c)
+        if (c in BREAK_AFTER && i + 1 < text.length && text[i + 1].isLetterOrDigit() && i > 0 && text[i - 1].isLetterOrDigit()) {
+            out.append(ZERO_WIDTH_SPACE)
+        }
+    }
+    return out.toString()
+}
+
+private const val BREAK_AFTER = ":-_/."
 
 /**
  * True when the label may have broken a word: a line ends inside a word, or the last line

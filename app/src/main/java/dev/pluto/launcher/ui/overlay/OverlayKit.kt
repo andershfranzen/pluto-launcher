@@ -434,7 +434,7 @@ internal fun PlutoButton(
 ) {
     val colors = MaterialTheme.colorScheme
     val (container, content) = when (style) {
-        ButtonStyle.FILLED -> if (destructive) colors.error to colors.onError else colors.primary to colors.onPrimary
+        ButtonStyle.FILLED -> if (destructive) colors.error to colors.onError else colors.inverseSurface to colors.inverseOnSurface
         ButtonStyle.TONAL -> if (destructive) colors.errorContainer to colors.onErrorContainer
         else colors.secondaryContainer to colors.onSecondaryContainer
         ButtonStyle.OUTLINED, ButtonStyle.TEXT -> Color.Transparent to (if (destructive) colors.error else colors.primary)
@@ -718,8 +718,8 @@ internal fun <T> ChoiceGroup(
                         // Selected fill and the thicker border fade in as the plain outline fades out.
                         .selectionBackground(
                             selection,
-                            colors.secondaryContainer,
-                            colors.secondary,
+                            colors.inverseSurface,
+                            colors.inverseSurface,
                             SelectedBorderWidth,
                             unselectedBorder = colors.outline,
                         )
@@ -736,7 +736,7 @@ internal fun <T> ChoiceGroup(
                             Icon(
                                 Icons.Rounded.Check,
                                 contentDescription = null,
-                                tint = colors.onSecondaryContainer,
+                                tint = colors.inverseOnSurface,
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(6.dp))
@@ -745,7 +745,7 @@ internal fun <T> ChoiceGroup(
                     Text(
                         text,
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isSelected) colors.onSecondaryContainer else colors.onSurface,
+                        color = if (isSelected) colors.inverseOnSurface else colors.onSurface,
                     )
                 }
             }

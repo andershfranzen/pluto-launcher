@@ -300,7 +300,6 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 { openDialog(EditDialog.NEW_FOLDER, "edit:newfolder") },
                 icon = Icons.Rounded.CreateNewFolder,
             )
-            PlutoButton("edit:done", OverlayText.DONE, { vm.back() }, icon = Icons.Rounded.CheckCircle, style = ButtonStyle.FILLED)
         }
 
         // --- Home favourites ---

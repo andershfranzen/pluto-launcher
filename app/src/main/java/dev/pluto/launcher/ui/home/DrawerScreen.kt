@@ -290,6 +290,10 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     LaunchedEffect(session.searchActive) {
         val was = searchWasActive[0]
         searchWasActive[0] = session.searchActive
+        if (session.searchActive && !was) {
+            // The field just unfolded from the search button: type straight away.
+            if (focus.requestFocusWhenReady(DRAWER_SEARCH_ID)) keyboard?.show()
+        }
         if (!session.searchActive && was) {
             keyboard?.hide()
             if (focus.focusedId == DRAWER_SEARCH_ID) {
@@ -669,7 +673,7 @@ private fun DrawerGrid(
     onAppFocused: (AppKey, String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = iconSize + 36.dp),
+        columns = AdaptiveCountCells(minCell = iconSize + 36.dp, minCount = 3, maxCount = 10, extra = 24.dp),
         state = gridState,
         // The end keeps room for the alphabet rail whether or not it is showing, so the
         // columns never reflow when search starts or ends.
