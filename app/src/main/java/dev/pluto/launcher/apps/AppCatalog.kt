@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Handler
@@ -31,12 +32,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.Locale
 
 sealed interface LaunchResult {
     data object Success : LaunchResult
-    /** Human-readable reason, e.g. "Calculator is not available right now." */
-    data class Failure(val message: String) : LaunchResult
+    /**
+     * Human-readable reason, e.g. "Calculator is not available right now."
+     * [targetMissing] is true when the activity no longer resolves, so the caller should
+     * reconcile persisted references to it (see [AppCatalog.findStale]).
+     */
+    data class Failure(val message: String, val targetMissing: Boolean = false) : LaunchResult
 }
+
+/** One successful catalog query. [generation] increases with every successful load. */
+data class CatalogLoad(val generation: Long, val apps: List<AppEntry>)
 
 sealed interface PackageEvent {
     /** Package fully removed (not an update). Persisted references may be forgotten. */
@@ -50,10 +59,13 @@ sealed interface PackageEvent {
  *
  * Loads on a background dispatcher. Registers a LauncherApps.Callback and reloads
  * the affected package on add/change/remove/available/unavailable/suspended/unsuspended.
+ * While that callback stays registered the list is kept current, so [refreshIfStale]
+ * (called on every resume) only reloads when something may have been missed.
  */
 class AppCatalog(context: Context) {
     private val appContext = context.applicationContext
     private val launcherApps = appContext.getSystemService(LauncherApps::class.java)
+    private val packageManager: PackageManager = appContext.packageManager
     private val userManager = appContext.getSystemService(UserManager::class.java)
     private val myUser: UserHandle = Process.myUserHandle()
     private val mySerial: Long = runCatching { userManager.getSerialNumberForUser(myUser) }.getOrDefault(0L)
@@ -63,15 +75,27 @@ class AppCatalog(context: Context) {
     private val loadMutex = Mutex()
     private var pendingReload: Job? = null
     private var started = false
+    /** True when the list may be out of date: before the first load, after a failed query or callback registration, or after stop(). */
+    @Volatile private var dirty = true
+    /** Locale the labels of the last successful load were read in. */
+    @Volatile private var loadedLocale: Locale? = null
+    private var generation = 0L
 
     private val _apps = MutableStateFlow<List<AppEntry>?>(null)
     private val _otherProfilesPresent = MutableStateFlow(false)
     private val _packageEvents = MutableSharedFlow<PackageEvent>(extraBufferCapacity = 16)
+    private val _loads = MutableStateFlow<CatalogLoad?>(null)
 
     /** All launchable activities in the personal profile, unsorted. Null until first load. */
     val apps: StateFlow<List<AppEntry>?> = _apps.asStateFlow()
     val otherProfilesPresent: StateFlow<Boolean> = _otherProfilesPresent.asStateFlow()
     val packageEvents: SharedFlow<PackageEvent> = _packageEvents.asSharedFlow()
+
+    /**
+     * The latest *successful* query only (a failed query keeps [apps] unchanged but is never
+     * published here), so reconciliation against it cannot mistake a failure for uninstalls.
+     */
+    val loads: StateFlow<CatalogLoad?> = _loads.asStateFlow()
 
     private val callback = object : LauncherApps.Callback() {
         override fun onPackageRemoved(packageName: String, user: UserHandle) {
@@ -101,17 +125,25 @@ class AppCatalog(context: Context) {
     fun start() {
         if (started) return
         started = true
-        try {
+        callbackRegistered = try {
             launcherApps.registerCallback(callback, mainHandler)
+            true
         } catch (e: RuntimeException) {
             Log.w(TAG, "Couldn't register LauncherApps callback", e)
+            false
         }
+        // Changes made while stopped were not observed.
+        dirty = true
         refresh()
     }
+
+    @Volatile private var callbackRegistered = false
 
     fun stop() {
         if (!started) return
         started = false
+        dirty = true
+        callbackRegistered = false
         synchronized(this) { pendingReload?.cancel() }
         try {
             launcherApps.unregisterCallback(callback)
@@ -120,10 +152,20 @@ class AppCatalog(context: Context) {
         }
     }
 
-    /** Full reload (e.g. on resume, to catch anything missed while suspended). */
+    /** Full reload now (e.g. after a launch failure). */
     fun refresh(): Unit = synchronized(this) {
+        dirty = true
         pendingReload?.cancel()
         pendingReload = scope.launch { reload() }
+    }
+
+    /**
+     * Called on every resume. A full reload reads every app's label (package resources), so it
+     * only runs when the list may be stale: no live callback, a failed/missing load, or a
+     * locale change since the labels were read. Otherwise the callback already kept it current.
+     */
+    fun refreshIfStale(locale: Locale = Locale.getDefault()) {
+        if (dirty || !callbackRegistered || loadedLocale != locale || _apps.value == null) refresh()
     }
 
     /** Coalesces bursts of package callbacks (installs often send several) into one reload. */
@@ -136,14 +178,25 @@ class AppCatalog(context: Context) {
     }
 
     private suspend fun reload() = loadMutex.withLock {
+        val locale = Locale.getDefault()
         val entries = try {
             launcherApps.getActivityList(null, myUser).map { it.toEntry() }
         } catch (e: RuntimeException) {
             Log.w(TAG, "Couldn't query launchable activities", e)
-            // Keep what we had rather than blanking the launcher; still mark loaded.
-            _apps.value ?: emptyList()
+            null
         }
-        _apps.value = entries
+        if (entries != null) {
+            _apps.value = entries
+            generation += 1
+            _loads.value = CatalogLoad(generation, entries)
+            loadedLocale = locale
+            dirty = false
+        } else {
+            // Keep what we had rather than blanking the launcher; still mark loaded. Stays dirty
+            // so the next resume retries, and nothing is reconciled against this.
+            _apps.value = _apps.value ?: emptyList()
+            dirty = true
+        }
         updateOtherProfiles()
     }
 
@@ -155,16 +208,73 @@ class AppCatalog(context: Context) {
         }
     }
 
-    /** Emits [PackageEvent.Removed] only when nothing launchable remains (updates send remove + add). */
+    /** Emits [PackageEvent.Removed] only when the package is really gone (updates send remove + add). */
     private suspend fun confirmRemoval(packageName: String) {
         delay(RELOAD_DEBOUNCE_MS)
-        val stillPresent = try {
-            launcherApps.getActivityList(packageName, myUser).isNotEmpty()
-        } catch (e: RuntimeException) {
-            // If we can't tell, don't forget the user's configuration.
-            true
+        if (packageState(packageName) == PackageState.UNINSTALLED) {
+            _packageEvents.emit(PackageEvent.Removed(packageName, mySerial))
         }
-        if (!stillPresent) _packageEvents.emit(PackageEvent.Removed(packageName, mySerial))
+    }
+
+    private enum class PackageState {
+        /** Has launcher activities right now (they are listed in [PackageInfoResult.components]). */
+        LAUNCHABLE,
+        /** Installed, but nothing launchable now: disabled, unavailable (SD card), mid-update... Keep references. */
+        INSTALLED_NOT_LAUNCHABLE,
+        /** Definitely not installed for this user. */
+        UNINSTALLED,
+        /** The system could not be asked. Keep references. */
+        UNKNOWN,
+    }
+
+    private fun packageState(packageName: String): PackageState = packageInfo(packageName).state
+
+    private class PackageInfoResult(val state: PackageState, val components: Set<ComponentName> = emptySet())
+
+    private fun packageInfo(packageName: String): PackageInfoResult {
+        val activities = try {
+            launcherApps.getActivityList(packageName, myUser)
+        } catch (e: RuntimeException) {
+            return PackageInfoResult(PackageState.UNKNOWN)
+        }
+        if (activities.isNotEmpty()) {
+            return PackageInfoResult(PackageState.LAUNCHABLE, activities.mapTo(HashSet()) { it.componentName })
+        }
+        return try {
+            // Without MATCH_UNINSTALLED_PACKAGES: a package uninstalled with "keep data" counts as gone.
+            // A disabled or suspended package still resolves here and is kept.
+            packageManager.getPackageInfo(packageName, PackageManager.MATCH_DISABLED_COMPONENTS)
+            PackageInfoResult(PackageState.INSTALLED_NOT_LAUNCHABLE)
+        } catch (e: PackageManager.NameNotFoundException) {
+            PackageInfoResult(PackageState.UNINSTALLED)
+        } catch (e: RuntimeException) {
+            PackageInfoResult(PackageState.UNKNOWN)
+        }
+    }
+
+    /**
+     * Which of [keys] (missing from the catalog) are definitely stale and may be forgotten:
+     * the package is installed and launchable but that activity no longer exists (an update
+     * removed or renamed it), or the package is uninstalled for this user. Keys from other
+     * profiles, packages that are disabled, suspended, unavailable or mid-update, and anything
+     * the system could not answer are kept. Blocking; call off the main thread.
+     */
+    fun findStale(keys: Collection<AppKey>): Set<AppKey> {
+        val personal = keys.filter { it.userSerial == mySerial }
+        if (personal.isEmpty()) return emptySet()
+        val stale = HashSet<AppKey>()
+        for ((pkg, pkgKeys) in personal.groupBy { it.packageName }) {
+            val info = packageInfo(pkg)
+            when (info.state) {
+                PackageState.LAUNCHABLE -> pkgKeys.filterTo(stale) { key ->
+                    val component = ComponentName.unflattenFromString(key.component)
+                    component == null || component !in info.components
+                }
+                PackageState.UNINSTALLED -> stale.addAll(pkgKeys)
+                PackageState.INSTALLED_NOT_LAUNCHABLE, PackageState.UNKNOWN -> Unit
+            }
+        }
+        return stale
     }
 
     private fun LauncherActivityInfo.toEntry(): AppEntry {
@@ -199,7 +309,7 @@ class AppCatalog(context: Context) {
         val info = resolve(key)
         if (info == null) {
             refresh()
-            return LaunchResult.Failure("$label is no longer installed.")
+            return LaunchResult.Failure("$label is no longer installed.", targetMissing = true)
         }
         if ((info.applicationInfo.flags and ApplicationInfo.FLAG_SUSPENDED) != 0) {
             return LaunchResult.Failure("$label is paused right now.")

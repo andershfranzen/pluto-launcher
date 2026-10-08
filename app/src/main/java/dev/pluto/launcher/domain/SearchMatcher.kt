@@ -13,13 +13,45 @@ object SearchMatcher {
     private const val RANK_SUBSTRING = 2
     private const val RANK_PACKAGE = 3
 
-    /** Lower-cases (Locale.ROOT), strips accents/diacritics (NFD + remove combining marks), trims, collapses whitespace. */
+    /**
+     * Letters with no canonical decomposition, so NFD leaves them intact. Folded to the
+     * ASCII spelling people type without the accent (applied after lower-casing).
+     */
+    private val letterFolds: Map<Char, String> = mapOf(
+        'ø' to "o",
+        'ł' to "l",
+        'đ' to "d",
+        'ð' to "d",
+        'ß' to "ss",
+        'æ' to "ae",
+        'œ' to "oe",
+        'ı' to "i",
+        'þ' to "th",
+        'ħ' to "h",
+        'ŧ' to "t",
+        'ŀ' to "l",
+    )
+
+    /**
+     * Lower-cases (Locale.ROOT), strips accents/diacritics (NFD + remove combining marks),
+     * folds letters without a decomposition (ø, ł, ß, æ, …), trims, collapses whitespace.
+     */
     fun normalize(text: String): String {
         val decomposed = Normalizer.normalize(text, Normalizer.Form.NFD)
-        return combiningMarks.replace(decomposed, "")
-            .lowercase(Locale.ROOT)
+        val lower = combiningMarks.replace(decomposed, "").lowercase(Locale.ROOT)
+        return fold(lower)
             .trim()
             .replace(whitespace, " ")
+    }
+
+    private fun fold(text: String): String {
+        if (text.none { it in letterFolds }) return text
+        return buildString(text.length + 4) {
+            for (c in text) {
+                val replacement = letterFolds[c]
+                if (replacement != null) append(replacement) else append(c)
+            }
+        }
     }
 
     /** True if the normalized query is contained in the normalized label or package name. Blank query matches all. */

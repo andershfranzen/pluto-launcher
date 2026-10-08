@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.theme
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -14,6 +17,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -22,11 +26,13 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import dev.pluto.launcher.data.prefs.LauncherSettings
 import dev.pluto.launcher.model.ThemePreference
 
@@ -111,6 +117,11 @@ private val PlutoLight = lightColorScheme(
  * [LauncherSettings.textScale] on top of the system font size, keeping Android 14+'s
  * non-linear font scaling (large text grows less than small text). With reduced motion,
  * press feedback is a static state layer instead of the animated ripple.
+ *
+ * The status and navigation bar icons follow the effective theme (dark icons over the
+ * light scrim, light icons over the dark one). This re-runs whenever the setting or the
+ * system night mode changes, since uiMode is handled in-process and the activity is never
+ * recreated for it.
  */
 @Composable
 fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
@@ -120,6 +131,16 @@ fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
         ThemePreference.LIGHT -> false
     }
     val context = LocalContext.current
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = context.findActivity()?.window ?: return@SideEffect
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
+    }
     val colorScheme: ColorScheme = remember(dark, context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -146,6 +167,12 @@ fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
             }
         }
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 /**

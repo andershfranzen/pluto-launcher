@@ -28,7 +28,10 @@ import dev.pluto.launcher.ui.state.reorderVisible
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -41,6 +44,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -48,6 +52,7 @@ import java.util.concurrent.atomic.AtomicLong
  * [state]; all mutations go through these methods. Organisation writes persist
  * immediately; session state is mirrored into [savedState] for process death.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class LauncherViewModel(
     private val container: AppContainer,
     private val savedState: SavedStateHandle,
@@ -59,38 +64,61 @@ class LauncherViewModel(
     private val message = MutableStateFlow<UserMessage?>(null)
     private val isDefaultHome = MutableStateFlow(false)
     private val messageIds = AtomicLong(0)
+    /** Set when the organisation or settings store cannot be read; the UI shows a recovery screen. */
+    private val storageError = MutableStateFlow<String?>(null)
+    /** Bumped by [retryStorage] to re-open the stores after a read failure. */
+    private val storageAttempt = MutableStateFlow(0)
 
-    /** Serialises read-modify-write edits (reorders, dock moves) so rapid presses never use stale data. */
+    /**
+     * The single serialisation point for organisation mutations: every read-modify-write edit
+     * (reorders, dock) and every other organisation write (pin, folders, categories, hide,
+     * forgetting uninstalled apps) holds it, so a reorder computed from a read can never
+     * overwrite a change made after that read.
+     */
     private val editLock = Mutex()
     /** Serialises history writes against disabling history, so nothing is recorded after it is off. */
     private val historyLock = Mutex()
     /** Set once the user finished onboarding in this session, so a stale settings emission cannot re-open it. */
     @Volatile private var onboardingDismissed = false
 
-    /** Shared, single subscription to the persisted organisation (null until first load). */
+    /**
+     * Shared, single subscription to the persisted organisation (null until first load).
+     * A Room failure (missing migration, schema mismatch, SQLiteException) must not crash the
+     * Home app in a loop: it becomes [storageError] and the database file is left untouched.
+     */
     private val organizationState: StateFlow<Organization?> =
-        repository.organization.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        storageAttempt.flatMapLatest {
+            repository.organization.catch { e -> onStorageFailure("organization", e) }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /** I/O errors are handled (fail closed) in SettingsRepository; anything else is a storage error. */
     private val settingsState: StateFlow<LauncherSettings?> =
-        container.settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        storageAttempt.flatMapLatest {
+            container.settings.settings.catch { e -> onStorageFailure("settings", e) }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val state: StateFlow<LauncherUiState> = run {
         val builder = LauncherStateBuilder()
+        // Null until organisation and settings have both loaded (or forever after a storage error).
         val library = combine(
             container.catalog.apps,
-            organizationState.filterNotNull(),
-            settingsState.filterNotNull(),
-        ) { catalog, organization, settings -> LibraryInputs(catalog, organization, settings) }
+            organizationState,
+            settingsState,
+        ) { catalog, organization, settings ->
+            if (organization == null || settings == null) null else LibraryInputs(catalog, organization, settings)
+        }
         val environment = combine(
             container.controllers.controllers,
             container.catalog.otherProfilesPresent,
             windowSize,
-            message,
+            combine(message, storageError, ::Pair),
             isDefaultHome,
-        ) { controllers, otherProfiles, window, msg, defaultHome ->
-            EnvironmentInputs(controllers, otherProfiles, window, msg, defaultHome)
+        ) { controllers, otherProfiles, window, (msg, error), defaultHome ->
+            EnvironmentInputs(controllers, otherProfiles, window, msg, defaultHome, error)
         }
-        combine(library, environment, session) { lib, env, sess -> builder.build(lib, env, sess) }
+        combine(library, environment, session) { lib, env, sess ->
+            if (lib == null) builder.notLoaded(env, sess) else builder.build(lib, env, sess)
+        }
             .flowOn(Dispatchers.Default)
             .stateIn(viewModelScope, SharingStarted.Eagerly, LauncherUiState())
     }
@@ -98,8 +126,14 @@ class LauncherViewModel(
     init {
         boundary("start app catalog") { container.catalog.start() }
         boundary("start controller monitor") { container.controllers.start() }
-        persist { repository.ensureDefaults() }
+        viewModelScope.launch {
+            persistNow { repository.ensureDefaults() }
+            seedDefaultLayoutOnce()
+        }
         viewModelScope.launch { container.catalog.packageEvents.collect(::onPackageEvent) }
+        viewModelScope.launch { reconcileWithCatalog() }
+        viewModelScope.launch { enforceHistoryPolicy() }
+        viewModelScope.launch { announceSettingsRecovery() }
         viewModelScope.launch { showOnboardingWhenNeeded() }
         viewModelScope.launch { keepSelectionByIdentity() }
         viewModelScope.launch { pruneStaleLayers() }
@@ -116,10 +150,14 @@ class LauncherViewModel(
         windowSize.value = WindowSizeDp(widthDp, heightDp)
     }
 
-    /** Activity resumed: refresh catalog, controllers, default-home status. */
+    /**
+     * Activity resumed: refresh controllers and default-home status. The catalog is kept
+     * current by its LauncherApps callback, so it only reloads when it may be stale (no live
+     * callback, failed load, locale change): a warm Home return does no full label reload.
+     */
     fun onResume(isDefaultHome: Boolean) {
         this.isDefaultHome.value = isDefaultHome
-        boundary("refresh app catalog") { container.catalog.refresh() }
+        boundary("refresh app catalog") { container.catalog.refreshIfStale() }
         boundary("refresh controllers") { container.controllers.refresh() }
     }
 
@@ -225,7 +263,11 @@ class LauncherViewModel(
                     updateSession { s -> if (s.topLayer == Layer.AppActions(key)) s.popTop() else s }
                     recordLaunch(key)
                 }
-                is LaunchResult.Failure -> postMessage(result.message)
+                is LaunchResult.Failure -> {
+                    postMessage(result.message)
+                    // The activity no longer resolves: drop the reference if it is really gone.
+                    if (result.targetMissing) forgetStale(listOf(key))
+                }
             }
         }
     }
@@ -241,8 +283,8 @@ class LauncherViewModel(
     }
 
     // --- Organisation -------------------------------------------------------
-    fun pin(key: AppKey) = persist { repository.pin(key) }
-    fun unpin(key: AppKey) = persist { repository.unpin(key) }
+    fun pin(key: AppKey) = lockedPersist { repository.pin(key) }
+    fun unpin(key: AppKey) = lockedPersist { repository.unpin(key) }
 
     fun moveHomeItem(item: HomeItem, op: ReorderOp<HomeItem>) = edit { org ->
         val visible = state.value.homeTiles.mapTo(HashSet()) { it.id }
@@ -260,18 +302,21 @@ class LauncherViewModel(
         }
     }
 
-    /** Adds to the first free dock slot; returns false when the dock is full. */
-    fun addToDock(key: AppKey): Boolean {
-        val current = state.value
-        if (current.isInDock(key)) return true
-        // A slot is free when nothing launchable is shown there (empty, or its app is gone/hidden).
-        val slot = current.dock.indexOfFirst { it == null }
+    /**
+     * Adds to the first free dock slot, chosen from the persisted dock under [editLock] (so
+     * two quick adds never pick the same slot). Only an empty slot is free: a hidden or
+     * temporarily unavailable app keeps its slot. [onDockFull] runs on the main thread when
+     * no slot is free, after the "Dock is full" message is posted.
+     */
+    fun addToDock(key: AppKey, onDockFull: () -> Unit = {}) = edit { org ->
+        if (key in org.dock) return@edit
+        val slot = org.dock.indexOfFirst { it == null }
         if (slot < 0) {
-            postMessage("Dock is full. Remove an app from the dock first.")
-            return false
+            postMessage(DOCK_FULL_MESSAGE)
+            onDockFull()
+            return@edit
         }
-        setDockSlot(slot, key)
-        return true
+        repository.setDock(org.dock.toMutableList().also { it[slot] = key })
     }
 
     fun removeFromDock(key: AppKey) = edit { org ->
@@ -291,17 +336,17 @@ class LauncherViewModel(
         repository.createFolder(name.trim().ifBlank { DEFAULT_FOLDER_NAME }, members, homeIndex)
     }
 
-    fun renameFolder(id: Long, name: String) = persist {
+    fun renameFolder(id: Long, name: String) = lockedPersist {
         repository.renameFolder(id, name.trim().ifBlank { DEFAULT_FOLDER_NAME })
     }
 
     fun deleteFolder(id: Long) {
         updateSession { s -> s.copy(layers = s.layers.filterNot { it == Layer.FolderLayer(id) }) }
-        persist { repository.deleteFolder(id) }
+        lockedPersist { repository.deleteFolder(id) }
     }
 
-    fun moveAppToFolder(key: AppKey, folderId: Long) = persist { repository.moveAppToFolder(key, folderId) }
-    fun removeAppFromFolder(key: AppKey) = persist { repository.removeAppFromFolder(key) }
+    fun moveAppToFolder(key: AppKey, folderId: Long) = lockedPersist { repository.moveAppToFolder(key, folderId) }
+    fun removeAppFromFolder(key: AppKey) = lockedPersist { repository.removeAppFromFolder(key) }
 
     fun moveFolderApp(folderId: Long, key: AppKey, op: ReorderOp<AppKey>) = edit { org ->
         val folder = org.folders[folderId] ?: return@edit
@@ -310,19 +355,19 @@ class LauncherViewModel(
         if (next != folder.apps) repository.setFolderOrder(folderId, next)
     }
 
-    fun addCategory(name: String) = persist { repository.addCategory(name.trim().ifBlank { DEFAULT_CATEGORY_NAME }) }
+    fun addCategory(name: String) = lockedPersist { repository.addCategory(name.trim().ifBlank { DEFAULT_CATEGORY_NAME }) }
 
     fun renameCategory(id: Long, name: String) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
-        persist { repository.renameCategory(id, trimmed) }
+        lockedPersist { repository.renameCategory(id, trimmed) }
     }
 
     fun deleteCategory(id: Long) {
         val category = state.value.categories.firstOrNull { it.id == id }
         if (category?.isAll == true) return
         updateSession { s -> if (s.activeCategoryId == id) s.copy(activeCategoryId = null) else s }
-        persist { repository.deleteCategory(id) }
+        lockedPersist { repository.deleteCategory(id) }
     }
 
     fun moveCategory(id: Long, op: ReorderOp<Long>) = edit { org ->
@@ -332,20 +377,30 @@ class LauncherViewModel(
     }
 
     fun setCategoryMembership(categoryId: Long, key: AppKey, member: Boolean) =
-        persist { repository.setCategoryMembership(categoryId, key, member) }
+        lockedPersist { repository.setCategoryMembership(categoryId, key, member) }
 
-    fun hide(key: AppKey) = persist { repository.hide(key) }
-    fun unhide(key: AppKey) = persist { repository.unhide(key) }
+    fun hide(key: AppKey) = lockedPersist { repository.hide(key) }
+    fun unhide(key: AppKey) = lockedPersist { repository.unhide(key) }
 
     // --- History & settings -------------------------------------------------
     fun clearHistory() = persist { historyLock.withLock { repository.clearRecents() } }
 
-    /** Disabling also deletes stored history and stops collection. */
+    /**
+     * Disabling also deletes stored history and stops collection. Records are deleted before
+     * the flag is written, so "off" is never persisted while records remain; should the
+     * process die in between, [enforceHistoryPolicy] deletes them on the next start.
+     */
     fun setHistoryEnabled(enabled: Boolean) = persist {
         historyLock.withLock {
-            container.settings.update { it.copy(historyEnabled = enabled) }
             if (!enabled) repository.clearRecents()
+            container.settings.update { it.copy(historyEnabled = enabled) }
         }
+    }
+
+    /** Re-opens the database and settings after a storage error (the Retry button). */
+    fun retryStorage() {
+        storageError.value = null
+        storageAttempt.update { it + 1 }
     }
 
     fun updateSettings(transform: (LauncherSettings) -> LauncherSettings) = persist {
@@ -364,7 +419,9 @@ class LauncherViewModel(
         try {
             historyLock.withLock {
                 // Read the persisted value, not the UI snapshot, so a just-disabled history is honoured.
-                if (container.settings.settings.first().historyEnabled) {
+                // Unreadable settings fail closed (readFailed): nothing is recorded then.
+                val settings = container.settings.settings.first()
+                if (settings.historyEnabled && !settings.readFailed) {
                     repository.recordLaunch(key, System.currentTimeMillis())
                 }
             }
@@ -383,8 +440,103 @@ class LauncherViewModel(
                 val keys = org.referencedKeys().filter {
                     it.packageName == event.packageName && it.userSerial == event.userSerial
                 }
-                keys.forEach { key -> persistNow { repository.forgetApp(key) } }
+                keys.forEach { key -> persistNow { editLock.withLock { repository.forgetApp(key) } } }
             }
+        }
+    }
+
+    /**
+     * Reconciles persisted references with every successful catalog load, so changes the
+     * live callback never saw (uninstalled while the process was dead or the view model was
+     * cleared, an update that removed or renamed a launcher activity) leave no stale rows.
+     * Never runs from a failed or empty query; [AppCatalog.findStale] only reports keys
+     * whose activity is gone from an installed package or whose package is uninstalled.
+     */
+    private suspend fun reconcileWithCatalog() {
+        container.catalog.loads.filterNotNull().collect { load ->
+            if (load.apps.isEmpty()) return@collect
+            val org = organizationState.filterNotNull().first()
+            val available = load.apps.mapTo(HashSet()) { it.key }
+            val missing = org.referencedKeys().filterNot { it in available }
+            if (missing.isNotEmpty()) forgetStale(missing)
+        }
+    }
+
+    /** Forgets those of [keys] that the system confirms are gone (checked off the main thread). */
+    private suspend fun forgetStale(keys: Collection<AppKey>) {
+        val stale = try {
+            withContext(Dispatchers.IO) { container.catalog.findStale(keys) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "couldn't check for stale apps", e)
+            emptySet()
+        }
+        stale.forEach { key ->
+            boundary("invalidate icons") { container.icons.invalidatePackage(key.packageName) }
+            persistNow { editLock.withLock { repository.forgetApp(key) } }
+        }
+    }
+
+    /**
+     * Disabled history must hold no records: whenever settings say history is off (at start
+     * and on every change) while records exist, delete them. Covers a crash between the delete
+     * and the flag write, and a failed delete.
+     */
+    private suspend fun enforceHistoryPolicy() {
+        combine(settingsState.filterNotNull(), organizationState.filterNotNull()) { settings, org ->
+            !settings.historyEnabled && !settings.readFailed && org.recents.isNotEmpty()
+        }
+            .distinctUntilChanged()
+            .collect { mustClear ->
+                if (mustClear) persistNow { historyLock.withLock { repository.clearRecents() } }
+            }
+    }
+
+    /** Tells the user once that a damaged settings file was replaced, or that settings can't be read. */
+    private suspend fun announceSettingsRecovery() {
+        settingsState.filterNotNull()
+            .map { it.recoveredFromCorruption to it.readFailed }
+            .distinctUntilChanged()
+            .collect { (recovered, unreadable) ->
+                when {
+                    unreadable -> postMessage(SETTINGS_UNREADABLE_MESSAGE)
+                    recovered -> {
+                        postMessage(SETTINGS_RESET_MESSAGE)
+                        persistNow { container.settings.update { it.copy(recoveredFromCorruption = false) } }
+                    }
+                }
+            }
+    }
+
+    /**
+     * First run: once the catalog has loaded apps successfully, place the device's default
+     * dialer, messaging, browser and camera in the dock and a few system apps on home.
+     * Only if no layout exists, and only once ever (settings.layoutSeeded), so a layout the
+     * user emptied on purpose is never refilled. An install that finished onboarding before
+     * seeding existed is marked seeded without changes.
+     */
+    private suspend fun seedDefaultLayoutOnce() {
+        val initial = settingsState.filterNotNull().first()
+        if (initial.layoutSeeded || initial.readFailed) return
+        if (initial.onboardingComplete) {
+            persistNow { container.settings.update { it.copy(layoutSeeded = true) } }
+            return
+        }
+        val load = container.catalog.loads.filterNotNull().first { it.apps.isNotEmpty() }
+        val plan = try {
+            withContext(Dispatchers.IO) { container.layoutSeeder.plan(load.apps) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "couldn't plan the default layout", e)
+            null
+        }
+        persistNow {
+            if (plan != null && !plan.isEmpty) {
+                editLock.withLock { repository.seedDefaultLayout(plan.dock, plan.home) }
+            }
+            container.settings.update { it.copy(layoutSeeded = true) }
         }
     }
 
@@ -471,6 +623,14 @@ class LauncherViewModel(
         viewModelScope.launch { persistNow(block) }
     }
 
+    /** [persist] for organisation writes: serialised with read-modify-write edits under [editLock]. */
+    private fun lockedPersist(block: suspend () -> Unit) = persist { editLock.withLock { block() } }
+
+    private fun onStorageFailure(what: String, e: Throwable) {
+        Log.e(TAG, "$what load failed", e)
+        storageError.value = e.message?.takeIf { it.isNotBlank() } ?: e.javaClass.simpleName
+    }
+
     private suspend fun persistNow(block: suspend () -> Unit) {
         try {
             block()
@@ -504,6 +664,11 @@ class LauncherViewModel(
         private const val TAG = "LauncherViewModel"
         private const val DEFAULT_FOLDER_NAME = "Folder"
         private const val DEFAULT_CATEGORY_NAME = "New category"
+        private const val DOCK_FULL_MESSAGE = "Dock is full. Remove an app from the dock first."
+        private const val SETTINGS_RESET_MESSAGE =
+            "Pluto's settings file was damaged and has been reset. Recent launches is off until you turn it on again."
+        private const val SETTINGS_UNREADABLE_MESSAGE =
+            "Pluto can't read its settings right now, so defaults are in use and Recent launches is paused."
 
         fun factory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {
             initializer { LauncherViewModel(container, createSavedStateHandle()) }

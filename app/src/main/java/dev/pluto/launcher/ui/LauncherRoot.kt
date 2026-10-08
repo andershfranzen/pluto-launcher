@@ -157,7 +157,10 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                     }
 
                     WallpaperScrim(state.settings)
-                    if (state.loading) {
+                    val storageError = state.storageError
+                    if (storageError != null) {
+                        StorageErrorScreen(storageError, onRetry = vm::retryStorage)
+                    } else if (state.loading) {
                         LoadingPlaceholder()
                     } else {
                         LauncherContent(state, mode, vm, focus)

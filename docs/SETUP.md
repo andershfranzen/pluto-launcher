@@ -19,8 +19,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Open Pluto from your current launcher's app list (it appears as "Pluto" with a small
 planet icon). The first launch:
 
-1. Loads your apps and shows a **usable default layout** straight away: alphabetical drawer,
-   empty favourites, empty dock, and the built-in categories All apps, Games and Tools.
+1. Loads your apps and shows a **usable default layout** straight away: your device's default
+   phone, messaging, browser and camera apps in the dock; Settings, Calendar, Clock, Gallery
+   and Files (where your device has them) as favourites; an alphabetical drawer; and the
+   built-in categories All apps, Games and Tools. The apps are picked from the defaults
+   Android reports, so a slot stays empty when no default is set. This happens once: if you
+   later empty the layout, Pluto does not refill it.
 2. Offers **optional category setup**, for example ticking which apps are games. You can skip
    it and do this later from any app's actions menu (Category membership).
 3. Shows a **controller navigation preview** with the default buttons (see below). It works

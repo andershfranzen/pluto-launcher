@@ -59,6 +59,10 @@ interface LauncherDao {
     @Query("SELECT COUNT(*) FROM category")
     suspend fun categoryCount(): Int
 
+    /** Rows in home_item, dock_slot and folder together: 0 means the user has no layout at all. */
+    @Query("SELECT (SELECT COUNT(*) FROM home_item) + (SELECT COUNT(*) FROM dock_slot) + (SELECT COUNT(*) FROM folder)")
+    suspend fun layoutRowCount(): Int
+
     // --- Home grid ----------------------------------------------------------
 
     @Query("DELETE FROM home_item")
@@ -88,6 +92,13 @@ interface LauncherDao {
         clearDock()
         val seen = HashSet<String>()
         insertDock(slots.mapIndexedNotNull { i, key -> key?.takeIf(seen::add)?.let { DockSlotEntity(i, it) } })
+    }
+
+    /** First-run default layout: dock and favourites committed together, or not at all. */
+    @Transaction
+    suspend fun seedLayout(dock: List<String?>, homeIds: List<String>) {
+        replaceDock(dock)
+        replaceHomeItems(homeIds)
     }
 
     // --- Folders ------------------------------------------------------------

@@ -67,9 +67,17 @@ something.
 - **Home role request**: if Android refuses the request without asking (an earlier "Don't
   ask again"), Pluto opens Default apps settings instead; if you decline the dialog, Pluto
   explains where to choose it later.
-- On the API 36 emulator, a Home key injected with `adb shell input keyevent HOME` while
-  Pluto is already in front does not always reach Pluto (`onNewIntent`), so open layers stay
-  open. This also happens without the 0.1 fixes; check it on hardware with the real Home
-  gesture/button.
+- **Home while Pluto is in front** closes open layers (drawer, search, folder, menus). Home
+  pressed while returning from another app keeps them, so you come back to the same place.
+  Verified on the API 36 emulator (`HomeIntentTest`); still to be checked with the OxygenOS
+  Home gesture.
+- **Damaged settings**: if Pluto's settings file is corrupt it is replaced, Pluto tells you so,
+  and Recent launches stays off until you turn it on again. Theme, rotation and controller
+  settings return to their defaults in that case. While the file cannot be read at all, Pluto
+  uses defaults with history paused and keeps retrying.
+- **Unreadable database** (for example after installing an older build over a newer one):
+  Pluto shows a recovery screen instead of the launcher, with Try again and a shortcut to
+  choose another Home app. Your data is left untouched; installing the newer build again
+  restores it.
 - Database migrations are tested only for the current schema (version 1); there is no
   migration history yet to exercise.

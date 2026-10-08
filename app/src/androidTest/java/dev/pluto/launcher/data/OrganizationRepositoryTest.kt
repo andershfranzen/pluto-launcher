@@ -54,6 +54,39 @@ class OrganizationRepositoryTest {
     }
 
     @Test
+    fun defaultLayoutIsSeededOnlyIntoAnEmptyLayout() = runTest {
+        repo.ensureDefaults()
+        assertTrue(repo.seedDefaultLayout(listOf(a, b, null), listOf(c, a)))
+        val o = org()
+        assertEquals(listOf(a, b, null, null, null), o.dock)
+        assertEquals(listOf(c, a), homeApps(o))
+
+        // Any existing organisation blocks a second seed.
+        assertFalse(repo.seedDefaultLayout(listOf(c), listOf(b)))
+        assertEquals(listOf(a, b, null, null, null), org().dock)
+    }
+
+    @Test
+    fun defaultLayoutIsNotSeededWhenOnlyAFolderExists() = runTest {
+        val folder = repo.createFolder("F", listOf(a))
+        repo.removeAppFromFolder(a)
+        repo.unpin(a)
+        assertTrue(org().folders.containsKey(folder))
+        assertFalse(repo.seedDefaultLayout(listOf(b), listOf(c)))
+        assertEquals(List(Organization.DOCK_SLOTS) { null }, org().dock)
+    }
+
+    @Test
+    fun setHomeOrderKeepsRowsAddedSinceTheCallerRead() = runTest {
+        repo.pin(a)
+        repo.pin(b)
+        val staleRead = org().homeItems
+        repo.pin(c) // a concurrent edit the reorder did not see
+        repo.setHomeOrder(staleRead.reversed())
+        assertEquals(listOf(b, a, c), homeApps(org()))
+    }
+
+    @Test
     fun pinIsIdempotentAndUnpinRemoves() = runTest {
         repo.pin(a)
         repo.pin(b)

@@ -3,7 +3,13 @@ package dev.pluto.launcher.ui.theme
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.view.WindowCompat
+import dev.pluto.launcher.model.ThemePreference
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -20,7 +26,24 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class PlutoThemeTest {
     @get:Rule
-    val rule = createComposeRule()
+    val rule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun systemBarIconsFollowTheEffectiveTheme() {
+        var theme by mutableStateOf(ThemePreference.LIGHT)
+        rule.setContent { PlutoTheme(LauncherSettings(theme = theme)) {} }
+        fun controller() = WindowCompat.getInsetsController(rule.activity.window, rule.activity.window.decorView)
+        rule.runOnIdle {
+            // Light theme: dark icons over the light scrim.
+            assertTrue(controller().isAppearanceLightStatusBars)
+            assertTrue(controller().isAppearanceLightNavigationBars)
+        }
+        theme = ThemePreference.DARK
+        rule.runOnIdle {
+            assertFalse(controller().isAppearanceLightStatusBars)
+            assertFalse(controller().isAppearanceLightNavigationBars)
+        }
+    }
 
     @Test
     fun reducedMotionReplacesTheRipple() {

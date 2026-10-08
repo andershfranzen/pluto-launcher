@@ -104,7 +104,10 @@ fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) 
                     id = "actions:dock",
                     label = OverlayText.ADD_TO_DOCK,
                     icon = Icons.Rounded.AddCircleOutline,
-                    onClick = { dockFull = !vm.addToDock(key) },
+                    onClick = {
+                        dockFull = false
+                        vm.addToDock(key, onDockFull = { dockFull = true })
+                    },
                 )
             }
             if (dockFull && !inDock) NoticeCard(OverlayText.DOCK_FULL)

@@ -125,6 +125,11 @@ data class LauncherUiState(
     val isDefaultHome: Boolean = false,
     val session: SessionState = SessionState(),
     val message: UserMessage? = null,
+    /**
+     * Non-null when the launcher's database or settings could not be read (e.g. a missing
+     * migration). The UI shows a recovery screen instead of crashing; data is left untouched.
+     */
+    val storageError: String? = null,
 ) {
     val controllerConnected: Boolean get() = controllers.isNotEmpty()
     val activeCategory: Category?

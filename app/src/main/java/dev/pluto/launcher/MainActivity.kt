@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
+import androidx.annotation.VisibleForTesting
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -44,7 +45,8 @@ import kotlinx.coroutines.launch
  *   ControllerInputRouter whose actions feed a flow passed to LauncherRoot.
  * - dispatchKeyEvent / dispatchGenericMotionEvent: give gamepad events to the router first.
  *   Touch events (dispatchTouchEvent) notify the focus layer that touch took over.
- * - onNewIntent with ACTION_MAIN + CATEGORY_HOME while already resumed -> vm.onHomePressed().
+ * - onNewIntent with ACTION_MAIN + CATEGORY_HOME while already in front (resumed and not
+ *   stopped since) -> vm.onHomePressed().
  * - Back (OnBackPressedDispatcher) -> vm.back(); at home Back does nothing (launcher stays).
  * - Applies settings.rotation to requestedOrientation: FOLLOW_SYSTEM -> SCREEN_ORIENTATION_USER,
  *   PORTRAIT -> USER_PORTRAIT, LANDSCAPE -> USER_LANDSCAPE (both directions),
@@ -68,6 +70,10 @@ class MainActivity : ComponentActivity() {
             initializer { LauncherViewModel(container, createSavedStateHandle()) }
         }
     }
+
+    /** The shared state model, exposed for instrumented tests. */
+    @VisibleForTesting
+    internal val viewModel: LauncherViewModel get() = vm
 
     /** Controller actions for LauncherRoot; buffered so a burst of input never blocks dispatch. */
     private val actions = MutableSharedFlow<LauncherAction>(extraBufferCapacity = 64)
@@ -166,19 +172,29 @@ class MainActivity : ComponentActivity() {
         }
 
     override fun onNewIntent(intent: Intent) {
-        // Checked before super: the lifecycle tells us whether Home was pressed while we were
-        // already in front, or whether we're being brought back from another app.
-        val wasResumed = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        // The framework pauses a singleTask activity before delivering a new intent, so the
+        // lifecycle state cannot tell "Home pressed while in front" from "returning from an
+        // app". [visibleSinceResume] is only cleared in onStop, which a press while we are in
+        // front never reaches.
+        val alreadyInFront = visibleSinceResume
         super.onNewIntent(intent)
         setIntent(intent)
-        val isHome = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)
-        if (isHome && wasResumed) vm.onHomePressed()
+        if (isHomeIntent(intent) && alreadyInFront) vm.onHomePressed()
     }
+
+    /** True from onResume until onStop: the launcher has been in front and still is visible. */
+    private var visibleSinceResume = false
 
     override fun onResume() {
         super.onResume()
-        // vm.onResume refreshes the catalog and controllers.
+        visibleSinceResume = true
+        // vm.onResume refreshes the catalog (if it may be stale) and controllers.
         vm.onResume(HomeRole.isDefaultHome(this))
+    }
+
+    override fun onStop() {
+        visibleSinceResume = false
+        super.onStop()
     }
 
     override fun onPause() {
@@ -190,6 +206,9 @@ class MainActivity : ComponentActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus) router.reset()
     }
+
+    private fun isHomeIntent(intent: Intent): Boolean =
+        intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean =
         router.onKeyEvent(event) || super.dispatchKeyEvent(event)

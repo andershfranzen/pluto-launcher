@@ -35,6 +35,8 @@ data class EnvironmentInputs(
     val window: WindowSizeDp?,
     val message: UserMessage?,
     val isDefaultHome: Boolean,
+    /** Non-null when the organisation or settings store could not be read. */
+    val storageError: String? = null,
 )
 
 /**
@@ -49,6 +51,21 @@ class LauncherStateBuilder {
     // Sorting ~200 labels with a Collator is the heaviest step; only redo it when the catalog changes.
     private var sortedFor: List<AppEntry>? = null
     private var sorted: List<AppEntry> = emptyList()
+
+    /**
+     * State while organisation or settings have not loaded: the loading placeholder, or the
+     * storage error screen when [EnvironmentInputs.storageError] is set.
+     */
+    fun notLoaded(env: EnvironmentInputs, session: SessionState): LauncherUiState =
+        LauncherUiState(
+            loading = true,
+            controllers = env.controllers,
+            otherProfilesPresent = env.otherProfilesPresent,
+            isDefaultHome = env.isDefaultHome,
+            session = session,
+            message = env.message,
+            storageError = env.storageError,
+        )
 
     fun build(library: LibraryInputs, env: EnvironmentInputs, session: SessionState): LauncherUiState {
         val org = library.organization
@@ -110,6 +127,7 @@ class LauncherStateBuilder {
             isDefaultHome = env.isDefaultHome,
             session = session,
             message = env.message,
+            storageError = env.storageError,
         )
     }
 

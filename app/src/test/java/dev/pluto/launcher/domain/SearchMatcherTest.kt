@@ -21,6 +21,29 @@ class SearchMatcherTest {
     }
 
     @Test
+    fun normalizeFoldsLettersWithoutDecomposition() {
+        assertEquals("oresundstag", SearchMatcher.normalize("Øresundståg"))
+        assertEquals("lodz transit", SearchMatcher.normalize("Łódź Transit"))
+        assertEquals("strasse", SearchMatcher.normalize("Straße"))
+        assertEquals("aero", SearchMatcher.normalize("Ærø"))
+        assertEquals("oeuvre", SearchMatcher.normalize("Œuvre"))
+        assertEquals("dakovo", SearchMatcher.normalize("Đakovo"))
+        assertEquals("istanbul", SearchMatcher.normalize("ıstanbul"))
+        assertEquals("thorn", SearchMatcher.normalize("Þorn"))
+    }
+
+    @Test
+    fun foldedLettersMatchUnaccentedQueries() {
+        assertTrue(SearchMatcher.matches(app("Øresundståg"), "oresund"))
+        assertTrue(SearchMatcher.matches(app("Łódź Transit"), "lodz"))
+        assertTrue(SearchMatcher.matches(app("Straße"), "strasse"))
+        assertTrue(SearchMatcher.matches(app("Straße"), "STRASSE"))
+        // Typing the accented letter still works.
+        assertTrue(SearchMatcher.matches(app("Øresundståg"), "Øre"))
+        assertEquals(listOf("Øresundståg"), SearchMatcher.filter(listOf(app("Maps"), app("Øresundståg")), "ore").map { it.label })
+    }
+
+    @Test
     fun normalizeHandlesDecomposedInput() {
         // "e" followed by a combining acute accent.
         assertEquals("cafe", SearchMatcher.normalize("Café"))

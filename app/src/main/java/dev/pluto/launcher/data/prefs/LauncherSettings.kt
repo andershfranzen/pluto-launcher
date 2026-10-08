@@ -119,6 +119,18 @@ data class LauncherSettings(
      * [controllerMappingKey]: the InputDevice descriptor, or "vp:<vendor>:<product>" fallback.
      */
     val controllerMappings: Map<String, ButtonMapping> = emptyMap(),
+    /** Set once the first-run default layout was seeded (or found unnecessary); never seeded again. */
+    val layoutSeeded: Boolean = false,
+    /**
+     * Set when a damaged settings file was replaced. The launcher tells the user once and
+     * clears it; it is persisted so the notice survives a crash before it was shown.
+     */
+    val recoveredFromCorruption: Boolean = false,
+    /**
+     * Not persisted: true when the settings could not be read and these are fail-closed
+     * fallback values ([SettingsRepository.UNREADABLE]). History is never recorded then.
+     */
+    val readFailed: Boolean = false,
 ) {
     /** Resolves the mapping for a controller: descriptor, then vendor/product, then default. */
     fun mappingFor(descriptor: String?, vendorId: Int, productId: Int): ButtonMapping =

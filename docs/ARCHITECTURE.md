@@ -69,6 +69,22 @@ window size, HomeRole ───┘          │                                 
 - **Package changes**: `AppCatalog.packageEvents` emits `Removed` only for full uninstalls;
   the ViewModel then calls `OrganizationRepository.forgetApp`. Updates and temporary
   unavailability never delete configuration.
+- **Reconciliation**: changes no live callback saw (uninstalled while Pluto's process was
+  dead, an update that removed or renamed a launcher activity) are caught on every
+  *successful* catalog load (`AppCatalog.loads`; a failed or empty query is never used).
+  Each persisted key missing from the catalog is checked with `AppCatalog.findStale`: it is
+  forgotten only if its package is launchable but that activity is gone, or the package is
+  not installed for this user (`PackageManager.getPackageInfo` throws `NameNotFoundException`).
+  Disabled, suspended, unavailable or mid-update packages keep their configuration. A launch
+  that finds its activity missing runs the same check.
+- **One serialisation point for organisation writes**: every organisation mutation in the
+  ViewModel holds `editLock` (read-modify-write reorders and the dock slot choice read the
+  persisted organisation inside it), so a reorder computed from an earlier read can never
+  overwrite a concurrent pin, folder change or uninstall cleanup. As a further guard,
+  `setHomeOrder` keeps any current row the caller did not mention.
+- **Storage errors** (a missing migration, schema mismatch, SQLiteException, or a settings
+  failure other than I/O) are caught on the read flows and shown as a recovery screen with
+  Try again and Choose Home app. The database file is never deleted or reset.
 
 ## Mode resolution
 
@@ -148,8 +164,8 @@ derived from available space and insets, never from orientation alone.
 | Data | Store | Notes |
 |------|-------|-------|
 | Favourites order, dock, folders, categories, membership, hidden apps | Room `launcher.db` | Written immediately per edit; multi-table edits in DAO transactions |
-| Recent launches (max 12) | Room `recent_launch` | Not written when history is disabled; disabling deletes all rows |
-| Settings and button mappings | DataStore `settings` | Lenient decoding: unknown values fall back to defaults per key |
+| Recent launches (max 12) | Room `recent_launch` | Not written when history is disabled or settings are unreadable; disabling deletes all rows before the flag is saved, and any rows found while history is off are deleted at start |
+| Settings and button mappings | DataStore `settings` | Lenient decoding: unknown values fall back to defaults per key. A corrupt file is replaced with fail-closed values (history off, onboarding done, layout seeded) and the user is told once; while the file is unreadable, `SettingsRepository.UNREADABLE` (history off) is used and reading is retried with back-off |
 | Session (layers, search, selection, anchors) | ViewModel + `SavedStateHandle` | Transient; not backed up |
 
 App references are stored as `AppKey.encode()` strings (`<userSerial>|<package>/<activity>`)
@@ -217,7 +233,12 @@ are in place for the first real migration.
 - No database work or icon decoding on the main thread. Room DAO calls are `suspend`;
   `IconCache.load` decodes on a background dispatcher and `peek` only reads the cache.
 - `AppCatalog` loads on a background dispatcher and reloads only the affected package on
-  LauncherApps callbacks, plus a full refresh on resume to catch missed events.
+  LauncherApps callbacks. On resume it reloads only when the list may be stale
+  (`refreshIfStale`: callback not registered, last query failed, or the locale changed), so a
+  warm Home return does not re-read every app label.
+- `IconCache` keeps a per-package invalidation counter (`versions`); `AppIcon` keys its bitmap
+  on it, so an updated app's new icon (or an icon whose decode failed mid-install) is
+  reloaded even though its `AppKey` is unchanged.
 - No wake locks, polling or background work: controller state comes from InputManager
   callbacks and app state from LauncherApps callbacks.
 - Platform exceptions (missing activities, removed profiles, SecurityException from

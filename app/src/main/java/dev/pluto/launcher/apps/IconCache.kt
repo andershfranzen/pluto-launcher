@@ -15,12 +15,17 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import dev.pluto.launcher.model.AppKey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
 /**
  * Decodes app icons off the main thread (Dispatchers.IO / Default) via
  * LauncherActivityInfo.getIcon / getBadgedIcon, rasterised at [sizePx], kept in an LruCache
- * sized by memory. Invalidate a package when it changes.
+ * sized by memory. Invalidate a package when it changes; [versions] then tells composed
+ * icons of that package to load again (their AppKey is unchanged by an update).
  */
 class IconCache(context: Context) {
     private val appContext = context.applicationContext
@@ -34,6 +39,17 @@ class IconCache(context: Context) {
     private val cache = object : LruCache<String, ImageBitmap>(cacheBytes()) {
         override fun sizeOf(key: String, value: ImageBitmap): Int = value.width * value.height * 4
     }
+
+    private val _versions = MutableStateFlow<Map<String, Int>>(emptyMap())
+
+    /**
+     * Per-package invalidation counter. Icons key their loaded bitmap on it, so an update
+     * (new icon) or a decode that failed mid-install is reloaded after the package event.
+     */
+    val versions: StateFlow<Map<String, Int>> = _versions.asStateFlow()
+
+    /** Current invalidation count for [packageName] (0 until it is first invalidated). */
+    fun versionOf(packageName: String): Int = _versions.value[packageName] ?: 0
 
     /**
      * Icons change with app updates, so the cache drops a package's bitmaps itself
@@ -79,6 +95,7 @@ class IconCache(context: Context) {
         cache.snapshot().keys
             .filter { it.substringAfterLast('|').startsWith(prefix) }
             .forEach { cache.remove(it) }
+        _versions.update { it + (packageName to ((it[packageName] ?: 0) + 1)) }
     }
 
     private fun decode(key: AppKey, sizePx: Int): ImageBitmap? {

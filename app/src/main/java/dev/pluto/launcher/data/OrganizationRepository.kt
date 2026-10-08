@@ -74,11 +74,30 @@ class OrganizationRepository(private val dao: LauncherDao) {
         )
     }
 
+    /**
+     * Writes the first-run default layout, but only while the user has no layout at all (no
+     * favourites, dock entries or folders), in one transaction. Returns true when it wrote.
+     */
+    suspend fun seedDefaultLayout(dock: List<AppKey?>, home: List<AppKey>): Boolean = writeLock.withLock {
+        if (dao.layoutRowCount() > 0) return@withLock false
+        val padded = List(Organization.DOCK_SLOTS) { i -> dock.getOrNull(i)?.encode() }
+        val homeIds = home.distinct().map { HomeItem.App(it).id }
+        if (padded.all { it == null } && homeIds.isEmpty()) return@withLock false
+        dao.seedLayout(padded, homeIds)
+        true
+    }
+
+    /**
+     * Reorders the home grid. A reorder never removes anything: a current row missing from
+     * [items] (added by a concurrent edit after the caller read the grid) is kept at the end.
+     */
     suspend fun setHomeOrder(items: List<HomeItem>): Unit = writeLock.withLock {
         // Apps that live in a folder cannot also sit on the grid directly.
         val ids = items.filter { item -> item !is HomeItem.App || dao.folderAppFor(item.key.encode()) == null }
             .map { it.id }
-        dao.replaceHomeItems(ids)
+        val supplied = ids.toHashSet()
+        val kept = dao.homeItems().map { it.itemId }.filterNot { it in supplied }
+        dao.replaceHomeItems(ids + kept)
     }
 
     /** Appends to the home grid unless already there directly or via a folder. */

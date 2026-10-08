@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,8 @@ import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 val LocalIconCache = staticCompositionLocalOf<IconCache> { error("IconCache not provided") }
 
@@ -55,9 +58,16 @@ private val DesaturateFilter = ColorFilter.colorMatrix(ColorMatrix().apply { set
 fun AppIcon(entry: AppEntry, size: Dp, modifier: Modifier = Modifier) {
     val cache = LocalIconCache.current
     val sizePx = with(LocalDensity.current) { size.roundToPx() }.coerceAtLeast(1)
+    // A package update keeps the AppKey, so the cache's per-package version is part of the key:
+    // after an update (or a decode that failed mid-install) the tile peeks and loads again.
+    // Mapped per package so one package's update only recomposes that package's icons.
+    val packageName = entry.packageName
+    val version by remember(cache, packageName) {
+        cache.versions.map { it[packageName] ?: 0 }.distinctUntilChanged()
+    }.collectAsState(initial = cache.versionOf(packageName))
     // peek() is a cheap memory-cache lookup; decoding only ever happens in load() off the main thread.
-    var bitmap by remember(entry.key, sizePx) { mutableStateOf(safePeek(cache, entry, sizePx)) }
-    LaunchedEffect(entry.key, sizePx) {
+    var bitmap by remember(entry.key, sizePx, version) { mutableStateOf(safePeek(cache, entry, sizePx)) }
+    LaunchedEffect(entry.key, sizePx, version) {
         if (bitmap == null) bitmap = safeLoad(cache, entry, sizePx)
     }
     val image = bitmap
