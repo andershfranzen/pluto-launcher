@@ -1,6 +1,12 @@
 package dev.pluto.launcher.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -18,7 +24,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,6 +37,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -59,7 +67,10 @@ import dev.pluto.launcher.ui.components.PlutoTextButton
 import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
+import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.controllerFocusTarget
+import dev.pluto.launcher.ui.motion.LocalAppLauncher
+import dev.pluto.launcher.ui.motion.PlutoMotion
 
 private const val FV_CLOSE = "folderview:close"
 private const val FV_RENAME = "folderview:rename"
@@ -85,8 +96,12 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
     }
     val focus = LocalControllerFocus.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val launcher = LocalAppLauncher.current
+    val outerInert = LocalFocusInert.current
     val iconSize = state.iconSize()
     val apps = folderUi.apps
+    // Tiles settle in one after another just after the folder container has opened.
+    val stagger = rememberStagger(animate = true, startDelayMs = 70, stepMs = 22, maxSlots = 8)
     var renaming by rememberSaveable(folderId) { mutableStateOf(false) }
     var draft by rememberSaveable(folderId) { mutableStateOf(folderUi.folder.name) }
 
@@ -96,9 +111,16 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
         withFrameNanos { }
         if (focus.inputMode == InputMode.CONTROLLER) focus.requestFocusWhenReady(defaultId)
     }
+    // The name field and the title row cross-fade; focus follows to whichever is arriving
+    // (the outgoing one is focus-inert while it fades).
+    val renameSeen = remember { booleanArrayOf(renaming) }
     LaunchedEffect(renaming) {
         if (renaming) {
+            renameSeen[0] = true
             if (focus.requestFocusWhenReady(FV_NAME_FIELD)) keyboard?.show()
+        } else if (renameSeen[0]) {
+            renameSeen[0] = false
+            focus.requestFocusWhenReady(FV_RENAME)
         }
     }
 
@@ -106,7 +128,6 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
         draft = folderUi.folder.name
         keyboard?.hide()
         renaming = false
-        focus.requestFocus(FV_RENAME)
     }
 
     // Back (system or controller) cancels an in-place rename before it closes the folder.
@@ -118,7 +139,6 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
         if (name.isNotEmpty() && name != folderUi.folder.name) vm.renameFolder(folderId, name)
         keyboard?.hide()
         renaming = false
-        focus.requestFocus(FV_RENAME)
     }
 
     BoxWithConstraints(
@@ -135,51 +155,64 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
                 .heightIn(max = maxHeight),
         ) {
             Column(Modifier.padding(16.dp)) {
-                if (renaming) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = draft,
-                            onValueChange = { draft = it },
-                            singleLine = true,
-                            label = { Text("Folder name") },
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Sentences,
-                                imeAction = ImeAction.Done,
-                            ),
-                            keyboardActions = KeyboardActions(onDone = { commitRename() }),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .controllerFocusTarget(FV_NAME_FIELD, onActivate = { keyboard?.show() }),
-                        )
-                        PlutoIconButton(FV_SAVE, Icons.Outlined.Check, "Save name", { commitRename() })
-                        PlutoIconButton(FV_CANCEL, Icons.Outlined.Close, "Cancel rename", { cancelRename() })
-                    }
-                } else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            folderUi.folder.name,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 8.dp)
-                                .semantics { heading() },
-                        )
-                        PlutoIconButton(FV_CLOSE, Icons.Outlined.Close, "Close folder", { vm.back() })
-                    }
-                    FlowRow(
-                        Modifier.padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        PlutoTextButton(FV_RENAME, "Rename", {
-                            draft = folderUi.folder.name
-                            renaming = true
-                        }, icon = Icons.Outlined.DriveFileRenameOutline)
-                        PlutoTextButton(FV_EDIT, "Edit", {
-                            vm.setEditSelection("folder:$folderId")
-                            vm.openLayer(Layer.Edit)
-                        }, icon = Icons.Outlined.Edit)
+                AnimatedContent(
+                    targetState = renaming,
+                    transitionSpec = {
+                        (fadeIn(PlutoMotion.fadeIn()) + slideInVertically(PlutoMotion.slideSpring) { it / 4 }) togetherWith
+                            fadeOut(PlutoMotion.fadeOut()) using SizeTransform(clip = false)
+                    },
+                    label = "folderRename",
+                ) { editing ->
+                    CompositionLocalProvider(LocalFocusInert provides (outerInert || editing != renaming)) {
+                        Column {
+                            if (editing) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    OutlinedTextField(
+                                        value = draft,
+                                        onValueChange = { draft = it },
+                                        singleLine = true,
+                                        label = { Text("Folder name") },
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Sentences,
+                                            imeAction = ImeAction.Done,
+                                        ),
+                                        keyboardActions = KeyboardActions(onDone = { commitRename() }),
+                                        shape = RoundedCornerShape(16.dp),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .controllerFocusTarget(FV_NAME_FIELD, onActivate = { keyboard?.show() }),
+                                    )
+                                    PlutoIconButton(FV_SAVE, Icons.Outlined.Check, "Save name", { commitRename() })
+                                    PlutoIconButton(FV_CANCEL, Icons.Outlined.Close, "Cancel rename", { cancelRename() })
+                                }
+                            } else {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        folderUi.folder.name,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(start = 8.dp)
+                                            .semantics { heading() },
+                                    )
+                                    PlutoIconButton(FV_CLOSE, Icons.Outlined.Close, "Close folder", { vm.back() })
+                                }
+                                FlowRow(
+                                    Modifier.padding(top = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    PlutoTextButton(FV_RENAME, "Rename", {
+                                        draft = folderUi.folder.name
+                                        renaming = true
+                                    }, icon = Icons.Outlined.DriveFileRenameOutline)
+                                    PlutoTextButton(FV_EDIT, "Edit", {
+                                        vm.setEditSelection("folder:$folderId")
+                                        vm.openLayer(Layer.Edit)
+                                    }, icon = Icons.Outlined.Edit)
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -200,12 +233,13 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
                             .fillMaxWidth()
                             .weight(1f, fill = false),
                     ) {
-                        items(apps, key = { it.key.encode() }) { entry ->
+                        itemsIndexed(apps, key = { _, entry -> entry.key.encode() }) { index, entry ->
                             val id = folderAppId(folderId, entry.key)
                             AppTile(
                                 entry = entry,
                                 iconSize = iconSize,
-                                onLaunch = { vm.launch(entry.key) },
+                                onLaunch = { launcher.launch(entry.key, id) },
+                                modifier = plutoItem().staggered(stagger, index),
                                 onActions = { vm.openLayer(Layer.AppActions(entry.key)) },
                                 focusId = id,
                                 onFocused = {

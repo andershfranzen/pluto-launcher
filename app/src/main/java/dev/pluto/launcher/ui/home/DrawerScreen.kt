@@ -1,5 +1,11 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,7 +22,8 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -33,6 +40,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -66,7 +76,11 @@ import dev.pluto.launcher.ui.components.PlutoTextButton
 import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
+import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.controllerFocusTarget
+import dev.pluto.launcher.ui.motion.LocalAppLauncher
+import dev.pluto.launcher.ui.motion.LocalDrawerReveal
+import dev.pluto.launcher.ui.motion.PlutoMotion
 
 private const val SURFACE = "drawer"
 
@@ -97,14 +111,35 @@ private fun drawerAppId(key: AppKey) = "drawer:${key.encode()}"
 fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val reveal = LocalDrawerReveal.current
+    val launcher = LocalAppLauncher.current
+    val outerInert = LocalFocusInert.current
     val iconSize = state.iconSize()
     val session = state.session
+    val currentState by rememberUpdatedState(state)
+    val categoryId = state.activeCategory?.id
     val gridKeys = state.drawerApps.map { drawerAppId(it.key) }
-    val gridState = rememberAnchoredGridState(SURFACE, state, gridKeys)
+    val currentKeys by rememberUpdatedState(gridKeys)
+
+    // Each category page has its own grid state (pages overlap while sliding); the first
+    // one starts at the persisted anchor. Anchors, focus order and scrolling follow the
+    // active page.
+    val anchoredState = rememberAnchoredGridState(SURFACE, state, gridKeys)
+    val pages = remember { DrawerPages(anchoredState) }
+    val gridState = pages.active
+    val currentGrid by rememberUpdatedState(gridState)
     ReportScrollAnchor(SURFACE, gridState, state, vm, gridKeys)
-    TrackFocusOrder(SURFACE, gridKeys) { gridState.scrollToItem(it) }
+    TrackFocusOrder(SURFACE, gridKeys) { currentGrid.scrollToItem(it) }
     var actionsMode by rememberSaveable { mutableStateOf(false) }
     val imeVisible = WindowInsets.isImeVisible
+
+    // The drawer can be composed before it is the open layer (pulled up by a finger) and
+    // after it closed (animating away); only the open drawer claims default focus.
+    val isTop = session.topLayer == Layer.Drawer
+
+    // Opened by a button or the controller: the first rows stagger in. Pulled up by a finger
+    // the content is already on screen, so it stays put.
+    val stagger = rememberStagger(animate = isTop && !reveal.isDragging, stepMs = 30, maxSlots = 5)
 
     // Local field value keeps the cursor/selection stable; the VM holds the text itself.
     var field by remember { mutableStateOf(TextFieldValue(session.searchText, TextRange(session.searchText.length))) }
@@ -120,15 +155,20 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
 
     val firstAppId = gridKeys.firstOrNull()
     val defaultId = if (session.searchActive) DRAWER_SEARCH_ID else firstAppId ?: DRAWER_SEARCH_ID
-    SideEffect { focus.setDefaultFocus(defaultId) }
+    val currentDefault by rememberUpdatedState(defaultId)
+    SideEffect { if (isTop) focus.setDefaultFocus(defaultId) }
 
     // On open: Search (button or Y) focuses the field and raises the keyboard; a controller
-    // otherwise lands on the first app.
-    LaunchedEffect(Unit) {
+    // otherwise lands on the first app. Runs once per opening, not when a layer above closes.
+    val opened = remember { booleanArrayOf(false) }
+    if (Layer.Drawer !in session.layers) opened[0] = false
+    LaunchedEffect(isTop) {
+        if (!isTop || opened[0]) return@LaunchedEffect
+        opened[0] = true
         withFrameNanos { }
         when {
-            session.searchActive -> if (focus.requestFocusWhenReady(DRAWER_SEARCH_ID)) keyboard?.show()
-            focus.inputMode == InputMode.CONTROLLER -> focus.requestFocusWhenReady(defaultId)
+            currentState.session.searchActive -> if (focus.requestFocusWhenReady(DRAWER_SEARCH_ID)) keyboard?.show()
+            focus.inputMode == InputMode.CONTROLLER -> focus.requestFocusWhenReady(currentDefault)
         }
     }
 
@@ -149,7 +189,37 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
         if (firstRun[0]) {
             firstRun[0] = false
         } else if (state.drawerApps.isNotEmpty()) {
-            gridState.scrollToItem(0)
+            currentGrid.scrollToItem(0)
+        }
+    }
+
+    // Category switched (chip, L1/R1): the outgoing page becomes focus-inert, so a controller
+    // that was on an app follows to the same app on the incoming page, else its first app.
+    val switch = remember { CategorySwitch(categoryId) }
+    if (switch.categoryId != categoryId) {
+        switch.categoryId = categoryId
+        val focused = Snapshot.withoutReadObservation { focus.focusedId }
+        switch.focusedApp = focused?.takeIf { it in switch.keys }
+    }
+    switch.keys = gridKeys
+    LaunchedEffect(categoryId) {
+        val was = switch.focusedApp ?: return@LaunchedEffect
+        switch.focusedApp = null
+        withFrameNanos { }
+        if (focus.inputMode != InputMode.CONTROLLER || currentState.session.topLayer != Layer.Drawer) return@LaunchedEffect
+        val keys = currentKeys
+        val target = was.takeIf { it in keys } ?: keys.firstOrNull() ?: DR_CLOSE
+        val index = keys.indexOf(target)
+        if (index >= 0 && currentGrid.layoutInfo.visibleItemsInfo.none { it.index == index }) currentGrid.scrollToItem(index)
+        focus.requestFocusWhenReady(target)
+    }
+
+    // Swipe down (on the header, or at the top of the list) pulls the drawer closed.
+    val closeDriver = rememberRevealDragDriver(opening = false) { open ->
+        if (!open) {
+            keyboard?.hide()
+            if (currentState.session.searchActive) vm.setSearchActive(false)
+            vm.back()
         }
     }
 
@@ -161,12 +231,15 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
         // Keyboard up in a short window: keep only the search row and results.
         val compact = imeVisible && maxHeight < CompactImeHeight
         val gap = if (compact) 4.dp else 8.dp
+        val tileIcon = if (compact) iconSize * 0.75f else iconSize
+        // Same arithmetic as GridCells.Adaptive, for the per-row entrance stagger.
+        val columns = ((maxWidth - gap * 2 - 24.dp + 4.dp) / (tileIcon + 36.dp + 4.dp)).toInt().coerceAtLeast(1)
         PlutoPanel(
             Modifier
                 .fillMaxSize()
                 .padding(gap),
         ) {
-            Column(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().revealDrag(closeDriver, opening = false)) {
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -221,7 +294,11 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     )
                 }
 
-                if (actionsMode && !compact) {
+                AnimatedVisibility(
+                    visible = actionsMode && !compact,
+                    enter = ExpandIn,
+                    exit = ShrinkOut,
+                ) {
                     Text(
                         DrawerText.ACTIONS_HINT,
                         style = MaterialTheme.typography.bodyMedium,
@@ -232,7 +309,12 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     )
                 }
 
-                if (state.categories.size > 1 && !compact) {
+                // The keyboard rising in a short window folds the chips away; they unfold with it.
+                AnimatedVisibility(
+                    visible = state.categories.size > 1 && !compact,
+                    enter = ExpandIn,
+                    exit = ShrinkOut,
+                ) {
                     CategoryTabs(
                         categories = state.categories,
                         selected = state.activeCategory,
@@ -242,36 +324,61 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     )
                 }
 
-                Box(Modifier.weight(1f).fillMaxWidth()) {
-                    if (state.drawerApps.isEmpty()) {
-                        DrawerEmptyState(state, vm, Modifier.align(Alignment.Center))
-                    } else {
-                        val tileIcon = if (compact) iconSize * 0.75f else iconSize
-                        LazyVerticalGrid(
-                            columns = GridCells.Adaptive(minSize = tileIcon + 36.dp),
-                            state = gridState,
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = if (compact) 4.dp else 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.fillMaxSize(),
-                        ) {
-                            items(state.drawerApps, key = { drawerAppId(it.key) }) { entry ->
-                                val id = drawerAppId(entry.key)
-                                val openActions = { vm.openLayer(Layer.AppActions(entry.key)) }
-                                AppTile(
-                                    entry = entry,
-                                    iconSize = tileIcon,
-                                    onLaunch = if (actionsMode) openActions else { { vm.launch(entry.key) } },
-                                    onActions = openActions,
-                                    actionsOnTap = actionsMode,
-                                    // Keyboard-compact rows show icons only so no tile is cut off; names stay in semantics.
-                                    showLabel = !compact,
-                                    focusId = id,
-                                    onFocused = {
-                                        vm.onAppSelected(entry.key)
-                                        vm.onControlFocused(id)
-                                    },
-                                )
+                // Category switches slide the results page (direction-aware); typing only
+                // filters inside the page, where items fade and glide (animateItem).
+                AnimatedContent(
+                    targetState = categoryId,
+                    transitionSpec = {
+                        val categories = currentState.categories
+                        val from = categories.indexOfFirst { it.id == initialState }
+                        val to = categories.indexOfFirst { it.id == targetState }
+                        categorySlide(if (to >= from) 1 else -1)
+                    },
+                    label = "drawerCategory",
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                ) { pageId ->
+                    val active = pageId == categoryId
+                    val pageGrid = remember { pages.newPageState() }
+                    if (active) SideEffect { pages.active = pageGrid }
+                    // The outgoing page keeps showing the apps it had.
+                    val frozen = remember { arrayOf(state.drawerApps) }
+                    if (active) frozen[0] = state.drawerApps
+                    val apps = frozen[0]
+                    val firstAtOpen = remember { pageGrid.firstVisibleItemIndex }
+                    CompositionLocalProvider(LocalFocusInert provides (outerInert || !active)) {
+                        Box(Modifier.fillMaxSize()) {
+                            if (apps.isEmpty()) {
+                                DrawerEmptyState(state, vm, Modifier.align(Alignment.Center).fadeInOnAppear())
+                            } else {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Adaptive(minSize = tileIcon + 36.dp),
+                                    state = pageGrid,
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = if (compact) 4.dp else 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.fillMaxSize(),
+                                ) {
+                                    itemsIndexed(apps, key = { _, entry -> drawerAppId(entry.key) }) { index, entry ->
+                                        val id = drawerAppId(entry.key)
+                                        val openActions = { vm.openLayer(Layer.AppActions(entry.key)) }
+                                        val row = ((index - firstAtOpen) / columns).coerceAtLeast(0)
+                                        AppTile(
+                                            entry = entry,
+                                            iconSize = tileIcon,
+                                            onLaunch = if (actionsMode) openActions else { { launcher.launch(entry.key, id) } },
+                                            onActions = openActions,
+                                            actionsOnTap = actionsMode,
+                                            modifier = plutoItem().staggered(stagger, row),
+                                            // Keyboard-compact rows show icons only so no tile is cut off; names stay in semantics.
+                                            showLabel = !compact,
+                                            focusId = id,
+                                            onFocused = {
+                                                vm.onAppSelected(entry.key)
+                                                vm.onControlFocused(id)
+                                            },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -289,6 +396,31 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }
         }
     }
+}
+
+private val ExpandIn = expandVertically(PlutoMotion.spatialFast(), expandFrom = Alignment.Top) + fadeIn(PlutoMotion.fadeIn())
+private val ShrinkOut = shrinkVertically(PlutoMotion.spatialFast(), shrinkTowards = Alignment.Top) + fadeOut(PlutoMotion.fadeOut())
+
+/** Grid states of the drawer's category pages; [active] is the page being shown. */
+@Stable
+private class DrawerPages(private val initial: LazyGridState) {
+    private var initialUsed = false
+    var active by mutableStateOf(initial)
+
+    /** The first page resumes at the persisted anchor; later categories start at the top. */
+    fun newPageState(): LazyGridState {
+        if (!initialUsed) {
+            initialUsed = true
+            return initial
+        }
+        return LazyGridState()
+    }
+}
+
+/** Bookkeeping for a category switch, updated during composition (no state reads). */
+private class CategorySwitch(var categoryId: Long?) {
+    var keys: List<String> = emptyList()
+    var focusedApp: String? = null
 }
 
 /** Drawer copy (inline for 0.1). */

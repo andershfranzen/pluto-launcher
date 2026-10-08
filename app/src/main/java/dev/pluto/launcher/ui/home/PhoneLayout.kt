@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
@@ -39,6 +40,7 @@ import dev.pluto.launcher.ui.components.PlutoTextButton
 import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.model.Organization
+import dev.pluto.launcher.ui.motion.LocalDrawerReveal
 
 /**
  * Portrait home: clock and date, a toolbar (Search, Edit, Settings), the favourites grid,
@@ -47,6 +49,8 @@ import dev.pluto.launcher.model.Organization
 @Composable
 fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
+    val reveal = LocalDrawerReveal.current
+    val liftPx = rememberDensityPx(HandleLift)
     val iconSize = state.iconSize()
     val gridKeys = state.homeTiles.map { it.id }
     val gridState = rememberAnchoredGridState(HOME_SURFACE, state, gridKeys)
@@ -66,7 +70,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
         Column(
             Modifier
                 .fillMaxSize()
-                .swipeUpToOpen { vm.openDrawer() },
+                .swipeUpToOpenDrawer(vm),
         ) {
             Row(
                 Modifier
@@ -91,7 +95,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         items(state.homeTiles, key = { it.id }) { tile ->
-                            HomeTileView(tile, iconSize, homeTileFocusId(tile), vm)
+                            HomeTileView(tile, iconSize, homeTileFocusId(tile), vm, plutoItem())
                         }
                     }
                 }
@@ -107,7 +111,13 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 onFocused = { vm.onControlFocused(ID_ALL_APPS) },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 4.dp)
+                    // The handle rises and fades as the drawer is pulled up over it.
+                    .graphicsLayer {
+                        val p = reveal.progress
+                        translationY = -p * liftPx
+                        alpha = 1f - p
+                    },
             )
 
             HorizontalDock(

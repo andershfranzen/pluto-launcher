@@ -1,5 +1,13 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,7 +27,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Search
@@ -30,6 +37,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -63,7 +74,10 @@ import dev.pluto.launcher.ui.components.promptFor
 import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
+import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.LocalShowTouchSelection
+import dev.pluto.launcher.ui.motion.LocalAppLauncher
+import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.overWallpaper
 
 private const val SURFACE = "handheld"
@@ -92,20 +106,27 @@ private fun recentId(key: AppKey) = "hh:recent:${key.encode()}"
 private fun catId(key: AppKey) = "hh:cat:${key.encode()}"
 
 /**
- * Controller-first landscape layout: category tabs (L1/R1 or touch), a favourites row,
- * a "Recent launches" row, and a large-tile grid of the active category. The selected app
- * (state.session.selectedApp) is restored after rotation, reflow or category change.
- * The selection stays visible while touch drives (a thin outline), and the button legend
- * stays visible as long as a controller is connected.
+ * Controller-first landscape layout ("console mode"): category tabs (L1/R1 or touch), a
+ * favourites row, a "Recent launches" row, and a large-tile grid of the active category. The
+ * selected app (state.session.selectedApp) is restored after rotation, reflow or category
+ * change. The selection stays visible while touch drives (a thin outline), and the button
+ * legend stays visible as long as a controller is connected.
+ *
+ * Motion: switching category slides the whole page below the tabs, direction-aware (the
+ * outgoing page is focus-inert while it leaves, so focus always lands on the incoming one);
+ * rows scroll like a carousel with a tile of look-ahead; the selected app's name under the
+ * rows changes with a short slide; sections settle in when the layout first appears.
  */
 @Composable
 fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
+    val outerInert = LocalFocusInert.current
     val iconSize = state.iconSize(base = 68.dp)
     val showRecents = state.settings.historyEnabled && state.recents.isNotEmpty()
     val showFavourites = state.homeTiles.isNotEmpty()
     val mapping = state.activeMapping()
     val hints = showControllerHints(state, focus, LauncherMode.HANDHELD)
+    val currentState by rememberUpdatedState(state)
 
     // Grid item keys, in display order; also used as logical scroll anchors.
     val headerKeys = buildList {
@@ -114,34 +135,53 @@ fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
         add(KEY_CAT_HEADER)
     }
     val gridKeys = headerKeys + if (state.categoryApps.isEmpty()) listOf(KEY_CAT_EMPTY) else state.categoryApps.map { catId(it.key) }
-    val gridState = rememberAnchoredGridState(SURFACE, state, gridKeys)
     val favKeys = state.homeTiles.map { it.id }
     val recentKeys = state.recents.map { it.key.encode() }
-    val favState = rememberAnchoredListState(FAV_SURFACE, state, favKeys)
-    val recentState = rememberAnchoredListState(RECENT_SURFACE, state, recentKeys)
-    ReportScrollAnchor(SURFACE, gridState, state, vm, gridKeys)
-    ReportListScrollAnchor(FAV_SURFACE, favState, vm)
-    ReportListScrollAnchor(RECENT_SURFACE, recentState, vm)
+
+    // Every category page owns its scroll states (two pages overlap while sliding); the first
+    // page starts at the persisted anchors. Anchors, focus order and restores use the active page.
+    val anchoredGrid = rememberAnchoredGridState(SURFACE, state, gridKeys)
+    val anchoredFav = rememberAnchoredListState(FAV_SURFACE, state, favKeys)
+    val anchoredRecent = rememberAnchoredListState(RECENT_SURFACE, state, recentKeys)
+    val pager = remember { HandheldPager(HandheldPageStates(anchoredGrid, anchoredFav, anchoredRecent)) }
+    val page = pager.active
+    ReportScrollAnchor(SURFACE, page.grid, state, vm, gridKeys)
+    ReportListScrollAnchor(FAV_SURFACE, page.fav, vm)
+    ReportListScrollAnchor(RECENT_SURFACE, page.recent, vm)
 
     // Ordered ids per row, so a vanished app hands focus to its neighbour in the same row.
     val currentHeaders by rememberUpdatedState(headerKeys)
     TrackFocusOrder(FOCUS_FAV, state.homeTiles.map(::favId)) { index ->
-        gridState.scrollIfHidden(currentHeaders.indexOf(KEY_FAV_ROW))
-        favState.scrollToItem(index)
+        val p = pager.active
+        p.grid.scrollIfHidden(currentHeaders.indexOf(KEY_FAV_ROW))
+        p.fav.scrollToItem(index)
     }
     TrackFocusOrder(FOCUS_RECENT, if (showRecents) state.recents.map { recentId(it.key) } else emptyList()) { index ->
-        gridState.scrollIfHidden(currentHeaders.indexOf(KEY_RECENT_ROW))
-        recentState.scrollToItem(index)
+        val p = pager.active
+        p.grid.scrollIfHidden(currentHeaders.indexOf(KEY_RECENT_ROW))
+        p.recent.scrollToItem(index)
     }
     TrackFocusOrder(FOCUS_CAT, state.categoryApps.map { catId(it.key) }) { index ->
-        gridState.scrollToItem(currentHeaders.size + index)
+        pager.active.grid.scrollToItem(currentHeaders.size + index)
     }
 
     val defaultId = state.categoryApps.firstOrNull()?.let { catId(it.key) }
         ?: state.activeCategory?.let { "$TAB_PREFIX:${it.id}" }
     SideEffect { focus.setDefaultFocus(defaultId) }
 
-    HandheldSelectionEffects(state, focus, gridState, favState, recentState, headerKeys)
+    // Remember what held focus at the moment the category changed, before the outgoing page
+    // turns focus-inert (read without subscribing, so focus moves never recompose this).
+    val categoryId = state.activeCategory?.id
+    val switch = remember { CategorySwitchState(categoryId) }
+    if (switch.categoryId != categoryId) {
+        switch.categoryId = categoryId
+        switch.focusedAtSwitch = Snapshot.withoutReadObservation { focus.focusedId }
+    }
+
+    HandheldSelectionEffects(state, focus, pager, headerKeys, switch)
+
+    // Sections settle in, top to bottom, when the layout appears.
+    val sections = rememberStagger(animate = true, stepMs = 45, maxSlots = 4)
 
     CompositionLocalProvider(LocalShowTouchSelection provides true) {
         Column(
@@ -174,63 +214,39 @@ fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 },
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = iconSize + 64.dp),
-                state = gridState,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            AnimatedContent(
+                targetState = categoryId,
+                transitionSpec = {
+                    val categories = currentState.categories
+                    val from = categories.indexOfFirst { it.id == initialState }
+                    val to = categories.indexOfFirst { it.id == targetState }
+                    categorySlide(if (to >= from) 1 else -1)
+                },
+                label = "handheldCategory",
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-            ) {
-                if (showFavourites) {
-                    item(key = KEY_FAV_HEADER, span = { GridItemSpan(maxLineSpan) }) { SectionHeader("Favourites") }
-                    item(key = KEY_FAV_ROW, span = { GridItemSpan(maxLineSpan) }) {
-                        LazyRow(
-                            state = favState,
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            items(state.homeTiles, key = { it.id }) { tile ->
-                                HomeTileView(tile, iconSize * 0.85f, favId(tile), vm, Modifier.width(iconSize + 44.dp))
-                            }
-                        }
-                    }
+            ) { pageId ->
+                val active = pageId == categoryId
+                val states = remember { pager.newPage(catHeaderIndex = headerKeys.size - 1) }
+                if (active) SideEffect { pager.active = states }
+                // The outgoing page keeps showing its own category while it slides away.
+                val frozenName = remember { arrayOf(state.activeCategory?.name) }
+                val frozenApps = remember { arrayOf(state.categoryApps) }
+                if (active) {
+                    frozenName[0] = state.activeCategory?.name
+                    frozenApps[0] = state.categoryApps
                 }
-                if (showRecents) {
-                    item(key = KEY_RECENT_HEADER, span = { GridItemSpan(maxLineSpan) }) { SectionHeader("Recent launches") }
-                    item(key = KEY_RECENT_ROW, span = { GridItemSpan(maxLineSpan) }) {
-                        LazyRow(
-                            state = recentState,
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            items(state.recents, key = { it.key.encode() }) { entry ->
-                                HandheldTile(entry, iconSize * 0.85f, recentId(entry.key), vm, Modifier.width(iconSize + 44.dp))
-                            }
-                        }
-                    }
-                }
-                item(key = KEY_CAT_HEADER, span = { GridItemSpan(maxLineSpan) }) {
-                    val name = state.activeCategory?.name ?: "All apps"
-                    val count = state.categoryApps.size
-                    SectionHeader("$name · " + if (count == 1) "1 app" else "$count apps")
-                }
-                if (state.categoryApps.isEmpty()) {
-                    item(key = KEY_CAT_EMPTY, span = { GridItemSpan(maxLineSpan) }) {
-                        EmptyState(
-                            title = "No apps in ${state.activeCategory?.name ?: "this category"} yet",
-                            detail = "Open an app's actions (X, press and hold, or Actions in All apps) and choose " +
-                                "Categories…, or manage categories in Settings.",
-                            onWallpaper = true,
-                        ) {
-                            PlutoTextButton("hh:empty:categories", "Categories", { vm.openLayer(Layer.Categories) })
-                            PlutoTextButton("hh:empty:allapps", "All apps", { vm.openDrawer() }, emphasized = true)
-                        }
-                    }
-                } else {
-                    items(state.categoryApps, key = { catId(it.key) }) { entry ->
-                        HandheldTile(entry, iconSize, catId(entry.key), vm)
-                    }
+                CompositionLocalProvider(LocalFocusInert provides (outerInert || !active)) {
+                    HandheldPage(
+                        state = state,
+                        vm = vm,
+                        states = states,
+                        categoryName = frozenName[0],
+                        categoryApps = frozenApps[0],
+                        iconSize = iconSize,
+                        showFavourites = showFavourites,
+                        showRecents = showRecents,
+                        sections = sections,
+                    )
                 }
             }
 
@@ -242,18 +258,163 @@ fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val selectedLabel = state.session.selectedApp?.let { key -> state.allApps.firstOrNull { it.key == key }?.label }
-                    Text(
-                        selectedLabel.orEmpty(),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
+                    SelectedAppLabel(selectedLabel.orEmpty(), Modifier.weight(1f))
                     ButtonLegend(mapping, Legends.Handheld)
                 }
             }
         }
     }
+}
+
+/** One category page: Favourites, Recent launches and the category's tiles, in one lazy grid. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HandheldPage(
+    state: LauncherUiState,
+    vm: LauncherViewModel,
+    states: HandheldPageStates,
+    categoryName: String?,
+    categoryApps: List<AppEntry>,
+    iconSize: Dp,
+    showFavourites: Boolean,
+    showRecents: Boolean,
+    sections: Stagger,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = iconSize + 64.dp),
+        state = states.grid,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        if (showFavourites) {
+            item(key = KEY_FAV_HEADER, span = { GridItemSpan(maxLineSpan) }) {
+                SectionHeader("Favourites", plutoItem().staggered(sections, 0))
+            }
+            item(key = KEY_FAV_ROW, span = { GridItemSpan(maxLineSpan) }) {
+                CompositionLocalProvider(LocalBringIntoViewSpec provides CarouselBringIntoViewSpec) {
+                    LazyRow(
+                        state = states.fav,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = plutoItem().staggered(sections, 0),
+                    ) {
+                        items(state.homeTiles, key = { it.id }) { tile ->
+                            HomeTileView(tile, iconSize * 0.85f, favId(tile), vm, plutoItem().width(iconSize + 44.dp))
+                        }
+                    }
+                }
+            }
+        }
+        if (showRecents) {
+            item(key = KEY_RECENT_HEADER, span = { GridItemSpan(maxLineSpan) }) {
+                SectionHeader("Recent launches", plutoItem().staggered(sections, 1))
+            }
+            item(key = KEY_RECENT_ROW, span = { GridItemSpan(maxLineSpan) }) {
+                CompositionLocalProvider(LocalBringIntoViewSpec provides CarouselBringIntoViewSpec) {
+                    LazyRow(
+                        state = states.recent,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = plutoItem().staggered(sections, 1),
+                    ) {
+                        items(state.recents, key = { it.key.encode() }) { entry ->
+                            HandheldTile(entry, iconSize * 0.85f, recentId(entry.key), plutoItem().width(iconSize + 44.dp), vm)
+                        }
+                    }
+                }
+            }
+        }
+        item(key = KEY_CAT_HEADER, span = { GridItemSpan(maxLineSpan) }) {
+            val name = categoryName ?: "All apps"
+            val count = categoryApps.size
+            SectionHeader("$name · " + if (count == 1) "1 app" else "$count apps", plutoItem().staggered(sections, 2))
+        }
+        if (categoryApps.isEmpty()) {
+            item(key = KEY_CAT_EMPTY, span = { GridItemSpan(maxLineSpan) }) {
+                EmptyState(
+                    title = "No apps in ${categoryName ?: "this category"} yet",
+                    detail = "Open an app's actions (X, press and hold, or Actions in All apps) and choose " +
+                        "Categories…, or manage categories in Settings.",
+                    onWallpaper = true,
+                    modifier = plutoItem().staggered(sections, 3),
+                ) {
+                    PlutoTextButton("hh:empty:categories", "Categories", { vm.openLayer(Layer.Categories) })
+                    PlutoTextButton("hh:empty:allapps", "All apps", { vm.openDrawer() }, emphasized = true)
+                }
+            }
+        } else {
+            items(categoryApps, key = { catId(it.key) }) { entry ->
+                HandheldTile(entry, iconSize, catId(entry.key), plutoItem().staggered(sections, 3), vm)
+            }
+        }
+    }
+}
+
+/**
+ * The selected app's name under the rows. Changes slide up quickly; while the D-pad is held
+ * every new name simply retargets (AnimatedContent keeps no queue, only the latest wins).
+ */
+@Composable
+private fun SelectedAppLabel(label: String, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        targetState = label,
+        transitionSpec = {
+            (fadeIn(tween(PlutoMotion.SHORT_MS, easing = PlutoMotion.EmphasizedDecelerate)) + slideInVertically(PlutoMotion.slideSpring) { it / 3 }) togetherWith
+                fadeOut(tween(PlutoMotion.SHORT_MS / 2, easing = PlutoMotion.EmphasizedAccelerate)) using null
+        },
+        contentAlignment = Alignment.CenterStart,
+        label = "selectedApp",
+        modifier = modifier,
+    ) { text ->
+        Text(
+            text,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Scroll states of one category page. */
+@Stable
+private class HandheldPageStates(val grid: LazyGridState, val fav: LazyListState, val recent: LazyListState)
+
+/** Hands out page states; [active] belongs to the page being shown (not the one leaving). */
+@Stable
+private class HandheldPager(private val initial: HandheldPageStates) {
+    private var initialUsed = false
+    var active by mutableStateOf(initial)
+
+    /**
+     * The first page resumes at the persisted anchors. A later page continues from where the
+     * active one is, so the rows do not jump; if the grid was scrolled into the category, the
+     * new category starts at its header.
+     */
+    fun newPage(catHeaderIndex: Int): HandheldPageStates {
+        if (!initialUsed) {
+            initialUsed = true
+            return initial
+        }
+        val from = Snapshot.withoutReadObservation { active }
+        val grid = from.grid
+        val gridState = if (grid.firstVisibleItemIndex > catHeaderIndex) {
+            LazyGridState(catHeaderIndex.coerceAtLeast(0), 0)
+        } else {
+            LazyGridState(grid.firstVisibleItemIndex, grid.firstVisibleItemScrollOffset)
+        }
+        return HandheldPageStates(
+            gridState,
+            LazyListState(from.fav.firstVisibleItemIndex, from.fav.firstVisibleItemScrollOffset),
+            LazyListState(from.recent.firstVisibleItemIndex, from.recent.firstVisibleItemScrollOffset),
+        )
+    }
+}
+
+/** Composition-time bookkeeping of the last category switch (plain fields, never observed). */
+private class CategorySwitchState(var categoryId: Long?) {
+    var focusedAtSwitch: String? = null
 }
 
 /**
@@ -299,11 +460,12 @@ private fun HandheldHeader(
 }
 
 @Composable
-private fun HandheldTile(entry: AppEntry, iconSize: Dp, focusId: String, vm: LauncherViewModel, modifier: Modifier = Modifier) {
+private fun HandheldTile(entry: AppEntry, iconSize: Dp, focusId: String, modifier: Modifier, vm: LauncherViewModel) {
+    val launcher = LocalAppLauncher.current
     AppTile(
         entry = entry,
         iconSize = iconSize,
-        onLaunch = { vm.launch(entry.key) },
+        onLaunch = { launcher.launch(entry.key, focusId) },
         onActions = { vm.openLayer(Layer.AppActions(entry.key)) },
         modifier = modifier,
         focusId = focusId,
@@ -325,10 +487,9 @@ private fun HandheldTile(entry: AppEntry, iconSize: Dp, focusId: String, vm: Lau
 private fun HandheldSelectionEffects(
     state: LauncherUiState,
     focus: ControllerFocusController,
-    gridState: LazyGridState,
-    favState: LazyListState,
-    recentState: LazyListState,
+    pager: HandheldPager,
     headerKeys: List<String>,
+    switch: CategorySwitchState,
 ) {
     val currentState by rememberUpdatedState(state)
     val currentHeaders by rememberUpdatedState(headerKeys)
@@ -341,6 +502,10 @@ private fun HandheldSelectionEffects(
         val favIndex = s.homeTiles.indexOfFirst { it is HomeTile.App && it.entry.key == selected }
         val recentIndex = if (s.settings.historyEnabled) s.recents.indexOfFirst { it.key == selected } else -1
         val control = s.session.focusedControlId?.takeIf { it.startsWith("hh:") }
+        val page = pager.active
+        val gridState = page.grid
+        val favState = page.fav
+        val recentState = page.recent
 
         if (!preferCategory && control != null) {
             if (focus.isRegistered(control)) {
@@ -417,7 +582,9 @@ private fun HandheldSelectionEffects(
     }
 
     // Category changed (L1/R1 or tab): bring the grid back to the category and keep the
-    // selection if it is a member, else select the first app — unless the user is on the tabs.
+    // selection if it is a member, else select the first app of the incoming page — unless
+    // the user is elsewhere (tabs, a row), where focus stays, moving to the same control on
+    // the incoming page if it was on the outgoing one.
     val categoryId = state.activeCategory?.id
     val firstRun = remember { booleanArrayOf(true) }
     LaunchedEffect(categoryId) {
@@ -425,13 +592,15 @@ private fun HandheldSelectionEffects(
             firstRun[0] = false
             return@LaunchedEffect
         }
+        val focused = switch.focusedAtSwitch
+        switch.focusedAtSwitch = null
         withFrameNanos { }
-        val focused = focus.focusedId
         if (currentState.session.layers.isNotEmpty()) return@LaunchedEffect
         if (focused == null || focused.startsWith("$FOCUS_CAT:")) {
             restore(preferCategory = true)
         } else if (focus.inputMode == InputMode.CONTROLLER) {
-            gridState.scrollIfHidden(currentHeaders.indexOf(KEY_CAT_HEADER))
+            if (focus.focusedId != focused) focus.requestFocusWhenReady(focused)
+            pager.active.grid.scrollIfHidden(currentHeaders.indexOf(KEY_CAT_HEADER))
         }
     }
 }

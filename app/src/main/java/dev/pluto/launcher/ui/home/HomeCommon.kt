@@ -1,7 +1,7 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -26,16 +27,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.ui.HomeTile
@@ -50,6 +44,8 @@ import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.controllerFocusable
+import dev.pluto.launcher.ui.motion.LocalAppLauncher
+import dev.pluto.launcher.ui.motion.PlutoMotion
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 /*
@@ -96,10 +92,11 @@ internal fun HomeTileView(
     when (tile) {
         is HomeTile.App -> {
             val key = tile.entry.key
+            val launcher = LocalAppLauncher.current
             AppTile(
                 entry = tile.entry,
                 iconSize = iconSize,
-                onLaunch = { vm.launch(key) },
+                onLaunch = { launcher.launch(key, focusId) },
                 onActions = { vm.openLayer(Layer.AppActions(key)) },
                 modifier = modifier,
                 focusId = focusId,
@@ -140,13 +137,20 @@ internal fun DockSlot(
 ) {
     val entry = state.dock.getOrNull(slot)
     val focusId = dockFocusId(slot)
+    val landing = rememberDockLanding(entry?.key)
     if (entry != null) {
+        val launcher = LocalAppLauncher.current
         AppTile(
             entry = entry,
             iconSize = iconSize,
-            onLaunch = { vm.launch(entry.key) },
+            onLaunch = { launcher.launch(entry.key, focusId) },
             onActions = { vm.openLayer(Layer.AppActions(entry.key)) },
-            modifier = modifier,
+            modifier = modifier.graphicsLayer {
+                val scale = landing.scale()
+                scaleX = scale
+                scaleY = scale
+                alpha = ((scale - DOCK_LANDING_SCALE) / (1f - DOCK_LANDING_SCALE) * 2f).coerceIn(0f, 1f)
+            },
             focusId = focusId,
             showLabel = false,
             onFocused = {
@@ -185,6 +189,38 @@ internal fun DockSlot(
             }
         }
     }
+}
+
+/**
+ * Scale of a dock slot's icon: when the slot gets a different app (newly filled or
+ * replaced, not on first composition) the icon lands from [DOCK_LANDING_SCALE] with
+ * [PlutoMotion.spatialBouncy]. Visual only; the slot's geometry never changes.
+ */
+@Stable
+internal class DockLanding {
+    val anim = Animatable(1f)
+
+    /** Set in composition when the app changes, so the very first frame already starts small. */
+    var pending = false
+
+    fun scale(): Float = if (pending) DOCK_LANDING_SCALE else anim.value
+}
+
+@Composable
+private fun rememberDockLanding(key: AppKey?): DockLanding {
+    val landing = remember { DockLanding() }
+    val lastKey = remember { arrayOf(key) }
+    if (lastKey[0] != key) {
+        lastKey[0] = key
+        if (key != null) landing.pending = true
+    }
+    LaunchedEffect(key) {
+        if (!landing.pending) return@LaunchedEffect
+        landing.anim.snapTo(DOCK_LANDING_SCALE)
+        landing.pending = false
+        landing.anim.animateTo(1f, PlutoMotion.spatialBouncy())
+    }
+    return landing
 }
 
 /**
@@ -303,48 +339,15 @@ internal fun TrackFocusOrder(surface: String, ids: List<String>, scrollTo: (susp
 }
 
 /**
- * Opens the drawer on an upward swipe: either a drag on non-scrolling areas, or upward
- * scroll left over when the favourites grid is already at its end. The visible
- * "All apps" button keeps the drawer reachable without gestures.
+ * Swipe up anywhere on the home surface to pull the drawer up continuously: drags on
+ * non-scrolling areas, and upward drag the favourites grid leaves over at its end. Releasing
+ * past half way (or with an upward fling) opens it; otherwise LauncherRoot settles it back.
+ * The visible "All apps" button keeps the drawer reachable without gestures.
  */
-internal fun Modifier.swipeUpToOpen(onOpen: () -> Unit): Modifier = composed {
-    val threshold = with(LocalDensity.current) { 72.dp.toPx() }
-    val currentOnOpen by rememberUpdatedState(onOpen)
-    val connection = remember {
-        object : NestedScrollConnection {
-            var accumulated = 0f
-            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                if (source == NestedScrollSource.UserInput && available.y < 0f) {
-                    accumulated += -available.y
-                    if (accumulated > threshold) {
-                        accumulated = 0f
-                        currentOnOpen()
-                    }
-                } else if (available.y > 0f) {
-                    accumulated = 0f
-                }
-                return Offset.Zero
-            }
-
-            override suspend fun onPreFling(available: Velocity): Velocity {
-                accumulated = 0f
-                return Velocity.Zero
-            }
-        }
-    }
-    this
-        .nestedScroll(connection)
-        .pointerInput(Unit) {
-            var total = 0f
-            detectVerticalDragGestures(
-                onDragStart = { total = 0f },
-                onDragEnd = { if (total < -threshold) currentOnOpen() },
-                onDragCancel = { total = 0f },
-            ) { change, amount ->
-                total += amount
-                change.consume()
-            }
-        }
+@Composable
+internal fun Modifier.swipeUpToOpenDrawer(vm: LauncherViewModel): Modifier {
+    val driver = rememberRevealDragDriver(opening = true) { open -> if (open) vm.openDrawer() }
+    return revealDrag(driver, opening = true)
 }
 
 /** Index of the first dock slot holding [key], or -1. */
