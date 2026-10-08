@@ -132,6 +132,7 @@ import androidx.compose.runtime.DisposableEffect
 import dev.pluto.launcher.ui.overlay.AppActionsSheet
 import dev.pluto.launcher.ui.overlay.CategoryMembershipDialog
 import dev.pluto.launcher.ui.overlay.EditScreen
+import dev.pluto.launcher.ui.overlay.ShelfPickerScreen
 import dev.pluto.launcher.ui.overlay.MoveToFolderDialog
 import dev.pluto.launcher.ui.settings.CategoriesScreen
 import dev.pluto.launcher.ui.settings.ControllerSettingsScreen
@@ -414,7 +415,7 @@ private val Layer.kind: LayerKind
         is Layer.FolderLayer -> LayerKind.FOLDER
         // Bottom-sheet/dialog style; they draw their own ModalPanel scrim.
         is Layer.AppActions, is Layer.CategoryMembership, is Layer.MoveToFolder -> LayerKind.SHEET
-        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings -> LayerKind.PAGE
+        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker -> LayerKind.PAGE
         Layer.Onboarding -> LayerKind.ONBOARDING
     }
 
@@ -1203,6 +1204,7 @@ private fun LayerContent(layer: Layer, state: LauncherUiState, vm: LauncherViewM
         Layer.Settings -> SettingsScreen(state, vm)
         Layer.HiddenApps -> HiddenAppsScreen(state, vm)
         Layer.Categories -> CategoriesScreen(state, vm)
+        is Layer.ShelfPicker -> ShelfPickerScreen(layer.categoryId, state, vm)
         Layer.ControllerSettings -> ControllerSettingsScreen(state, vm)
         Layer.Onboarding -> OnboardingScreen(state, vm)
     }

@@ -26,6 +26,8 @@ sealed interface Layer {
     data object Settings : Layer
     data object HiddenApps : Layer
     data object Categories : Layer
+    /** Pick the apps of one category (console "Add apps", Edit shelf). */
+    data class ShelfPicker(val categoryId: Long) : Layer
     data object ControllerSettings : Layer
     data object Onboarding : Layer
 
@@ -40,6 +42,7 @@ sealed interface Layer {
             Settings -> "settings"
             HiddenApps -> "hidden"
             Categories -> "categories"
+            is ShelfPicker -> "shelfpicker:${layer.categoryId}"
             ControllerSettings -> "controller"
             Onboarding -> "onboarding"
         }
@@ -56,6 +59,7 @@ sealed interface Layer {
                 "settings" -> Settings
                 "hidden" -> HiddenApps
                 "categories" -> Categories
+                "shelfpicker" -> arg.toLongOrNull()?.let(::ShelfPicker)
                 "controller" -> ControllerSettings
                 "onboarding" -> Onboarding
                 else -> null

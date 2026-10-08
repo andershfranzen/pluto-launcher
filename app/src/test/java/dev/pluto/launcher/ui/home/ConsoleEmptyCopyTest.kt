@@ -8,9 +8,15 @@ import org.junit.Test
 /** The empty-shelf guidance names controls that exist, in the words of the current input. */
 class ConsoleEmptyCopyTest {
     @Test
-    fun controllerCopyNamesTheMappedButton() {
+    fun categoryCopyPointsAtAddApps() {
         val (title, detail) = emptyTitle(ShelfId.OfCategory(3), "Games", actionsKey = "X")
         assertTrue(title.contains("Games"))
+        assertTrue(detail, detail.contains("Add apps"))
+    }
+
+    @Test
+    fun controllerCopyNamesTheMappedButton() {
+        val (_, detail) = emptyTitle(ShelfId.Favourites, "Favourites", actionsKey = "X")
         assertTrue(detail, detail.startsWith("Press X on an app"))
         assertFalse(detail, detail.contains("press and hold", ignoreCase = true))
     }

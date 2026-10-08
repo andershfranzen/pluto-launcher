@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -113,7 +116,12 @@ private const val ID_HH_SEARCH = "hh:search"
 private const val ID_HH_ALL_APPS = "hh:allapps"
 private const val ID_HH_SETTINGS = "hh:settings"
 private const val ID_EMPTY_ALL_APPS = "hh:empty:allapps"
-private const val ID_EMPTY_CATEGORIES = "hh:empty:categories"
+private const val ID_EMPTY_ADD = "hh:empty:add"
+private const val ID_HH_EDIT_SHELF = "hh:editshelf"
+
+/** The category behind [shelfId] when its apps can be picked (any category except All apps). */
+private fun pickableCategoryId(shelfId: ShelfId, state: LauncherUiState): Long? =
+    (shelfId as? ShelfId.OfCategory)?.categoryId?.takeIf { id -> state.categories.any { it.id == id && !it.isAll } }
 
 /** The selection is mirrored into the shared session only once the flow rests this long (no emission per D-pad step). */
 private const val SELECTION_COMMIT_DELAY_MS = 400L
@@ -266,7 +274,11 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     val flowIds = remember(apps, active) { apps.map { cardFocusId(active.key, it.key) } }
     TrackFocusOrder(FLOW_SURFACE, flowIds) { index -> stage.select(index, scope) }
 
-    val emptyDefault = if (apps.isEmpty()) ID_EMPTY_ALL_APPS else null
+    val emptyDefault = when {
+        apps.isNotEmpty() -> null
+        pickableCategoryId(active, state) != null -> ID_EMPTY_ADD
+        else -> ID_EMPTY_ALL_APPS
+    }
     SideEffect { focus.setDefaultFocus(selectedCardId(stage, active) ?: emptyDefault ?: shelfTabId(active)) }
     // Whenever touch takes over (or switches shelf), the next controller input returns to the
     // selected card, never to whatever top-bar button the controller last visited.
@@ -322,6 +334,10 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                         val down = Modifier.focusProperties { down = selectedCardFocus() }
                         // Borderless on the dark stage: quieter than the shelf tabs.
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            val editable = pickableCategoryId(active, state)
+                            if (editable != null && apps.isNotEmpty()) {
+                                PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit ${shelf.title}", { vm.openLayer(Layer.ShelfPicker(editable)) }, down)
+                            }
                             PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, down)
                             PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, down)
                             PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, down)
@@ -346,6 +362,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                                 page = switch.outgoingMotion,
                                 hero = HeroEmphasis.Static,
                                 emptyTitle = emptyTitle(outgoingShelf, ConsoleShelves.title(outgoingShelf, state.categories), actionsKey),
+                                pickable = pickableCategoryId(outgoingShelf, state),
                                 vm = vm,
                                 onActivate = { _, _ -> },
                                 onActions = {},
@@ -364,6 +381,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             page = switch.incomingMotion,
                             hero = hero,
                             emptyTitle = emptyTitle(active, shelf.title, actionsKey),
+                            pickable = pickableCategoryId(active, state),
                             vm = vm,
                             onActivate = { index, entry ->
                                 if (index == stage.selectedIndex) {
@@ -402,8 +420,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                     Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = ConsoleBottomClearance)
-                        .heightIn(min = 40.dp),
+                        .padding(start = 16.dp, end = 16.dp, top = if (hints) 8.dp else 0.dp, bottom = ConsoleBottomClearance),
                     contentAlignment = Alignment.CenterEnd,
                 ) {
                     if (hints) ButtonLegend(mapping, if (apps.isNotEmpty()) ConsoleLegend else ConsoleLegendEmpty)
@@ -422,6 +439,8 @@ private fun ShelfPage(
     page: PageMotion,
     hero: HeroEmphasis,
     emptyTitle: Pair<String, String>,
+    /** Category whose apps the empty state's "Add apps" picks, or null (no picker). */
+    pickable: Long?,
     vm: LauncherViewModel,
     onActivate: (Int, AppEntry) -> Unit,
     onActions: (AppEntry) -> Unit,
@@ -449,16 +468,19 @@ private fun ShelfPage(
                     detail = emptyTitle.second,
                     onWallpaper = true,
                     icon = Icons.Outlined.Apps,
-                    // A readable measure, centred (not one line across the whole stage).
-                    modifier = Modifier.widthIn(max = 560.dp),
+                    // A readable measure, centred; scrolls rather than squashing its buttons
+                    // when the stage is short (large text, small landscape windows).
+                    modifier = Modifier.widthIn(max = 560.dp).verticalScroll(rememberScrollState()),
                 ) {
-                    if (shelfId is ShelfId.OfCategory) {
+                    if (pickable != null) {
+                        PlutoTextButton(ID_EMPTY_ADD, "Add apps", { vm.openLayer(Layer.ShelfPicker(pickable)) }, emphasized = true)
                         PlutoTextButton(
-                            ID_EMPTY_CATEGORIES, "Categories", { vm.openLayer(Layer.Categories) },
+                            ID_EMPTY_ALL_APPS, "All apps", { vm.openDrawer() },
                             outline = Color.White.copy(alpha = 0.3f),
                         )
+                    } else {
+                        PlutoTextButton(ID_EMPTY_ALL_APPS, "All apps", { vm.openDrawer() }, emphasized = true)
                     }
-                    PlutoTextButton(ID_EMPTY_ALL_APPS, "All apps", { vm.openDrawer() }, emphasized = true)
                 }
             }
         } else {
@@ -495,7 +517,7 @@ private fun HeroEmphasisEffect(focus: ControllerFocusController, hero: HeroEmpha
         snapshotFlow {
             val id = focus.focusedId
             focus.inputMode == InputMode.CONTROLLER && id != null &&
-                (id.startsWith(TAB_ID_PREFIX) || id == ID_HH_SEARCH || id == ID_HH_ALL_APPS || id == ID_HH_SETTINGS)
+                (id.startsWith(TAB_ID_PREFIX) || id == ID_HH_SEARCH || id == ID_HH_ALL_APPS || id == ID_HH_SETTINGS || id == ID_HH_EDIT_SHELF)
         }.distinctUntilChanged().collectLatest { inHeader ->
             if (inHeader) {
                 hero.lift = 0f
@@ -529,8 +551,7 @@ internal fun emptyTitle(id: ShelfId, name: String, actionsKey: String?): Pair<St
     return when (id) {
         ShelfId.Recent -> "No recent launches yet" to "Apps you open from Pluto show up here, most recent first."
         ShelfId.Favourites -> "No favourites yet" to "$openActions and choose Pin to home to add it here."
-        is ShelfId.OfCategory -> "No apps in $name yet" to
-            "$openActions in All apps and choose Categories…, or manage categories here."
+        is ShelfId.OfCategory -> "No apps in $name yet" to "Choose Add apps to pick what goes here."
     }
 }
 

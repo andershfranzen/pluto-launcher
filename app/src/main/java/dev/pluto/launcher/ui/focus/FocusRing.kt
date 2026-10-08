@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui.focus
 
+import androidx.compose.runtime.withFrameNanos
 import android.view.View
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
@@ -214,6 +215,12 @@ fun FocusRingOverlayHost(modifier: Modifier = Modifier, content: @Composable () 
  * The gliding ring itself. Must fill the area it overlays and be drawn above the content;
  * [LocalFocusRingOverlay] must provide [state] to the content.
  */
+/** Frames to wait for a newly composed target to be placed before the ring moves to it. */
+private const val MAX_PLACEMENT_FRAMES = 4
+
+/** Bounds of a node that is attached but not placed yet: pinned to the overlay's origin. */
+private fun Rect.isUnplaced(): Boolean = left == 0f && top == 0f
+
 @Composable
 fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier) {
     val glow = MaterialTheme.colorScheme.primary
@@ -229,7 +236,17 @@ fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier
                     alpha.animateTo(0f, PlutoMotion.fadeOut())
                     return@coroutineScope
                 }
-                val bounds = holder.boundsOf(target)
+                // A target composed this frame (a shelf switch, a layer that just opened) is
+                // attached before it is placed and reports bounds at the overlay's origin; gliding
+                // from those made the ring sweep in from the top-left corner. Wait for real bounds.
+                var bounds = holder.boundsOf(target)
+                var frames = 0
+                while ((bounds == null || bounds.isUnplaced()) && frames < MAX_PLACEMENT_FRAMES) {
+                    withFrameNanos { }
+                    bounds = holder.boundsOf(target)
+                    frames++
+                }
+                if (bounds != null && bounds.isUnplaced()) bounds = null
                 val last = holder.lastDrawn
                 val startDelta = when {
                     bounds == null -> Rect.Zero
@@ -267,8 +284,10 @@ fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier
                 val a = alpha.value
                 val target = state.target
                 if (target != null) holder.shape = target.shape
-                val bounds = target?.let(holder::boundsOf) ?: holder.lastBase
-                if (target != null && bounds != null) holder.lastBase = bounds
+                // Until a new target is placed, keep drawing where the ring last was.
+                val live = target?.let(holder::boundsOf)?.takeUnless { it.isUnplaced() }
+                val bounds = live ?: holder.lastBase
+                if (live != null) holder.lastBase = live
                 val shape = holder.shape
                 if (a <= 0f || bounds == null || shape == null) {
                     holder.lastDrawn = null

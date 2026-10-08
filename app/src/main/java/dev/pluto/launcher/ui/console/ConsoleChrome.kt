@@ -1,5 +1,9 @@
 package dev.pluto.launcher.ui.console
 
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.animation.core.Animatable
 import android.hardware.BatteryState
 import android.os.Build
 import android.view.InputDevice
@@ -203,9 +207,23 @@ internal fun ShelfTabs(
     }
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (prevKey != null) KeyChip(prevKey, Modifier.padding(horizontal = 4.dp))
+        val fadePx = with(LocalDensity.current) { TabEdgeFade.toPx() }
         Row(
             Modifier
                 .weight(1f, fill = false)
+                // Tabs scrolled past an edge fade out there instead of being cut mid-word.
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .drawWithContent {
+                    drawContent()
+                    val start = if (scroll.value > 0) fadePx else 0f
+                    val end = if (scroll.value < scroll.maxValue) fadePx else 0f
+                    if (start > 0f) {
+                        drawRect(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = start), blendMode = BlendMode.DstIn)
+                    }
+                    if (end > 0f) {
+                        drawRect(Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = size.width - end, endX = size.width), blendMode = BlendMode.DstIn)
+                    }
+                }
                 .horizontalScroll(scroll)
                 .padding(4.dp),
             // Room for the focus ring's outset on both neighbours (it never overlaps the selected pill).
@@ -240,6 +258,9 @@ private val TabUnderlineHeight = 2.dp
 
 /** Fill of a tab that holds controller focus but is not the selected shelf (the ring alone was too faint). */
 private val FocusedTabFill = Color.White.copy(alpha = 0.18f)
+
+/** Width of the fade where the tab row is scrolled past an edge. */
+private val TabEdgeFade = 40.dp
 
 /** Space kept between the selected tab and the row's edge before scrolling to it. */
 private val TabScrollMargin = 24.dp
@@ -422,28 +443,26 @@ internal fun ConsoleTitle(stage: CoverflowState, subtitle: String, modifier: Mod
         lastChange[0] = now
         previousTitle[0] = title
     }
-    Column(modifier.clearAndSetSemantics { }, horizontalAlignment = Alignment.CenterHorizontally) {
-        AnimatedContent(
-            targetState = title,
-            transitionSpec = {
-                if (fast[0]) {
-                    EnterTransition.None togetherWith ExitTransition.None using null
-                } else {
-                    fadeIn(tween(PlutoMotion.SHORT_MS, easing = PlutoMotion.EmphasizedDecelerate)) togetherWith
-                        fadeOut(tween(PlutoMotion.SHORT_MS / 2, easing = PlutoMotion.EmphasizedAccelerate)) using null
-                }
-            },
-            contentAlignment = Alignment.Center,
-            label = "consoleTitle",
-        ) { t ->
-            Text(
-                t,
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
+    // One text, always the newest name: a quick fade-up on a calm change, an instant swap
+    // while scrolling fast. Never two names on screen at once (a crossfade overlapped them).
+    val alpha = remember { Animatable(1f) }
+    LaunchedEffect(title) {
+        if (fast[0]) {
+            alpha.snapTo(1f)
+        } else {
+            alpha.snapTo(TITLE_FADE_FROM)
+            alpha.animateTo(1f, tween(PlutoMotion.SHORT_MS, easing = PlutoMotion.EmphasizedDecelerate))
         }
+    }
+    Column(modifier.clearAndSetSemantics { }, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.graphicsLayer { this.alpha = alpha.value },
+        )
         Text(
             if (entry == null) subtitle else "$subtitle · ${stage.selectedIndex + 1} of ${stage.count}",
             style = MaterialTheme.typography.bodyMedium.overWallpaper(),
@@ -454,7 +473,10 @@ internal fun ConsoleTitle(stage: CoverflowState, subtitle: String, modifier: Mod
     }
 }
 
-/** Title changes closer together than this (a held D-pad) swap without a crossfade. */
+/** Opacity a calmly changed title fades up from. */
+private const val TITLE_FADE_FROM = 0.25f
+
+/** Title changes closer together than this (a held D-pad, a fling) swap without a fade. */
 private const val TITLE_FADE_MIN_INTERVAL_MS = 2L * PlutoMotion.SHORT_MS
 
 /** Added over the scrim at the top: 1 - (1 - 0.7) * (1 - 0.67) ≈ 0.9. */
