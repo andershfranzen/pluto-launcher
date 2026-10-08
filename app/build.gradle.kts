@@ -20,8 +20,14 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 + resource shrinking: Compose in a debug build runs unoptimised and is
+            // noticeably janky; daily use should always be on a release build.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Signed with the local debug key so it installs over (and keeps the data of)
+            // debug builds on a development phone. Replace with a real key before publishing.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
