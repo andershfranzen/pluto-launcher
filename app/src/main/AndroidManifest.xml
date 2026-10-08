@@ -21,6 +21,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Pluto">
 
+        <!-- Lets Perfetto/simpleperf profile release builds (no debuggability). -->
+        <profileable android:shell="true" />
+
         <!--
             Handles every configuration change in-process so rotation, controller
             attach/detach (keyboard|navigation) and theme changes never restart the
