@@ -2,7 +2,27 @@ package dev.pluto.launcher.ui.settings
 
 import android.view.KeyEvent
 import android.view.MotionEvent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.ui.MotionDurationScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +42,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -58,7 +80,14 @@ import dev.pluto.launcher.ui.overlay.SectionHeader
 import dev.pluto.launcher.ui.overlay.StepperRow
 import dev.pluto.launcher.ui.overlay.rememberScreenFocus
 import dev.pluto.launcher.ui.overlay.stepped
+import dev.pluto.launcher.ui.motion.PlutoMotion
+import dev.pluto.launcher.ui.overlay.AnimatedDialog
+import dev.pluto.launcher.ui.overlay.ExpandingSection
+import dev.pluto.launcher.ui.overlay.isDialogExiting
+import dev.pluto.launcher.ui.overlay.rememberLastNonNull
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
 import kotlin.math.hypot
 
 private const val CAPTURE_TIMEOUT_SECONDS = 10
@@ -102,9 +131,17 @@ private fun ControllerInfo.mappingKey() = LauncherSettings.controllerMappingKey(
 @Stable
 private class Diagnostics {
     var lastKey by mutableStateOf<String?>(null)
+    /** Bumped on every key press, so the last-key chip pulses even when the same key repeats. */
+    var keyPresses by mutableIntStateOf(0)
     var axes by mutableStateOf<String?>(null)
     /** Coarse stick summary for screen readers; changes only on dead-zone or direction changes. */
     var stickSummary by mutableStateOf<String?>(null)
+    /** Raw stick positions (-1..1); read only while drawing the stick pads. */
+    var leftX by mutableFloatStateOf(0f)
+    var leftY by mutableFloatStateOf(0f)
+    var rightX by mutableFloatStateOf(0f)
+    var rightY by mutableFloatStateOf(0f)
+    var hasMotion by mutableStateOf(false)
 }
 
 /** "centred", "up", "down-left", ... for a stick position, given the dead zone. */
@@ -186,6 +223,7 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         if (event.action == KeyEvent.ACTION_DOWN) {
             val device = event.device?.name?.let { " · $it" }.orEmpty()
             diagnostics.lastKey = "${keyLabel(code)} (${KeyEvent.keyCodeToString(code)})$device"
+            if (event.repeatCount == 0) diagnostics.keyPresses++
         }
         val action = capturing
         when {
@@ -211,6 +249,11 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         val inDeadZone = hypot(x, y) < settings.stickDeadZone
         val summary = "Left stick ${stickDirection(x, y, settings.stickDeadZone)}, right stick ${stickDirection(rx, ry, settings.stickDeadZone)}"
         if (summary != diagnostics.stickSummary) diagnostics.stickSummary = summary
+        diagnostics.leftX = x
+        diagnostics.leftY = y
+        diagnostics.rightX = rx
+        diagnostics.rightY = ry
+        if (!diagnostics.hasMotion) diagnostics.hasMotion = true
         diagnostics.axes = "Left stick %+.2f, %+.2f%s\nRight stick %+.2f, %+.2f\nD-pad (hat) %+.0f, %+.0f".format(
             x, y, if (inDeadZone) " (dead zone)" else "", rx, ry, hatX, hatY,
         )
@@ -247,11 +290,12 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         trapFocus = isTop,
         dialogOpen = capturing != null,
         overlay = {
-            capturing?.let { action ->
+            AnimatedDialog(capturing) { action ->
                 CaptureDialog(
                     action = action,
                     secondsLeft = secondsLeft,
                     refused = captureRefused,
+                    reducedMotion = settings.reducedMotion,
                     onCancel = { endCapture(SettingsText.CAPTURE_CANCELLED, action) },
                 )
             }
@@ -280,7 +324,7 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
             BodyText(SettingsText.DIAGNOSTICS_UNAVAILABLE)
         } else {
             BodyText(SettingsText.DIAGNOSTICS_HELP)
-            DiagnosticsPanel(diagnostics)
+            DiagnosticsPanel(diagnostics, settings.stickDeadZone)
         }
 
         // --- Button mapping ---
@@ -296,7 +340,10 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 onSelect = { applyToThis = it },
             )
         }
-        notice?.let { NoticeCard(it, icon = Icons.Rounded.SwapHoriz) }
+        val shownNotice = rememberLastNonNull(notice)
+        ExpandingSection(visible = notice != null) {
+            shownNotice?.let { NoticeCard(it, icon = Icons.Rounded.SwapHoriz) }
+        }
         BodyText("${SettingsText.MOVE}: ${SettingsText.MOVE_KEYS}")
         ControllerAction.entries.forEach { action ->
             val keys = keysLabel(mapping, action)
@@ -390,21 +437,23 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
  * direction summary instead, read when the user reaches it.
  */
 @Composable
-private fun DiagnosticsPanel(diagnostics: Diagnostics) {
+private fun DiagnosticsPanel(diagnostics: Diagnostics, deadZone: Float) {
     Column(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
         Text(SettingsText.LAST_KEY, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(
-            diagnostics.lastKey ?: SettingsText.NO_KEY_YET,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        )
+        LastKeyChip(diagnostics)
         Spacer(Modifier.heightIn(min = 8.dp))
         Text(SettingsText.AXES, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(
+            Modifier.padding(vertical = 8.dp).clearAndSetSemantics { },
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            StickPad(diagnostics, deadZone, right = false)
+            StickPad(diagnostics, deadZone, right = true)
+        }
         val summary = diagnostics.stickSummary ?: SettingsText.NO_MOTION_YET
         Text(
             diagnostics.axes ?: SettingsText.NO_MOTION_YET,
@@ -415,10 +464,93 @@ private fun DiagnosticsPanel(diagnostics: Diagnostics) {
     }
 }
 
+private const val KEY_PULSE_SCALE = 0.06f
+
+/** The last key pressed, in a chip that pulses once per new press (a one-shot, never looping). */
+@Composable
+private fun LastKeyChip(diagnostics: Diagnostics) {
+    val colors = MaterialTheme.colorScheme
+    val pulse = remember { Animatable(0f) }
+    val presses = diagnostics.keyPresses
+    LaunchedEffect(presses) {
+        if (presses == 0) return@LaunchedEffect
+        pulse.snapTo(1f)
+        pulse.animateTo(0f, tween(PlutoMotion.LONG_MS, easing = PlutoMotion.EmphasizedDecelerate))
+    }
+    val highlight = colors.primary
+    Text(
+        diagnostics.lastKey ?: SettingsText.NO_KEY_YET,
+        style = MaterialTheme.typography.bodyLarge,
+        color = colors.onSurface,
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .graphicsLayer {
+                val scale = 1f + KEY_PULSE_SCALE * pulse.value
+                scaleX = scale
+                scaleY = scale
+                transformOrigin = TransformOrigin(0f, 0.5f)
+            }
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.surfaceContainerHighest)
+            .drawBehind { drawRect(highlight, alpha = 0.28f * pulse.value) }
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+    )
+}
+
+private val StickPadSize = 64.dp
+private val StickDotSize = 14.dp
+
+/**
+ * Live stick position: a ring (with the dead zone shaded) and a dot. The dot follows the
+ * true value on a very stiff, critically damped spring (≈20 ms behind), which smooths
+ * coarse event steps without visible lag. Drawn in the draw phase only.
+ */
+@Composable
+private fun StickPad(diagnostics: Diagnostics, deadZone: Float, right: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    val position = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+    LaunchedEffect(diagnostics, right) {
+        snapshotFlow {
+            if (right) Offset(diagnostics.rightX, diagnostics.rightY) else Offset(diagnostics.leftX, diagnostics.leftY)
+        }.collectLatest { target ->
+            position.animateTo(target, StickSpring)
+        }
+    }
+    val ring = colors.outline
+    val zone = colors.surfaceContainerHighest
+    val dot = colors.primary
+    val idle = colors.onSurfaceVariant
+    val dotRadius = with(LocalDensity.current) { StickDotSize.toPx() / 2f }
+    Canvas(Modifier.size(StickPadSize)) {
+        val radius = size.minDimension / 2f
+        drawCircle(zone, radius = radius * deadZone.coerceIn(0f, 1f))
+        drawCircle(ring, radius = radius - 1.dp.toPx(), style = Stroke(1.dp.toPx()))
+        val p = position.value
+        val travel = radius - dotRadius
+        drawCircle(
+            if (diagnostics.hasMotion) dot else idle,
+            radius = dotRadius,
+            center = center + Offset(p.x.coerceIn(-1f, 1f) * travel, p.y.coerceIn(-1f, 1f) * travel),
+        )
+    }
+}
+
+/** Critically damped and very stiff: settles in ~40 ms, trails a moving stick by ~20 ms. */
+private val StickSpring = spring<Offset>(dampingRatio = 1f, stiffness = 10_000f, visibilityThreshold = Offset(0.001f, 0.001f))
+
 /** Modal "Press a button…" prompt. Cancel works by touch or system Back; it also times out. */
 @Composable
-private fun CaptureDialog(action: ControllerAction, secondsLeft: Int, refused: Boolean, onCancel: () -> Unit) {
+private fun CaptureDialog(
+    action: ControllerAction,
+    secondsLeft: Int,
+    refused: Boolean,
+    reducedMotion: Boolean,
+    onCancel: () -> Unit,
+) {
     rememberScreenFocus("controller:capture:cancel")
+    // The "listening" pulse loops only while capture is live and Reduce motion is off.
+    val listening = !reducedMotion && !isDialogExiting()
     ModalPanel(
         title = SettingsText.PRESS_A_BUTTON,
         idPrefix = "controller:capture",
@@ -426,7 +558,66 @@ private fun CaptureDialog(action: ControllerAction, secondsLeft: Int, refused: B
         interceptBack = true,
         actions = { PlutoButton("controller:capture:cancel", KitText.CANCEL, onCancel, style = ButtonStyle.TEXT) },
     ) {
+        ListeningIndicator(listening, Modifier.align(Alignment.CenterHorizontally).padding(vertical = 8.dp))
         BodyText(SettingsText.captureFor(SettingsText.actionLabel(action), secondsLeft))
-        if (refused) NoticeCard(SettingsText.CAPTURE_REFUSED, isError = true, icon = Icons.Rounded.Warning)
+        ExpandingSection(visible = refused) {
+            NoticeCard(SettingsText.CAPTURE_REFUSED, isError = true, icon = Icons.Rounded.Warning)
+        }
+    }
+}
+
+private val ListeningSize = 72.dp
+private const val PULSE_PERIOD_MS = 1_400
+
+/**
+ * Gamepad glyph with a gentle ring that keeps expanding and fading while [active]. The loop
+ * stops (ring hidden) as soon as [active] turns false, and also when the window's animation
+ * scale is 0 (Reduce motion / system "Remove animations"), so it never spins frames for nothing.
+ * Decorative: hidden from accessibility (the dialog text says what to do).
+ */
+@Composable
+private fun ListeningIndicator(active: Boolean, modifier: Modifier = Modifier) {
+    val ring = remember { Animatable(0f) }
+    LaunchedEffect(active) {
+        ring.snapTo(0f)
+        if (!active) return@LaunchedEffect
+        while (isActive) {
+            val scale = coroutineContext[MotionDurationScale]?.scaleFactor ?: 1f
+            if (scale == 0f) {
+                ring.snapTo(0f)
+                break
+            }
+            ring.snapTo(0f)
+            ring.animateTo(1f, tween(PULSE_PERIOD_MS, easing = LinearOutSlowInEasing))
+        }
+    }
+    val color = MaterialTheme.colorScheme.primary
+    Box(
+        modifier
+            .size(ListeningSize)
+            .clearAndSetSemantics { }
+            .drawBehind {
+                val p = ring.value
+                if (p > 0f) {
+                    val base = size.minDimension * 0.32f
+                    drawCircle(
+                        color,
+                        radius = base + (size.minDimension / 2f - base) * p,
+                        alpha = 0.45f * (1f - p),
+                        style = Stroke(width = 3.dp.toPx()),
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .size(ListeningSize * 0.64f)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.SportsEsports, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+        }
     }
 }

@@ -47,6 +47,11 @@ import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.AppIcon
 import dev.pluto.launcher.ui.overlay.ActionRow
+import dev.pluto.launcher.ui.overlay.AnimatedDialog
+import dev.pluto.launcher.ui.overlay.AnimatedItems
+import dev.pluto.launcher.ui.overlay.ExpandingSection
+import dev.pluto.launcher.ui.overlay.isDialogExiting
+import dev.pluto.launcher.ui.overlay.rememberLastNonNull
 import dev.pluto.launcher.ui.overlay.BodyText
 import dev.pluto.launcher.ui.overlay.ButtonBar
 import dev.pluto.launcher.ui.overlay.ButtonStyle
@@ -100,32 +105,33 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         trapFocus = isTop,
         dialogOpen = dialog != null,
         overlay = {
-            when (dialog) {
-                SettingsDialog.DISABLE_HISTORY -> ConfirmDialog(
-                    idPrefix = "settings:history:off",
-                    title = SettingsText.DISABLE_HISTORY_TITLE,
-                    text = SettingsText.DISABLE_HISTORY_TEXT,
-                    confirmLabel = SettingsText.TURN_OFF,
-                    destructive = true,
-                    onConfirm = {
-                        vm.setHistoryEnabled(false)
-                        close()
-                    },
-                    onDismiss = ::close,
-                )
-                SettingsDialog.CLEAR_HISTORY -> ConfirmDialog(
-                    idPrefix = "settings:history:clear",
-                    title = SettingsText.CLEAR_HISTORY_TITLE,
-                    text = SettingsText.CLEAR_HISTORY_TEXT,
-                    confirmLabel = SettingsText.CLEAR,
-                    destructive = true,
-                    onConfirm = {
-                        vm.clearHistory()
-                        close()
-                    },
-                    onDismiss = ::close,
-                )
-                null -> Unit
+            AnimatedDialog(dialog) { shown ->
+                when (shown) {
+                    SettingsDialog.DISABLE_HISTORY -> ConfirmDialog(
+                        idPrefix = "settings:history:off",
+                        title = SettingsText.DISABLE_HISTORY_TITLE,
+                        text = SettingsText.DISABLE_HISTORY_TEXT,
+                        confirmLabel = SettingsText.TURN_OFF,
+                        destructive = true,
+                        onConfirm = {
+                            vm.setHistoryEnabled(false)
+                            close()
+                        },
+                        onDismiss = ::close,
+                    )
+                    SettingsDialog.CLEAR_HISTORY -> ConfirmDialog(
+                        idPrefix = "settings:history:clear",
+                        title = SettingsText.CLEAR_HISTORY_TITLE,
+                        text = SettingsText.CLEAR_HISTORY_TEXT,
+                        confirmLabel = SettingsText.CLEAR,
+                        destructive = true,
+                        onConfirm = {
+                            vm.clearHistory()
+                            close()
+                        },
+                        onDismiss = ::close,
+                    )
+                }
             }
         },
     ) {
@@ -312,47 +318,43 @@ fun HiddenAppsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         trapFocus = isTop,
     ) {
         NoticeCard(SettingsText.HIDDEN_EXPLANATION, icon = Icons.Rounded.VisibilityOff)
-        if (hiddenApps.isEmpty()) {
-            BodyText(SettingsText.HIDDEN_EMPTY)
-        } else {
-            if (hiddenApps.size > 1) {
-                ButtonBar(Modifier.padding(horizontal = 8.dp)) {
-                    PlutoButton(
-                        "hidden:restoreall",
-                        SettingsText.RESTORE_ALL,
-                        {
-                            hiddenApps.forEach { vm.unhide(it.key) }
-                            screenFocus.focus("hidden:close")
-                        },
-                        icon = Icons.Rounded.Visibility,
-                        style = ButtonStyle.TEXT,
-                    )
-                }
+        ExpandingSection(visible = hiddenApps.isEmpty()) { BodyText(SettingsText.HIDDEN_EMPTY) }
+        ExpandingSection(visible = hiddenApps.size > 1) {
+            ButtonBar(Modifier.padding(horizontal = 8.dp)) {
+                PlutoButton(
+                    "hidden:restoreall",
+                    SettingsText.RESTORE_ALL,
+                    {
+                        hiddenApps.forEach { vm.unhide(it.key) }
+                        screenFocus.focus("hidden:close")
+                    },
+                    icon = Icons.Rounded.Visibility,
+                    style = ButtonStyle.TEXT,
+                )
             }
-            hiddenApps.forEachIndexed { index, app ->
-                key(app.key.encode()) {
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        AppIcon(app, 40.dp)
-                        Spacer(Modifier.width(16.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(app.label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-                            Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        PlutoButton(
-                            id = "hidden:restore:${app.key.encode()}",
-                            label = SettingsText.RESTORE,
-                            icon = Icons.Rounded.Visibility,
-                            onClick = {
-                                vm.unhide(app.key)
-                                screenFocus.focus(restoreId(index + 1) ?: restoreId(index - 1) ?: "hidden:close")
-                            },
-                        )
-                    }
+        }
+        // Restored rows fade and shrink away; the rest slide up into their place.
+        AnimatedItems(hiddenApps, key = { it.key.encode() }) { app, index ->
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AppIcon(app, 40.dp)
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(app.label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                    Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                Spacer(Modifier.width(8.dp))
+                PlutoButton(
+                    id = "hidden:restore:${app.key.encode()}",
+                    label = SettingsText.RESTORE,
+                    icon = Icons.Rounded.Visibility,
+                    onClick = {
+                        vm.unhide(app.key)
+                        screenFocus.focus(restoreId(index + 1) ?: restoreId(index - 1) ?: "hidden:close")
+                    },
+                )
             }
         }
     }
@@ -388,55 +390,59 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
         trapFocus = isTop,
         dialogOpen = dialogKind != null,
         overlay = {
-            val category = categories.firstOrNull { it.id == dialogCategoryId }
-            if (dialogKind != null && dialogKind != CategoryDialogKind.ADD && category == null) {
+            val liveCategory = categories.firstOrNull { it.id == dialogCategoryId }
+            if (dialogKind != null && dialogKind != CategoryDialogKind.ADD && liveCategory == null) {
                 // The category vanished while its dialog was open; close after composition.
                 LaunchedEffect(Unit) { close() }
             }
-            when (dialogKind) {
-                CategoryDialogKind.ADD -> TextInputDialog(
-                    idPrefix = "categories:new",
-                    title = SettingsText.NEW_CATEGORY,
-                    fieldLabel = SettingsText.CATEGORY_NAME,
-                    initial = "",
-                    confirmLabel = SettingsText.ADD,
-                    onConfirm = { name ->
-                        vm.addCategory(name.take(MAX_NAME_LENGTH))
-                        close()
-                    },
-                    onDismiss = { close() },
-                )
-                CategoryDialogKind.RENAME -> if (category != null) {
-                    TextInputDialog(
-                        idPrefix = "categories:rename",
-                        title = SettingsText.RENAME_CATEGORY,
+            // A dialog animating out keeps showing the category it was opened for.
+            val lastCategory = rememberLastNonNull(liveCategory)
+            AnimatedDialog(dialogKind) { kind ->
+                val category = if (isDialogExiting()) lastCategory else liveCategory
+                when (kind) {
+                    CategoryDialogKind.ADD -> TextInputDialog(
+                        idPrefix = "categories:new",
+                        title = SettingsText.NEW_CATEGORY,
                         fieldLabel = SettingsText.CATEGORY_NAME,
-                        initial = category.name,
-                        confirmLabel = SettingsText.SAVE,
+                        initial = "",
+                        confirmLabel = SettingsText.ADD,
                         onConfirm = { name ->
-                            vm.renameCategory(category.id, name)
+                            vm.addCategory(name.take(MAX_NAME_LENGTH))
                             close()
                         },
                         onDismiss = { close() },
                     )
+                    CategoryDialogKind.RENAME -> if (category != null) {
+                        TextInputDialog(
+                            idPrefix = "categories:rename",
+                            title = SettingsText.RENAME_CATEGORY,
+                            fieldLabel = SettingsText.CATEGORY_NAME,
+                            initial = category.name,
+                            confirmLabel = SettingsText.SAVE,
+                            onConfirm = { name ->
+                                vm.renameCategory(category.id, name)
+                                close()
+                            },
+                            onDismiss = { close() },
+                        )
+                    }
+                    CategoryDialogKind.DELETE -> if (category != null && !category.isAll) {
+                        ConfirmDialog(
+                            idPrefix = "categories:delete",
+                            title = SettingsText.deleteCategoryTitle(category.name),
+                            text = SettingsText.DELETE_CATEGORY_TEXT,
+                            confirmLabel = SettingsText.DELETE,
+                            destructive = true,
+                            onConfirm = {
+                                vm.deleteCategory(category.id)
+                                val index = categories.indexOf(category)
+                                val neighbour = categories.getOrNull(index + 1) ?: categories.getOrNull(index - 1)
+                                close(neighbour?.let { "categories:${it.id}:rename" } ?: "categories:add")
+                            },
+                            onDismiss = { close() },
+                        )
+                    }
                 }
-                CategoryDialogKind.DELETE -> if (category != null && !category.isAll) {
-                    ConfirmDialog(
-                        idPrefix = "categories:delete",
-                        title = SettingsText.deleteCategoryTitle(category.name),
-                        text = SettingsText.DELETE_CATEGORY_TEXT,
-                        confirmLabel = SettingsText.DELETE,
-                        destructive = true,
-                        onConfirm = {
-                            vm.deleteCategory(category.id)
-                            val index = categories.indexOf(category)
-                            val neighbour = categories.getOrNull(index + 1) ?: categories.getOrNull(index - 1)
-                            close(neighbour?.let { "categories:${it.id}:rename" } ?: "categories:add")
-                        },
-                        onDismiss = { close() },
-                    )
-                }
-                null -> Unit
             }
         },
     ) {
@@ -450,56 +456,55 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 style = ButtonStyle.FILLED,
             )
         }
-        categories.forEachIndexed { index, category ->
-            key(category.id) {
-                val count = if (category.isAll) state.apps.size else state.categoryMembers[category.id].orEmpty().size
-                Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                    Text(
-                        category.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(horizontal = 12.dp),
+        // Reordered categories slide to their new places; added/deleted ones expand/shrink.
+        AnimatedItems(categories, key = { it.id }) { category, index ->
+            val count = if (category.isAll) state.apps.size else state.categoryMembers[category.id].orEmpty().size
+            Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                Text(
+                    category.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+                Text(
+                    if (category.isAll) SettingsText.ALL_CATEGORY_NOTE else SettingsText.memberCount(count),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+                ButtonBar(
+                    Modifier.padding(start = 12.dp, end = 8.dp, top = 6.dp),
+                    arrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    val prefix = "categories:${category.id}"
+                    PlutoButton(
+                        "$prefix:rename",
+                        SettingsText.RENAME,
+                        { open(CategoryDialogKind.RENAME, category.id, "$prefix:rename") },
+                        icon = Icons.Rounded.DriveFileRenameOutline,
                     )
-                    Text(
-                        if (category.isAll) SettingsText.ALL_CATEGORY_NOTE else SettingsText.memberCount(count),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 12.dp),
+                    PlutoButton(
+                        "$prefix:up",
+                        SettingsText.MOVE_UP,
+                        { vm.moveCategory(category.id, ReorderOp.Up) },
+                        icon = Icons.Rounded.ArrowUpward,
+                        enabled = index > 0,
                     )
-                    ButtonBar(
-                        Modifier.padding(start = 12.dp, end = 8.dp, top = 6.dp),
-                        arrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        val prefix = "categories:${category.id}"
+                    PlutoButton(
+                        "$prefix:down",
+                        SettingsText.MOVE_DOWN,
+                        { vm.moveCategory(category.id, ReorderOp.Down) },
+                        icon = Icons.Rounded.ArrowDownward,
+                        enabled = index < categories.lastIndex,
+                    )
+                    if (!category.isAll) {
                         PlutoButton(
-                            "$prefix:rename",
-                            SettingsText.RENAME,
-                            { open(CategoryDialogKind.RENAME, category.id, "$prefix:rename") },
-                            icon = Icons.Rounded.DriveFileRenameOutline,
+                            "$prefix:delete",
+                            SettingsText.DELETE,
+                            { open(CategoryDialogKind.DELETE, category.id, "$prefix:delete") },
+                            icon = Icons.Rounded.Delete,
+                            destructive = true,
                         )
-                        PlutoButton(
-                            "$prefix:up",
-                            SettingsText.MOVE_UP,
-                            { vm.moveCategory(category.id, ReorderOp.Up) },
-                            icon = Icons.Rounded.ArrowUpward,
-                            enabled = index > 0,
-                        )
-                        PlutoButton(
-                            "$prefix:down",
-                            SettingsText.MOVE_DOWN,
-                            { vm.moveCategory(category.id, ReorderOp.Down) },
-                            icon = Icons.Rounded.ArrowDownward,
-                            enabled = index < categories.lastIndex,
-                        )
-                        if (!category.isAll) {
-                            PlutoButton(
-                                "$prefix:delete",
-                                SettingsText.DELETE,
-                                { open(CategoryDialogKind.DELETE, category.id, "$prefix:delete") },
-                                icon = Icons.Rounded.Delete,
-                                destructive = true,
-                            )
-                        }
                     }
                 }
             }

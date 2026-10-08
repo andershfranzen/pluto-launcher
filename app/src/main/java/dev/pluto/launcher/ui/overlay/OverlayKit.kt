@@ -1,6 +1,28 @@
 package dev.pluto.launcher.ui.overlay
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.State
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LookaheadScope
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import dev.pluto.launcher.ui.motion.PlutoMotion
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
@@ -164,12 +186,15 @@ internal class ScreenFocus(private val controller: ControllerFocusController, de
 internal fun rememberScreenFocus(defaultId: String, refocusKey: Any? = Unit): ScreenFocus {
     val controller = LocalControllerFocus.current
     val screenFocus = remember(controller) { ScreenFocus(controller, defaultId) }
+    // A dialog animating out must not claim the default or move focus any more.
+    val leaving = isDialogExiting()
     LaunchedEffect(screenFocus, defaultId) {
+        if (leaving) return@LaunchedEffect
         screenFocus.defaultId = defaultId
         controller.setDefaultFocus(defaultId)
     }
     LaunchedEffect(screenFocus, refocusKey) {
-        screenFocus.focus()
+        if (!leaving) screenFocus.focus()
     }
     screenFocus.Effects()
     return screenFocus
@@ -180,16 +205,35 @@ internal fun rememberScreenFocus(defaultId: String, refocusKey: Any? = Unit): Sc
 @Composable
 private fun panelColor(): Color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = PANEL_ALPHA)
 
-/** Dims what is below and swallows touches so nothing underneath can be activated. */
+/**
+ * Dims what is below and swallows touches so nothing underneath can be activated. Inside an
+ * [AnimatedDialog] it fades with the dialog and lets touches through while the dialog leaves.
+ */
 @Composable
-private fun ModalScrim(onTap: (() -> Unit)?) {
+private fun ModalScrim(onTap: (() -> Unit)?, presence: DialogPresence? = null) {
+    val color = MaterialTheme.colorScheme.scrim.copy(alpha = MODAL_SCRIM_ALPHA)
+    val leaving = presence?.isExiting == true
     Box(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = MODAL_SCRIM_ALPHA))
-            .pointerInput(onTap) { detectTapGestures { onTap?.invoke() } },
+            .then(if (presence != null) Modifier.graphicsLayer { alpha = presence.alpha.value } else Modifier)
+            .background(color)
+            .then(if (leaving) Modifier else Modifier.pointerInput(onTap) { detectTapGestures { onTap?.invoke() } }),
     )
 }
+
+/** Fade + scale of a nested dialog's panel (visual only). */
+private fun Modifier.dialogPanelMotion(presence: DialogPresence?): Modifier =
+    if (presence == null) {
+        this
+    } else {
+        graphicsLayer {
+            alpha = presence.alpha.value
+            val scale = presence.scale.value
+            scaleX = scale
+            scaleY = scale
+        }
+    }
 
 @Composable
 private fun PanelHeader(title: String, closeId: String, onClose: () -> Unit, leading: (@Composable () -> Unit)?) {
@@ -261,8 +305,15 @@ internal fun LayerScaffold(
                                 .verticalScroll(rememberScrollState())
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
-                            content = content,
-                        )
+                        ) {
+                            val column = this
+                            // Rows using Modifier.animatePlacement slide to their new positions in here.
+                            LookaheadScope {
+                                CompositionLocalProvider(LocalPlacementScope provides this) {
+                                    column.content()
+                                }
+                            }
+                        }
                     } else {
                         Column(body, content = content)
                     }
@@ -294,15 +345,19 @@ internal fun ModalPanel(
     actions: (@Composable FlowRowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (interceptBack) BackHandler(onBack = onDismiss)
-    val covered = dialogOpen || LocalFocusInert.current
-    Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen)) {
-        ModalScrim(onTap = onDismiss)
+    // Inside AnimatedDialog: animate with it, and once closed act as gone while it fades out.
+    val presence = LocalDialogPresence.current
+    val leaving = presence?.isExiting == true
+    if (interceptBack) BackHandler(enabled = !leaving, onBack = onDismiss)
+    val covered = dialogOpen || leaving || LocalFocusInert.current
+    Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen && !leaving)) {
+        ModalScrim(onTap = onDismiss, presence = presence)
         Surface(
             modifier = Modifier
                 .align(Alignment.Center)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(16.dp)
+                .dialogPanelMotion(presence)
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
                 // Announced as a pane; screen-reader traversal stays inside the dialog.
@@ -320,7 +375,8 @@ internal fun ModalPanel(
             color = panelColor(),
             tonalElevation = 2.dp,
         ) {
-            CompositionLocalProvider(LocalFocusInert provides covered) {
+            // Dialogs nested in this one get their own presence.
+            CompositionLocalProvider(LocalFocusInert provides covered, LocalDialogPresence provides null) {
                 Column {
                     PanelHeader(title, "$idPrefix:close", onDismiss, leading)
                     val body = Modifier.weight(1f, fill = false).fillMaxWidth()
@@ -449,12 +505,18 @@ internal fun ActionRow(
     selected: Boolean = false,
     contentDescription: String? = null,
     onFocused: (() -> Unit)? = null,
+    lift: Boolean = false,
+    animateChanges: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val description = contentDescription
         ?: listOfNotNull(label, supporting, if (!enabled) KitText.UNAVAILABLE else null).joinToString(", ")
+    // Selection fill/border fade in and out (draw phase only); a lifted row also rises slightly.
+    val selection = animateFloatAsState(if (selected) 1f else 0f, PlutoMotion.effects(), label = "rowSelection")
+    val liftPx = with(LocalDensity.current) { LiftElevation.toPx() }
     Row(
         modifier
+            .then(if (lift) Modifier.liftOnSelection(selection, liftPx) else Modifier)
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .controllerFocusable(
@@ -467,8 +529,7 @@ internal fun ActionRow(
             // Selection is announced ("selected") and drawn with a border, not by colour alone.
             .then(if (selected) Modifier.semantics { stateDescription = KitText.SELECTED } else Modifier)
             .clip(ControlShape)
-            .background(if (selected) colors.secondaryContainer else Color.Transparent)
-            .then(if (selected) Modifier.border(BorderStroke(2.dp, colors.secondary), ControlShape) else Modifier)
+            .selectionBackground(selection, colors.secondaryContainer, colors.secondary, SelectedBorderWidth)
             .alpha(if (enabled) 1f else 0.45f)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -483,16 +544,33 @@ internal fun ActionRow(
                 leading()
                 Spacer(Modifier.width(16.dp))
             }
+            icon != null && animateChanges -> {
+                Crossfade(icon, animationSpec = PlutoMotion.fadeIn(), label = "rowIcon") { shown ->
+                    Icon(shown, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+                }
+                Spacer(Modifier.width(16.dp))
+            }
             icon != null -> {
                 Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
                 Spacer(Modifier.width(16.dp))
             }
         }
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.bodyLarge, color = tint)
-            if (supporting != null) {
-                Text(supporting, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        if (animateChanges) {
+            // Label flips (Pin ⇄ Unpin, Add to ⇄ Remove from dock) crossfade; height follows smoothly.
+            AnimatedContent(
+                targetState = label to supporting,
+                modifier = Modifier.weight(1f),
+                transitionSpec = {
+                    (fadeIn(PlutoMotion.fadeIn()) togetherWith fadeOut(PlutoMotion.fadeOut()))
+                        .using(SizeTransform(clip = false) { _, _ -> PlutoMotion.spatialFast() })
+                },
+                contentAlignment = Alignment.CenterStart,
+                label = "rowLabel",
+            ) { (shownLabel, shownSupporting) ->
+                RowTexts(shownLabel, shownSupporting, tint, Modifier.fillMaxWidth())
             }
+        } else {
+            RowTexts(label, supporting, tint, Modifier.weight(1f))
         }
         if (trailing != null) {
             Spacer(Modifier.width(12.dp))
@@ -502,6 +580,57 @@ internal fun ActionRow(
             Icon(Icons.Rounded.Check, contentDescription = null, tint = colors.onSecondaryContainer, modifier = Modifier.size(20.dp))
         }
     }
+}
+
+@Composable
+private fun RowTexts(label: String, supporting: String?, tint: Color, modifier: Modifier) {
+    Column(modifier) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = tint)
+        if (supporting != null) {
+            Text(supporting, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+private val SelectedBorderWidth = 2.dp
+private val LiftElevation = 6.dp
+private const val LIFT_SCALE = 0.015f
+
+/**
+ * Selection fill and border drawn at [progress] (0 = none, 1 = selected) so selecting fades
+ * them in without recomposition; the outline is cached per size.
+ */
+private fun Modifier.selectionBackground(
+    progress: State<Float>,
+    fill: Color,
+    border: Color,
+    borderWidth: Dp,
+    unselectedBorder: Color? = null,
+): Modifier =
+    drawWithCache {
+        val outline = ControlShape.createOutline(size, layoutDirection, this)
+        val stroke = Stroke(width = borderWidth.toPx() * 2f)
+        val thinStroke = Stroke(width = 1.dp.toPx() * 2f)
+        onDrawBehind {
+            val p = progress.value
+            if (unselectedBorder != null && p < 1f) drawOutline(outline, unselectedBorder, alpha = 1f - p, style = thinStroke)
+            if (p > 0f) {
+                drawOutline(outline, fill, alpha = p)
+                // Stroke is centred on the outline and half of it is clipped away: a crisp inner border.
+                drawOutline(outline, border, alpha = p, style = stroke)
+            }
+        }
+    }
+
+/** The selected (picked) row lifts: a soft shadow and a hint of scale. Visual only. */
+private fun Modifier.liftOnSelection(progress: State<Float>, elevationPx: Float): Modifier = graphicsLayer {
+    val p = progress.value
+    shadowElevation = p * elevationPx
+    shape = ControlShape
+    clip = false
+    val scale = 1f + LIFT_SCALE * p
+    scaleX = scale
+    scaleY = scale
 }
 
 @Composable
@@ -518,6 +647,8 @@ internal fun SwitchRow(
         label = label,
         supporting = supporting,
         icon = icon,
+        // Explanations that change with the switch (e.g. history on/off) resize smoothly.
+        modifier = Modifier.animateContentSize(PlutoMotion.spatialFast()),
         onClick = { onCheckedChange(!checked) },
         contentDescription = listOfNotNull(label, if (checked) KitText.ON else KitText.OFF, supporting).joinToString(", "),
         trailing = {
@@ -572,6 +703,7 @@ internal fun <T> ChoiceGroup(
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             options.forEach { (value, text) ->
                 val isSelected = value == selected
+                val selection = animateFloatAsState(if (isSelected) 1f else 0f, PlutoMotion.effects(), label = "chipSelection")
                 Row(
                     Modifier
                         .heightIn(min = 48.dp)
@@ -582,22 +714,32 @@ internal fun <T> ChoiceGroup(
                             shape = ControlShape,
                         )
                         .clip(ControlShape)
-                        .background(if (isSelected) colors.secondaryContainer else Color.Transparent)
-                        .border(
-                            BorderStroke(if (isSelected) 2.dp else 1.dp, if (isSelected) colors.secondary else colors.outline),
-                            ControlShape,
+                        // Selected fill and the thicker border fade in as the plain outline fades out.
+                        .selectionBackground(
+                            selection,
+                            colors.secondaryContainer,
+                            colors.secondary,
+                            SelectedBorderWidth,
+                            unselectedBorder = colors.outline,
                         )
                         .padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (isSelected) {
-                        Icon(
-                            Icons.Rounded.Check,
-                            contentDescription = null,
-                            tint = colors.onSecondaryContainer,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(6.dp))
+                    // The check mark grows in beside the label (small element; neighbours reflow with it).
+                    AnimatedVisibility(
+                        visible = isSelected,
+                        enter = fadeIn(PlutoMotion.fadeIn()) + expandHorizontally(PlutoMotion.spatialFast()),
+                        exit = fadeOut(PlutoMotion.fadeOut()) + shrinkHorizontally(PlutoMotion.spatialFast()),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = colors.onSecondaryContainer,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                        }
                     }
                     Text(
                         text,
@@ -641,15 +783,33 @@ internal fun StepperRow(
             onClick = { onDecrease?.invoke() },
             enabled = onDecrease != null,
         )
-        Text(
-            valueText,
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.onSurface,
-            textAlign = TextAlign.Center,
+        // The value rolls up when it grows and down when it shrinks. One polite live region
+        // carries the current value; the animated copies are hidden from accessibility.
+        AnimatedContent(
+            targetState = valueText,
             modifier = Modifier
                 .widthIn(min = 64.dp)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        )
+                .clearAndSetSemantics {
+                    contentDescription = valueText
+                    liveRegion = LiveRegionMode.Polite
+                },
+            transitionSpec = {
+                val up = numericValue(targetState) >= numericValue(initialState)
+                val enter = slideInVertically(PlutoMotion.slideSpring) { h -> if (up) h / 2 else -h / 2 } + fadeIn(PlutoMotion.fadeIn())
+                val exit = slideOutVertically(PlutoMotion.slideSpring) { h -> if (up) -h / 2 else h / 2 } + fadeOut(PlutoMotion.fadeOut())
+                (enter togetherWith exit).using(SizeTransform(clip = false) { _, _ -> PlutoMotion.spatialFast() })
+            },
+            contentAlignment = Alignment.Center,
+            label = "stepperValue",
+        ) { shown ->
+            Text(
+                shown,
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(min = 64.dp),
+            )
+        }
         IconAction(
             id = "$idPrefix:inc",
             icon = Icons.Rounded.Add,
@@ -659,6 +819,12 @@ internal fun StepperRow(
         )
     }
 }
+
+/** The number in a stepper value text ("85%", "0.25", "300 ms"); 0 when there is none. */
+internal fun numericValue(text: String): Float =
+    NumberPattern.find(text.replace(',', '.'))?.value?.toFloatOrNull() ?: 0f
+
+private val NumberPattern = Regex("""-?\d+(?:\.\d+)?""")
 
 /** Steps [value] by [step] (direction ±1) inside [range], rounding away float drift. Null at the limit. */
 internal fun stepped(value: Float, step: Float, range: ClosedFloatingPointRange<Float>, direction: Int): Float? {
@@ -735,17 +901,21 @@ internal fun ConfirmDialog(
     destructive: Boolean = false,
 ) {
     rememberScreenFocus("$idPrefix:cancel")
+    // Once closed (animating out) a late key press must not confirm or dismiss twice.
+    val leaving = isDialogExiting()
+    val confirm = { if (!leaving) onConfirm() }
+    val dismiss = { if (!leaving) onDismiss() }
     ModalPanel(
         title = title,
         idPrefix = idPrefix,
-        onDismiss = onDismiss,
+        onDismiss = dismiss,
         interceptBack = true,
         actions = {
-            PlutoButton("$idPrefix:cancel", KitText.CANCEL, onDismiss, style = ButtonStyle.TEXT)
+            PlutoButton("$idPrefix:cancel", KitText.CANCEL, dismiss, style = ButtonStyle.TEXT)
             PlutoButton(
                 "$idPrefix:confirm",
                 confirmLabel,
-                onConfirm,
+                confirm,
                 style = ButtonStyle.FILLED,
                 destructive = destructive,
             )
@@ -772,7 +942,8 @@ internal fun TextInputDialog(
 ) {
     var text by rememberSaveable { mutableStateOf(initial) }
     val valid = text.isNotBlank()
-    val submit = { if (valid) onConfirm(text.trim()) }
+    val leaving = isDialogExiting()
+    val submit = { if (valid && !leaving) onConfirm(text.trim()) }
     val controller = LocalControllerFocus.current
     val fieldFocus = remember { FocusRequester() }
     rememberScreenFocus("$idPrefix:confirm")

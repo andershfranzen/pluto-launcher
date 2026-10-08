@@ -2,6 +2,7 @@ package dev.pluto.launcher.ui.overlay
 
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -164,120 +165,124 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
         trapFocus = isTop,
         dialogOpen = dialog != null,
         overlay = {
-            when (dialog) {
-                EditDialog.MOVE_BEFORE, EditDialog.MOVE_AFTER -> if (target != null) {
-                    val before = dialog == EditDialog.MOVE_BEFORE
-                    TargetPicker(
-                        target = target,
+            // While a dialog animates out it keeps showing what it was opened for.
+            val shownTarget = rememberLastNonNull(target)
+            AnimatedDialog(dialog) { shownDialog ->
+                val target = if (isDialogExiting()) shownTarget else target
+                when (shownDialog) {
+                    EditDialog.MOVE_BEFORE, EditDialog.MOVE_AFTER -> if (target != null) {
+                        val before = shownDialog == EditDialog.MOVE_BEFORE
+                        TargetPicker(
+                            target = target,
+                            state = state,
+                            title = if (before) OverlayText.moveBeforeTitle(target.label) else OverlayText.moveAfterTitle(target.label),
+                            onPick = { targetId ->
+                                dialog = null
+                                when (target) {
+                                    is EditTarget.Home -> HomeItem.decode(targetId)?.let { other ->
+                                        vm.moveHomeItem(target.item, if (before) ReorderOp.Before(other) else ReorderOp.After(other))
+                                    }
+                                    is EditTarget.Dock -> targetId.removePrefix(DOCK_PREFIX).toIntOrNull()?.let { other ->
+                                        moveDock(target.slot, if (before) ReorderOp.Before(other) else ReorderOp.After(other), "edit:ctl:before")
+                                    }
+                                    is EditTarget.FolderApp -> AppKey.decode(targetId)?.let { other ->
+                                        vm.moveFolderApp(
+                                            target.folder.folder.id,
+                                            target.entry.key,
+                                            if (before) ReorderOp.Before(other) else ReorderOp.After(other),
+                                        )
+                                    }
+                                }
+                                screenFocus.returnFrom(dialogOpener)
+                            },
+                            onDismiss = ::closeDialog,
+                        )
+                    } else {
+                        DismissNow(::closeDialog)
+                    }
+                    EditDialog.PICK_FAVOURITE -> AppPicker(
                         state = state,
-                        title = if (before) OverlayText.moveBeforeTitle(target.label) else OverlayText.moveAfterTitle(target.label),
-                        onPick = { targetId ->
-                            dialog = null
-                            when (target) {
-                                is EditTarget.Home -> HomeItem.decode(targetId)?.let { other ->
-                                    vm.moveHomeItem(target.item, if (before) ReorderOp.Before(other) else ReorderOp.After(other))
-                                }
-                                is EditTarget.Dock -> targetId.removePrefix(DOCK_PREFIX).toIntOrNull()?.let { other ->
-                                    moveDock(target.slot, if (before) ReorderOp.Before(other) else ReorderOp.After(other), "edit:ctl:before")
-                                }
-                                is EditTarget.FolderApp -> AppKey.decode(targetId)?.let { other ->
-                                    vm.moveFolderApp(
-                                        target.folder.folder.id,
-                                        target.entry.key,
-                                        if (before) ReorderOp.Before(other) else ReorderOp.After(other),
-                                    )
-                                }
-                            }
-                            screenFocus.returnFrom(dialogOpener)
-                        },
-                        onDismiss = ::closeDialog,
-                    )
-                } else {
-                    DismissNow(::closeDialog)
-                }
-                EditDialog.PICK_FAVOURITE -> AppPicker(
-                    state = state,
-                    title = OverlayText.CHOOSE_FAVOURITE,
-                    isCurrent = { key -> state.homeTiles.any { it is HomeTile.App && it.entry.key == key } },
-                    currentLabel = OverlayText.ON_HOME,
-                    onPick = { key ->
-                        dialog = null
-                        vm.pin(key)
-                        screenFocus.returnFrom("edit:addfav")
-                    },
-                    onDismiss = ::closeDialog,
-                )
-                EditDialog.PICK_APP -> if (target is EditTarget.Dock) {
-                    AppPicker(
-                        state = state,
-                        title = OverlayText.CHOOSE_APP,
-                        isCurrent = { it == target.entry?.key },
-                        currentLabel = null,
+                        title = OverlayText.CHOOSE_FAVOURITE,
+                        isCurrent = { key -> state.homeTiles.any { it is HomeTile.App && it.entry.key == key } },
+                        currentLabel = OverlayText.ON_HOME,
                         onPick = { key ->
                             dialog = null
-                            vm.setDockSlot(target.slot, key)
-                            screenFocus.returnFrom(rowId("$DOCK_PREFIX${target.slot}"))
+                            vm.pin(key)
+                            screenFocus.returnFrom("edit:addfav")
                         },
                         onDismiss = ::closeDialog,
                     )
-                } else {
-                    DismissNow(::closeDialog)
-                }
-                EditDialog.RENAME_FOLDER -> {
-                    val folder = (target as? EditTarget.Home)?.tile as? HomeTile.FolderTile
-                    if (folder != null) {
-                        TextInputDialog(
-                            idPrefix = "edit:rename",
-                            title = OverlayText.RENAME_FOLDER,
-                            fieldLabel = OverlayText.FOLDER_NAME,
-                            initial = folder.folder.folder.name,
-                            confirmLabel = OverlayText.RENAME,
-                            onConfirm = { name ->
-                                vm.renameFolder(folder.folder.folder.id, name)
-                                closeDialog()
-                            },
-                            onDismiss = ::closeDialog,
-                        )
-                    } else {
-                        DismissNow(::closeDialog)
-                    }
-                }
-                EditDialog.DELETE_FOLDER -> {
-                    val home = target as? EditTarget.Home
-                    val folder = home?.tile as? HomeTile.FolderTile
-                    if (folder != null) {
-                        ConfirmDialog(
-                            idPrefix = "edit:delete",
-                            title = OverlayText.deleteFolderTitle(folder.folder.folder.name),
-                            text = OverlayText.DELETE_FOLDER_TEXT,
-                            confirmLabel = OverlayText.DELETE,
-                            destructive = true,
-                            onConfirm = {
+                    EditDialog.PICK_APP -> if (target is EditTarget.Dock) {
+                        AppPicker(
+                            state = state,
+                            title = OverlayText.CHOOSE_APP,
+                            isCurrent = { it == target.entry?.key },
+                            currentLabel = null,
+                            onPick = { key ->
                                 dialog = null
-                                vm.deleteFolder(folder.folder.folder.id)
-                                vm.setEditSelection(null)
-                                controllerFocusAfterRemoval(state, home.index)?.let { screenFocus.returnFrom(it) }
-                                    ?: screenFocus.returnFrom("edit:newfolder")
+                                vm.setDockSlot(target.slot, key)
+                                screenFocus.returnFrom(rowId("$DOCK_PREFIX${target.slot}"))
                             },
                             onDismiss = ::closeDialog,
                         )
                     } else {
                         DismissNow(::closeDialog)
                     }
+                    EditDialog.RENAME_FOLDER -> {
+                        val folder = (target as? EditTarget.Home)?.tile as? HomeTile.FolderTile
+                        if (folder != null) {
+                            TextInputDialog(
+                                idPrefix = "edit:rename",
+                                title = OverlayText.RENAME_FOLDER,
+                                fieldLabel = OverlayText.FOLDER_NAME,
+                                initial = folder.folder.folder.name,
+                                confirmLabel = OverlayText.RENAME,
+                                onConfirm = { name ->
+                                    vm.renameFolder(folder.folder.folder.id, name)
+                                    closeDialog()
+                                },
+                                onDismiss = ::closeDialog,
+                            )
+                        } else {
+                            DismissNow(::closeDialog)
+                        }
+                    }
+                    EditDialog.DELETE_FOLDER -> {
+                        val home = target as? EditTarget.Home
+                        val folder = home?.tile as? HomeTile.FolderTile
+                        if (folder != null) {
+                            ConfirmDialog(
+                                idPrefix = "edit:delete",
+                                title = OverlayText.deleteFolderTitle(folder.folder.folder.name),
+                                text = OverlayText.DELETE_FOLDER_TEXT,
+                                confirmLabel = OverlayText.DELETE,
+                                destructive = true,
+                                onConfirm = {
+                                    dialog = null
+                                    vm.deleteFolder(folder.folder.folder.id)
+                                    vm.setEditSelection(null)
+                                    controllerFocusAfterRemoval(state, home.index)?.let { screenFocus.returnFrom(it) }
+                                        ?: screenFocus.returnFrom("edit:newfolder")
+                                },
+                                onDismiss = ::closeDialog,
+                            )
+                        } else {
+                            DismissNow(::closeDialog)
+                        }
+                    }
+                    EditDialog.NEW_FOLDER -> TextInputDialog(
+                        idPrefix = "edit:newfolder:name",
+                        title = OverlayText.NEW_FOLDER_TITLE,
+                        fieldLabel = OverlayText.FOLDER_NAME,
+                        initial = OverlayText.DEFAULT_FOLDER_NAME,
+                        confirmLabel = OverlayText.CREATE,
+                        onConfirm = { name ->
+                            vm.createFolder(name, emptyList())
+                            closeDialog()
+                        },
+                        onDismiss = ::closeDialog,
+                    )
                 }
-                EditDialog.NEW_FOLDER -> TextInputDialog(
-                    idPrefix = "edit:newfolder:name",
-                    title = OverlayText.NEW_FOLDER_TITLE,
-                    fieldLabel = OverlayText.FOLDER_NAME,
-                    initial = OverlayText.DEFAULT_FOLDER_NAME,
-                    confirmLabel = OverlayText.CREATE,
-                    onConfirm = { name ->
-                        vm.createFolder(name, emptyList())
-                        closeDialog()
-                    },
-                    onDismiss = ::closeDialog,
-                )
-                null -> Unit
             }
         },
     ) {
@@ -301,15 +306,18 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
         // --- Home favourites ---
         SectionHeader(OverlayText.HOME_SECTION)
         if (state.homeTiles.isEmpty()) BodyText(OverlayText.HOME_EMPTY)
-        state.homeTiles.forEachIndexed { index, tile ->
-            key(tile.id) {
-                val selected = target is EditTarget.Home && target.tile.id == tile.id
+        // Rows slide to their new places when moved and fade/shrink out when removed.
+        AnimatedItems(state.homeTiles, key = { it.id }) { tile, index ->
+            val selected = target is EditTarget.Home && target.tile.id == tile.id
+            val item = remember(tile.id) { HomeItem.decode(tile.id) }
+            Column {
                 when (tile) {
                     is HomeTile.App -> ActionRow(
                         id = rowId(tile.id),
                         label = tile.entry.label,
                         leading = { AppIcon(tile.entry, 36.dp) },
                         selected = selected,
+                        lift = true,
                         contentDescription = if (selected) OverlayText.selectedHint(tile.entry.label) else tile.entry.label,
                         onClick = { toggle(tile.id) },
                     )
@@ -319,17 +327,18 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                         supporting = OverlayText.appCount(tile.folder.apps.size),
                         icon = Icons.Rounded.Folder,
                         selected = selected,
+                        lift = true,
                         onClick = { toggle(tile.id) },
                     )
                 }
-                if (selected) {
+                ExpandingSection(visible = selected && item != null) {
                     val last = state.homeTiles.lastIndex
                     ControlBar {
                         EditControl("edit:ctl:up", OverlayText.MOVE_UP, Icons.Rounded.ArrowUpward, enabled = index > 0) {
-                            vm.moveHomeItem(target.item, ReorderOp.Up)
+                            item?.let { vm.moveHomeItem(it, ReorderOp.Up) }
                         }
                         EditControl("edit:ctl:down", OverlayText.MOVE_DOWN, Icons.Rounded.ArrowDownward, enabled = index < last) {
-                            vm.moveHomeItem(target.item, ReorderOp.Down)
+                            item?.let { vm.moveHomeItem(it, ReorderOp.Down) }
                         }
                         EditControl("edit:ctl:before", OverlayText.MOVE_BEFORE, Icons.Rounded.SwapVert, enabled = last > 0) {
                             openDialog(EditDialog.MOVE_BEFORE, "edit:ctl:before")
@@ -372,9 +381,10 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 leading = entry?.let { { AppIcon(it, 36.dp) } },
                 icon = if (entry == null) Icons.Rounded.Add else null,
                 selected = selected,
+                lift = true,
                 onClick = { toggle(selectionId) },
             )
-            if (selected) {
+            ExpandingSection(visible = selected) {
                 ControlBar {
                     if (entry != null) {
                         EditControl("edit:ctl:up", OverlayText.MOVE_UP, Icons.Rounded.ArrowUpward, enabled = slot > 0) {
@@ -413,13 +423,13 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
 
         // --- Folder contents ---
         if (folders.isNotEmpty()) SectionHeader(OverlayText.FOLDERS_SECTION)
-        folders.forEach { folderUi ->
-            key(folderUi.folder.id) {
+        AnimatedItems(folders, key = { it.folder.id }) { folderUi, _ ->
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 BodyText(OverlayText.folderHeader(folderUi.folder.name))
-                if (folderUi.apps.isEmpty()) BodyText(OverlayText.FOLDER_EMPTY)
-                folderUi.apps.forEachIndexed { index, app ->
+                ExpandingSection(visible = folderUi.apps.isEmpty()) { BodyText(OverlayText.FOLDER_EMPTY) }
+                AnimatedItems(folderUi.apps, key = { it.key.encode() }) { app, index ->
                     val selectionId = app.key.encode()
-                    key(selectionId) {
+                    Column {
                         val selected = target is EditTarget.FolderApp && target.entry.key == app.key &&
                             target.folder.folder.id == folderUi.folder.id
                         ActionRow(
@@ -428,9 +438,10 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                             supporting = folderUi.folder.name,
                             leading = { AppIcon(app, 36.dp) },
                             selected = selected,
+                            lift = true,
                             onClick = { toggle(selectionId) },
                         )
-                        if (selected) {
+                        ExpandingSection(visible = selected) {
                             val folderId = folderUi.folder.id
                             val last = folderUi.apps.lastIndex
                             ControlBar {
@@ -477,10 +488,14 @@ private fun initialFocusFor(target: EditTarget?): String? = when (target) {
     is EditTarget.FolderApp -> rowId(target.entry.key.encode())
 }
 
-/** Closes a dialog whose subject vanished (e.g. app uninstalled) after composition, not during it. */
+/**
+ * Closes a dialog whose subject vanished (e.g. app uninstalled) after composition, not during
+ * it. A dialog already animating out is closed; it must not close (and move focus) again.
+ */
 @Composable
 private fun DismissNow(onDismiss: () -> Unit) {
-    LaunchedEffect(Unit) { onDismiss() }
+    val leaving = isDialogExiting()
+    LaunchedEffect(Unit) { if (!leaving) onDismiss() }
 }
 
 /** Row id of the home tile that takes the place of the one at [removedIndex]. */
@@ -494,7 +509,9 @@ private fun controllerFocusAfterRemoval(state: LauncherUiState, removedIndex: In
 @Composable
 private fun ControlBar(content: @Composable () -> Unit) {
     FlowRow(
-        modifier = Modifier.padding(start = 24.dp, end = 8.dp, top = 4.dp, bottom = 12.dp),
+        // Top padding includes the column spacing that used to separate it from its row,
+        // so the whole gap expands/collapses with the bar.
+        modifier = Modifier.padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) { content() }

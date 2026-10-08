@@ -1,7 +1,28 @@
 package dev.pluto.launcher.ui.settings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.LayoutDirection
+import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.motion.PlutoMotion
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -125,12 +146,37 @@ fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 12.dp),
         )
-        val body = Modifier.weight(1f).fillMaxWidth()
-        when (step) {
-            OnboardingStep.WELCOME -> StepColumn(body) { WelcomeStep(state) }
-            OnboardingStep.GAMES -> GamesStep(state, vm, gamesCategory?.id, body)
-            OnboardingStep.CONTROLLER -> StepColumn(body) { ControllerStep(state) }
-            OnboardingStep.HOME -> StepColumn(body) { HomeStep(state, requestHomeRole) }
+        StepProgress(index, steps.size, Modifier.padding(start = 28.dp, end = 28.dp, top = 8.dp, bottom = 4.dp))
+        // Next brings the new step in from the end edge, Back from the start edge. The leaving
+        // step is focus-inert and hidden from accessibility, so the step focus request
+        // (rememberScreenFocus above, keyed by step) can only land on the incoming step.
+        val inert = LocalFocusInert.current
+        AnimatedContent(
+            targetState = step,
+            modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(),
+            transitionSpec = {
+                val towards = if (targetState.ordinal >= initialState.ordinal) {
+                    AnimatedContentTransitionScope.SlideDirection.Start
+                } else {
+                    AnimatedContentTransitionScope.SlideDirection.End
+                }
+                (
+                    slideIntoContainer(towards, PlutoMotion.slideSpring) { it / 3 } + fadeIn(PlutoMotion.fadeIn()) togetherWith
+                        slideOutOfContainer(towards, PlutoMotion.slideSpring) { it / 3 } + fadeOut(PlutoMotion.fadeOut())
+                    ).using(SizeTransform(clip = false))
+            },
+            label = "onboardingStep",
+        ) { shownStep ->
+            val leaving = transition.targetState != EnterExitState.Visible
+            CompositionLocalProvider(LocalFocusInert provides (inert || leaving)) {
+                val body = Modifier.fillMaxSize().then(if (leaving) Modifier.clearAndSetSemantics { } else Modifier)
+                when (shownStep) {
+                    OnboardingStep.WELCOME -> StepColumn(body) { WelcomeStep(state) }
+                    OnboardingStep.GAMES -> GamesStep(state, vm, gamesCategory?.id, body)
+                    OnboardingStep.CONTROLLER -> StepColumn(body) { ControllerStep(state) }
+                    OnboardingStep.HOME -> StepColumn(body) { HomeStep(state, requestHomeRole) }
+                }
+            }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         ButtonBar(Modifier.padding(16.dp)) {
@@ -166,6 +212,31 @@ fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }
         }
     }
+}
+
+/**
+ * Thin progress track whose fill glides to the current step. Decorative (the "Step x of y"
+ * text above is what screen readers read); drawn in the draw phase only.
+ */
+@Composable
+private fun StepProgress(index: Int, count: Int, modifier: Modifier = Modifier) {
+    val target = if (count <= 0) 0f else (index + 1f) / count
+    val progress = animateFloatAsState(target, PlutoMotion.spatial(), label = "onboardingProgress")
+    val track = MaterialTheme.colorScheme.surfaceContainerHighest
+    val fill = MaterialTheme.colorScheme.primary
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .clearAndSetSemantics { }
+            .drawBehind {
+                val radius = CornerRadius(size.height / 2f)
+                drawRoundRect(track, cornerRadius = radius)
+                val width = size.width * progress.value.coerceIn(0f, 1f)
+                val left = if (layoutDirection == LayoutDirection.Rtl) size.width - width else 0f
+                drawRoundRect(fill, topLeft = Offset(left, 0f), size = Size(width, size.height), cornerRadius = radius)
+            },
+    )
 }
 
 @Composable
