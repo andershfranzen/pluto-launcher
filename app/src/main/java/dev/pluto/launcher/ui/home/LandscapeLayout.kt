@@ -78,7 +78,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         val shortWindow = maxHeight < SideDockMaxHeight
-        Column(Modifier.fillMaxSize().swipeUpToOpen { vm.openDrawer() }) {
+        Column(Modifier.fillMaxSize().swipeUpToOpenDrawer(vm)) {
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -145,7 +145,7 @@ private fun FavouritesGrid(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(state.homeTiles, key = { it.id }) { tile ->
-                    HomeTileView(tile, iconSize, homeTileFocusId(tile), vm)
+                    HomeTileView(tile, iconSize, homeTileFocusId(tile), vm, plutoItem())
                 }
             }
         }
