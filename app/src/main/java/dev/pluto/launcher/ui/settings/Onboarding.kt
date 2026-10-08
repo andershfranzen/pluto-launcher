@@ -3,6 +3,7 @@ package dev.pluto.launcher.ui.settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloatAsState
@@ -22,6 +23,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.LayoutDirection
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -140,35 +142,31 @@ fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
         trapFocus = isTop,
         scrollable = false,
     ) {
-        Text(
-            SettingsText.stepOf(index + 1, steps.size),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        // The step label and the buttons change with the body, in the same transition.
+        AnimatedContent(
+            targetState = index,
+            transitionSpec = { stepTransition(targetState >= initialState) },
+            label = "onboardingStepLabel",
             modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 12.dp),
-        )
+        ) { shownIndex ->
+            Text(
+                SettingsText.stepOf(shownIndex + 1, steps.size),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         StepProgress(index, steps.size, Modifier.padding(start = 28.dp, end = 28.dp, top = 8.dp, bottom = 4.dp))
         // Next brings the new step in from the end edge, Back from the start edge. The leaving
         // step is focus-inert and hidden from accessibility, so the step focus request
         // (rememberScreenFocus above, keyed by step) can only land on the incoming step.
-        val inert = LocalFocusInert.current
         AnimatedContent(
             targetState = step,
             modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(),
-            transitionSpec = {
-                val towards = if (targetState.ordinal >= initialState.ordinal) {
-                    AnimatedContentTransitionScope.SlideDirection.Start
-                } else {
-                    AnimatedContentTransitionScope.SlideDirection.End
-                }
-                (
-                    slideIntoContainer(towards, PlutoMotion.slideSpring) { it / 3 } + fadeIn(PlutoMotion.fadeIn()) togetherWith
-                        slideOutOfContainer(towards, PlutoMotion.slideSpring) { it / 3 } + fadeOut(PlutoMotion.fadeOut())
-                    ).using(SizeTransform(clip = false))
-            },
+            transitionSpec = { stepTransition(targetState.ordinal >= initialState.ordinal) },
             label = "onboardingStep",
         ) { shownStep ->
             val leaving = transition.targetState != EnterExitState.Visible
-            CompositionLocalProvider(LocalFocusInert provides (inert || leaving)) {
+            CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
                 val body = Modifier.fillMaxSize().then(if (leaving) Modifier.clearAndSetSemantics { } else Modifier)
                 when (shownStep) {
                     OnboardingStep.WELCOME -> StepColumn(body) { WelcomeStep(state) }
@@ -179,39 +177,87 @@ fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        ButtonBar(Modifier.padding(16.dp)) {
+        AnimatedContent(
+            targetState = step,
+            transitionSpec = {
+                fadeIn(PlutoMotion.fadeIn()) togetherWith fadeOut(PlutoMotion.fadeOut()) using SizeTransform(clip = false)
+            },
+            label = "onboardingButtons",
+        ) { buttonsStep ->
+            val leaving = transition.targetState != EnterExitState.Visible
+            val buttonsIndex = steps.indexOf(buttonsStep).coerceAtLeast(0)
+            CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
+                StepButtons(
+                    step = buttonsStep,
+                    index = buttonsIndex,
+                    isLast = buttonsIndex == steps.lastIndex,
+                    isDefaultHome = state.isDefaultHome,
+                    onBack = { goTo(steps[(index - 1).coerceAtLeast(0)]) },
+                    onNext = { goTo(steps[(index + 1).coerceAtMost(steps.lastIndex)]) },
+                    onFinish = ::finish,
+                    modifier = Modifier.padding(16.dp).then(if (leaving) Modifier.clearAndSetSemantics { } else Modifier),
+                )
+            }
+        }
+    }
+}
+
+/** Shared-axis step change: forward slides toward the start edge, back toward the end. */
+private fun <S> AnimatedContentTransitionScope<S>.stepTransition(forward: Boolean): ContentTransform {
+    val towards = if (forward) {
+        AnimatedContentTransitionScope.SlideDirection.Start
+    } else {
+        AnimatedContentTransitionScope.SlideDirection.End
+    }
+    return (
+        slideIntoContainer(towards, PlutoMotion.slideSpring) { it / 3 } + fadeIn(PlutoMotion.fadeIn()) togetherWith
+            slideOutOfContainer(towards, PlutoMotion.slideSpring) { it / 3 } + fadeOut(PlutoMotion.fadeOut())
+        ).using(SizeTransform(clip = false))
+}
+
+@Composable
+private fun StepButtons(
+    step: OnboardingStep,
+    index: Int,
+    isLast: Boolean,
+    isDefaultHome: Boolean,
+    onBack: () -> Unit,
+    onNext: () -> Unit,
+    onFinish: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+        ButtonBar(modifier) {
             if (index > 0) {
                 PlutoButton(
                     "onboarding:back",
                     SettingsText.BACK,
-                    { goTo(steps[index - 1]) },
+                    onBack,
                     icon = Icons.AutoMirrored.Rounded.ArrowBack,
                     style = ButtonStyle.TEXT,
                 )
             }
             if (step == OnboardingStep.GAMES) {
-                PlutoButton("onboarding:skip", SettingsText.SKIP, { goTo(steps[index + 1]) }, style = ButtonStyle.TEXT)
+                PlutoButton("onboarding:skip", SettingsText.SKIP, onNext, style = ButtonStyle.TEXT)
             }
             when {
-                step == OnboardingStep.HOME && !state.isDefaultHome ->
-                    PlutoButton("onboarding:next", SettingsText.NOT_NOW, ::finish, style = ButtonStyle.OUTLINED)
+                step == OnboardingStep.HOME && !isDefaultHome ->
+                    PlutoButton("onboarding:next", SettingsText.NOT_NOW, onFinish, style = ButtonStyle.OUTLINED)
                 isLast -> PlutoButton(
                     "onboarding:next",
                     if (step == OnboardingStep.HOME) SettingsText.FINISH else SettingsText.START,
-                    ::finish,
+                    onFinish,
                     icon = Icons.Rounded.CheckCircle,
                     style = ButtonStyle.FILLED,
                 )
                 else -> PlutoButton(
                     "onboarding:next",
                     SettingsText.NEXT,
-                    { goTo(steps[index + 1]) },
+                    onNext,
                     icon = Icons.AutoMirrored.Rounded.ArrowForward,
                     style = ButtonStyle.FILLED,
                 )
             }
         }
-    }
 }
 
 /**

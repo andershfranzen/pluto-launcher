@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.Category
 import dev.pluto.launcher.ui.UserMessage
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.PlutoDimens
@@ -479,7 +480,7 @@ fun MessageBar(
             ) { msg ->
                 // Departing content can't take focus (the Dismiss id belongs to the live message).
                 val inert = leaving || transition.targetState != EnterExitState.Visible
-                CompositionLocalProvider(LocalFocusInert provides (LocalFocusInert.current || inert)) {
+                CompositionLocalProvider(LocalFocusInert provides focusInert(inert)) {
                     MessageBarContent(msg, onDismiss = { currentOnDismiss(msg.id) })
                 }
             }

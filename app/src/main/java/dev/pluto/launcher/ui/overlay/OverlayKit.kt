@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
+import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -105,6 +106,7 @@ import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.focus.controllerFocusable
 import kotlin.math.roundToInt
 
@@ -117,7 +119,6 @@ import kotlin.math.roundToInt
 
 internal val PanelShape = RoundedCornerShape(24.dp)
 internal val ControlShape = RoundedCornerShape(16.dp)
-private const val PANEL_ALPHA = 0.92f
 private const val MODAL_SCRIM_ALPHA = 0.4f
 
 // --- Focus helpers ----------------------------------------------------------------
@@ -203,7 +204,7 @@ internal fun rememberScreenFocus(defaultId: String, refocusKey: Any? = Unit): Sc
 // --- Surfaces -------------------------------------------------------------------
 
 @Composable
-private fun panelColor(): Color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = PANEL_ALPHA)
+private fun panelColor(): Color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = PlutoDimens.PanelAlpha)
 
 /**
  * Dims what is below and swallows touches so nothing underneath can be activated. Inside an
@@ -279,7 +280,7 @@ internal fun LayerScaffold(
     overlay: @Composable BoxScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val covered = dialogOpen || LocalFocusInert.current
+    val covered = dialogOpen || LocalFocusInert.current.value
     Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen)) {
         ModalScrim(onTap = null)
         Surface(
@@ -294,7 +295,7 @@ internal fun LayerScaffold(
             shape = PanelShape,
             color = panelColor(),
         ) {
-            CompositionLocalProvider(LocalFocusInert provides covered) {
+            CompositionLocalProvider(LocalFocusInert provides focusInert(covered)) {
                 Column {
                     PanelHeader(title, "$idPrefix:close", onClose, leading = null)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -349,7 +350,7 @@ internal fun ModalPanel(
     val presence = LocalDialogPresence.current
     val leaving = presence?.isExiting == true
     if (interceptBack) BackHandler(enabled = !leaving, onBack = onDismiss)
-    val covered = dialogOpen || leaving || LocalFocusInert.current
+    val covered = dialogOpen || leaving || LocalFocusInert.current.value
     Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen && !leaving)) {
         ModalScrim(onTap = onDismiss, presence = presence)
         Surface(
@@ -376,7 +377,7 @@ internal fun ModalPanel(
             tonalElevation = 2.dp,
         ) {
             // Dialogs nested in this one get their own presence.
-            CompositionLocalProvider(LocalFocusInert provides covered, LocalDialogPresence provides null) {
+            CompositionLocalProvider(LocalFocusInert provides focusInert(covered), LocalDialogPresence provides null) {
                 Column {
                     PanelHeader(title, "$idPrefix:close", onDismiss, leading)
                     val body = Modifier.weight(1f, fill = false).fillMaxWidth()

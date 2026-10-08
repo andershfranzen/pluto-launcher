@@ -54,7 +54,12 @@ object PlutoDimens {
     val PanelCorner = 24.dp
     val TileCorner = 16.dp
     val MinTouchTarget = 48.dp
-    const val PanelAlpha = 0.92f
+    /**
+     * Panels (drawer, sheets, dialogs, folders) are opaque: content beneath must never show
+     * through text. Folder tile backgrounds over the wallpaper keep a slight translucency.
+     */
+    const val PanelAlpha = 1f
+    const val TileBackdropAlpha = 0.92f
 }
 
 // A calm, space-inspired fallback palette: deep navy night with pale tan accents echoing the Pluto icon.

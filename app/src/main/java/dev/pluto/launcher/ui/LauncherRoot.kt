@@ -22,6 +22,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -40,8 +46,12 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -50,8 +60,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.input.key.Key
@@ -63,7 +75,9 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -83,6 +97,9 @@ import dev.pluto.launcher.ui.components.MessageBar
 import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
+import dev.pluto.launcher.ui.focus.FocusRingOverlayHost
+import dev.pluto.launcher.ui.focus.LocalFocusRingVisibility
 import dev.pluto.launcher.ui.focus.ProvideControllerFocus
 import dev.pluto.launcher.ui.home.DRAWER_SEARCH_ID
 import dev.pluto.launcher.ui.home.DrawerScreen
@@ -90,6 +107,7 @@ import dev.pluto.launcher.ui.home.FolderOverlay
 import dev.pluto.launcher.ui.home.HandheldLayout
 import dev.pluto.launcher.ui.home.LandscapeLayout
 import dev.pluto.launcher.ui.home.PhoneLayout
+import dev.pluto.launcher.ui.home.iconSize
 import dev.pluto.launcher.ui.motion.AppLauncher
 import dev.pluto.launcher.ui.motion.DrawerRevealState
 import dev.pluto.launcher.ui.motion.InertBackDispatcherOwner
@@ -103,6 +121,13 @@ import dev.pluto.launcher.ui.motion.OriginRegistry
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.motion.StackSlot
 import dev.pluto.launcher.ui.motion.blockPointerInput
+import dev.pluto.launcher.ui.motion.drawMotion
+import dev.pluto.launcher.ui.motion.LaunchMotion
+import dev.pluto.launcher.ui.motion.LaunchVeil
+import dev.pluto.launcher.ui.motion.LaunchVeilState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.runtime.DisposableEffect
 import dev.pluto.launcher.ui.overlay.AppActionsSheet
 import dev.pluto.launcher.ui.overlay.CategoryMembershipDialog
 import dev.pluto.launcher.ui.overlay.EditScreen
@@ -163,13 +188,33 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     val origins = remember { OriginRegistry() }
     val launchSources = LocalLaunchSourceFactory.current
     val reducedMotion by rememberUpdatedState(state.settings.reducedMotion)
-    val appLauncher = remember(vm, origins, launchSources) {
+    val veil = remember { LaunchVeilState() }
+    val launchScope = rememberCoroutineScope()
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val appLauncher = remember(vm, origins, launchSources, veil, lifecycle) {
         AppLauncher { key, originId ->
             val bounds = origins.boundsOf(originId)
             // Reduce motion keeps the source bounds but uses the default window transition.
             val source = if (bounds != null) launchSources?.create(bounds, animate = !reducedMotion) else null
-            vm.launch(key, source?.screenBounds, source?.options)
+            if (bounds == null || source == null || reducedMotion) {
+                vm.launch(key, source?.screenBounds, source?.options)
+            } else if (veil.progress.value == 0f) {
+                // The tile visibly hands off to the app (see LaunchVeilState), then it starts.
+                launchScope.launch {
+                    veil.cover(bounds)
+                    vm.launch(key, source.screenBounds, source.options)
+                    delay(LaunchMotion.VEIL_TIMEOUT_MS)
+                    if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) veil.reveal()
+                }
+            }
         }
+    }
+    DisposableEffect(lifecycle, veil) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) launchScope.launch { veil.clear() }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
     }
 
     CompositionLocalProvider(
@@ -180,6 +225,9 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     ) {
         PlutoTheme(state.settings) {
             ProvideControllerFocus(focus) {
+                // One focus ring that glides between controls (instead of a ring per control
+                // cross-fading), drawn above every layer of the launcher window.
+                FocusRingOverlayHost {
                 BoxWithConstraints(
                     Modifier
                         .fillMaxSize()
@@ -227,13 +275,43 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                             .widthIn(max = 560.dp),
                     )
+                    LaunchVeil(veil, MaterialTheme.colorScheme.surface, Modifier.matchParentSize())
+                }
                 }
             }
         }
     }
 
     ActionRouting(state, vm, focus, actions)
+    if (!state.loading) PrewarmIcons(state, iconCache)
 }
+
+/**
+ * Decodes app icons ahead of need, in the background once the launcher is idle, at the sizes
+ * the current presentation will show next (folders and the drawer, Handheld rows and tiles,
+ * onboarding lists), so surfaces entering with motion (a folder growing open, a category
+ * page sliding in, an onboarding step) never show blank placeholders that pop in mid-move.
+ */
+@Composable
+private fun PrewarmIcons(state: LauncherUiState, cache: dev.pluto.launcher.apps.IconCache) {
+    val density = LocalDensity.current
+    val sizes = buildList {
+        add(state.iconSize())
+        if (state.mode == LauncherMode.HANDHELD || state.controllerConnected) {
+            val handheld = state.iconSize(base = 68.dp)
+            add(handheld)
+            add(handheld * 0.85f)
+        }
+        if (Layer.Onboarding in state.session.layers || Layer.Edit in state.session.layers) add(36.dp)
+    }.map { with(density) { it.roundToPx() } }.distinct()
+    val keys = state.allApps.map { it.key }
+    LaunchedEffect(keys, sizes) {
+        delay(ICON_PREWARM_DELAY_MS)
+        for (size in sizes) for (key in keys) cache.load(key, size)
+    }
+}
+
+private const val ICON_PREWARM_DELAY_MS = 800L
 
 /**
  * Routes controller actions: the focus layer first, then launcher-level shortcuts.
@@ -366,16 +444,27 @@ private class LayerHostState {
      * animating or being dragged) even if it is not in the stack. [shown]: newly seen layers
      * start fully shown (first composition: restored state must not animate in).
      */
-    fun update(layers: List<Layer>, drawerVisible: Boolean, shown: Boolean, openerId: () -> String?): List<StackSlot> {
+    fun update(
+        layers: List<Layer>,
+        drawerVisible: Boolean,
+        parkDrawer: Boolean,
+        shown: Boolean,
+        openerId: () -> String?,
+    ): List<StackSlot> {
         var next = LayerStack.reconcile(slots, layers.map(Layer::encode))
         next = LayerStack.withoutFinished(next, finished)
         finished.clear()
 
         val drawerIndex = next.indexOfFirst { it.key == DRAWER_KEY }
-        if (drawerIndex < 0 && drawerVisible && next.none { it.present && entries[it.key]?.kind?.coversBelow == true }) {
+        val covered = next.any { it.present && entries[it.key]?.kind?.coversBelow == true }
+        if (drawerIndex < 0 && drawerVisible && !covered) {
             // Dragged up from home before the ViewModel knows: render it, not yet focusable.
             next = next + StackSlot(DRAWER_KEY, present = false)
-        } else if (drawerIndex >= 0 && !next[drawerIndex].present && !drawerVisible) {
+        } else if (drawerIndex < 0 && parkDrawer && !covered) {
+            // Closed: keep it composed off screen (inert, invisible) just above home, so the
+            // next open only moves a layer instead of composing the whole drawer in one frame.
+            next = listOf(StackSlot(DRAWER_KEY, present = false)) + next
+        } else if (drawerIndex >= 0 && !next[drawerIndex].present && !drawerVisible && !parkDrawer) {
             next = next.filterIndexed { i, _ -> i != drawerIndex }
         }
 
@@ -456,11 +545,35 @@ private fun LauncherContent(
     DrawerRevealSync(reveal, drawerOpen = Layer.Drawer in layers)
     val drawerVisible by remember(reveal) { derivedStateOf { reveal.isVisible } }
 
+    // The closed drawer is kept composed ("parked") once things are idle: after the first
+    // frames, and again a moment after a full-screen page closed or the window changed size
+    // (rotation), so parking never adds to those transitions' own work.
+    val windowSize = LocalWindowInfo.current.containerSize
+    val parkKey = ParkKey(layers.any { it.kind.coversBelow }, windowSize.width, windowSize.height)
+    var parkedFor by remember { mutableStateOf<ParkKey?>(null) }
+    LaunchedEffect(parkKey) {
+        if (parkKey.covered) return@LaunchedEffect
+        delay(DRAWER_PARK_DELAY_MS)
+        withFrameNanos { }
+        parkedFor = parkKey
+    }
+    val parkDrawer = parkedFor == parkKey
+
     val host = remember { LayerHostState() }
     val firstComposition = remember { booleanArrayOf(true) }
     host.version.intValue // recompose when a leaving layer finished
-    val slots = host.update(layers, drawerVisible, shown = firstComposition[0]) { focus.openerId }
+    val slots = host.update(layers, drawerVisible, parkDrawer, shown = firstComposition[0]) { focus.openerId }
     SideEffect { firstComposition[0] = false }
+
+    // Forget a layer's saved state once it is gone from the stack and the screen.
+    val layerStates = rememberSaveableStateHolder()
+    val knownKeys = remember { HashSet<String>() }
+    SideEffect {
+        val live = slots.mapTo(HashSet()) { it.key }
+        layers.mapTo(live) { Layer.encode(it) }
+        knownKeys.filter { it !in live }.forEach { layerStates.removeState(it); knownKeys.remove(it) }
+        knownKeys.addAll(live)
+    }
 
     val firstComposed = LayerStack.firstComposed(slots, host::covers)
     val showBase = LayerStack.baseComposed(slots, host::covers)
@@ -474,16 +587,22 @@ private fun LauncherContent(
         vm = vm,
     )
 
+    // Where the drawer panel's opaque body starts (inset + gap + corner radius), for clipping home.
+    val density = LocalDensity.current
+    val panelTopPx = WindowInsets.safeDrawing.getTop(density) + with(density) { DrawerPanelTopClearance.toPx() }
     Box(Modifier.fillMaxSize().onPlaced { host.windowOffset = it.positionInWindow() }) {
         if (showBase) {
             val covered = layers.isNotEmpty()
             val beneath = host.beneathOf(slots, -1)
-            CompositionLocalProvider(LocalFocusInert provides covered) {
+            CompositionLocalProvider(LocalFocusInert provides focusInert(covered)) {
                 Box(
                     Modifier
                         .fillMaxSize()
                         .hiddenFromAccessibility(covered)
-                        .beneathMotion(beneath, reveal, rtl),
+                        // Home has no text input: the keyboard (drawer search, rename dialogs)
+                        // must not reflow the layout beneath the layer that raised it.
+                        .consumeWindowInsets(HomeImeInsets)
+                        .beneathMotion(beneath, reveal, rtl, panelTopPx),
                 ) {
                     ModeCrossfade(mode, landscapeWindow, state, vm)
                 }
@@ -493,9 +612,13 @@ private fun LauncherContent(
             val slot = slots[index]
             key(slot.key) {
                 val entry = host.entries.getValue(slot.key)
+                // Saved per layer: a layer covered by a settled page leaves composition, and its
+                // scroll position (and other saveable UI state) must be there when it returns.
+                layerStates.SaveableStateProvider(slot.key) {
                 LayerFrame(
                     entry = entry,
                     present = slot.present,
+                    parked = !slot.present && !drawerVisible,
                     isTop = index == topIndex,
                     beneath = host.beneathOf(slots, index),
                     reveal = reveal,
@@ -504,6 +627,7 @@ private fun LauncherContent(
                     state = state,
                     vm = vm,
                 )
+                }
             }
         }
     }
@@ -540,10 +664,72 @@ private fun DrawerRevealSync(reveal: DrawerRevealState, drawerOpen: Boolean) {
 /** How long a released drag's outcome may wait for the ViewModel before the stack wins. */
 private const val VM_SYNC_GRACE_MS = 600L
 
+/** The keyboard's share of the insets beyond the system bars and cutout (consumed for home). */
+private val HomeImeInsets: WindowInsets
+    @Composable get() = WindowInsets.ime.exclude(WindowInsets.systemBars.union(WindowInsets.displayCutout))
+
+/** Drawer panel gap (8dp) plus its corner radius: home stays visible down to here. */
+private val DrawerPanelTopClearance = 8.dp + 24.dp
+
+/** What decides whether the closed drawer may stay composed. */
+private data class ParkKey(val covered: Boolean, val width: Int, val height: Int)
+
+/** Idle time before the closed drawer is (re)composed off screen. */
+private const val DRAWER_PARK_DELAY_MS = 600L
+
+/**
+ * While the drawer is parked (closed, off screen) it sees [state] only after it has stopped
+ * changing for a moment, so browsing home (selection, L1/R1 categories) never recomposes the
+ * hidden drawer in the same frames. Unparking hands it the current state at once.
+ *
+ * Composing the parked drawer is spread over frames: its results grow by [PARK_CHUNK] tiles
+ * per frame (tiles it already shows are kept), so parking never costs one long frame.
+ */
+@Composable
+private fun rememberParkedState(state: LauncherUiState, parked: Boolean): LauncherUiState {
+    val held = remember { arrayOf(if (parked) state.withDrawerApps(PARK_CHUNK) else state) }
+    val growing = remember { booleanArrayOf(parked) }
+    val catchUp = remember { mutableIntStateOf(0) }
+    catchUp.intValue // recompose when a parked update lands
+    if (!parked) {
+        held[0] = state
+        growing[0] = false
+    } else if (held[0] !== state) {
+        LaunchedEffect(state) {
+            if (!growing[0]) delay(PARKED_CATCH_UP_MS)
+            growing[0] = true
+            val apps = state.drawerApps
+            val shown = held[0].drawerApps
+            var common = 0
+            while (common < shown.size && common < apps.size && shown[common].key == apps[common].key) common++
+            var n = maxOf(common, PARK_CHUNK)
+            while (true) {
+                held[0] = if (n >= apps.size) state else state.withDrawerApps(n)
+                catchUp.intValue++
+                if (n >= apps.size) break
+                withFrameNanos { }
+                withFrameNanos { }
+                n += PARK_CHUNK
+            }
+            growing[0] = false
+        }
+    }
+    return held[0]
+}
+
+private fun LauncherUiState.withDrawerApps(count: Int): LauncherUiState =
+    if (drawerApps.size <= count) this else copy(drawerApps = drawerApps.take(count))
+
+private const val PARKED_CATCH_UP_MS = 500L
+
+/** Tiles the parked drawer adds per step while it is composed in the background. */
+private const val PARK_CHUNK = 6
+
 @Composable
 private fun LayerFrame(
     entry: LayerEntry,
     present: Boolean,
+    parked: Boolean,
     isTop: Boolean,
     beneath: Beneath,
     reveal: DrawerRevealState,
@@ -566,6 +752,11 @@ private fun LayerFrame(
     }
 
     val active = present && isTop
+    // A leaving layer keeps showing the state it had when it left (e.g. Edit keeps its
+    // selection expanded while it fades out instead of collapsing mid-exit).
+    val lastPresentState = remember { arrayOf(state) }
+    if (present) lastPresentState[0] = state
+    val layerState = if (present || entry.kind == LayerKind.DRAWER) state else lastPresentState[0]
     // A leaving layer's BackHandlers must not intercept Back while it animates out.
     val lifecycleOwner = LocalLifecycleOwner.current
     val inertBack = remember(lifecycleOwner) { InertBackDispatcherOwner(lifecycleOwner) }
@@ -573,9 +764,18 @@ private fun LayerFrame(
     val backOwner = if (present && realBack != null) realBack else inertBack
     val origins = LocalOriginRegistry.current
 
+    // Layers move in the draw phase only; the gliding ring fades in as its layer settles.
+    val ringVisibility: () -> Float = remember(entry, reveal) {
+        if (entry.kind == LayerKind.DRAWER) {
+            { ((reveal.progress - 0.75f) / 0.25f).coerceIn(0f, 1f) }
+        } else {
+            { ((entry.progress.value - 0.6f) / 0.4f).coerceIn(0f, 1f) }
+        }
+    }
     CompositionLocalProvider(
-        LocalFocusInert provides !active,
+        LocalFocusInert provides focusInert(!active),
         LocalOnBackPressedDispatcherOwner provides backOwner,
+        LocalFocusRingVisibility provides ringVisibility,
     ) {
         Box(
             Modifier
@@ -588,24 +788,35 @@ private fun LayerFrame(
             val leavingBlock = if (present) Modifier else Modifier.blockPointerInput()
             when (entry.kind) {
                 LayerKind.DRAWER -> {
+                    val drawerState = rememberParkedState(state, parked)
                     Box(
                         Modifier
                             .fillMaxSize()
                             .drawBehind {
-                                drawRect(Color.Black, alpha = LayerMotion.DRAWER_DIM * reveal.progress.coerceIn(0f, 1f))
+                                val d = reveal.progress.coerceIn(0f, 1f)
+                                if (d > 0f) drawRect(Color.Black, alpha = LayerMotion.DRAWER_DIM * d)
                             },
                     )
+                    val hidden = remember(reveal) { derivedStateOf { reveal.progress <= 0f && !reveal.isDragging } }
                     Box(
                         Modifier
                             .fillMaxSize()
-                            .graphicsLayer {
+                            // Fully closed: laid out just below the window, so the parked drawer
+                            // never takes touches meant for home (changes twice per open/close).
+                            .layout { measurable, constraints ->
+                                val placeable = measurable.measure(constraints)
+                                layout(placeable.width, placeable.height) {
+                                    placeable.place(0, if (hidden.value) placeable.height else 0)
+                                }
+                            }
+                            .drawMotion {
                                 val d = reveal.progress
-                                translationY = LayerMotion.drawerOffset(d, size.height)
+                                translationY = LayerMotion.drawerOffset(d, height)
                                 alpha = LayerMotion.fadeEarly(d, 0.2f)
                             }
                             .then(leavingBlock),
                     ) {
-                        LayerContent(entry.layer, state, vm)
+                        LayerContent(entry.layer, drawerState, vm)
                     }
                 }
                 LayerKind.FOLDER -> {
@@ -614,7 +825,7 @@ private fun LayerFrame(
                     Box(
                         Modifier
                             .fillMaxSize()
-                            .graphicsLayer {
+                            .drawMotion {
                                 val p = entry.progress.value
                                 val s = LayerMotion.folderScale(p)
                                 scaleX = s
@@ -623,18 +834,18 @@ private fun LayerFrame(
                                 transformOrigin = LayerMotion.originOf(
                                     origins.boundsOf(entry.originId) ?: origins.boundsOf(folderTileId),
                                     host.windowOffset,
-                                    size,
+                                    Size(width, height),
                                 )
                             }
                             .then(leavingBlock),
                     ) {
-                        LayerContent(entry.layer, state, vm)
+                        LayerContent(entry.layer, layerState, vm)
                     }
                 }
                 LayerKind.SHEET -> Box(
                     Modifier
                         .fillMaxSize()
-                        .graphicsLayer {
+                        .drawMotion {
                             val p = entry.progress.value
                             // Settles from slightly larger, toward the tile that opened it; the
                             // panel's own full-screen scrim never shrinks to expose an edge.
@@ -642,30 +853,30 @@ private fun LayerFrame(
                             scaleX = s
                             scaleY = s
                             alpha = LayerMotion.fadeEarly(p, 1f)
-                            transformOrigin = LayerMotion.originOf(origins.boundsOf(entry.originId), host.windowOffset, size)
+                            transformOrigin = LayerMotion.originOf(origins.boundsOf(entry.originId), host.windowOffset, Size(width, height))
                         }
                         .then(leavingBlock),
                 ) {
-                    LayerContent(entry.layer, state, vm)
+                    LayerContent(entry.layer, layerState, vm)
                 }
                 LayerKind.PAGE -> Box(
                     Modifier
                         .fillMaxSize()
-                        .graphicsLayer {
+                        .drawMotion {
                             // Shared axis X: in from the end edge, out back to it.
                             val p = entry.progress.value
-                            val travel = LayerMotion.pageTravel(size.width, density)
+                            val travel = LayerMotion.pageTravel(width, density)
                             translationX = (if (rtl) -1f else 1f) * travel * (1f - p)
                             alpha = LayerMotion.fadeLate(p, 0.15f)
                         }
                         .then(leavingBlock),
                 ) {
-                    LayerContent(entry.layer, state, vm)
+                    LayerContent(entry.layer, layerState, vm)
                 }
                 LayerKind.ONBOARDING -> Box(
                     Modifier
                         .fillMaxSize()
-                        .graphicsLayer {
+                        .drawMotion {
                             val p = entry.progress.value
                             val s = LayerMotion.onboardingScale(p)
                             scaleX = s
@@ -674,7 +885,7 @@ private fun LayerFrame(
                         }
                         .then(leavingBlock),
                 ) {
-                    LayerContent(entry.layer, state, vm)
+                    LayerContent(entry.layer, layerState, vm)
                 }
             }
         }
@@ -686,11 +897,11 @@ private fun LayerFrame(
  * drawer; anything under an arriving page shifts toward the start and fades out (shared
  * axis), so dropping it once the page has settled is invisible.
  */
-private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, rtl: Boolean): Modifier =
+private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, rtl: Boolean, panelTopPx: Float = 0f): Modifier =
     if (beneath === NothingAbove) {
         this
     } else {
-        graphicsLayer {
+        drawMotion {
             var a = 1f
             if (beneath.drawer) {
                 val d = reveal.progress
@@ -698,6 +909,9 @@ private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, 
                 scaleX = s
                 scaleY = s
                 a *= LayerMotion.recedeAlpha(d)
+                // The drawer's opaque panel hides everything below its top edge (plus its
+                // rounded corners); only the strip above it is drawn.
+                if (d > 0f) clipBottom = LayerMotion.drawerOffset(d, height) + panelTopPx
             }
             val covers = beneath.covers
             if (covers.isNotEmpty()) {
@@ -708,7 +922,7 @@ private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, 
                     if (p > c) c = p
                     if (covers[i].kind == LayerKind.PAGE && p > shift) shift = p
                 }
-                translationX = (if (rtl) 1f else -1f) * LayerMotion.beneathShift(size.width, density) * shift
+                translationX = (if (rtl) 1f else -1f) * LayerMotion.beneathShift(width, density) * shift
                 a *= LayerMotion.beneathPageAlpha(c)
             }
             alpha = a
@@ -726,7 +940,6 @@ private data class ModeTarget(val mode: LauncherMode, val landscape: Boolean)
 @Composable
 private fun ModeCrossfade(mode: LauncherMode, landscapeWindow: Boolean, state: LauncherUiState, vm: LauncherViewModel) {
     val target = ModeTarget(mode, landscapeWindow)
-    val outerInert = LocalFocusInert.current
     AnimatedContent(
         targetState = target,
         modifier = Modifier.fillMaxSize(),
@@ -745,7 +958,7 @@ private fun ModeCrossfade(mode: LauncherMode, landscapeWindow: Boolean, state: L
         // Rotation: the outgoing layout was built for the other orientation; never draw it.
         if (!(leaving && shown.landscape != target.landscape)) {
             // The outgoing layout is visual only: no focus, not read by screen readers.
-            CompositionLocalProvider(LocalFocusInert provides (outerInert || leaving)) {
+            CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
                 Box(Modifier.fillMaxSize().hiddenFromAccessibility(leaving)) {
                     when (shown.mode) {
                         LauncherMode.PHONE -> PhoneLayout(state, vm)

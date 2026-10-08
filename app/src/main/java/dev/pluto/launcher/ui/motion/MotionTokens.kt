@@ -26,6 +26,12 @@ object PlutoMotion {
     const val MEDIUM_MS = 220
     const val LONG_MS = 360
 
+    /**
+     * Search results swap in place: outgoing results fade out over this, incoming ones fade in
+     * after it, so two icons never share a cell and nothing flies across the grid.
+     */
+    const val SWAP_MS = 70
+
     /** Layers, pages, sheets: slightly soft, no visible overshoot. */
     fun <T> spatial(): FiniteAnimationSpec<T> = spring(dampingRatio = 0.9f, stiffness = 420f)
 

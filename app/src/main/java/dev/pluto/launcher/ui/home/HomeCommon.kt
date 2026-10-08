@@ -21,6 +21,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.ui.HomeTile
 import dev.pluto.launcher.ui.Layer
@@ -40,6 +42,7 @@ import dev.pluto.launcher.ui.components.AppTile
 import dev.pluto.launcher.ui.components.FolderTile
 import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.model.LauncherMode
+import dev.pluto.launcher.ui.focus.GridNavigation
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.LocalFocusInert
@@ -130,12 +133,11 @@ internal fun HomeTileView(
 @Composable
 internal fun DockSlot(
     slot: Int,
-    state: LauncherUiState,
+    entry: AppEntry?,
     vm: LauncherViewModel,
     iconSize: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val entry = state.dock.getOrNull(slot)
     val focusId = dockFocusId(slot)
     val landing = rememberDockLanding(entry?.key)
     if (entry != null) {
@@ -324,7 +326,7 @@ internal fun ReportListScrollAnchor(surface: String, listState: LazyListState, v
 @Composable
 internal fun TrackFocusOrder(surface: String, ids: List<String>, scrollTo: (suspend (Int) -> Unit)? = null) {
     val focus = LocalControllerFocus.current
-    val inert by rememberUpdatedState(LocalFocusInert.current)
+    val inert = LocalFocusInert.current
     SideEffect { focus.setOrder(surface, ids, scrollTo) }
     DisposableEffect(focus, surface) { onDispose { focus.clearScroller(surface) } }
     val firstRun = remember { booleanArrayOf(true) }
@@ -334,8 +336,20 @@ internal fun TrackFocusOrder(surface: String, ids: List<String>, scrollTo: (susp
             return@LaunchedEffect
         }
         withFrameNanos { }
-        if (!inert) focus.followVanished(surface)
+        if (!inert.value) focus.followVanished(surface)
     }
+}
+
+/**
+ * Registers [gridState] for logical Up/Down controller movement (same column, row by row)
+ * over [ids], its single-span items starting at grid index [firstIndex].
+ */
+@Composable
+internal fun TrackGridNavigation(surface: String, gridState: LazyGridState, ids: List<String>, firstIndex: Int = 0) {
+    val focus = LocalControllerFocus.current
+    val scope = rememberCoroutineScope()
+    SideEffect { focus.setGrid(surface, GridNavigation(gridState, ids, firstIndex, scope)) }
+    DisposableEffect(focus, surface) { onDispose { focus.setGrid(surface, null) } }
 }
 
 /**

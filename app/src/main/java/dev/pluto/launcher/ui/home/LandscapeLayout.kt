@@ -69,6 +69,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
     ReportScrollAnchor(HOME_SURFACE, gridState, state, vm, gridKeys)
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
     TrackFocusOrder(HOME_SURFACE, state.homeTiles.map(::homeTileFocusId)) { gridState.scrollToItem(it) }
+    TrackGridNavigation(HOME_SURFACE, gridState, state.homeTiles.map(::homeTileFocusId))
     val defaultId = state.homeTiles.firstOrNull()?.let(::homeTileFocusId) ?: ID_ALL_APPS
     SideEffect { focus.setDefaultFocus(defaultId) }
 
@@ -101,7 +102,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
                     Column(Modifier.fillMaxSize()) {
                         FavouritesGrid(state, vm, iconSize, gridState, Modifier.weight(1f).fillMaxWidth())
                         HorizontalDock(
-                            state, vm, iconSize,
+                            state.dock, vm, iconSize,
                             Modifier
                                 .align(Alignment.CenterHorizontally)
                                 .widthIn(max = 640.dp)
@@ -170,7 +171,7 @@ private fun VerticalDock(state: LauncherUiState, vm: LauncherViewModel, slotIcon
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             repeat(Organization.DOCK_SLOTS) { slot ->
-                DockSlot(slot, state, vm, slotIconSize)
+                DockSlot(slot, state.dock.getOrNull(slot), vm, slotIconSize)
             }
         }
     }

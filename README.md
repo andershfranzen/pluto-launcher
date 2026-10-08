@@ -56,6 +56,32 @@ can be forced on or turned off in Settings.
 - **First-run setup**: usable default layout, optional category setup, controller preview,
   then the system default-Home chooser.
 
+## Motion
+
+All motion uses the shared tokens in `ui/motion/MotionTokens.kt` (springs for anything
+spatial, short tweens for fades) and follows Reduce motion and Android's animator scale.
+
+- **Drawer**: one continuous position drives the drawer, the receding home and the scrim,
+  whether it is pulled by a finger, opened by a button or controller Y, or closed with
+  Back / Home. The closed drawer stays composed off screen (built up a few tiles per frame
+  while idle), so opening it only moves a layer.
+- **Layers** (drawer, folders, sheets, pages, onboarding) move in the draw phase only
+  (`drawMotion`), so a moving layer never makes Compose recompute the bounds of every tile
+  inside it. Panels are opaque, and home is not drawn beneath the drawer panel.
+- **Controller focus**: a single ring glides between controls. Up/Down inside app grids
+  moves by row in a remembered column, so a held D-pad keeps its column while the grid
+  scrolls.
+- **App launch**: the tapped tile grows into a veil that covers the screen before the app
+  starts. Stock Android also scales the app window up from the tile; OxygenOS replaces that
+  with its own fade, and the veil keeps the hand-off visible there.
+- **Search**: results swap in place (old ones fade out, then new ones fade in) instead of
+  flying across the grid; Clear fades the full list back in.
+
+On the reference phone, a **debug** build is noticeably slower than a release build: the
+debuggable runtime interprets much of the code. Judge smoothness on a release build
+(`./gradlew assembleRelease`; it is signed with the local debug key and installs over a
+debug build, keeping your data).
+
 ## Screenshots
 
 Taken on the Android 36 emulator (1080 x 2400, 420 dpi, gesture navigation) with a few

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.DeferredTargetAnimation
 import androidx.compose.animation.core.ExperimentalAnimatableApi
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloat
@@ -26,6 +27,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.motion.PlutoMotion
 
 /*
@@ -169,25 +172,39 @@ private val PlacementSpring: FiniteAnimationSpec<IntOffset> = PlutoMotion.slideS
 private val SizeSpring: FiniteAnimationSpec<IntSize> = PlutoMotion.spatial()
 
 /**
- * Animates this element from its previous to its new position whenever its position inside
- * the layer body changes (reordering, rows added or removed above it, a panel expanding).
+ * Animates this element from its previous to its new position when the list was reordered:
+ * [order] (its index) changed while [count] (the list size) did not. Every other move (a
+ * panel above expanding or collapsing, a row added or removed) is already animated by that
+ * neighbour's own size animation pushing this row through layout; animating the placement
+ * on top of it made rows drift away from their neighbours (expanding controls drawn over the
+ * next row, gaps under a collapsing one), so those moves follow layout directly.
  * Layout-phase only: the element is measured normally and placed at an animated offset, so
  * nothing recomposes per frame and layout geometry (touch targets, focus) is unchanged once
  * settled. The target is the lookahead (final) position, so rows never chase a moving target.
  * Scrolling and whole-layer motion happen outside the scope and are not animated here.
  */
 @OptIn(ExperimentalAnimatableApi::class)
-internal fun Modifier.animatePlacement(): Modifier = composed {
+internal fun Modifier.animatePlacement(order: Int, count: Int): Modifier = composed {
     val scope = LocalPlacementScope.current ?: return@composed this
     val offset = remember { DeferredTargetAnimation(IntOffset.VectorConverter) }
     val coroutineScope = rememberCoroutineScope()
+    // Plain fields updated in composition: the reorder that the next placement should animate.
+    val last = remember { intArrayOf(order, count) }
+    val reordering = remember { booleanArrayOf(false) }
+    if (order != last[0] || count != last[1]) {
+        reordering[0] = count == last[1]
+        last[0] = order
+        last[1] = count
+    }
     this.approachLayout(
         isMeasurementApproachInProgress = { false },
         isPlacementApproachInProgress = { lookaheadCoordinates ->
             val target = with(scope) {
                 lookaheadScopeCoordinates.localLookaheadPositionOf(lookaheadCoordinates)
             }.round()
+            if (!reordering[0]) return@approachLayout false
             offset.updateTarget(target, coroutineScope, PlacementSpring)
+            if (offset.isIdle) reordering[0] = false
             !offset.isIdle
         },
     ) { measurable, constraints ->
@@ -199,9 +216,15 @@ internal fun Modifier.animatePlacement(): Modifier = composed {
             } else {
                 val origin = with(scope) { lookaheadScopeCoordinates }
                 val target = with(scope) { origin.localLookaheadPositionOf(coordinates) }.round()
-                val animated = offset.updateTarget(target, coroutineScope, PlacementSpring)
                 val current = origin.localPositionOf(coordinates, Offset.Zero).round()
-                placeable.place(animated - current)
+                if (reordering[0]) {
+                    val animated = offset.updateTarget(target, coroutineScope, PlacementSpring)
+                    placeable.place(animated - current)
+                } else {
+                    // Follow layout exactly; remember where we are so a reorder starts here.
+                    offset.updateTarget(current, coroutineScope, snap())
+                    placeable.place(0, 0)
+                }
             }
         }
     }
@@ -268,7 +291,6 @@ private class AnimatedItemsState<T> {
 internal fun <T> AnimatedItems(items: List<T>, key: (T) -> Any, content: @Composable (item: T, index: Int) -> Unit) {
     val state = remember { AnimatedItemsState<T>() }
     val entries = state.update(items, key)
-    val inert = LocalFocusInert.current
     for (entry in entries) {
         key(entry.key) {
             val item = entry.item
@@ -276,11 +298,16 @@ internal fun <T> AnimatedItems(items: List<T>, key: (T) -> Any, content: @Compos
             val leaving = !entry.visibility.targetState
             AnimatedVisibility(
                 visibleState = entry.visibility,
-                modifier = Modifier.animatePlacement().leaving(leaving),
+                // Clipped to its own (animated) bounds: an expanding panel never draws over the
+                // next row before that row has moved out of the way.
+                modifier = Modifier
+                    .animatePlacement(order = items.indexOfFirst { key(it) == entry.key }, count = items.size)
+                    .clipToBounds()
+                    .leaving(leaving),
                 enter = RowEnter,
                 exit = RowExit,
             ) {
-                CompositionLocalProvider(LocalFocusInert provides (inert || leaving)) {
+                CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
                     content(item, index)
                 }
             }
@@ -295,14 +322,13 @@ internal fun <T> AnimatedItems(items: List<T>, key: (T) -> Any, content: @Compos
  */
 @Composable
 internal fun ExpandingSection(visible: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    val inert = LocalFocusInert.current
     AnimatedVisibility(
         visible = visible,
-        modifier = modifier.leaving(!visible),
+        modifier = modifier.clipToBounds().leaving(!visible),
         enter = RowEnter,
         exit = RowExit,
     ) {
-        CompositionLocalProvider(LocalFocusInert provides (inert || !visible)) {
+        CompositionLocalProvider(LocalFocusInert provides focusInert(!visible)) {
             content()
         }
     }

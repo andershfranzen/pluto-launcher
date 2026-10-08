@@ -10,11 +10,13 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +66,10 @@ import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.input.Direction
 import dev.pluto.launcher.input.LauncherAction
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.ui.input.InputMode as ComposeInputMode
 
 enum class InputMode { TOUCH, CONTROLLER }
@@ -115,6 +120,14 @@ class ControllerFocusController {
     private var defaultFocusId: String? = null
     private val orders = FocusOrders()
     private val scrollers = HashMap<String, suspend (Int) -> Unit>()
+    private val grids = HashMap<String, GridNavigation>()
+
+    /** Last grid move: its target id and the column it is keeping (survives short rows). */
+    private var gridAnchorId: String? = null
+    private var gridAnchorColumn = 0
+
+    /** A grid move whose target was off screen: where focus is going (base for the next press). */
+    private var pendingGridTarget: String? = null
 
     private var _inputMode by mutableStateOf(InputMode.TOUCH)
     private var _focusedId by mutableStateOf<String?>(null)
@@ -328,7 +341,48 @@ class ControllerFocusController {
         return opener
     }
 
+    /**
+     * Registers the lazy grid of [surface] for logical Up/Down movement ([GridNavigation]);
+     * null unregisters it.
+     */
+    fun setGrid(surface: String, grid: GridNavigation?) {
+        if (grid == null) grids.remove(surface) else grids[surface] = grid
+    }
+
+    /**
+     * Up/Down inside a registered lazy grid moves by one row in the same (remembered) column,
+     * computed from item indices rather than on-screen geometry: during a held D-pad the grid
+     * is still animating the previous bring-into-view, and a spatial search over moving bounds
+     * lost the column. Returns null when the move leaves the grid (spatial search takes over).
+     */
+    private fun moveInGrid(direction: Direction): Boolean? {
+        if (direction != Direction.UP && direction != Direction.DOWN) return null
+        val from = pendingGridTarget?.takeIf { it !in registry || _focusedId == null } ?: _focusedId ?: return null
+        pendingGridTarget = null
+        val grid = grids.values.firstOrNull { from in it.ids } ?: return null
+        val pos = grid.ids.indexOf(from)
+        val columns = grid.state.layoutInfo.maxSpan
+        if (pos < 0 || columns <= 0) return null
+        val column = if (gridAnchorId == from) gridAnchorColumn else pos % columns
+        val row = pos / columns + if (direction == Direction.DOWN) 1 else -1
+        val lastRow = (grid.ids.size - 1) / columns
+        if (row < 0 || row > lastRow) return null
+        val target = minOf(row * columns + column, grid.ids.size - 1)
+        val id = grid.ids[target]
+        gridAnchorId = id
+        gridAnchorColumn = column
+        if (requestFocus(id)) return true
+        // Not composed yet (beyond the viewport): scroll it in, then focus it.
+        pendingGridTarget = id
+        grid.scope.launch {
+            grid.reveal(grid.firstIndex + target, down = direction == Direction.DOWN)
+            if (requestFocusWhenReady(id) && pendingGridTarget == id) pendingGridTarget = null
+        }
+        return true
+    }
+
     internal fun moveFocus(direction: Direction): Boolean {
+        moveInGrid(direction)?.let { return it }
         val manager = currentAttachment?.focusManager ?: return false
         val focusDirection = when (direction) {
             Direction.UP -> FocusDirection.Up
@@ -415,15 +469,66 @@ class ControllerFocusController {
     }
 }
 
+/**
+ * A lazy grid registered for logical Up/Down movement: [ids] are the focus ids of its
+ * single-span items, which start on a line boundary at grid index [firstIndex] (after any
+ * full-width header items).
+ */
+class GridNavigation(
+    val state: LazyGridState,
+    val ids: List<String>,
+    val firstIndex: Int,
+    val scope: CoroutineScope,
+) {
+    /** Scrolls by about one line so the item at grid [index] gets composed. */
+    suspend fun reveal(index: Int, down: Boolean) {
+        val info = state.layoutInfo
+        if (info.visibleItemsInfo.any { it.index == index }) return
+        val line = info.visibleItemsInfo.lastOrNull()?.size?.height ?: 0
+        if (line <= 0) {
+            state.scrollToItem(index)
+            return
+        }
+        state.scrollBy(((line + info.mainAxisItemSpacing) * if (down) 1 else -1).toFloat())
+        if (state.layoutInfo.visibleItemsInfo.none { it.index == index }) state.scrollToItem(index)
+    }
+}
+
 val LocalControllerFocus = staticCompositionLocalOf<ControllerFocusController> {
     error("ControllerFocusController not provided")
 }
 
 /**
- * True for content that sits beneath the active layer. Controls inside it stay visible
- * but cannot take focus, so spatial navigation never escapes into a covered surface.
+ * Whether content sits beneath the active layer (or is leaving). Controls inside it stay
+ * visible but cannot take focus, so spatial navigation never escapes into a covered surface.
+ *
+ * A chain of snapshot-backed nodes rather than a Boolean composition local: a layer turning
+ * inert or active (the drawer opening, a page covering home) only re-evaluates the focus
+ * properties of its controls, instead of recomposing every tile that reads it. Read [value]
+ * where a Boolean is needed; create a child with [focusInert].
  */
-val LocalFocusInert = compositionLocalOf { false }
+@Stable
+class FocusInert internal constructor(private val parent: FocusInert?) {
+    internal var own by mutableStateOf(false)
+
+    /** True when this node or any ancestor is inert (snapshot state: observed where read). */
+    val value: Boolean get() = own || parent?.value == true
+
+    companion object {
+        val None = FocusInert(null)
+    }
+}
+
+val LocalFocusInert = staticCompositionLocalOf { FocusInert.None }
+
+/** A child of the current [LocalFocusInert] that is additionally inert when [own] is true. */
+@Composable
+fun focusInert(own: Boolean): FocusInert {
+    val parent = LocalFocusInert.current
+    val node = remember(parent) { FocusInert(parent) }
+    if (Snapshot.withoutReadObservation { node.own } != own) node.own = own
+    return node
+}
 
 /**
  * True where the remembered selection should stay visible while touch is in control
@@ -478,7 +583,8 @@ fun Modifier.controllerFocusable(
     val ring = remember { FocusRingAnimation() }
     // The gliding overlay only covers controls in its own window (not dialogs).
     val overlay = LocalFocusRingOverlay.current?.takeIf { it.view === LocalView.current }
-    val overlayTarget = remember(overlay, shape) { overlay?.let { FocusRingTarget(shape) } }
+    val visibility = LocalFocusRingVisibility.current
+    val overlayTarget = remember(overlay, shape, visibility) { overlay?.let { FocusRingTarget(shape, visibility) } }
 
     LaunchedEffect(controller, overlay, overlayTarget) {
         snapshotFlow { focused && controller.inputMode == InputMode.CONTROLLER }.collectLatest { show ->
@@ -536,7 +642,7 @@ fun Modifier.controllerFocusable(
             }
         }
         .focusRequester(requester)
-        .focusProperties { canFocus = !inert }
+        .focusProperties { canFocus = !inert.value }
         .onKeyEvent { event ->
             // Keyboard Enter / centre behaves like A. Gamepad buttons arrive via the router instead.
             if (event.key in ActivationKeys) {
@@ -641,7 +747,7 @@ fun Modifier.controllerFocusTarget(
             }
         }
         .focusRequester(requester)
-        .focusProperties { canFocus = !inert }
+        .focusProperties { canFocus = !inert.value }
 }
 
 /**

@@ -2,6 +2,9 @@ package dev.pluto.launcher.ui.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -77,12 +80,16 @@ import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.focus.controllerFocusTarget
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.LocalDrawerReveal
 import dev.pluto.launcher.ui.motion.PlutoMotion
 
 private const val SURFACE = "drawer"
+
+/** Keystrokes whose VM echo the search field still tolerates (see DrawerScreen). */
+private const val MAX_PENDING_ECHOES = 32
 
 /** Focus id of the drawer's search field; LauncherRoot focuses it for Y / Search. */
 const val DRAWER_SEARCH_ID = "drawer:search"
@@ -128,28 +135,50 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val pages = remember { DrawerPages(anchoredState) }
     val gridState = pages.active
     val currentGrid by rememberUpdatedState(gridState)
-    ReportScrollAnchor(SURFACE, gridState, state, vm, gridKeys)
     TrackFocusOrder(SURFACE, gridKeys) { currentGrid.scrollToItem(it) }
+    TrackGridNavigation(SURFACE, gridState, gridKeys)
     var actionsMode by rememberSaveable { mutableStateOf(false) }
     val imeVisible = WindowInsets.isImeVisible
 
-    // The drawer can be composed before it is the open layer (pulled up by a finger) and
-    // after it closed (animating away); only the open drawer claims default focus.
+    // The drawer stays composed while closed ("parked" off screen by LauncherRoot, so opening
+    // never has to compose it in its first frame), is composed before it is the open layer
+    // (pulled up by a finger) and after it closed (animating away); only the open drawer
+    // claims default focus.
     val isTop = session.topLayer == Layer.Drawer
+    val parked = outerInert.value && Layer.Drawer !in session.layers
+    // A parked drawer may be showing only part of its results while it is composed in the
+    // background: it must not move the logical scroll anchor.
+    if (!parked) ReportScrollAnchor(SURFACE, gridState, state, vm, gridKeys)
+    // The drawer stays composed while closed; per-visit modes still end when it closes.
+    LaunchedEffect(parked) { if (parked) actionsMode = false }
 
     // Opened by a button or the controller: the first rows stagger in. Pulled up by a finger
     // the content is already on screen, so it stays put.
     val stagger = rememberStagger(animate = isTop && !reveal.isDragging, stepMs = 30, maxSlots = 5)
+    val wasTop = remember { booleanArrayOf(isTop) }
+    if (isTop != wasTop[0]) {
+        wasTop[0] = isTop
+        val hidden = Snapshot.withoutReadObservation { !reveal.isDragging && reveal.progress < 0.05f }
+        if (isTop && hidden) stagger.arm()
+    }
+    LaunchedEffect(isTop) { if (isTop) stagger.replay() }
 
     // Local field value keeps the cursor/selection stable; the VM holds the text itself.
     var field by remember { mutableStateOf(TextFieldValue(session.searchText, TextRange(session.searchText.length))) }
-    // Last text we sent to the VM; only *other* changes (Clear, Back) overwrite the field, so
-    // a state update arriving a frame late never rewinds fast typing.
-    val lastSent = remember { arrayOf(session.searchText) }
+    // Texts we sent to the VM that it may still echo back, oldest first. Only *other* changes
+    // (Clear, Back) overwrite the field: an echo of an older keystroke arriving after newer
+    // ones (fast typing, conflated state) must never rewind the field.
+    val sent = remember { ArrayDeque<String>().apply { add(session.searchText) } }
     LaunchedEffect(session.searchText) {
-        if (session.searchText != lastSent[0]) {
-            lastSent[0] = session.searchText
-            field = TextFieldValue(session.searchText, TextRange(session.searchText.length))
+        val text = session.searchText
+        val echo = sent.indexOf(text)
+        if (echo >= 0) {
+            // Our own keystroke: drop it and everything older; the field is already ahead.
+            repeat(echo) { sent.removeFirst() }
+        } else {
+            sent.clear()
+            sent.add(text)
+            field = TextFieldValue(text, TextRange(text.length))
         }
     }
 
@@ -172,10 +201,14 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
         }
     }
 
-    // Back closed the search: drop the keyboard and move focus off the field.
+    // Back closed the search: drop the keyboard and move focus off the field. Only on a real
+    // change: the parked drawer is composed while another layer may own the keyboard.
     val currentFirstApp by rememberUpdatedState(firstAppId)
+    val searchWasActive = remember { booleanArrayOf(session.searchActive) }
     LaunchedEffect(session.searchActive) {
-        if (!session.searchActive) {
+        val was = searchWasActive[0]
+        searchWasActive[0] = session.searchActive
+        if (!session.searchActive && was) {
             keyboard?.hide()
             if (focus.focusedId == DRAWER_SEARCH_ID) {
                 currentFirstApp?.let { focus.requestFocus(it) } ?: focus.requestFocus(DR_CLOSE)
@@ -183,12 +216,18 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
         }
     }
 
+    // Search open: results swap in place (see searchResultItem), typing and Clear alike, so
+    // Clear fades the full list in instead of swapping it in one frame.
+    val searchMode = session.searchActive || session.searchText.isNotEmpty()
+
     // New search text: show the best matches from the top.
     val firstRun = remember { booleanArrayOf(true) }
     LaunchedEffect(session.searchText) {
         if (firstRun[0]) {
             firstRun[0] = false
-        } else if (state.drawerApps.isNotEmpty()) {
+        } else if (state.drawerApps.isNotEmpty() && (currentGrid.firstVisibleItemIndex != 0 || currentGrid.firstVisibleItemScrollOffset != 0)) {
+            // Only when needed: a programmatic scroll drops the grid's item animations, so
+            // Clear (or typing) at the top would otherwise swap the results in one frame.
             currentGrid.scrollToItem(0)
         }
     }
@@ -251,8 +290,9 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                         value = field,
                         onValueChange = {
                             field = it
-                            if (it.text != lastSent[0]) {
-                                lastSent[0] = it.text
+                            if (it.text != sent.lastOrNull()) {
+                                sent.addLast(it.text)
+                                if (sent.size > MAX_PENDING_ECHOES) sent.removeFirst()
                                 vm.setSearchText(it.text)
                             }
                         },
@@ -281,7 +321,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                             .controllerFocusTarget(
                                 id = DRAWER_SEARCH_ID,
                                 onActivate = { keyboard?.show() },
-                                onFocused = { if (!state.session.searchActive) vm.setSearchActive(true) },
+                                onFocused = { if (!currentState.session.searchActive) vm.setSearchActive(true) },
                             ),
                     )
                     PlutoIconButton(
@@ -332,7 +372,8 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                         val categories = currentState.categories
                         val from = categories.indexOfFirst { it.id == initialState }
                         val to = categories.indexOfFirst { it.id == targetState }
-                        categorySlide(if (to >= from) 1 else -1)
+                        // Parked (off screen): follow L1/R1 on Handheld home without animating.
+                        if (parked) EnterTransition.None togetherWith ExitTransition.None else categorySlide(if (to >= from) 1 else -1)
                     },
                     label = "drawerCategory",
                     modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -345,7 +386,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     if (active) frozen[0] = state.drawerApps
                     val apps = frozen[0]
                     val firstAtOpen = remember { pageGrid.firstVisibleItemIndex }
-                    CompositionLocalProvider(LocalFocusInert provides (outerInert || !active)) {
+                    CompositionLocalProvider(LocalFocusInert provides focusInert(!active)) {
                         Box(Modifier.fillMaxSize()) {
                             if (apps.isEmpty()) {
                                 DrawerEmptyState(state, vm, Modifier.align(Alignment.Center).fadeInOnAppear())
@@ -368,7 +409,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
                                             onLaunch = if (actionsMode) openActions else { { launcher.launch(entry.key, id) } },
                                             onActions = openActions,
                                             actionsOnTap = actionsMode,
-                                            modifier = plutoItem().staggered(stagger, row),
+                                            modifier = (if (searchMode) searchResultItem() else plutoItem()).staggered(stagger, row),
                                             // Keyboard-compact rows show icons only so no tile is cut off; names stay in semantics.
                                             showLabel = !compact,
                                             focusId = id,

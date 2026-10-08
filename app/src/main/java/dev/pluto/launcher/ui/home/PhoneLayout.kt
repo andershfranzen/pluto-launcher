@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
@@ -57,6 +58,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
     ReportScrollAnchor(HOME_SURFACE, gridState, state, vm, gridKeys)
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
     TrackFocusOrder(HOME_SURFACE, state.homeTiles.map(::homeTileFocusId)) { gridState.scrollToItem(it) }
+    TrackGridNavigation(HOME_SURFACE, gridState, state.homeTiles.map(::homeTileFocusId))
     val defaultId = state.homeTiles.firstOrNull()?.let(::homeTileFocusId) ?: ID_ALL_APPS
     SideEffect { focus.setDefaultFocus(defaultId) }
 
@@ -124,7 +126,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
             )
 
             HorizontalDock(
-                state, vm, iconSize,
+                state.dock, vm, iconSize,
                 Modifier
                     .align(Alignment.CenterHorizontally)
                     .widthIn(max = 560.dp)
@@ -192,7 +194,7 @@ internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier, i
 
 /** The five dock slots in a row, on a translucent panel. */
 @Composable
-internal fun HorizontalDock(state: LauncherUiState, vm: LauncherViewModel, iconSize: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier) {
+internal fun HorizontalDock(dock: List<AppEntry?>, vm: LauncherViewModel, iconSize: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier) {
     PlutoPanel(modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -201,7 +203,7 @@ internal fun HorizontalDock(state: LauncherUiState, vm: LauncherViewModel, iconS
         ) {
             repeat(Organization.DOCK_SLOTS) { slot ->
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    DockSlot(slot, state, vm, iconSize)
+                    DockSlot(slot, dock.getOrNull(slot), vm, iconSize)
                 }
             }
         }

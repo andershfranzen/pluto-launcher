@@ -75,6 +75,7 @@ import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.focus.LocalShowTouchSelection
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.PlutoMotion
@@ -120,7 +121,6 @@ private fun catId(key: AppKey) = "hh:cat:${key.encode()}"
 @Composable
 fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
-    val outerInert = LocalFocusInert.current
     val iconSize = state.iconSize(base = 68.dp)
     val showRecents = state.settings.historyEnabled && state.recents.isNotEmpty()
     val showFavourites = state.homeTiles.isNotEmpty()
@@ -164,6 +164,7 @@ fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
     TrackFocusOrder(FOCUS_CAT, state.categoryApps.map { catId(it.key) }) { index ->
         pager.active.grid.scrollToItem(currentHeaders.size + index)
     }
+    TrackGridNavigation(FOCUS_CAT, page.grid, state.categoryApps.map { catId(it.key) }, firstIndex = headerKeys.size)
 
     val defaultId = state.categoryApps.firstOrNull()?.let { catId(it.key) }
         ?: state.activeCategory?.let { "$TAB_PREFIX:${it.id}" }
@@ -235,7 +236,7 @@ fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
                     frozenName[0] = state.activeCategory?.name
                     frozenApps[0] = state.categoryApps
                 }
-                CompositionLocalProvider(LocalFocusInert provides (outerInert || !active)) {
+                CompositionLocalProvider(LocalFocusInert provides focusInert(!active)) {
                     HandheldPage(
                         state = state,
                         vm = vm,
@@ -283,10 +284,13 @@ private fun HandheldPage(
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = iconSize + 64.dp),
         state = states.grid,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxSize(),
+        // Rows fade under the tab header and above the legend instead of being cut through.
+        modifier = Modifier
+            .fillMaxSize()
+            .scrollFadeEdges({ states.grid.canScrollBackward }, { states.grid.canScrollForward }, top = 16.dp, bottom = 24.dp),
     ) {
         if (showFavourites) {
             item(key = KEY_FAV_HEADER, span = { GridItemSpan(maxLineSpan) }) {
@@ -388,9 +392,10 @@ private class HandheldPager(private val initial: HandheldPageStates) {
     var active by mutableStateOf(initial)
 
     /**
-     * The first page resumes at the persisted anchors. A later page continues from where the
-     * active one is, so the rows do not jump; if the grid was scrolled into the category, the
-     * new category starts at its header.
+     * The first page resumes at the persisted anchors. A later page starts at the top (the
+     * Favourites and Recent launches rows fully visible), or at the category header when the
+     * grid was scrolled into the category: never at a partial offset, which left a row half
+     * under the tab bar.
      */
     fun newPage(catHeaderIndex: Int): HandheldPageStates {
         if (!initialUsed) {
@@ -399,10 +404,10 @@ private class HandheldPager(private val initial: HandheldPageStates) {
         }
         val from = Snapshot.withoutReadObservation { active }
         val grid = from.grid
-        val gridState = if (grid.firstVisibleItemIndex > catHeaderIndex) {
-            LazyGridState(catHeaderIndex.coerceAtLeast(0), 0)
+        val gridState = if (grid.firstVisibleItemIndex >= catHeaderIndex && catHeaderIndex > 0) {
+            LazyGridState(catHeaderIndex, 0)
         } else {
-            LazyGridState(grid.firstVisibleItemIndex, grid.firstVisibleItemScrollOffset)
+            LazyGridState(0, 0)
         }
         return HandheldPageStates(
             gridState,
@@ -564,6 +569,8 @@ private fun HandheldSelectionEffects(
                 target = catId(s.categoryApps.first().key)
                 if (preferCategory) scroll = { gridState.scrollIfHidden(currentHeaders.size) }
             }
+            // An empty category: its own (selected) tab, never a tab that is not selected.
+            preferCategory && s.activeCategory != null -> target = "$TAB_PREFIX:${s.activeCategory!!.id}"
             else -> return
         }
         if (controllerMode) {
@@ -599,7 +606,13 @@ private fun HandheldSelectionEffects(
         if (focused == null || focused.startsWith("$FOCUS_CAT:")) {
             restore(preferCategory = true)
         } else if (focus.inputMode == InputMode.CONTROLLER) {
-            if (focus.focusedId != focused) focus.requestFocusWhenReady(focused)
+            // On a tab: the ring follows the newly selected tab, never stays on the old one.
+            val target = if (focused.startsWith("$TAB_PREFIX:")) {
+                currentState.activeCategory?.let { "$TAB_PREFIX:${it.id}" } ?: focused
+            } else {
+                focused
+            }
+            if (focus.focusedId != target) focus.requestFocusWhenReady(target)
             pager.active.grid.scrollIfHidden(currentHeaders.indexOf(KEY_CAT_HEADER))
         }
     }

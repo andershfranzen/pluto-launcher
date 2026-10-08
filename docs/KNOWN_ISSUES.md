@@ -13,10 +13,35 @@ something.
   latency, reflow time and frame-time targets are goals, not results.
 - **Stick defaults are untuned.** Dead zone 0.25 and repeat 350/100 ms come from the spec and
   may need adjusting per controller.
-- **OxygenOS specifics** (Home transition animations, the wording of default-app settings,
-  gesture navigation edge cases) have not been checked.
+- **OxygenOS specifics** (the wording of default-app settings, gesture navigation edge
+  cases) have not been checked. Launch animations were checked: see below.
 - Only emulator/JVM testing is possible in CI; migration tests need a device or emulator
   (`connectedDebugAndroidTest`).
+
+## Motion and performance (measured on the Nord 5, 144 Hz)
+
+- **App launch animation on OxygenOS**: OxygenOS 16 ignores the launch animation a
+  third-party launcher asks for (`makeScaleUpAnimation` and `makeClipRevealAnimation` were
+  both tried) and fades the app in full screen. Pluto grows a veil from the tapped tile
+  first, which delays the launch by about 110 ms; the return-to-home animation is the
+  system's own slide.
+- **Debug builds are slow**: a debuggable build runs largely interpreted. On the reference
+  phone the drawer's opening frame takes about 40 to 60 ms in a debug build and about
+  15 to 20 ms (main thread) in a release build. Use a release build for daily use.
+- **Search frames that bring many apps back** (the first character, deleting the last one,
+  Clear) still compose most of the grid in one frame: about 130 to 150 ms in a debug
+  build. The change is animated, but that single frame is long.
+- **After rotation, closing a full-screen page or starting**, Pluto composes the closed
+  drawer in the background once the screen has been idle for about 0.6 s. On a debug build
+  the first of those frames takes about 100 ms. If you open the drawer before that, the
+  first opening frame is slower, as in earlier versions.
+- **Rotation** itself has one long relayout frame (about 150 to 180 ms in a debug build),
+  hidden by the system's rotation animation.
+- With an accessibility service enabled (for example a gesture app), Compose also updates
+  accessibility information after large changes such as opening the drawer, which adds
+  main-thread work.
+- **Reorder in Edit**: rows that swap places slide past each other, so for a moment one row
+  passes over the other's controls.
 
 ## Unsupported in 0.1
 

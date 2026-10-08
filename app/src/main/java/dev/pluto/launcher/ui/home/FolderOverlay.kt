@@ -68,6 +68,7 @@ import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.LocalFocusInert
+import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.focus.controllerFocusTarget
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.PlutoMotion
@@ -97,7 +98,6 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
     val focus = LocalControllerFocus.current
     val keyboard = LocalSoftwareKeyboardController.current
     val launcher = LocalAppLauncher.current
-    val outerInert = LocalFocusInert.current
     val iconSize = state.iconSize()
     val apps = folderUi.apps
     // Tiles settle in one after another just after the folder container has opened.
@@ -163,7 +163,7 @@ fun FolderOverlay(state: LauncherUiState, vm: LauncherViewModel, folderId: Long)
                     },
                     label = "folderRename",
                 ) { editing ->
-                    CompositionLocalProvider(LocalFocusInert provides (outerInert || editing != renaming)) {
+                    CompositionLocalProvider(LocalFocusInert provides focusInert(editing != renaming)) {
                         Column {
                             if (editing) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {

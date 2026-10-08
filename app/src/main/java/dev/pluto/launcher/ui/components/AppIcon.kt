@@ -297,7 +297,7 @@ fun FolderTile(
             Modifier
                 .size(iconSize)
                 .clip(RoundedCornerShape(iconSize * 0.3f))
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = PlutoDimens.PanelAlpha)),
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = PlutoDimens.TileBackdropAlpha)),
             contentAlignment = Alignment.Center,
         ) {
             val preview = folder.apps.take(4)

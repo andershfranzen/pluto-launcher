@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
@@ -147,9 +148,16 @@ internal class FocusRingAnimation {
 // --- Gliding overlay ---------------------------------------------------------------------
 
 /** What a focused control hands to the overlay: its live coordinates and ring shape. */
-internal class FocusRingTarget(val shape: Shape) {
+internal class FocusRingTarget(val shape: Shape, val visibility: () -> Float = { 1f }) {
     var coordinates: LayoutCoordinates? = null
 }
+
+/**
+ * How visible the surface holding a control is (0..1), read in draw. Layers that move in the
+ * draw phase only (their layout already sits at rest) provide their entry progress, so the
+ * gliding ring fades in as the layer settles instead of waiting at the final position.
+ */
+val LocalFocusRingVisibility = staticCompositionLocalOf<() -> Float> { { 1f } }
 
 /**
  * State of the opt-in gliding focus ring overlay of one window. Create it with
@@ -269,7 +277,23 @@ fun FocusRingOverlay(state: FocusRingOverlayState, modifier: Modifier = Modifier
                 val d = delta.value
                 val drawn = Rect(bounds.left + d.left, bounds.top + d.top, bounds.right + d.right, bounds.bottom + d.bottom)
                 holder.lastDrawn = drawn
-                drawFocusRing(shape, drawn.topLeft, drawn.size, a, glow)
+                val visible = a * (target?.visibility?.invoke() ?: 1f)
+                // Clip like the control itself is clipped (a tile scrolled half under a header
+                // shows half a ring): sides cut by a scrolling container clip the ring there.
+                val clip = target?.let(holder::clippedBoundsOf)
+                if (clip != null && clip.isEmpty) return@drawBehind
+                if (clip == null || clip == bounds) {
+                    drawFocusRing(shape, drawn.topLeft, drawn.size, visible, glow)
+                } else {
+                    clipRect(
+                        left = if (clip.left > bounds.left + 0.5f) clip.left else -Float.MAX_VALUE / 4,
+                        top = if (clip.top > bounds.top + 0.5f) clip.top else -Float.MAX_VALUE / 4,
+                        right = if (clip.right < bounds.right - 0.5f) clip.right else Float.MAX_VALUE / 4,
+                        bottom = if (clip.bottom < bounds.bottom - 0.5f) clip.bottom else Float.MAX_VALUE / 4,
+                    ) {
+                        drawFocusRing(shape, drawn.topLeft, drawn.size, visible, glow)
+                    }
+                }
             },
     )
 }
@@ -279,6 +303,17 @@ private class OverlayHolder {
     var lastDrawn: Rect? = null
     var lastBase: Rect? = null
     var shape: Shape? = null
+
+    /** The target's bounds after clipping by its ancestors (scrolling lists, panels). */
+    fun clippedBoundsOf(target: FocusRingTarget): Rect? {
+        val self = own?.takeIf { it.isAttached } ?: return null
+        val coords = target.coordinates?.takeIf { it.isAttached } ?: return null
+        return try {
+            self.localBoundingBoxOf(coords, clipBounds = true)
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+    }
 
     fun boundsOf(target: FocusRingTarget): Rect? {
         val self = own?.takeIf { it.isAttached } ?: return null
