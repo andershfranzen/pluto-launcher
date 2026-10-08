@@ -7,6 +7,8 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.Animatable
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
@@ -50,6 +53,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -73,6 +79,8 @@ import dev.pluto.launcher.data.prefs.ControllerAction
 import dev.pluto.launcher.ui.components.KeyChip
 import dev.pluto.launcher.ui.components.LegendItem
 import dev.pluto.launcher.ui.components.pressScale
+import dev.pluto.launcher.ui.focus.InputMode
+import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.ConsoleScrimAlpha
@@ -95,7 +103,12 @@ val ConsoleLegend = listOf(
     LegendItem(ControllerAction.SETTINGS, "Settings"),
 )
 
-internal fun shelfTabId(id: ShelfId): String = "hh:tab:${id.key}"
+/** The legend beside Open / Actions, which show their own buttons. */
+val ConsoleLegendCompact = ConsoleLegend.filter { it.action != ControllerAction.CONFIRM && it.action != ControllerAction.ACTIONS }
+
+internal const val TAB_ID_PREFIX = "hh:tab:"
+
+internal fun shelfTabId(id: ShelfId): String = "$TAB_ID_PREFIX${id.key}"
 
 /** Focus targets the console links explicitly (the flow's overlapping cards defeat spatial search). */
 @Stable
@@ -159,9 +172,11 @@ internal fun ConsoleTopBar(
 }
 
 /**
- * The shelf tabs: Recent launches · Favourites · categories. Touch or L1/R1; the selected
- * tab is a filled pill with bold text and an underline (not colour alone). The selected tab
- * scrolls into view. Down goes to the flow's selected card ([downTarget]).
+ * The shelf tabs: Recent launches · Favourites · categories. Touch, L1/R1, or moving
+ * controller focus along the row (focus is selection there). The selected tab is a filled
+ * pill with a short underline (not colour alone; every tab keeps one weight so selecting
+ * never changes widths); a focused other tab gets a translucent fill under its ring. The
+ * selected tab scrolls into view. Down goes to the flow's selected card ([downTarget]).
  */
 @Composable
 internal fun ShelfTabs(
@@ -196,7 +211,8 @@ internal fun ShelfTabs(
                 .weight(1f, fill = false)
                 .horizontalScroll(scroll)
                 .padding(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            // Room for the focus ring's outset on both neighbours (it never overlaps the selected pill).
+            horizontalArrangement = Arrangement.spacedBy(TabGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             shelves.forEachIndexed { index, (id, title) ->
@@ -221,6 +237,12 @@ internal fun ShelfTabs(
 internal data class IntRangeHolder(val start: Int, val end: Int)
 
 private val TabShape = RoundedCornerShape(20.dp)
+private val TabGap = 12.dp
+private val TabUnderlineWidth = 18.dp
+private val TabUnderlineHeight = 2.dp
+
+/** Fill of a tab that holds controller focus but is not the selected shelf (the ring alone was too faint). */
+private val FocusedTabFill = Color.White.copy(alpha = 0.18f)
 
 /** Space kept between the selected tab and the row's edge before scrolling to it. */
 private val TabScrollMargin = 24.dp
@@ -237,14 +259,24 @@ private fun ShelfTab(
     onBounds: (Int, Int) -> Unit,
 ) {
     val requester = remember { FocusRequester() }
+    val focus = LocalControllerFocus.current
     DisposableEffect(id.key, requester) {
         links.tabs[id.key] = requester
         onDispose { if (links.tabs[id.key] === requester) links.tabs.remove(id.key) }
     }
-    // Switch/PS5 style: the selected shelf is a solid light pill with dark text; the others
-    // are just their light text.
+    val selectedNow by rememberUpdatedState(isSelected)
+    val isSelectedNow = { selectedNow }
+    var hasFocus by remember { mutableStateOf(false) }
+    val showFocus = hasFocus && focus.inputMode == InputMode.CONTROLLER
+    // Switch/PS5 style: the selected shelf is a solid light pill with dark text and an
+    // underline; a focused other tab gets a translucent fill under its ring; the rest are
+    // just their light text.
     val container by animateColorAsState(
-        if (isSelected) Color.White else Color.Transparent,
+        when {
+            isSelected -> Color.White
+            showFocus -> FocusedTabFill
+            else -> Color.Transparent
+        },
         PlutoMotion.fadeIn(),
         label = "shelfTab",
     )
@@ -264,16 +296,41 @@ private fun ShelfTab(
             .defaultMinSize(minHeight = PlutoDimens.MinTouchTarget)
             .focusRequester(requester)
             .focusProperties { down = downTarget() }
+            .onFocusChanged { hasFocus = it.hasFocus }
             .controllerFocusable(
                 id = shelfTabId(id),
                 onActivate = onClick,
                 contentDescription = "$title shelf, $position",
                 shape = TabShape,
                 interactionSource = press,
+                // Focus is selection along the row (PS5 / Xbox): stepping from one tab to the
+                // next switches the shelf, as L1/R1 do. Focus arriving from elsewhere (UP from
+                // the flow, a restore) never switches anything.
+                onFocused = {
+                    val from = focus.previousFocusedId
+                    if (!isSelectedNow() && focus.inputMode == InputMode.CONTROLLER && from != null &&
+                        from.startsWith(TAB_ID_PREFIX) && from != shelfTabId(id)
+                    ) {
+                        onClick()
+                    }
+                },
             )
             .semantics { selected = isSelected }
             .clip(TabShape)
-            .drawBehind { drawRect(container) }
+            .drawBehind {
+                drawRect(container)
+                if (isSelected) {
+                    // Not colour alone: the selected tab is also underlined.
+                    val w = TabUnderlineWidth.toPx()
+                    val h = TabUnderlineHeight.toPx()
+                    drawRoundRect(
+                        content,
+                        topLeft = Offset((size.width - w) / 2f, size.height - h - 4.dp.toPx()),
+                        size = Size(w, h),
+                        cornerRadius = CornerRadius(h / 2f),
+                    )
+                }
+            }
             .padding(horizontal = 16.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -348,50 +405,63 @@ private fun readBattery(deviceId: Int): BatteryReading? = try {
 // Title under the stage, ambient backdrop
 // ---------------------------------------------------------------------------------------
 
-private data class TitleText(val title: String, val subtitle: String)
-
 /**
  * The selected app's name, large, with the shelf and position under it. Reads the
- * selection itself, so a D-pad step recomposes only this (a quick crossfade; every new name
- * simply retargets, nothing queues). Screen readers get the same from the focused card.
+ * selection itself, so a D-pad step recomposes only this. Only the name crossfades (and
+ * only while steps come slower than the fade: a held D-pad just swaps it); the shelf and the
+ * counter under it update in place, so the block never flickers. Screen readers get the
+ * same from the focused card.
  */
 @Composable
-internal fun ConsoleTitle(stage: CoverflowState?, subtitle: String, modifier: Modifier = Modifier) {
-    val entry = stage?.selectedEntry
-    val count = stage?.count ?: 0
-    val text = if (entry == null) {
-        TitleText("", subtitle)
-    } else {
-        TitleText(entry.label, "$subtitle · ${stage.selectedIndex + 1} of $count")
+internal fun ConsoleTitle(stage: CoverflowState, subtitle: String, modifier: Modifier = Modifier) {
+    val entry = stage.selectedEntry
+    val title = entry?.label.orEmpty()
+    val lastChange = remember { longArrayOf(0L) }
+    val fast = remember { booleanArrayOf(false) }
+    val previousTitle = remember { arrayOfNulls<String>(1) }
+    if (previousTitle[0] != title) {
+        val now = android.os.SystemClock.uptimeMillis()
+        fast[0] = previousTitle[0] != null && now - lastChange[0] < TITLE_FADE_MIN_INTERVAL_MS
+        lastChange[0] = now
+        previousTitle[0] = title
     }
-    AnimatedContent(
-        targetState = text,
-        transitionSpec = {
-            fadeIn(tween(PlutoMotion.SHORT_MS, easing = PlutoMotion.EmphasizedDecelerate)) togetherWith
-                fadeOut(tween(PlutoMotion.SHORT_MS / 2, easing = PlutoMotion.EmphasizedAccelerate)) using null
-        },
-        contentAlignment = Alignment.Center,
-        label = "consoleTitle",
-        modifier = modifier.clearAndSetSemantics { },
-    ) { t ->
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier.clearAndSetSemantics { }, horizontalAlignment = Alignment.CenterHorizontally) {
+        AnimatedContent(
+            targetState = title,
+            transitionSpec = {
+                if (fast[0]) {
+                    EnterTransition.None togetherWith ExitTransition.None using null
+                } else {
+                    fadeIn(tween(PlutoMotion.SHORT_MS, easing = PlutoMotion.EmphasizedDecelerate)) togetherWith
+                        fadeOut(tween(PlutoMotion.SHORT_MS / 2, easing = PlutoMotion.EmphasizedAccelerate)) using null
+                }
+            },
+            contentAlignment = Alignment.Center,
+            label = "consoleTitle",
+        ) { t ->
             Text(
-                t.title,
+                t,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
             )
-            Text(
-                t.subtitle,
-                style = MaterialTheme.typography.bodyMedium.overWallpaper(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
         }
+        Text(
+            if (entry == null) subtitle else "$subtitle · ${stage.selectedIndex + 1} of ${stage.count}",
+            style = MaterialTheme.typography.bodyMedium.overWallpaper(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }
+
+/** Title changes closer together than this (a held D-pad) swap without a crossfade. */
+private const val TITLE_FADE_MIN_INTERVAL_MS = 2L * PlutoMotion.SHORT_MS
+
+/** Added over the scrim at the top: 1 - (1 - 0.7) * (1 - 0.67) ≈ 0.9. */
+private const val TopScrimExtra = 0.67f
 
 /**
  * Ambient glow behind the stage, tinted from the selected app's icon colour and crossfading
@@ -426,6 +496,15 @@ internal fun ConsoleBackdrop(stage: () -> CoverflowState?, artPx: Int, versions:
                 // An immersive stage: the wallpaper recedes behind a dark scrim, the spotlight
                 // in the selected app's colour sits on top of it.
                 drawRect(Color.Black.copy(alpha = ConsoleScrimAlpha))
+                // Deeper behind the tabs (about 90% at the top), so a light wallpaper never
+                // shows through the header.
+                drawRect(
+                    Brush.verticalGradient(
+                        listOf(Color.Black.copy(alpha = TopScrimExtra), Color.Transparent),
+                        startY = 0f,
+                        endY = size.height * 0.32f,
+                    ),
+                )
                 val c = glow.value
                 if (c.alpha <= 0f) return@drawBehind
                 val center = Offset(size.width / 2f, size.height * 0.46f)

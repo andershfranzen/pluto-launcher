@@ -207,7 +207,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val parked = outerInert.value && Layer.Drawer !in session.layers
     val searchMode = session.searchActive || session.searchText.isNotEmpty()
 
-    val feed = rememberResultsFeed(rememberEqual(state.drawerApps), spread = !parked)
+    val feed = rememberResultsFeed(rememberEqual(state.drawerApps), spread = !parked, query = state.session.searchText)
     val apps = feed.shown
     val gridKeys = remember(apps) { apps.map { drawerAppId(it.key) } }
     val currentKeys by rememberUpdatedState(gridKeys)
@@ -762,14 +762,19 @@ private class ResultsFeed(initial: List<AppEntry>) {
 }
 
 @Composable
-private fun rememberResultsFeed(results: List<AppEntry>, spread: Boolean): ResultsFeed {
+private fun rememberResultsFeed(results: List<AppEntry>, spread: Boolean, query: String): ResultsFeed {
     val feed = remember { ResultsFeed(results) }
+    val lastQuery = remember { arrayOf(query) }
     if (feed.target !== results) {
         feed.target = results
         val previous = feed.peek()
         val before = previous.mapTo(HashSet(previous.size)) { it.key }
         val kept = results.count { it.key in before }
-        feed.heavy = kept * 2 < maxOf(previous.size, results.size)
+        // A keystroke always swaps in place: kept tiles gliding to new cells crossed the
+        // fading ones, and one frame showed tiles mid-flight at mixed positions. Gliding is
+        // kept for list changes under an unchanged query (an install, a hidden app).
+        val typed = query != lastQuery[0]
+        feed.heavy = typed || kept * 2 < maxOf(previous.size, results.size)
         val first = if (!spread || results.size - kept <= RESULT_CHUNK) {
             feed.keep = null
             results
@@ -779,6 +784,8 @@ private fun rememberResultsFeed(results: List<AppEntry>, spread: Boolean): Resul
         }
         if (feed.heavy) feed.rekeyMoved(previous, first, results)
         feed.set(first, notify = false)
+        // Compared at the next change of results (they may arrive a frame after the query).
+        lastQuery[0] = query
     }
     val target = feed.target
     LaunchedEffect(target) {

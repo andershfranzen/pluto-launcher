@@ -55,6 +55,16 @@ something.
   tab, shorter reflection kept clear of the title, sequenced shelf switches); the clock
   follows the system minute tick. The phone was locked during this round, so T1–T7 are
   still to be measured on a release build there.
+- **Polish round 2** fixed two controller focus faults. (1) A held D-pad in the Coverflow
+  moved one card and then wandered through the header. When the composed window of cards
+  advanced, every card was disposed and recreated, the focused one included, because the
+  keyed card was not the loop body's only content (`CoverflowFocusTest`). (2) Closing a layer
+  (for example the drawer opened with Y) put focus on the first tab instead of the card that
+  opened it. The opener was read after Compose had already moved focus into the layer. In
+  console mode, moving along the tab row now selects the shelf, as on PS5 / Xbox. Search keystrokes
+  always crossfade in place instead of gliding tiles across cells, and 1 to 2 character
+  queries no longer match package names ("ch" found Google and Pluto through
+  `googlequicksearchbox` / `launcher`).
 - **Reorder in Edit**: rows that swap places slide past each other, so for a moment one row
   passes over the other's controls.
 

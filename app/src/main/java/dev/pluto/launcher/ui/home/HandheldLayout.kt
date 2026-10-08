@@ -1,6 +1,8 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
@@ -40,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
@@ -63,6 +67,8 @@ import dev.pluto.launcher.ui.console.ConsoleArtSize
 import dev.pluto.launcher.ui.console.ConsoleBackdrop
 import dev.pluto.launcher.ui.console.ConsoleFocusLinks
 import dev.pluto.launcher.ui.console.ConsoleLegend
+import dev.pluto.launcher.ui.console.ConsoleLegendCompact
+import dev.pluto.launcher.ui.console.HeroEmphasis
 import dev.pluto.launcher.ui.console.ConsoleShelves
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -80,6 +86,7 @@ import dev.pluto.launcher.ui.console.ShelfId
 import dev.pluto.launcher.ui.console.ShelfTabs
 import dev.pluto.launcher.ui.console.cardFocusId
 import dev.pluto.launcher.ui.console.shelfTabId
+import dev.pluto.launcher.ui.console.TAB_ID_PREFIX
 import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
@@ -89,7 +96,11 @@ import dev.pluto.launcher.ui.focus.focusInert
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.LocalOriginRegistry
 import dev.pluto.launcher.ui.motion.PlutoMotion
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.PI
+import kotlin.math.sin
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -162,6 +173,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     val scope = rememberCoroutineScope()
     val mapping = state.activeMapping()
     val hints = showControllerHints(state, focus, LauncherMode.HANDHELD)
+    val actionsKey = if (state.controllerConnected) mapping.promptFor(ControllerAction.ACTIONS) else null
     val versions by icons.versions.collectAsState()
     val currentVersions by rememberUpdatedState(versions)
     val artPx = with(LocalDensity.current) { ConsoleArtSize.roundToPx() }
@@ -204,6 +216,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     }
     val stage = switch.stage
     val links = remember { ConsoleFocusLinks() }
+    val hero = remember { HeroEmphasis() }
+    HeroEmphasisEffect(focus, hero)
 
     LaunchedEffect(active) {
         if (switch.progress < 1f) {
@@ -289,7 +303,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                     status = {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ControllerBattery(state.controllers.firstOrNull()?.deviceId)
-                            ClockHeader(compact = true)
+                            ClockHeader(compact = true, quiet = true)
                         }
                     },
                     buttons = {
@@ -318,7 +332,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                                 stage = outgoing,
                                 leaving = true,
                                 page = switch.outgoingMotion,
-                                emptyTitle = emptyTitle(outgoingShelf, ConsoleShelves.title(outgoingShelf, state.categories)),
+                                hero = HeroEmphasis.Static,
+                                emptyTitle = emptyTitle(outgoingShelf, ConsoleShelves.title(outgoingShelf, state.categories), actionsKey),
                                 vm = vm,
                                 onActivate = { _, _ -> },
                                 onActions = {},
@@ -335,7 +350,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             stage = stage,
                             leaving = false,
                             page = switch.incomingMotion,
-                            emptyTitle = emptyTitle(active, shelf.title),
+                            hero = hero,
+                            emptyTitle = emptyTitle(active, shelf.title, actionsKey),
                             vm = vm,
                             onActivate = { index, entry ->
                                 if (index == stage.selectedIndex) {
@@ -358,30 +374,38 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                     }
                 }
 
-                ConsoleTitle(
-                    stage = stage.takeIf { apps.isNotEmpty() },
-                    subtitle = shelf.subtitle,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                )
+                // An empty shelf explains itself on the stage; no stray caption under it.
+                if (apps.isNotEmpty()) {
+                    ConsoleTitle(
+                        stage = stage,
+                        subtitle = shelf.subtitle,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                    )
+                }
                 // Open / Options centred under the title, the legend at the end: on one row
                 // while they fit side by side (the stage keeps its height), else stacked.
                 ConsoleBottomRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+                        // Clear of the navigation handle (not just its inset).
+                        .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = ConsoleBottomClearance),
                     actions = {
                         if (apps.isNotEmpty()) {
                             ConsoleActions(
                                 links = links,
                                 upTarget = selectedCardFocus,
+                                hero = hero,
+                                openKey = if (hints) mapping.promptFor(ControllerAction.CONFIRM) else null,
+                                actionsKey = if (hints) mapping.promptFor(ControllerAction.ACTIONS) else null,
                                 onOpen = { stage.selectedEntry?.let { launch(stage, active, it) } },
                                 onOptions = { stage.selectedEntry?.let(::openActions) },
                             )
                         }
                     },
-                    legend = { if (hints) ButtonLegend(mapping, ConsoleLegend) },
+                    // Open and Actions carry their own button glyphs; the legend lists the rest.
+                    legend = { if (hints) ButtonLegend(mapping, if (apps.isNotEmpty()) ConsoleLegendCompact else ConsoleLegend) },
                 )
             }
         }
@@ -430,6 +454,7 @@ private fun ShelfPage(
     stage: CoverflowState,
     leaving: Boolean,
     page: PageMotion,
+    hero: HeroEmphasis,
     emptyTitle: Pair<String, String>,
     vm: LauncherViewModel,
     onActivate: (Int, AppEntry) -> Unit,
@@ -457,9 +482,15 @@ private fun ShelfPage(
                     title = emptyTitle.first,
                     detail = emptyTitle.second,
                     onWallpaper = true,
+                    icon = Icons.Outlined.Apps,
+                    // A readable measure, centred (not one line across the whole stage).
+                    modifier = Modifier.widthIn(max = 560.dp),
                 ) {
                     if (shelfId is ShelfId.OfCategory) {
-                        PlutoTextButton(ID_EMPTY_CATEGORIES, "Categories", { vm.openLayer(Layer.Categories) })
+                        PlutoTextButton(
+                            ID_EMPTY_CATEGORIES, "Categories", { vm.openLayer(Layer.Categories) },
+                            outline = Color.White.copy(alpha = 0.3f),
+                        )
                     }
                     PlutoTextButton(ID_EMPTY_ALL_APPS, "All apps", { vm.openDrawer() }, emphasized = true)
                 }
@@ -471,6 +502,7 @@ private fun ShelfPage(
                 icons = icons,
                 versions = versions,
                 page = page,
+                hero = hero,
                 onActivate = onActivate,
                 onActions = onActions,
                 onFocused = onFocused,
@@ -483,11 +515,18 @@ private fun ShelfPage(
     }
 }
 
-/** Open / Options under the title (DOWN from the selected card). */
+/**
+ * Open / Actions under the title (DOWN from the selected card). With a controller they show
+ * its buttons ([openKey], [actionsKey]) instead of icons; they soften while focus is up in
+ * the header, like the hero card.
+ */
 @Composable
 private fun ConsoleActions(
     links: ConsoleFocusLinks,
     upTarget: () -> FocusRequester,
+    hero: HeroEmphasis,
+    openKey: String?,
+    actionsKey: String?,
     onOpen: () -> Unit,
     onOptions: () -> Unit,
     modifier: Modifier = Modifier,
@@ -497,20 +536,72 @@ private fun ConsoleActions(
         onDispose { links.openAttached = false }
     }
     val up = Modifier.focusProperties { up = upTarget() }
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        PlutoTextButton(ID_HH_OPEN, "Open", onOpen, up.focusRequester(links.open), icon = Icons.Outlined.PlayArrow, emphasized = true)
-        PlutoTextButton(ID_HH_OPTIONS, "Options", onOptions, up, icon = Icons.Outlined.MoreHoriz)
+    Row(
+        modifier.graphicsLayer { alpha = ACTIONS_IDLE_ALPHA + (1f - ACTIONS_IDLE_ALPHA) * hero.emphasis },
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PlutoTextButton(
+            ID_HH_OPEN, "Open", onOpen, up.focusRequester(links.open),
+            icon = Icons.Outlined.PlayArrow, emphasized = true, keyHint = openKey,
+        )
+        PlutoTextButton(ID_HH_OPTIONS, "Actions", onOptions, up, icon = Icons.Outlined.MoreHoriz, keyHint = actionsKey)
     }
 }
 
-/** Title and guidance for an empty shelf. */
-private fun emptyTitle(id: ShelfId, name: String): Pair<String, String> = when (id) {
-    ShelfId.Recent -> "No recent launches yet" to "Apps you open from Pluto show up here, most recent first."
-    ShelfId.Favourites -> "No favourites yet" to
-        "Press X on an app (or press and hold it) and choose Pin to home to add it here."
-    is ShelfId.OfCategory -> "No apps in $name yet" to
-        "Open an app's actions (X, press and hold, or Actions in All apps) and choose Categories…, " +
-        "or manage categories in Settings."
+/** Open / Actions while focus is up in the header. */
+private const val ACTIONS_IDLE_ALPHA = 0.6f
+
+/** Space between the bottom row and the navigation handle, on top of the system inset. */
+private val ConsoleBottomClearance = 20.dp
+
+/**
+ * Drives [hero]: the centre card recedes while controller focus is in the header (tabs,
+ * search, all apps, settings) and lifts briefly when focus comes back down. Reads focus in
+ * a snapshot flow, so nothing recomposes.
+ */
+@Composable
+private fun HeroEmphasisEffect(focus: ControllerFocusController, hero: HeroEmphasis) {
+    LaunchedEffect(focus, hero) {
+        snapshotFlow {
+            val id = focus.focusedId
+            focus.inputMode == InputMode.CONTROLLER && id != null &&
+                (id.startsWith(TAB_ID_PREFIX) || id == ID_HH_SEARCH || id == ID_HH_ALL_APPS || id == ID_HH_SETTINGS)
+        }.distinctUntilChanged().collectLatest { inHeader ->
+            if (inHeader) {
+                hero.lift = 0f
+                animate(hero.emphasis, 0f, animationSpec = PlutoMotion.spatialFast()) { v, _ -> hero.emphasis = v }
+            } else {
+                val wasIdle = hero.emphasis < 0.5f
+                coroutineScope {
+                    launch { animate(hero.emphasis, 1f, animationSpec = PlutoMotion.spatialFast()) { v, _ -> hero.emphasis = v } }
+                    if (wasIdle) {
+                        // A short "lift" as focus lands on the card (scale 1.0 -> 1.04 -> 1.0).
+                        animate(0f, 1f, animationSpec = tween(HERO_LIFT_MS, easing = LinearEasing)) { v, _ ->
+                            hero.lift = HERO_LIFT * sin(v * PI.toFloat())
+                        }
+                        hero.lift = 0f
+                    }
+                }
+            }
+        }
+    }
+}
+
+private const val HERO_LIFT = 0.04f
+private const val HERO_LIFT_MS = 260
+
+/**
+ * Title and guidance for an empty shelf, in the words of the current input: controller
+ * buttons ([actionsKey], e.g. "X") while a controller is connected, touch otherwise.
+ */
+internal fun emptyTitle(id: ShelfId, name: String, actionsKey: String?): Pair<String, String> {
+    val openActions = if (actionsKey != null) "Press $actionsKey on an app" else "Press and hold an app"
+    return when (id) {
+        ShelfId.Recent -> "No recent launches yet" to "Apps you open from Pluto show up here, most recent first."
+        ShelfId.Favourites -> "No favourites yet" to "$openActions and choose Pin to home to add it here."
+        is ShelfId.OfCategory -> "No apps in $name yet" to
+            "$openActions in All apps and choose Categories…, or manage categories here."
+    }
 }
 
 /**
@@ -579,7 +670,7 @@ private fun ConsoleFocusEffects(
         withFrameNanos { }
         if (currentState.session.layers.isNotEmpty()) return@LaunchedEffect
         val target = when {
-            was != null && was.startsWith("hh:tab:") -> shelfTabId(active)
+            was != null && was.startsWith(TAB_ID_PREFIX) -> shelfTabId(active)
             was == null || was.startsWith("hh:card:") || was.startsWith("hh:empty:") || was.startsWith("hh:act:") ->
                 currentSelected() ?: currentEmpty ?: shelfTabId(active)
             else -> was

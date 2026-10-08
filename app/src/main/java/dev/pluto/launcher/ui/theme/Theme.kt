@@ -253,9 +253,10 @@ fun TextStyle.overWallpaper(): TextStyle {
     return copy(
         color = MaterialTheme.colorScheme.onSurface,
         shadow = Shadow(
-            color = if (dark) Color.Black.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.85f),
-            offset = Offset(0f, 1.5f),
-            blurRadius = 6f,
+            // Strong enough that light text stays legible over light parts of a wallpaper.
+            color = if (dark) Color.Black.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.9f),
+            offset = Offset(0f, 1f),
+            blurRadius = 8f,
         ),
     )
 }

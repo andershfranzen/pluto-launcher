@@ -15,6 +15,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -81,7 +82,6 @@ import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
 import dev.pluto.launcher.ui.theme.panelColor
-import dev.pluto.launcher.ui.theme.sheetRaisedColor
 import dev.pluto.launcher.ui.theme.sheetRimBrush
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -151,6 +151,9 @@ fun PlutoIconButton(
             )
             .clip(shape)
             .background(background)
+            // A hairline edge, so the disc reads the same over light and dark parts of the
+            // wallpaper (over a light area the translucent disc alone disappeared).
+            .then(if (onWallpaper) Modifier.border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), shape) else Modifier)
             .padding(horizontal = if (showLabel) 14.dp else 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -177,6 +180,8 @@ fun PlutoTextButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     emphasized: Boolean = false,
+    keyHint: String? = null,
+    outline: Color? = null,
 ) {
     val shape = RoundedCornerShape(24.dp)
     val container = if (emphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
@@ -189,11 +194,16 @@ fun PlutoTextButton(
             .controllerFocusable(id = id, onActivate = onClick, contentDescription = text, shape = shape, interactionSource = press)
             .clip(shape)
             .background(container)
+            .then(if (outline != null) Modifier.border(1.dp, outline, shape) else Modifier)
             .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        if (icon != null) {
+        if (keyHint != null) {
+            // The controller button that does the same (console: "Ⓐ Open"), in place of the icon.
+            KeyChip(keyHint)
+            Spacer(Modifier.width(8.dp))
+        } else if (icon != null) {
             Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
         }
@@ -241,7 +251,7 @@ fun KeyChip(name: String, modifier: Modifier = Modifier) {
 
 /**
  * Category tabs. Touch-selectable; L1/R1 switching is handled by the caller (VM).
- * Resting tabs are outlined chips; the selection is a filled pill that slides between them
+ * Resting tabs are outline-only chips; the selection is a filled pill that slides between them
  * (one shared indicator drawn behind the row) with a bolder label, so the state is carried
  * by shape and weight, not colour alone.
  * [prevKey] / [nextKey] optionally show the bound shoulder buttons at either end.
@@ -300,8 +310,7 @@ fun CategoryTabs(
         }
     }
 
-    val baseColor = sheetRaisedColor().copy(alpha = 0.72f)
-    val outlineColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+    val outlineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
     val pillColor = MaterialTheme.colorScheme.primaryContainer
 
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -320,7 +329,8 @@ fun CategoryTabs(
                     // Resting (outlined) chips, then the sliding selection pill, then the labels.
                     tabBounds.values.forEach { r ->
                         val radius = minOf(corner, r.height / 2f)
-                        drawRoundRect(baseColor, r.topLeft, r.size, CornerRadius(radius, radius))
+                        // Outline only at rest: next to the filled selection pill the state
+                        // reads at a glance (two fills, light blue vs grey, were too alike).
                         drawRoundRect(
                             color = outlineColor,
                             topLeft = Offset(r.left + inset, r.top + inset),

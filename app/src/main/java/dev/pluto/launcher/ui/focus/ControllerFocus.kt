@@ -149,6 +149,13 @@ class ControllerFocusController {
     val focusedId: String? get() = _focusedId
     val lastFocusedId: String? get() = _lastFocusedId
 
+    /**
+     * The control that held focus just before the current one (plain, not observed). Lets a
+     * control tell a move along its own row (e.g. tab to tab) from focus arriving elsewhere.
+     */
+    var previousFocusedId: String? = null
+        private set
+
     /** The control most recently activated by touch, Confirm or Enter. */
     val lastActivatedId: String? get() = _lastActivatedId
 
@@ -452,6 +459,7 @@ class ControllerFocusController {
     }
 
     internal fun onFocused(id: String) {
+        if (id != _lastFocusedId) previousFocusedId = _lastFocusedId
         _focusedId = id
         _lastFocusedId = id
     }

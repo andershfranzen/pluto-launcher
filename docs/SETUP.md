@@ -14,6 +14,21 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 `-r` keeps your existing Pluto data when you install a newer build. Pluto needs Android 11
 (API 30) or later. It does not ask for any runtime permissions.
 
+For daily use (and for any performance measurement) install the **release** build instead
+(`./gradlew :app:assembleRelease`, then `adb install -r app/build/outputs/apk/release/app-release.apk`).
+A sideloaded APK is only *verified* at install time (`dumpsys package dexopt` shows
+`status=verify, reason=install`): the baseline profile shipped inside it is applied later,
+by ProfileInstaller and the next background dexopt (usually overnight while charging).
+Until then startup and the first drawer frames partly run in the JIT. To apply the profile
+straight away:
+
+```sh
+adb shell cmd package compile -m speed-profile -f dev.pluto.launcher
+```
+
+Afterwards `dumpsys package dexopt` shows `status=speed-profile`. Measure cold start and
+first-frame timings after this step (and say so when reporting them).
+
 ## 2. First launch
 
 Open Pluto from your current launcher's app list (it appears as "Pluto" with a small

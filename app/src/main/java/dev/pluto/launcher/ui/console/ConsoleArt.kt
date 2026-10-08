@@ -1,17 +1,9 @@
 package dev.pluto.launcher.ui.console
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.LinearGradient
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
-import android.graphics.Shader
 import android.util.LruCache
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import dev.pluto.launcher.apps.IconCache
 import dev.pluto.launcher.model.AppKey
 import kotlinx.coroutines.CancellationException
@@ -19,12 +11,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * What a Coverflow card draws for one app: the icon (shared with [IconCache], not copied),
- * a small pre-faded mirror image for the reflection, and the icon's dominant colour for the
- * card face and the ambient backdrop glow. Built once per app off the main thread.
+ * What a Coverflow card draws for one app: the icon (shared with [IconCache], not copied)
+ * and its dominant colour for the ambient backdrop glow. Built once per app off the main
+ * thread. (Cards share one material and reflect only their face, so no mirror image.)
  */
-class ConsoleArt(val icon: ImageBitmap, val reflection: ImageBitmap, val color: Int) {
-    internal val bytes: Int get() = (icon.width * icon.height + reflection.width * reflection.height) * 4
+class ConsoleArt(val icon: ImageBitmap, val color: Int) {
+    internal val bytes: Int get() = icon.width * icon.height * 4
 }
 
 /**
@@ -57,14 +49,7 @@ object ConsoleArtCache {
         }
     }
 
-    private fun build(icon: ImageBitmap): ConsoleArt {
-        val source = icon.asAndroidBitmap()
-        val color = dominantColor(source)
-        val reflection = reflectionOf(source)
-        // Uploaded to the GPU now (off the first draw of the card).
-        reflection.prepareToDraw()
-        return ConsoleArt(icon, reflection.asImageBitmap(), color)
-    }
+    private fun build(icon: ImageBitmap): ConsoleArt = ConsoleArt(icon, dominantColor(icon.asAndroidBitmap()))
 
     /** Dominant colour from a 16 x 16 downscale (cheap; see [ConsoleColors.dominant]). */
     private fun dominantColor(source: Bitmap): Int {
@@ -75,39 +60,12 @@ object ConsoleArtCache {
         return ConsoleColors.dominant(pixels)
     }
 
-    /**
-     * The lower part of the icon mirrored, at half resolution (a soft reflection is nicer
-     * anyway), with a top-to-bottom fade baked into its alpha so drawing it needs no mask
-     * or offscreen layer.
-     */
-    private fun reflectionOf(source: Bitmap): Bitmap {
-        val soft = source.toSoftware()
-        val w = (soft.width / 2).coerceAtLeast(1)
-        val h = (soft.height * REFLECTION_FRACTION / 2f).toInt().coerceAtLeast(1)
-        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(out)
-        val matrix = Matrix().apply {
-            // Scale to half size and flip vertically around the bottom edge of the icon.
-            setScale(0.5f, -0.5f)
-            postTranslate(0f, soft.height / 2f)
-        }
-        canvas.drawBitmap(soft, matrix, Paint(Paint.FILTER_BITMAP_FLAG))
-        val fade = Paint().apply {
-            shader = LinearGradient(0f, 0f, 0f, h * 0.7f, 0x8C000000.toInt(), 0x00000000, Shader.TileMode.CLAMP)
-            xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
-        }
-        canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), fade)
-        return out
-    }
-
     private fun Bitmap.toSoftware(): Bitmap =
         if (config == Bitmap.Config.HARDWARE) copy(Bitmap.Config.ARGB_8888, false) else this
 
     private fun cacheKey(key: AppKey, sizePx: Int, version: Int) = "$sizePx|$version|${key.encode()}"
 
     private const val SAMPLE = 16
-    /** Depth of the reflection in icon heights (short, so it stays clear of the title). */
-    const val REFLECTION_FRACTION = 0.26f
 
     private fun cacheBytes(): Int =
         (Runtime.getRuntime().maxMemory() / 12).coerceIn(4L * 1024 * 1024, 48L * 1024 * 1024).toInt()

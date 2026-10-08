@@ -42,6 +42,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -559,11 +560,21 @@ private fun LauncherContent(
 
     // Record the opener when layers are added; restore focus to it when they close.
     val previousCount = remember { intArrayOf(layers.size) }
+    // The opener is read during composition, before this frame's changes are applied: once
+    // they are, what lies beneath turns focus-inert, Compose clears the opener's focus and (in
+    // keyboard mode) moves it to the layer's first control, so reading it in the SideEffect
+    // recorded e.g. the drawer's close button and focus never returned to the opener.
+    val opener = remember { arrayOfNulls<String>(1) }
+    if (layers.size > previousCount[0]) {
+        opener[0] = Snapshot.withoutReadObservation { focus.openerId }
+    }
     SideEffect {
         val count = layers.size
         val before = previousCount[0]
         if (count > before) {
-            repeat(count - before) { i -> focus.pushLayer(if (i == 0) focus.openerId else null) }
+            val openerId = opener[0] ?: focus.openerId
+            opener[0] = null
+            repeat(count - before) { i -> focus.pushLayer(if (i == 0) openerId else null) }
         } else if (count < before) {
             var restoreId: String? = null
             repeat(before - count) { focus.popLayer()?.let { restoreId = it } }

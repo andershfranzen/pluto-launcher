@@ -127,4 +127,21 @@ class SearchMatcherTest {
         val packageOnly = AppEntry(AppKey("com.maps.lite/.Main", 0), "Navigator")
         assertEquals(listOf(both, packageOnly), SearchMatcher.filter(listOf(packageOnly, both), "maps"))
     }
+
+    @Test
+    fun shortQueriesIgnorePackageNames() {
+        val chrome = AppEntry(AppKey("com.android.chrome/.Main", 0), "Chrome")
+        val voice = AppEntry(AppKey("com.google.android.googlequicksearchbox/.Voice", 0), "Voice Search")
+        val google = AppEntry(AppKey("com.google.android.googlequicksearchbox/.Search", 0), "Google")
+        val pluto = AppEntry(AppKey("dev.pluto.launcher/.MainActivity", 0), "Pluto")
+        // Label matches only: prefix first, then the in-word match; no package-only results.
+        assertEquals(listOf(chrome, voice), SearchMatcher.filter(listOf(chrome, google, pluto, voice), "ch"))
+    }
+
+    @Test
+    fun packageMatchesStartAPackageSegment() {
+        val pluto = AppEntry(AppKey("dev.pluto.launcher/.MainActivity", 0), "Pluto")
+        assertFalse(SearchMatcher.matches(pluto, "unc"))
+        assertTrue(SearchMatcher.matches(pluto, "launch"))
+    }
 }

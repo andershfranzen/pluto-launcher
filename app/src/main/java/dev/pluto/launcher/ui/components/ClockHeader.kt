@@ -92,12 +92,12 @@ fun rememberMinuteClock(): Long {
 /**
  * Compact time and date drawn over the wallpaper. Respects the system 12/24-hour setting
  * and locale. [compact] puts time and an abbreviated date on one line (landscape / handheld
- * headers). Texts never clip mid-glyph at large font sizes: they ellipsize, the compact
+ * headers); [quiet] sets the compact time at tab size and regular weight. Texts never clip mid-glyph at large font sizes: they ellipsize, the compact
  * date gives way first (it shrinks to nothing before the time does), and the full-size
  * date may wrap to a second line.
  */
 @Composable
-fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false) {
+fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false, quiet: Boolean = false) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales.get(0) ?: Locale.getDefault()
     val now = rememberMinuteClock()
@@ -114,7 +114,9 @@ fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false) {
         Row(semanticsModifier, verticalAlignment = Alignment.CenterVertically) {
             AnimatedClockText(
                 time,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
+                // Quiet (console status corner): the size of the tabs, regular weight, so the
+                // clock doesn't pull attention from the stage.
+                style = (if (quiet) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)).overWallpaper(),
             )
             Spacer(Modifier.width(10.dp))
             // Measured after the time (weight), so the date is what gives way when space is tight.

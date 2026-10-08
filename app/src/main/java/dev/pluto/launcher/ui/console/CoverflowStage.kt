@@ -75,11 +75,21 @@ private val CardShape = RoundedCornerShape(26.dp)
 private const val CARD_CORNER_FRACTION = 0.15f
 private const val ICON_INSET_FRACTION = 0.13f
 private const val REFLECTION_GAP_FRACTION = 0.04f
-/** Must match ConsoleArt's reflection bitmap fraction. */
-private const val REFLECTION_FRACTION = ConsoleArtCache.REFLECTION_FRACTION
+/** Depth of the reflection, in card heights. */
+private const val REFLECTION_FRACTION = 0.25f
 
-/** Room under the card for its reflection, in card heights: the whole gap and mirror. */
-private const val STAGE_REFLECTION_SPACE = REFLECTION_GAP_FRACTION + REFLECTION_FRACTION
+/** The shared card material: frosted dark glass (#1E222A at about 85%). */
+private val CardFaceTop = Color(0xD9262A33)
+private val CardFaceBottom = Color(0xD91A1D23)
+
+/** How much of the reflection's depth is visible before it has faded out. */
+private const val REFLECTION_VISIBLE = 0.6f
+
+/**
+ * Room under the card for its reflection, in card heights: the gap and the visible part of
+ * the mirror (its transparent tail may run under the title).
+ */
+private const val STAGE_REFLECTION_SPACE = REFLECTION_GAP_FRACTION + REFLECTION_FRACTION * REFLECTION_VISIBLE
 
 /** Clear space between the end of the reflection and whatever sits under the stage (the title). */
 private val ReflectionClearance = 12.dp
@@ -214,6 +224,23 @@ internal class CoverflowState(initialIndex: Int, initialApps: List<AppEntry>) {
 }
 
 /**
+ * How present the centre card is: [emphasis] 1 while the flow (or nothing) holds focus, 0
+ * while controller focus is up in the header, so A clearly won't open it; [lift] is a short
+ * extra scale when focus comes back down. Both are read in layer/draw only.
+ */
+@Stable
+internal class HeroEmphasis {
+    var emphasis by mutableFloatStateOf(1f)
+    var lift by mutableFloatStateOf(0f)
+
+    companion object {
+        val Static = HeroEmphasis()
+        const val IDLE_SCALE = 0.92f
+        const val IDLE_DIM = 0.32f
+    }
+}
+
+/**
  * Slide/fade of a whole flow while shelves switch: [offset] is a fraction of the stage width,
  * [alpha] multiplies every card's alpha (cards use ModulateAlpha, so no page-sized offscreen layer).
  */
@@ -237,6 +264,7 @@ internal fun CoverflowStage(
     icons: IconCache,
     versions: Map<String, Int>,
     page: PageMotion,
+    hero: HeroEmphasis,
     onActivate: (index: Int, entry: AppEntry) -> Unit,
     onActions: (entry: AppEntry) -> Unit,
     onFocused: (index: Int, entry: AppEntry) -> Unit,
@@ -272,10 +300,15 @@ internal fun CoverflowStage(
     val placeholder = MaterialTheme.colorScheme.surfaceVariant
     val apps = stage.apps
     val count = apps.size
+    // The composed cards, resolved before the loop: key() must be the loop body's only
+    // content. With a `?: continue` ahead of it, each iteration got its own positional group
+    // and the keyed card sat inside it, so when the window's first index advanced every card
+    // was disposed and recreated, including the one that had just taken focus; Compose then
+    // cleared focus and re-entered at the first tab (a held D-pad wandered into the header).
+    val visible = remember(window, apps) { window.mapNotNull { i -> apps.getOrNull(i)?.let { IndexedValue(i, it) } } }
     Layout(
         content = {
-            for (index in window) {
-                val entry = apps.getOrNull(index) ?: continue
+            for ((index, entry) in visible) {
                 key(entry.key) {
                     CoverCard(
                         stage = stage,
@@ -287,6 +320,7 @@ internal fun CoverflowStage(
                         artPx = artPx,
                         placeholder = placeholder,
                         page = page,
+                        hero = hero,
                         onActivate = onActivate,
                         onActions = onActions,
                         onFocused = onFocused,
@@ -382,6 +416,7 @@ private fun CoverCard(
     artPx: Int,
     placeholder: Color,
     page: PageMotion,
+    hero: HeroEmphasis,
     onActivate: (Int, AppEntry) -> Unit,
     onActions: (AppEntry) -> Unit,
     onFocused: (Int, AppEntry) -> Unit,
@@ -400,13 +435,19 @@ private fun CoverCard(
     }
     val key = entry.key
     val enabled = entry.isEnabled
+    fun heroDim(i: Int): Float = if (i == stage.selectedIndex) (1f - hero.emphasis) * HeroEmphasis.IDLE_DIM else 0f
     Spacer(
         Modifier
             .layoutId(index)
             .graphicsLayer {
                 val t = CoverflowMath.transform(index - stage.position)
-                scaleX = t.scale
-                scaleY = t.scale
+                val heroScale = if (index == stage.selectedIndex) {
+                    HeroEmphasis.IDLE_SCALE + (1f - HeroEmphasis.IDLE_SCALE) * hero.emphasis + hero.lift
+                } else {
+                    1f
+                }
+                scaleX = t.scale * heroScale
+                scaleY = t.scale * heroScale
                 rotationY = t.rotationY
                 cameraDistance = CAMERA_DISTANCE * density
                 alpha = (t.alpha * page.alpha()).coerceIn(0f, 1f)
@@ -416,44 +457,38 @@ private fun CoverCard(
             .drawWithCache {
                 stage.artTick
                 val art = ConsoleArtCache.peek(key, artPx, version)
-                val base = art?.color?.let(::Color) ?: placeholder
-                val top = art?.color?.let { Color(ConsoleColors.darken(it, 0.92f)) } ?: placeholder
-                val bottom = art?.color?.let { Color(ConsoleColors.darken(it, 0.42f)) } ?: placeholder
                 val w = size.width
                 val h = size.height
                 val corner = CornerRadius(w * CARD_CORNER_FRACTION)
-                val face = Brush.verticalGradient(listOf(top, bottom), startY = 0f, endY = h)
-                val gloss = Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.26f), Color.White.copy(alpha = 0.04f), Color.Transparent),
+                // One material for every card (frosted dark glass, like a console's tiles);
+                // the app's own colour lives only in the backdrop glow behind the stage.
+                val face = Brush.verticalGradient(listOf(CardFaceTop, CardFaceBottom), startY = 0f, endY = h)
+                val rim = Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.34f), Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.04f)),
                     startY = 0f,
-                    endY = h * 0.58f,
+                    endY = h * 0.35f,
+                )
+                val gloss = Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.10f), Color.Transparent),
+                    startY = 0f,
+                    endY = h * 0.5f,
                 )
                 val gap = h * REFLECTION_GAP_FRACTION
                 val reflectionH = h * REFLECTION_FRACTION
-                val reflectionFace = Brush.verticalGradient(
-                    listOf(base.copy(alpha = 0.30f), Color.Transparent),
+                // A short, faint mirror of the card's face only (no mirrored icon: its round plate
+                // read as a grey dome under every card), gone by 60% of its depth.
+                val reflection = Brush.verticalGradient(
+                    listOf(CardFaceTop.copy(alpha = 0.20f), Color.Transparent),
                     startY = h + gap,
-                    // Gone well before the reflection's end.
-                    endY = h + gap + reflectionH * 0.7f,
+                    endY = h + gap + reflectionH * REFLECTION_VISIBLE,
                 )
                 val inset = (w * ICON_INSET_FRACTION).roundToInt()
                 val iconSide = (w - inset * 2).roundToInt().coerceAtLeast(1)
-                val reflectionImageH = (iconSide * REFLECTION_FRACTION).roundToInt().coerceAtLeast(1)
                 val border = Stroke(width = 1.dp.toPx())
                 onDrawBehind {
-                    // Reflection beneath the card: a faded mirror of the face, then of the icon
-                    // (pre-faded bitmap: no mask, no offscreen layer).
-                    drawRoundRect(reflectionFace, Offset(0f, h + gap), Size(w, reflectionH), corner)
-                    if (art != null) {
-                        drawImage(
-                            art.reflection,
-                            dstOffset = IntOffset(inset, (h + gap).roundToInt() + inset),
-                            dstSize = IntSize(iconSide, reflectionImageH),
-                            alpha = if (enabled) 1f else 0.5f,
-                        )
-                    }
-                    // The card face: tinted from the icon, the icon, a glossy top light and a fine edge.
+                    drawRoundRect(reflection, Offset(0f, h + gap), Size(w, reflectionH), corner)
                     drawRoundRect(face, cornerRadius = corner)
+                    drawRoundRect(gloss, cornerRadius = corner)
                     if (art != null) {
                         drawImage(
                             art.icon,
@@ -461,14 +496,15 @@ private fun CoverCard(
                             dstSize = IntSize(iconSide, iconSide),
                             alpha = if (enabled) 1f else 0.5f,
                         )
+                    } else {
+                        drawCircle(placeholder, radius = iconSide * 0.42f)
                     }
-                    drawRoundRect(gloss, cornerRadius = corner)
-                    drawRoundRect(Color.White.copy(alpha = 0.16f), cornerRadius = corner, style = border)
-                    // Side cards dim with distance (draw-phase read of the flow position).
-                    val dim = CoverflowMath.transform(index - stage.position).dim
+                    drawRoundRect(rim, cornerRadius = corner, style = border)
+                    // Side cards dim with distance, and the hero dims while focus is up in the
+                    // header (draw-phase reads of the flow position and the emphasis).
+                    val dim = maxOf(CoverflowMath.transform(index - stage.position).dim, heroDim(index))
                     if (dim > 0.01f) {
                         drawRoundRect(Color.Black.copy(alpha = dim), cornerRadius = corner)
-                        drawRoundRect(Color.Black.copy(alpha = dim), Offset(0f, h + gap), Size(w, reflectionH), corner)
                     }
                 }
             }

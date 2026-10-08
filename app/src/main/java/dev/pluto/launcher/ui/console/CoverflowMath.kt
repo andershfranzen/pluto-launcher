@@ -11,16 +11,19 @@ import kotlin.math.sign
  */
 object CoverflowMath {
     /** Centre to first neighbour, in card widths. */
-    const val FIRST_GAP = 0.68f
+    const val FIRST_GAP = 0.74f
 
-    /** Each further neighbour, in card widths (they overlap: classic Coverflow stacking). */
-    const val SIDE_GAP = 0.36f
+    /**
+     * Each further neighbour, in card widths. They still overlap (classic Coverflow stacking)
+     * but about three quarters of each side card stays visible.
+     */
+    const val SIDE_GAP = 0.44f
 
-    /** Tilt of every side card, degrees. */
-    const val SIDE_ANGLE = 55f
+    /** Tilt of every side card, degrees: shallow enough that side icons keep about 3/4 of their width (cos 42° ≈ 0.74). */
+    const val SIDE_ANGLE = 42f
 
     /** Scale of the first neighbour, and how much each further one shrinks. */
-    const val SIDE_SCALE = 0.72f
+    const val SIDE_SCALE = 0.8f
     const val SCALE_STEP = 0.05f
     const val MIN_SCALE = 0.5f
 

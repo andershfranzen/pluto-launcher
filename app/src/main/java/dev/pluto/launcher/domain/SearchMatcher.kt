@@ -54,7 +54,10 @@ object SearchMatcher {
         }
     }
 
-    /** True if the normalized query is contained in the normalized label or package name. Blank query matches all. */
+    /**
+     * True if the normalized query is in the normalized label, or (3+ characters) starts a
+     * segment of the package name. Blank query matches all.
+     */
     fun matches(entry: AppEntry, query: String): Boolean {
         val q = normalize(query)
         return q.isEmpty() || rank(entry, q) != null
@@ -62,7 +65,7 @@ object SearchMatcher {
 
     /**
      * Filters and ranks: label prefix, then label word-prefix, then label substring,
-     * then package-name substring; ties keep the input (alphabetical) order.
+     * then package-name segment prefix; ties keep the input (alphabetical) order.
      * Blank query returns [apps] unchanged.
      */
     fun filter(apps: List<AppEntry>, query: String): List<AppEntry> {
@@ -80,10 +83,27 @@ object SearchMatcher {
             label.startsWith(q) -> RANK_PREFIX
             hasWordPrefix(label, q) -> RANK_WORD_PREFIX
             label.contains(q) -> RANK_SUBSTRING
-            normalize(entry.packageName).contains(q) -> RANK_PACKAGE
+            q.length >= MIN_PACKAGE_QUERY && hasSegmentPrefix(normalize(entry.packageName), q) -> RANK_PACKAGE
             else -> null
         }
     }
+
+    /**
+     * Package names only match from the start of one of their segments ("mozilla" in
+     * org.mozilla.firefox), and only for queries of [MIN_PACKAGE_QUERY]+ characters: "ch"
+     * matched Google (googlequicksear-ch-box) and Pluto (laun-ch-er), so short queries
+     * returned apps whose names don't contain what was typed.
+     */
+    private fun hasSegmentPrefix(packageName: String, q: String): Boolean {
+        var i = packageName.indexOf(q)
+        while (i >= 0) {
+            if (i == 0 || packageName[i - 1] == '.' || packageName[i - 1] == '_') return true
+            i = packageName.indexOf(q, startIndex = i + 1)
+        }
+        return false
+    }
+
+    private const val MIN_PACKAGE_QUERY = 3
 
     /** True if [q] occurs right after a non-alphanumeric character somewhere in [label]. */
     private fun hasWordPrefix(label: String, q: String): Boolean {
