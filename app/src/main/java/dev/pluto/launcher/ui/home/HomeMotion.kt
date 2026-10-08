@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.VelocityTracker1D
@@ -133,6 +134,14 @@ internal class RevealDragDriver(private val reveal: DrawerRevealState, private v
     var active = false
         private set
 
+    /**
+     * True while a pointer is pressed on the surface ([revealDrag] observes it). Nested scroll
+     * reports programmatic scrolls (bring-into-view after the keyboard hides or a D-pad focus
+     * move) as UserInput too; those never end with a fling, so starting a reveal drag from
+     * them left the drawer stuck in "dragging" (half-closed, invisible yet taking touches).
+     */
+    var pointerDown = false
+
     fun start() {
         if (active) return
         active = true
@@ -201,7 +210,7 @@ internal class RevealDragDriver(private val reveal: DrawerRevealState, private v
             if (source != NestedScrollSource.UserInput) return Offset.Zero
             if (!active) {
                 val wanted = if (opening) available.y < 0f else available.y > 0f
-                if (!wanted) return Offset.Zero
+                if (!wanted || !pointerDown) return Offset.Zero
                 start()
             }
             return consumeIntoReveal(available.y)
@@ -256,6 +265,16 @@ internal fun rememberRevealDragDriver(opening: Boolean, onReleased: (Boolean) ->
  * grid scroll never starts a reveal by itself.
  */
 internal fun Modifier.revealDrag(driver: RevealDragDriver, opening: Boolean): Modifier = this
+    // Observes (never consumes) whether a finger is down anywhere on the surface, so only a
+    // real drag's leftover can start a nested-scroll reveal (see RevealDragDriver.pointerDown).
+    .pointerInput(driver) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                driver.pointerDown = event.changes.any { it.pressed }
+            }
+        }
+    }
     .nestedScroll(driver.nestedScrollConnection)
     .pointerInput(driver, opening) {
         val tracker = VelocityTracker()
