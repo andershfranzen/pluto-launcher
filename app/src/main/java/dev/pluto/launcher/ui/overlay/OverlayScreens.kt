@@ -18,6 +18,8 @@ import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,6 +32,9 @@ import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.AppIcon
+import dev.pluto.launcher.ui.focus.LocalControllerFocus
+import dev.pluto.launcher.ui.motion.LocalAppLauncher
+import dev.pluto.launcher.ui.motion.LocalOriginRegistry
 
 /*
  * Entry points for modal layers rendered by LauncherRoot when the matching Layer is on top.
@@ -48,6 +53,15 @@ fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) 
     val isTop = state.session.topLayer == Layer.AppActions(key)
     var dockFull by rememberSaveable(key.encode()) { mutableStateOf(false) }
     rememberScreenFocus(if (entry != null) "actions:launch" else "actions:close")
+    val appLauncher = LocalAppLauncher.current
+    // Launch grows the app out of the tile that opened this sheet, when that tile is on screen.
+    val controller = LocalControllerFocus.current
+    val origins = LocalOriginRegistry.current
+    val originId = remember(key) { controller.openerId?.takeIf { origins.boundsOf(it) != null } }
+    // Rows stagger in once per opening (not again after rotation).
+    var entrancePlayed by rememberSaveable(key.encode()) { mutableStateOf(false) }
+    val stagger = remember { !entrancePlayed }
+    LaunchedEffect(Unit) { entrancePlayed = true }
 
     ModalPanel(
         title = entry?.label ?: OverlayText.APP_ACTIONS,
@@ -67,55 +81,47 @@ fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) 
                 .filter { !it.isAll && key in state.categoryMembers[it.id].orEmpty() }
                 .map { it.name }
 
-            BodyText(entry.packageName)
+            fun Modifier.entrance(index: Int) = staggerIn(index, enabled = stagger)
+            BodyText(entry.packageName, Modifier.entrance(0))
             ActionRow(
                 id = "actions:launch",
                 label = OverlayText.LAUNCH,
                 icon = Icons.Rounded.PlayArrow,
                 supporting = if (!entry.isEnabled) OverlayText.SUSPENDED else null,
+                modifier = Modifier.entrance(1),
                 onClick = {
                     vm.back()
-                    vm.launch(key)
+                    appLauncher.launch(key, originId)
                 },
             )
-            if (pinnedDirectly) {
-                ActionRow(id = "actions:pin", label = OverlayText.UNPIN, icon = Icons.Rounded.PushPin, onClick = { vm.unpin(key) })
-            } else {
-                ActionRow(
-                    id = "actions:pin",
-                    label = OverlayText.PIN,
-                    icon = Icons.Rounded.PushPin,
-                    supporting = folder?.let { OverlayText.inFolder(it.folder.name) },
-                    onClick = { vm.pin(key) },
-                )
-            }
-            if (inDock) {
-                ActionRow(
-                    id = "actions:dock",
-                    label = OverlayText.REMOVE_FROM_DOCK,
-                    icon = Icons.Rounded.RemoveCircleOutline,
-                    onClick = {
-                        dockFull = false
-                        vm.removeFromDock(key)
-                    },
-                )
-            } else {
-                ActionRow(
-                    id = "actions:dock",
-                    label = OverlayText.ADD_TO_DOCK,
-                    icon = Icons.Rounded.AddCircleOutline,
-                    onClick = {
-                        dockFull = false
-                        vm.addToDock(key, onDockFull = { dockFull = true })
-                    },
-                )
-            }
-            if (dockFull && !inDock) NoticeCard(OverlayText.DOCK_FULL)
+            // One row per action whose label crossfades when its state flips, so focus stays put.
+            ActionRow(
+                id = "actions:pin",
+                label = if (pinnedDirectly) OverlayText.UNPIN else OverlayText.PIN,
+                icon = Icons.Rounded.PushPin,
+                supporting = if (pinnedDirectly) null else folder?.let { OverlayText.inFolder(it.folder.name) },
+                modifier = Modifier.entrance(2),
+                animateChanges = true,
+                onClick = { if (pinnedDirectly) vm.unpin(key) else vm.pin(key) },
+            )
+            ActionRow(
+                id = "actions:dock",
+                label = if (inDock) OverlayText.REMOVE_FROM_DOCK else OverlayText.ADD_TO_DOCK,
+                icon = if (inDock) Icons.Rounded.RemoveCircleOutline else Icons.Rounded.AddCircleOutline,
+                modifier = Modifier.entrance(3),
+                animateChanges = true,
+                onClick = {
+                    dockFull = false
+                    if (inDock) vm.removeFromDock(key) else vm.addToDock(key, onDockFull = { dockFull = true })
+                },
+            )
+            ExpandingSection(visible = dockFull && !inDock) { NoticeCard(OverlayText.DOCK_FULL) }
             ActionRow(
                 id = "actions:categories",
                 label = OverlayText.CATEGORIES,
                 icon = Icons.Rounded.Category,
                 supporting = OverlayText.inCategories(categoryNames),
+                modifier = Modifier.entrance(4),
                 onClick = { vm.openLayer(Layer.CategoryMembership(key)) },
             )
             ActionRow(
@@ -123,26 +129,30 @@ fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) 
                 label = OverlayText.MOVE_TO_FOLDER,
                 icon = Icons.Rounded.Folder,
                 supporting = folder?.let { OverlayText.inFolder(it.folder.name) },
+                modifier = Modifier.entrance(5),
                 onClick = { vm.openLayer(Layer.MoveToFolder(key)) },
             )
-            if (isHidden) {
-                ActionRow(id = "actions:hide", label = OverlayText.UNHIDE, icon = Icons.Rounded.Visibility, onClick = { vm.unhide(key) })
-            } else {
-                ActionRow(
-                    id = "actions:hide",
-                    label = OverlayText.HIDE,
-                    icon = Icons.Rounded.VisibilityOff,
-                    supporting = OverlayText.HIDE_HINT,
-                    onClick = {
+            ActionRow(
+                id = "actions:hide",
+                label = if (isHidden) OverlayText.UNHIDE else OverlayText.HIDE,
+                icon = if (isHidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                supporting = if (isHidden) null else OverlayText.HIDE_HINT,
+                modifier = Modifier.entrance(6),
+                animateChanges = true,
+                onClick = {
+                    if (isHidden) {
+                        vm.unhide(key)
+                    } else {
                         vm.back()
                         vm.hide(key)
-                    },
-                )
-            }
+                    }
+                },
+            )
             ActionRow(
                 id = "actions:info",
                 label = OverlayText.APP_INFO,
                 icon = Icons.Rounded.Info,
+                modifier = Modifier.entrance(7),
                 onClick = {
                     vm.back()
                     vm.openAppInfo(key)
@@ -155,6 +165,7 @@ fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) 
                 icon = Icons.Rounded.Delete,
                 supporting = OverlayText.UNINSTALL_HINT,
                 destructive = true,
+                modifier = Modifier.entrance(8),
                 onClick = {
                     vm.back()
                     vm.requestUninstall(key)
@@ -265,7 +276,7 @@ fun MoveToFolderDialog(key: AppKey, state: LauncherUiState, vm: LauncherViewMode
                 )
             }
         }
-        if (naming) {
+        AnimatedDialog(if (naming) Unit else null) {
             TextInputDialog(
                 idPrefix = "movefolder:name",
                 title = OverlayText.NEW_FOLDER_TITLE,
