@@ -1,7 +1,21 @@
 package dev.pluto.launcher.ui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,10 +36,30 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -39,10 +73,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.Category
 import dev.pluto.launcher.ui.UserMessage
+import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.controllerFocusable
+import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /** Standard translucent panel used by sheets, drawers and menus. */
 @Composable
@@ -80,10 +121,19 @@ fun PlutoIconButton(
     } else {
         Color.Transparent
     }
+    val press = remember { MutableInteractionSource() }
     Row(
         modifier
+            .pressScale(press)
             .defaultMinSize(minWidth = PlutoDimens.MinTouchTarget, minHeight = PlutoDimens.MinTouchTarget)
-            .controllerFocusable(id = id, onActivate = onClick, contentDescription = label, shape = shape, onFocused = onFocused)
+            .controllerFocusable(
+                id = id,
+                onActivate = onClick,
+                contentDescription = label,
+                shape = shape,
+                onFocused = onFocused,
+                interactionSource = press,
+            )
             .clip(shape)
             .background(background)
             .padding(horizontal = if (showLabel) 14.dp else 12.dp, vertical = 12.dp),
@@ -116,10 +166,12 @@ fun PlutoTextButton(
     val shape = RoundedCornerShape(24.dp)
     val container = if (emphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
     val content = if (emphasized) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+    val press = remember { MutableInteractionSource() }
     Row(
         modifier
+            .pressScale(press)
             .defaultMinSize(minWidth = PlutoDimens.MinTouchTarget, minHeight = PlutoDimens.MinTouchTarget)
-            .controllerFocusable(id = id, onActivate = onClick, contentDescription = text, shape = shape)
+            .controllerFocusable(id = id, onActivate = onClick, contentDescription = text, shape = shape, interactionSource = press)
             .clip(shape)
             .background(container)
             .padding(horizontal = 18.dp, vertical = 12.dp),
@@ -188,6 +240,53 @@ fun CategoryTabs(
     nextKey: String? = null,
     onFocused: ((Category) -> Unit)? = null,
 ) {
+    val scrollState = rememberScrollState()
+    // Each tab's layout bounds inside the scrolling row's content (inside its padding).
+    val tabBounds = remember { mutableStateMapOf<Long, Rect>() }
+    val indicator = remember { Animatable(Rect.Zero, Rect.VectorConverter) }
+    val indicatorAlpha = remember { Animatable(0f) }
+    val indicatorPlaced = remember { mutableStateOf(false) }
+    val selectedId = selected?.id
+    val density = LocalDensity.current
+    val contentPaddingPx = with(density) { TabRowPadding.toPx() }
+    val edgeMarginPx = with(density) { TabScrollMargin.toPx() }
+
+    LaunchedEffect(selectedId) {
+        if (selectedId == null) {
+            indicatorAlpha.animateTo(0f, PlutoMotion.fadeOut())
+            return@LaunchedEffect
+        }
+        snapshotFlow { tabBounds[selectedId] }.filterNotNull().collectLatest { target ->
+            coroutineScope {
+                if (!indicatorPlaced.value || indicatorAlpha.value == 0f) {
+                    // First placement (or reappearing): no slide in from nowhere.
+                    indicator.snapTo(target)
+                    indicatorPlaced.value = true
+                } else {
+                    launch { indicator.animateTo(target, PlutoMotion.spatialFast()) }
+                }
+                launch { indicatorAlpha.animateTo(1f, PlutoMotion.fadeIn()) }
+                // Bring the selected tab into view (centred) when it is not comfortably visible.
+                val viewport = scrollState.viewportSize
+                if (viewport > 0) {
+                    val left = target.left + contentPaddingPx
+                    val right = target.right + contentPaddingPx
+                    val visibleStart = scrollState.value + edgeMarginPx
+                    val visibleEnd = scrollState.value + viewport - edgeMarginPx
+                    if (left < visibleStart || right > visibleEnd) {
+                        val centred = (left + right) / 2f - viewport / 2f
+                        val to = centred.roundToInt().coerceIn(0, scrollState.maxValue)
+                        launch { scrollState.animateScrollTo(to, PlutoMotion.spatial()) }
+                    }
+                }
+            }
+        }
+    }
+
+    val baseColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)
+    val pillColor = MaterialTheme.colorScheme.primaryContainer
+    val pillBorder = MaterialTheme.colorScheme.primary
+
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (prevKey != null) {
             KeyChip(prevKey, Modifier.padding(horizontal = 4.dp))
@@ -195,19 +294,48 @@ fun CategoryTabs(
         Row(
             Modifier
                 .weight(1f, fill = false)
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 4.dp, vertical = 4.dp),
+                .horizontalScroll(scrollState)
+                .padding(TabRowPadding)
+                .drawWithContent {
+                    val corner = TabCorner.toPx()
+                    // Resting containers of every tab, then the sliding selection pill, then the labels.
+                    tabBounds.values.forEach { r ->
+                        val radius = minOf(corner, r.height / 2f)
+                        drawRoundRect(baseColor, r.topLeft, r.size, CornerRadius(radius, radius))
+                    }
+                    val a = indicatorAlpha.value
+                    if (a > 0f && indicatorPlaced.value) {
+                        val r = indicator.value
+                        val radius = minOf(corner, r.height / 2f)
+                        val border = TabBorder.toPx()
+                        val inset = border / 2f
+                        drawRoundRect(pillColor, r.topLeft, r.size, CornerRadius(radius, radius), alpha = a)
+                        drawRoundRect(
+                            color = pillBorder,
+                            topLeft = Offset(r.left + inset, r.top + inset),
+                            size = Size(r.width - border, r.height - border),
+                            cornerRadius = CornerRadius(radius - inset, radius - inset),
+                            style = Stroke(border),
+                            alpha = a,
+                        )
+                    }
+                    drawContent()
+                },
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             categories.forEach { category ->
-                CategoryTab(
-                    category = category,
-                    isSelected = category.id == selected?.id,
-                    id = "$idPrefix:${category.id}",
-                    onClick = { onSelect(category) },
-                    onFocused = onFocused?.let { { it(category) } },
-                )
+                key(category.id) {
+                    CategoryTab(
+                        category = category,
+                        isSelected = category.id == selectedId,
+                        id = "$idPrefix:${category.id}",
+                        onClick = { onSelect(category) },
+                        onFocused = onFocused?.let { { it(category) } },
+                        onBounds = { tabBounds[category.id] = it },
+                        onGone = { tabBounds.remove(category.id) },
+                    )
+                }
             }
         }
         if (nextKey != null) {
@@ -216,17 +344,49 @@ fun CategoryTabs(
     }
 }
 
+private val TabRowPadding = 4.dp
+private val TabCorner = 20.dp
+private val TabBorder = 2.dp
+
+/** Space kept between a newly selected tab and the row's edge before scrolling to it. */
+private val TabScrollMargin = 24.dp
+
+/** Tabs are small; they dip a little less than tiles when pressed. */
+private const val TabPressedScale = 0.95f
+
 @Composable
-private fun CategoryTab(category: Category, isSelected: Boolean, id: String, onClick: () -> Unit, onFocused: (() -> Unit)?) {
-    val shape = RoundedCornerShape(20.dp)
-    val container = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)
-    }
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+private fun CategoryTab(
+    category: Category,
+    isSelected: Boolean,
+    id: String,
+    onClick: () -> Unit,
+    onFocused: (() -> Unit)?,
+    onBounds: (Rect) -> Unit,
+    onGone: () -> Unit,
+) {
+    val shape = RoundedCornerShape(TabCorner)
+    val contentColor by animateColorAsState(
+        if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+        PlutoMotion.fadeIn(),
+        label = "tabLabel",
+    )
+    val underline = animateFloatAsState(if (isSelected) 1f else 0f, PlutoMotion.spatialFast(), label = "tabUnderline")
+    val press = remember { MutableInteractionSource() }
+    val currentOnBounds by rememberUpdatedState(onBounds)
+    val currentOnGone by rememberUpdatedState(onGone)
+    DisposableEffect(Unit) { onDispose { currentOnGone() } }
+    val lastBounds = remember { arrayOf(Rect.Zero) }
     Column(
         Modifier
+            .onPlaced { coordinates ->
+                // Layout bounds within the row (the press scale below is visual only).
+                val rect = Rect(coordinates.positionInParent(), coordinates.size.toSize())
+                if (rect != lastBounds[0]) {
+                    lastBounds[0] = rect
+                    currentOnBounds(rect)
+                }
+            }
+            .pressScale(press, pressedScale = TabPressedScale)
             .defaultMinSize(minHeight = PlutoDimens.MinTouchTarget)
             .controllerFocusable(
                 id = id,
@@ -234,11 +394,10 @@ private fun CategoryTab(category: Category, isSelected: Boolean, id: String, onC
                 contentDescription = "${category.name} category",
                 shape = shape,
                 onFocused = onFocused,
+                interactionSource = press,
             )
             .semantics { selected = isSelected }
             .clip(shape)
-            .background(container)
-            .then(if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, shape) else Modifier)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -252,16 +411,20 @@ private fun CategoryTab(category: Category, isSelected: Boolean, id: String, onC
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        if (isSelected) {
-            Spacer(Modifier.height(3.dp))
-            Box(
-                Modifier
-                    .width(20.dp)
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(contentColor),
-            )
-        }
+        // The underline's space is always reserved, so selecting never changes tab geometry.
+        Spacer(Modifier.height(3.dp))
+        Box(
+            Modifier
+                .width(20.dp)
+                .height(3.dp)
+                .graphicsLayer {
+                    val u = underline.value
+                    alpha = u.coerceIn(0f, 1f)
+                    scaleX = 0.3f + 0.7f * u
+                }
+                .clip(RoundedCornerShape(2.dp))
+                .background(contentColor),
+        )
     }
 }
 
@@ -276,50 +439,90 @@ fun MessageBar(
     modifier: Modifier = Modifier,
     timeoutMillis: Long = 6_000,
 ) {
-    if (message == null) return
-    LaunchedEffect(message.id) {
+    val currentOnDismiss by rememberUpdatedState(onDismiss)
+    LaunchedEffect(message?.id) {
+        val id = message?.id ?: return@LaunchedEffect
         delay(timeoutMillis)
-        onDismiss(message.id)
+        currentOnDismiss(id)
     }
-    Surface(
+    // The last message stays drawn while the bar slides away after dismissal.
+    val shown = remember { arrayOfNulls<UserMessage>(1) }
+    if (message != null) shown[0] = message
+    val visibility = remember { MutableTransitionState(false) }
+    visibility.targetState = message != null
+    if (!visibility.currentState && !visibility.targetState && visibility.isIdle) return
+    AnimatedVisibility(
+        visibleState = visibility,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.inverseSurface,
-        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-        shadowElevation = 6.dp,
+        enter = slideInVertically(PlutoMotion.slideSpring) { it } + fadeIn(PlutoMotion.fadeIn()),
+        exit = slideOutVertically(PlutoMotion.slideSpring) { it } + fadeOut(PlutoMotion.fadeOut()),
     ) {
-        Row(
-            Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        val leaving = transition.targetState != EnterExitState.Visible
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.inverseSurface,
+            contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+            shadowElevation = 6.dp,
+        ) {
+            val current = message ?: shown[0] ?: return@Surface
+            // A replacing message slides up into place while the previous one fades away.
+            AnimatedContent(
+                targetState = current,
+                contentKey = { it.id },
+                transitionSpec = {
+                    (slideInVertically(PlutoMotion.slideSpring) { it / 2 } + fadeIn(PlutoMotion.fadeIn()))
+                        .togetherWith(slideOutVertically(PlutoMotion.slideSpring) { -it / 3 } + fadeOut(PlutoMotion.fadeOut()))
+                        .using(SizeTransform(clip = true) { _, _ -> PlutoMotion.spatialFast() })
+                },
+                label = "message",
+            ) { msg ->
+                // Departing content can't take focus (the Dismiss id belongs to the live message).
+                val inert = leaving || transition.targetState != EnterExitState.Visible
+                CompositionLocalProvider(LocalFocusInert provides (LocalFocusInert.current || inert)) {
+                    MessageBarContent(msg, onDismiss = { currentOnDismiss(msg.id) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MessageBarContent(message: UserMessage, onDismiss: () -> Unit) {
+    Row(
+        Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            message.text,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 10.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+        )
+        val shape = RoundedCornerShape(20.dp)
+        val press = remember { MutableInteractionSource() }
+        Box(
+            Modifier
+                .pressScale(press)
+                .defaultMinSize(minWidth = PlutoDimens.MinTouchTarget, minHeight = PlutoDimens.MinTouchTarget)
+                .controllerFocusable(
+                    id = "message:dismiss",
+                    onActivate = onDismiss,
+                    contentDescription = "Dismiss message",
+                    shape = shape,
+                    interactionSource = press,
+                )
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center,
         ) {
             Text(
-                message.text,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 10.dp)
-                    .semantics { liveRegion = LiveRegionMode.Polite },
+                "Dismiss",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.inversePrimary,
+                modifier = Modifier.clearAndSetSemantics { },
             )
-            val shape = RoundedCornerShape(20.dp)
-            Box(
-                Modifier
-                    .defaultMinSize(minWidth = PlutoDimens.MinTouchTarget, minHeight = PlutoDimens.MinTouchTarget)
-                    .controllerFocusable(
-                        id = "message:dismiss",
-                        onActivate = { onDismiss(message.id) },
-                        contentDescription = "Dismiss message",
-                        shape = shape,
-                    )
-                    .padding(horizontal = 12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    "Dismiss",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.inversePrimary,
-                    modifier = Modifier.clearAndSetSemantics { },
-                )
-            }
         }
     }
 }

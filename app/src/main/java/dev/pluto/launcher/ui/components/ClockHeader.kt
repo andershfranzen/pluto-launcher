@@ -1,7 +1,15 @@
 package dev.pluto.launcher.ui.components
 
 import android.text.format.DateFormat
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -20,12 +29,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.overWallpaper
 import kotlinx.coroutines.delay
 import java.util.Date
@@ -73,12 +86,9 @@ fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false) {
             DateFormat.format(DateFormat.getBestDateTimePattern(locale, "EEEMMMd"), date).toString()
         }
         Row(semanticsModifier, verticalAlignment = Alignment.CenterVertically) {
-            Text(
+            AnimatedClockText(
                 time,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold).overWallpaper(),
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.width(10.dp))
             // Measured after the time (weight), so the date is what gives way when space is tight.
@@ -93,14 +103,52 @@ fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false) {
         }
     } else {
         Column(semanticsModifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                time,
-                style = MaterialTheme.typography.displayMedium.overWallpaper(),
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Ellipsis,
-            )
+            AnimatedClockText(time, style = MaterialTheme.typography.displayMedium.overWallpaper())
             Text(day, style = MaterialTheme.typography.titleMedium.overWallpaper(), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }
+
+/**
+ * The time, with each character that changes on a minute tick sliding up into place while
+ * the old one slides away (one-shot, subtle; nothing loops). Characters are matched from the
+ * end so "9:59" -> "10:00" keeps the colon steady. Falls back to a single ellipsizing Text
+ * when the time does not fit (very large font sizes), so it never clips mid-glyph.
+ */
+@Composable
+private fun AnimatedClockText(text: String, style: TextStyle, modifier: Modifier = Modifier) {
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier) {
+        val maxWidth = constraints.maxWidth
+        val fits = remember(text, style, maxWidth) {
+            maxWidth == Constraints.Infinity ||
+                measurer.measure(text, style, maxLines = 1, softWrap = false).size.width <= maxWidth * FitTolerance
+        }
+        if (!fits) {
+            Text(text, style = style, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+        } else {
+            Row {
+                val length = text.length
+                for (index in 0 until length) {
+                    // Keyed by position from the end, so digits keep their slot when the length changes.
+                    key(length - index) {
+                        AnimatedContent(
+                            targetState = text[index],
+                            transitionSpec = {
+                                (slideInVertically(PlutoMotion.slideSpring) { it / 2 } + fadeIn(PlutoMotion.fadeIn()))
+                                    .togetherWith(slideOutVertically(PlutoMotion.slideSpring) { -it / 2 } + fadeOut(PlutoMotion.fadeOut()))
+                                    .using(SizeTransform(clip = false) { _, _ -> PlutoMotion.spatialFast() })
+                            },
+                            label = "clockChar",
+                        ) { char ->
+                            Text(char.toString(), style = style, maxLines = 1, softWrap = false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Per-character layout loses kerning; keep a little slack before choosing it. */
+private const val FitTolerance = 0.96f
