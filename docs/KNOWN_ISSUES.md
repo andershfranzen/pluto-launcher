@@ -156,15 +156,32 @@ something.
 - Database migrations are tested only for the current schema (version 1); there is no
   migration history yet to exercise.
 
+## Measured on the reference phone (2026-10-08)
+
+OnePlus Nord 5, Android 16, display at 144 Hz (6.9 ms frame budget), release build installed
+with its baseline profile (`speed-profile`), about 90 launcher apps, `dumpsys gfxinfo` reset
+per scenario, input injected with `adb shell input`. Lawnchair on the same phone and script
+is given for reference.
+
+| Scenario | Janky frames | p95 | p99 | Target |
+| --- | --- | --- | --- | --- |
+| Drawer fling scroll (All apps) | 1.3–1.8% | 11–13 ms | 16–23 ms | < 1%, p99 ≤ 13.9 ms |
+| Lawnchair drawer, same flings | 2.3–4.0% | 10–13 ms | 17 ms | (reference) |
+| Drawer open + close | 4.4–5.0% | 14–17 ms | 18–19 ms | no frame > 13.9 ms |
+| Search typing + Clear | 4.7–5.2% | 17 ms | 28 ms | p95 ≤ 13.9 ms |
+| Console D-pad traversal | 0.8–1.5% | 17–19 ms | 22–24 ms | < 1%, p99 ≤ 13.9 ms |
+| Console L1/R1 shelf switch | 1.4% | 14–15 ms | 32–38 ms | < 1%, p99 ≤ 13.9 ms |
+
+A Perfetto trace of drawer flings shows Pluto's own work within budget (main thread
+1.3 ms per frame on average, RenderThread 4.1 ms, 6 of 595 frames over 6.9 ms, none over
+14 ms); the remaining spikes are GPU buffer allocations when the overscroll stretch starts
+and about 1 ms per frame of accessibility-tree updates (an accessibility service is enabled
+on the reference phone). Still to do: each console shelf switch composes the incoming shelf
+in one ~30 ms main-thread frame, and search keystrokes that bring many apps back still cost
+20–35 ms.
+
 ## Console mode (Coverflow) polish still to do
 
-- After touching a shelf tab, the next D-pad press can land on the top bar (search / all
-  apps / settings) instead of the Coverflow, and a thin focus outline can stay on that
-  button in touch mode.
-- Side cards at the current tilt squash round icons into ovals, card faces vary in tone,
-  and the reflection shows a grey dome under round icons.
-- The selected card looks the same whether or not the Coverflow has focus; console mode has
-  no white-only focus style yet.
-- Short shelves have no placeholder ("ghost") cards, and the empty-shelf text is small.
-- Frame times for held D-pad traversal and L1/R1 shelf switches have not been measured on
-  the reference phone yet.
+- Side cards are tilted 38° (was 55°) so round icons stay round; card faces still vary
+  slightly in tone between apps.
+- Shelf switches: see the measured ~30 ms frame above.

@@ -294,8 +294,15 @@ class ControllerFocusController {
      * without focusing it now (used while touch is in control, e.g. after rotation).
      */
     fun rememberFocusTarget(id: String?) {
-        if (id != null) _lastFocusedId = id
+        if (id == null) return
+        _lastFocusedId = id
+        // While touch is in control, focus callbacks from the still-focused control (it keeps
+        // Compose focus under touch) must not overwrite an explicit choice.
+        if (_inputMode == InputMode.TOUCH) touchRestoreId = id
     }
+
+    /** Explicit restore target chosen while touch was in control; wins over [_lastFocusedId]. */
+    private var touchRestoreId: String? = null
 
     /** True when a composable currently owns [id]. */
     fun isRegistered(id: String): Boolean = id in registry
@@ -420,7 +427,8 @@ class ControllerFocusController {
      * neighbour), the screen default, or the first focusable.
      */
     private fun restoreFocus(): Boolean {
-        val last = _lastFocusedId
+        val last = touchRestoreId ?: _lastFocusedId
+        touchRestoreId = null
         val neighbour = last?.takeIf { it !in registry }?.let(::replacementFor)
         listOfNotNull(last, neighbour, defaultFocusId).distinct().forEach { if (requestFocus(it)) return true }
         val manager = currentAttachment?.focusManager ?: return false

@@ -685,7 +685,9 @@ private fun ConsoleFocusEffects(
         if (focus.inputMode == InputMode.CONTROLLER) {
             if (focus.focusedId != target) focus.requestFocusWhenReady(target)
         } else {
-            focus.rememberFocusTarget(target)
+            // Switched by touch: the next controller input starts on the new shelf's card,
+            // not on a top-bar button the controller happened to visit before.
+            focus.rememberFocusTarget(currentSelected() ?: currentEmpty ?: shelfTabId(active))
         }
     }
 }
