@@ -77,6 +77,10 @@ data class SessionState(
     val scrollAnchors: Map<String, String> = emptyMap(),
     /** Edit mode: the item currently picked up for moving (HomeItem.id / "dock:<slot>" / app key). */
     val editSelection: String? = null,
+    // --- Handheld shelves
+    /** Active Handheld (console) shelf, ShelfId.key ("recent", "fav", "cat:<id>"); null = default landing shelf. */
+    val handheldShelf: String? = null,
+    // --- end Handheld shelves
 ) {
     val topLayer: Layer? get() = layers.lastOrNull()
 }
