@@ -4,6 +4,50 @@ import dev.pluto.launcher.model.HandheldAppearance
 import dev.pluto.launcher.model.RotationPreference
 import dev.pluto.launcher.model.ThemePreference
 
+/** What is drawn behind the launcher. */
+enum class BackgroundStyle {
+    /** The system wallpaper (with the contrast scrim). */
+    WALLPAPER,
+    /** PS3 XMB-style animated waves in console (handheld) mode; the wallpaper elsewhere. */
+    XMB_CONSOLE,
+    /** XMB waves everywhere. */
+    XMB_EVERYWHERE,
+}
+
+/** Base colour of the XMB background. AUTO changes with the month, like the PS3 did. */
+enum class XmbColor(val argb: Long) {
+    AUTO(0),
+    BLUE(0xFF1D58B5),
+    PURPLE(0xFF6B2FA3),
+    PINK(0xFFC24680),
+    RED(0xFFAE2230),
+    ORANGE(0xFFCE6519),
+    GOLD(0xFFB8922A),
+    GREEN(0xFF3D8C32),
+    TEAL(0xFF1C8A8C),
+    SILVER(0xFF878D98),
+    BLACK(0xFF17191F),
+    ;
+
+    companion object {
+        /** Month (1-12) to colour for AUTO: an approximation of the PS3's monthly themes. */
+        fun forMonth(month: Int): XmbColor = when (month) {
+            1 -> SILVER
+            2 -> GOLD
+            3 -> GREEN
+            4 -> PINK
+            5 -> TEAL
+            6 -> PURPLE
+            7 -> BLUE
+            8 -> BLUE
+            9 -> PURPLE
+            10 -> ORANGE
+            11 -> GOLD
+            else -> RED
+        }
+    }
+}
+
 /** Launcher actions a controller button can trigger. Movement (D-pad / stick) is not remappable. */
 enum class ControllerAction { CONFIRM, BACK, ACTIONS, SEARCH, SETTINGS, PREV_CATEGORY, NEXT_CATEGORY }
 
@@ -105,6 +149,8 @@ data class LauncherSettings(
     /** Launcher text multiplier on top of the system font scale, 0.85..1.5. */
     val textScale: Float = 1f,
     val reducedMotion: Boolean = false,
+    val backgroundStyle: BackgroundStyle = BackgroundStyle.WALLPAPER,
+    val xmbColor: XmbColor = XmbColor.AUTO,
     val rotation: RotationPreference = RotationPreference.FOLLOW_SYSTEM,
     val handheldAppearance: HandheldAppearance = HandheldAppearance.AUTOMATIC,
     val historyEnabled: Boolean = true,

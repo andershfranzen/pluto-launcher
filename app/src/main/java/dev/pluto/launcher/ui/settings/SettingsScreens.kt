@@ -1,5 +1,20 @@
 package dev.pluto.launcher.ui.settings
 
+import dev.pluto.launcher.ui.focus.controllerFocusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import dev.pluto.launcher.data.prefs.XmbColor
+import dev.pluto.launcher.data.prefs.BackgroundStyle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -148,6 +163,21 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
             selected = settings.theme,
             onSelect = { theme -> update { it.copy(theme = theme) } },
         )
+        ChoiceGroup(
+            idPrefix = "settings:background",
+            label = "Background",
+            supporting = "XMB: animated waves in the style of the PS3 menu.",
+            options = listOf(
+                BackgroundStyle.WALLPAPER to "Wallpaper",
+                BackgroundStyle.XMB_CONSOLE to "XMB in console mode",
+                BackgroundStyle.XMB_EVERYWHERE to "XMB everywhere",
+            ),
+            selected = settings.backgroundStyle,
+            onSelect = { style -> update { it.copy(backgroundStyle = style) } },
+        )
+        ExpandingSection(visible = settings.backgroundStyle != BackgroundStyle.WALLPAPER) {
+            XmbColorRow(selected = settings.xmbColor, onSelect = { c -> update { it.copy(xmbColor = c) } })
+        }
         StepperRow(
             idPrefix = "settings:scrim",
             label = SettingsText.SCRIM,
@@ -506,6 +536,50 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
                             destructive = true,
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+
+/** XMB colour swatches: Auto (follows the month, shown as a colour wheel) and the fixed colours. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun XmbColorRow(selected: XmbColor, onSelect: (XmbColor) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val name = if (selected == XmbColor.AUTO) "Auto (changes every month)" else selected.name.lowercase().replaceFirstChar { it.uppercase() }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Text("XMB colour", style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+        Text(name, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        FlowRow(
+            Modifier.padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            XmbColor.entries.forEach { c ->
+                val isSelected = c == selected
+                val fill: Brush = if (c == XmbColor.AUTO) {
+                    Brush.sweepGradient(XmbColor.entries.filter { it != XmbColor.AUTO && it != XmbColor.BLACK }.map { Color(it.argb) } + Color(XmbColor.BLUE.argb))
+                } else {
+                    SolidColor(Color(c.argb))
+                }
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .controllerFocusable(
+                            id = "settings:xmb:${c.name}",
+                            onActivate = { onSelect(c) },
+                            contentDescription = (if (c == XmbColor.AUTO) "Auto colour" else "${c.name.lowercase()} colour") +
+                                if (isSelected) ", selected" else "",
+                            shape = CircleShape,
+                        )
+                        .padding(4.dp)
+                        .background(fill, CircleShape)
+                        .border(if (isSelected) 3.dp else 1.dp, if (isSelected) colors.onSurface else colors.outlineVariant, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isSelected) Icon(Icons.Rounded.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
             }
         }

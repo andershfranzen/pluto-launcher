@@ -67,6 +67,8 @@ class SettingsRepository(context: Context) {
         val ICON_SCALE = floatPreferencesKey("icon_scale")
         val TEXT_SCALE = floatPreferencesKey("text_scale")
         val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
+        val BACKGROUND = stringPreferencesKey("background_style")
+        val XMB_COLOR = stringPreferencesKey("xmb_color")
         val ROTATION = stringPreferencesKey("rotation")
         val HANDHELD = stringPreferencesKey("handheld_appearance")
         val HISTORY = booleanPreferencesKey("history_enabled")
@@ -118,6 +120,8 @@ class SettingsRepository(context: Context) {
                 iconScale = (p[Keys.ICON_SCALE] ?: d.iconScale).coerceIn(LauncherSettings.ICON_SCALE_RANGE),
                 textScale = (p[Keys.TEXT_SCALE] ?: d.textScale).coerceIn(LauncherSettings.TEXT_SCALE_RANGE),
                 reducedMotion = p[Keys.REDUCED_MOTION] ?: d.reducedMotion,
+                backgroundStyle = enumOr<BackgroundStyle>(p[Keys.BACKGROUND], d.backgroundStyle),
+                xmbColor = enumOr<XmbColor>(p[Keys.XMB_COLOR], d.xmbColor),
                 rotation = enumOr<RotationPreference>(p[Keys.ROTATION], d.rotation),
                 handheldAppearance = enumOr<HandheldAppearance>(p[Keys.HANDHELD], d.handheldAppearance),
                 historyEnabled = p[Keys.HISTORY] ?: d.historyEnabled,
@@ -142,6 +146,8 @@ class SettingsRepository(context: Context) {
             p[Keys.ICON_SCALE] = s.iconScale.coerceIn(LauncherSettings.ICON_SCALE_RANGE)
             p[Keys.TEXT_SCALE] = s.textScale.coerceIn(LauncherSettings.TEXT_SCALE_RANGE)
             p[Keys.REDUCED_MOTION] = s.reducedMotion
+            p[Keys.BACKGROUND] = s.backgroundStyle.name
+            p[Keys.XMB_COLOR] = s.xmbColor.name
             p[Keys.ROTATION] = s.rotation.name
             p[Keys.HANDHELD] = s.handheldAppearance.name
             p[Keys.HISTORY] = s.historyEnabled

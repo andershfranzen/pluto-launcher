@@ -58,6 +58,10 @@ Pluto never forces rotation on the app you are using.
 - Shelves switched with L1/R1: *Recent launches*, *Favourites*, then your categories.
   Each shelf remembers its selection.
 - A backdrop tinted from the selected app's icon, a big title, and a persistent button legend.
+- Optional **XMB-style animated background**, in the spirit of the PS3 menu: flowing light ribbons over
+  a gradient. Pick a colour, or *Auto*, which changes the colour every month the way the PS3 did. It can
+  run in console mode only or everywhere, and becomes a still image with Reduce motion.
+- **Add apps** picker for Games, Tools and your own categories, with likely apps suggested first.
 
 **Controllers**
 - D-pad and left-stick navigation with a dead zone, controlled repeat and suppression of

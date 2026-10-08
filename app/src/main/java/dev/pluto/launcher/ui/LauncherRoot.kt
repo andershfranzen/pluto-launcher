@@ -141,6 +141,9 @@ import dev.pluto.launcher.ui.settings.OnboardingScreen
 import dev.pluto.launcher.ui.settings.SettingsScreen
 import dev.pluto.launcher.ui.theme.PlutoTheme
 import dev.pluto.launcher.ui.theme.WallpaperScrim
+import dev.pluto.launcher.ui.theme.XmbBackground
+import dev.pluto.launcher.ui.theme.xmbBaseColor
+import dev.pluto.launcher.ui.theme.xmbIn
 import android.os.Looper
 import android.os.MessageQueue
 import androidx.compose.ui.unit.Constraints
@@ -276,7 +279,11 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                         ModeResolver.resolve(widthDp, heightDp, state.controllerConnected, state.settings.handheldAppearance)
                     }
 
-                    WallpaperScrim(state.settings)
+                    if (state.settings.xmbIn(console = mode == LauncherMode.HANDHELD)) {
+                        XmbBackground(state.settings.xmbBaseColor(), animate = !state.settings.reducedMotion)
+                    } else {
+                        WallpaperScrim(state.settings)
+                    }
                     val storageError = state.storageError
                     if (storageError != null) {
                         StorageErrorScreen(storageError, onRetry = vm::retryStorage)

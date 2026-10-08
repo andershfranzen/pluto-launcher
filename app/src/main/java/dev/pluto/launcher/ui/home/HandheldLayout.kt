@@ -82,6 +82,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import dev.pluto.launcher.ui.console.ConsoleTitle
 import dev.pluto.launcher.ui.theme.ConsoleTheme
+import dev.pluto.launcher.ui.theme.xmbIn
 import dev.pluto.launcher.ui.console.ConsoleTopBar
 import dev.pluto.launcher.ui.console.ControllerBattery
 import dev.pluto.launcher.ui.console.PhoneBattery
@@ -295,12 +296,15 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     val selectedCardFocus: () -> FocusRequester = { switch.stage.let { if (it.count > 0) it.selectedRequester() else FocusRequester.Default } }
     CompositionLocalProvider(LocalShowTouchSelection provides true) {
         Box(Modifier.fillMaxSize()) {
-            ConsoleBackdrop(
-                stage = { switch.stage },
-                artPx = artPx,
-                versions = { currentVersions },
-                modifier = Modifier.matchParentSize(),
-            )
+            // With the XMB background on, the root draws it behind the console instead.
+            if (!state.settings.xmbIn(console = true)) {
+                ConsoleBackdrop(
+                    stage = { switch.stage },
+                    artPx = artPx,
+                    versions = { currentVersions },
+                    modifier = Modifier.matchParentSize(),
+                )
+            }
             // Only vertical insets here: the stage and title are centred on the whole screen
             // (a landscape camera cutout would otherwise push them off-centre); the top bar and
             // legend take the horizontal insets themselves.
