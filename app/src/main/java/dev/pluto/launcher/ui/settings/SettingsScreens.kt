@@ -94,9 +94,10 @@ private enum class SettingsDialog { DISABLE_HISTORY, CLEAR_HISTORY }
 @Composable
 fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val settings = state.settings
+    var page by rememberSaveable { mutableStateOf(SettingsPage.APPEARANCE) }
     var dialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
     var dialogOpener by rememberSaveable { mutableStateOf<String?>(null) }
-    val screenFocus = rememberScreenFocus("settings:theme:${ThemePreference.SYSTEM}")
+    val screenFocus = rememberScreenFocus("settings:page:${page.name}")
     val requestHomeRole = rememberHomeRoleRequest(onDeclined = { vm.showMessage(SettingsText.HOME_ROLE_DECLINED) })
     val versionName = rememberVersionName()
     val isTop = state.session.topLayer == Layer.Settings
@@ -116,6 +117,8 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
     LayerScaffold(
         title = SettingsText.SETTINGS,
         idPrefix = "settings",
+        contentKey = page,
+        headerContent = { SettingsNavigation(page) { page = it } },
         onClose = { vm.back() },
         trapFocus = isTop,
         dialogOpen = dialog != null,
@@ -150,185 +153,198 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }
         },
     ) {
-        // --- Appearance ---
-        SectionHeader(SettingsText.APPEARANCE)
-        ChoiceGroup(
-            idPrefix = "settings:theme",
-            label = SettingsText.THEME,
-            options = listOf(
-                ThemePreference.SYSTEM to SettingsText.THEME_SYSTEM,
-                ThemePreference.LIGHT to SettingsText.THEME_LIGHT,
-                ThemePreference.DARK to SettingsText.THEME_DARK,
-            ),
-            selected = settings.theme,
-            onSelect = { theme -> update { it.copy(theme = theme) } },
-        )
-        ChoiceGroup(
-            idPrefix = "settings:background",
-            label = "Background",
-            supporting = "XMB: animated waves in the style of the PS3 menu.",
-            options = listOf(
-                BackgroundStyle.WALLPAPER to "Wallpaper",
-                BackgroundStyle.XMB_CONSOLE to "XMB in console mode",
-                BackgroundStyle.XMB_EVERYWHERE to "XMB everywhere",
-            ),
-            selected = settings.backgroundStyle,
-            onSelect = { style -> update { it.copy(backgroundStyle = style) } },
-        )
-        ExpandingSection(visible = settings.backgroundStyle != BackgroundStyle.WALLPAPER) {
-            XmbColorRow(selected = settings.xmbColor, onSelect = { c -> update { it.copy(xmbColor = c) } })
-        }
-        StepperRow(
-            idPrefix = "settings:scrim",
-            label = SettingsText.SCRIM,
-            supporting = SettingsText.SCRIM_HELP,
-            valueText = percent(settings.scrimAlpha),
-            onDecrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, -1)
-                ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
-            onIncrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, 1)
-                ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
-        )
-        StepperRow(
-            idPrefix = "settings:icons",
-            label = SettingsText.ICON_SIZE,
-            valueText = percent(settings.iconScale),
-            onDecrease = stepped(settings.iconScale, ICON_STEP, LauncherSettings.ICON_SCALE_RANGE, -1)
-                ?.let { v -> { update { it.copy(iconScale = v) } } },
-            onIncrease = stepped(settings.iconScale, ICON_STEP, LauncherSettings.ICON_SCALE_RANGE, 1)
-                ?.let { v -> { update { it.copy(iconScale = v) } } },
-        )
-        StepperRow(
-            idPrefix = "settings:text",
-            label = SettingsText.TEXT_SIZE,
-            supporting = SettingsText.TEXT_SIZE_HELP,
-            valueText = percent(settings.textScale),
-            onDecrease = stepped(settings.textScale, TEXT_STEP, LauncherSettings.TEXT_SCALE_RANGE, -1)
-                ?.let { v -> { update { it.copy(textScale = v) } } },
-            onIncrease = stepped(settings.textScale, TEXT_STEP, LauncherSettings.TEXT_SCALE_RANGE, 1)
-                ?.let { v -> { update { it.copy(textScale = v) } } },
-        )
-        SwitchRow(
-            id = "settings:motion",
-            label = SettingsText.REDUCE_MOTION,
-            supporting = SettingsText.REDUCE_MOTION_HELP,
-            checked = settings.reducedMotion,
-            onCheckedChange = { on -> update { it.copy(reducedMotion = on) } },
-        )
-
-        // --- Layout & rotation ---
-        SectionHeader(SettingsText.LAYOUT)
-        ChoiceGroup(
-            idPrefix = "settings:rotation",
-            label = SettingsText.ROTATION,
-            supporting = SettingsText.ROTATION_HELP,
-            options = listOf(
-                RotationPreference.FOLLOW_SYSTEM to SettingsText.ROTATION_FOLLOW,
-                RotationPreference.PORTRAIT to SettingsText.ROTATION_PORTRAIT,
-                RotationPreference.LANDSCAPE to SettingsText.ROTATION_LANDSCAPE,
-                RotationPreference.LANDSCAPE_WHEN_CONTROLLER to SettingsText.ROTATION_CONTROLLER,
-            ),
-            selected = settings.rotation,
-            onSelect = { rotation -> update { it.copy(rotation = rotation) } },
-        )
-        ChoiceGroup(
-            idPrefix = "settings:handheld",
-            label = SettingsText.HANDHELD,
-            supporting = SettingsText.HANDHELD_HELP,
-            options = listOf(
-                HandheldAppearance.AUTOMATIC to SettingsText.HANDHELD_AUTO,
-                HandheldAppearance.ALWAYS to SettingsText.HANDHELD_ALWAYS,
-                HandheldAppearance.NEVER to SettingsText.HANDHELD_NEVER,
-            ),
-            selected = settings.handheldAppearance,
-            onSelect = { appearance -> update { it.copy(handheldAppearance = appearance) } },
-        )
-
-        // --- Organisation ---
-        SectionHeader(SettingsText.ORGANISATION)
-        ActionRow(
-            id = "settings:categories",
-            label = SettingsText.CATEGORIES,
-            icon = Icons.Rounded.Category,
-            supporting = SettingsText.categoryCount(state.categories.size),
-            onClick = { vm.openLayer(Layer.Categories) },
-        )
-        ActionRow(
-            id = "settings:hidden",
-            label = SettingsText.HIDDEN_APPS,
-            icon = Icons.Rounded.VisibilityOff,
-            supporting = SettingsText.hiddenCount(state.allApps.count { it.key in state.hidden }),
-            onClick = { vm.openLayer(Layer.HiddenApps) },
-        )
-        ActionRow(
-            id = "settings:edit",
-            label = SettingsText.EDIT_HOME,
-            icon = Icons.Rounded.Edit,
-            supporting = SettingsText.EDIT_HOME_HELP,
-            onClick = { vm.openLayer(Layer.Edit) },
-        )
-
-        // --- Recent launches ---
-        SectionHeader(SettingsText.HISTORY)
-        SwitchRow(
-            id = "settings:history",
-            label = SettingsText.KEEP_HISTORY,
-            icon = Icons.Rounded.History,
-            supporting = if (settings.historyEnabled) SettingsText.KEEP_HISTORY_ON else SettingsText.KEEP_HISTORY_OFF,
-            checked = settings.historyEnabled,
-            onCheckedChange = { on ->
-                if (on) vm.setHistoryEnabled(true) else open(SettingsDialog.DISABLE_HISTORY, "settings:history")
-            },
-        )
-        ActionRow(
-            id = "settings:history:clear",
-            label = SettingsText.CLEAR_HISTORY,
-            icon = Icons.Rounded.DeleteSweep,
-            supporting = SettingsText.historyCount(state.recents.size),
-            onClick = { open(SettingsDialog.CLEAR_HISTORY, "settings:history:clear") },
-        )
-
-        // --- Controller ---
-        SectionHeader(SettingsText.CONTROLLER_TITLE)
-        ActionRow(
-            id = "settings:controller",
-            label = SettingsText.CONTROLLER,
-            icon = Icons.Rounded.SportsEsports,
-            supporting = if (state.controllerConnected) {
-                SettingsText.controllerConnected(state.controllers.size)
-            } else {
-                SettingsText.CONTROLLER_HELP_NONE
-            },
-            onClick = { vm.openLayer(Layer.ControllerSettings) },
-        )
-
-        // --- Default launcher ---
-        SectionHeader(SettingsText.DEFAULT_LAUNCHER)
-        NoticeCard(if (state.isDefaultHome) SettingsText.IS_DEFAULT else SettingsText.NOT_DEFAULT, icon = Icons.Rounded.Home)
-        BodyText(SettingsText.HOW_TO_SWITCH_BACK)
-        ButtonBar(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), arrangement = Arrangement.spacedBy(8.dp)) {
-            if (!state.isDefaultHome) {
-                PlutoButton("settings:default:set", SettingsText.SET_DEFAULT, requestHomeRole, icon = Icons.Rounded.Home, style = ButtonStyle.FILLED)
+        if (page == SettingsPage.APPEARANCE) {
+            SettingsSection("Theme & background") {
+                ChoiceGroup(
+                    idPrefix = "settings:theme",
+                    label = SettingsText.THEME,
+                    options = listOf(
+                        ThemePreference.SYSTEM to SettingsText.THEME_SYSTEM,
+                        ThemePreference.LIGHT to SettingsText.THEME_LIGHT,
+                        ThemePreference.DARK to SettingsText.THEME_DARK,
+                    ),
+                    selected = settings.theme,
+                    onSelect = { theme -> update { it.copy(theme = theme) } },
+                )
+                ChoiceGroup(
+                    idPrefix = "settings:background",
+                    label = "Background",
+                    supporting = "Use your wallpaper, or a gently animated wave background.",
+                    options = listOf(
+                        BackgroundStyle.WALLPAPER to "Wallpaper",
+                        BackgroundStyle.XMB_CONSOLE to "XMB in console mode",
+                        BackgroundStyle.XMB_EVERYWHERE to "XMB everywhere",
+                    ),
+                    selected = settings.backgroundStyle,
+                    onSelect = { style -> update { it.copy(backgroundStyle = style) } },
+                )
+                ExpandingSection(visible = settings.backgroundStyle != BackgroundStyle.WALLPAPER) {
+                    XmbColorRow(selected = settings.xmbColor, onSelect = { c -> update { it.copy(xmbColor = c) } })
+                }
+                StepperRow(
+                    idPrefix = "settings:scrim",
+                    label = SettingsText.SCRIM,
+                    supporting = SettingsText.SCRIM_HELP,
+                    valueText = percent(settings.scrimAlpha),
+                    onDecrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, -1)
+                        ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
+                    onIncrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, 1)
+                        ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
+                )
             }
-            val context = LocalContext.current
-            PlutoButton(
-                "settings:default:open",
-                SettingsText.OPEN_DEFAULT_APPS,
-                { openDefaultAppsSettings(context) },
-                icon = Icons.Rounded.SettingsApplications,
-            )
+            SettingsSection("Size & motion") {
+                StepperRow(
+                    idPrefix = "settings:icons",
+                    label = SettingsText.ICON_SIZE,
+                    valueText = percent(settings.iconScale),
+                    onDecrease = stepped(settings.iconScale, ICON_STEP, LauncherSettings.ICON_SCALE_RANGE, -1)
+                        ?.let { v -> { update { it.copy(iconScale = v) } } },
+                    onIncrease = stepped(settings.iconScale, ICON_STEP, LauncherSettings.ICON_SCALE_RANGE, 1)
+                        ?.let { v -> { update { it.copy(iconScale = v) } } },
+                )
+                StepperRow(
+                    idPrefix = "settings:text",
+                    label = SettingsText.TEXT_SIZE,
+                    supporting = SettingsText.TEXT_SIZE_HELP,
+                    valueText = percent(settings.textScale),
+                    onDecrease = stepped(settings.textScale, TEXT_STEP, LauncherSettings.TEXT_SCALE_RANGE, -1)
+                        ?.let { v -> { update { it.copy(textScale = v) } } },
+                    onIncrease = stepped(settings.textScale, TEXT_STEP, LauncherSettings.TEXT_SCALE_RANGE, 1)
+                        ?.let { v -> { update { it.copy(textScale = v) } } },
+                )
+                SwitchRow(
+                    id = "settings:motion",
+                    label = SettingsText.REDUCE_MOTION,
+                    supporting = SettingsText.REDUCE_MOTION_HELP,
+                    checked = settings.reducedMotion,
+                    onCheckedChange = { on -> update { it.copy(reducedMotion = on) } },
+                )
+
+            }
         }
 
-        if (state.otherProfilesPresent) {
-            NoticeCard(SettingsText.PROFILES_NOTICE, icon = Icons.Rounded.Work)
+        if (page == SettingsPage.LAYOUT) {
+            SettingsSection(SettingsText.LAYOUT) {
+                ChoiceGroup(
+                    idPrefix = "settings:rotation",
+                    label = SettingsText.ROTATION,
+                    supporting = SettingsText.ROTATION_HELP,
+                    options = listOf(
+                        RotationPreference.FOLLOW_SYSTEM to SettingsText.ROTATION_FOLLOW,
+                        RotationPreference.PORTRAIT to SettingsText.ROTATION_PORTRAIT,
+                        RotationPreference.LANDSCAPE to SettingsText.ROTATION_LANDSCAPE,
+                        RotationPreference.LANDSCAPE_WHEN_CONTROLLER to SettingsText.ROTATION_CONTROLLER,
+                    ),
+                    selected = settings.rotation,
+                    onSelect = { rotation -> update { it.copy(rotation = rotation) } },
+                )
+                ChoiceGroup(
+                    idPrefix = "settings:handheld",
+                    label = SettingsText.HANDHELD,
+                    supporting = SettingsText.HANDHELD_HELP,
+                    options = listOf(
+                        HandheldAppearance.AUTOMATIC to SettingsText.HANDHELD_AUTO,
+                        HandheldAppearance.ALWAYS to SettingsText.HANDHELD_ALWAYS,
+                        HandheldAppearance.NEVER to SettingsText.HANDHELD_NEVER,
+                    ),
+                    selected = settings.handheldAppearance,
+                    onSelect = { appearance -> update { it.copy(handheldAppearance = appearance) } },
+                )
+
+            }
         }
 
-        // --- About ---
-        SectionHeader(SettingsText.ABOUT)
-        BodyText(SettingsText.version(versionName))
-        BodyText(SettingsText.LICENSE)
-        BodyText(SettingsText.PRIVACY)
-        BodyText(SettingsText.PROFILES_NOTICE)
-        BodyText(SettingsText.LIMITATIONS)
+        if (page == SettingsPage.APPS) {
+            SettingsSection(SettingsText.ORGANISATION) {
+                ActionRow(
+                    id = "settings:categories",
+                    label = SettingsText.CATEGORIES,
+                    icon = Icons.Rounded.Category,
+                    supporting = SettingsText.categoryCount(state.categories.size),
+                    onClick = { vm.openLayer(Layer.Categories) },
+                )
+                ActionRow(
+                    id = "settings:hidden",
+                    label = SettingsText.HIDDEN_APPS,
+                    icon = Icons.Rounded.VisibilityOff,
+                    supporting = SettingsText.hiddenCount(state.allApps.count { it.key in state.hidden }),
+                    onClick = { vm.openLayer(Layer.HiddenApps) },
+                )
+                ActionRow(
+                    id = "settings:edit",
+                    label = SettingsText.EDIT_HOME,
+                    icon = Icons.Rounded.Edit,
+                    supporting = SettingsText.EDIT_HOME_HELP,
+                    onClick = { vm.openLayer(Layer.Edit) },
+                )
+
+            }
+            SettingsSection(SettingsText.HISTORY) {
+                SwitchRow(
+                    id = "settings:history",
+                    label = SettingsText.KEEP_HISTORY,
+                    icon = Icons.Rounded.History,
+                    supporting = if (settings.historyEnabled) SettingsText.KEEP_HISTORY_ON else SettingsText.KEEP_HISTORY_OFF,
+                    checked = settings.historyEnabled,
+                    onCheckedChange = { on ->
+                        if (on) vm.setHistoryEnabled(true) else open(SettingsDialog.DISABLE_HISTORY, "settings:history")
+                    },
+                )
+                ActionRow(
+                    id = "settings:history:clear",
+                    label = SettingsText.CLEAR_HISTORY,
+                    icon = Icons.Rounded.DeleteSweep,
+                    supporting = SettingsText.historyCount(state.recents.size),
+                    onClick = { open(SettingsDialog.CLEAR_HISTORY, "settings:history:clear") },
+                )
+
+            }
+        }
+
+        if (page == SettingsPage.LAYOUT) {
+            SettingsSection(SettingsText.CONTROLLER_TITLE) {
+                ActionRow(
+                    id = "settings:controller",
+                    label = SettingsText.CONTROLLER,
+                    icon = Icons.Rounded.SportsEsports,
+                    supporting = if (state.controllerConnected) {
+                        SettingsText.controllerConnected(state.controllers.size)
+                    } else {
+                        SettingsText.CONTROLLER_HELP_NONE
+                    },
+                    onClick = { vm.openLayer(Layer.ControllerSettings) },
+                )
+
+            }
+        }
+
+        if (page == SettingsPage.GENERAL) {
+            SettingsSection(SettingsText.DEFAULT_LAUNCHER) {
+                NoticeCard(if (state.isDefaultHome) SettingsText.IS_DEFAULT else SettingsText.NOT_DEFAULT, icon = Icons.Rounded.Home)
+                BodyText(SettingsText.HOW_TO_SWITCH_BACK)
+                ButtonBar(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), arrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!state.isDefaultHome) {
+                        PlutoButton("settings:default:set", SettingsText.SET_DEFAULT, requestHomeRole, icon = Icons.Rounded.Home, style = ButtonStyle.FILLED)
+                    }
+                    val context = LocalContext.current
+                    PlutoButton(
+                        "settings:default:open",
+                        SettingsText.OPEN_DEFAULT_APPS,
+                        { openDefaultAppsSettings(context) },
+                        icon = Icons.Rounded.SettingsApplications,
+                    )
+                }
+
+            }
+
+            SettingsSection(SettingsText.ABOUT) {
+                BodyText(SettingsText.version(versionName))
+                BodyText(SettingsText.LICENSE)
+                BodyText(SettingsText.PRIVACY)
+                BodyText(SettingsText.PROFILES_NOTICE)
+                BodyText(SettingsText.LIMITATIONS)
+            }
+        }
         Spacer(Modifier.heightIn(min = 16.dp))
     }
 }

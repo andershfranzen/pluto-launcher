@@ -229,9 +229,9 @@ class LauncherViewModel(
                     handled = true
                     s
                 }
-                // A typed query is cleared first; an empty, merely active search field is not
-                // a separate step (it had no visible effect), so Back closes the drawer.
-                top == Layer.Drawer && s.searchText.isNotEmpty() -> {
+                // Search owns a Back step even when empty: first drop text-field focus,
+                // then close the drawer. This also matches the controller's Back sequence.
+                top == Layer.Drawer && (s.searchActive || s.searchText.isNotEmpty()) -> {
                     handled = true
                     s.copy(searchActive = false, searchText = "")
                 }

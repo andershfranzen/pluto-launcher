@@ -725,11 +725,14 @@ private class ControllerFocusableNode(
 
     fun update(link: ControlLink, shape: Shape, contentDescription: String?, secondaryLabel: String?) {
         val old = this.link
+        val changedId = isAttached && old.id != link.id
+        // Unregister while the OLD id is still attached to its token.
+        if (changedId) unregister()
         this.link = link
         link.controller = controller
-        if (isAttached && old.id != link.id) {
-            unregister()
+        if (changedId) {
             register()
+            if (focused) controller?.onFocused(link.id)
         }
         if (shape != this.shape) {
             this.shape = shape
@@ -979,11 +982,14 @@ private class ControllerFocusTargetNode(private var link: ControlLink) :
 
     fun update(link: ControlLink) {
         val old = this.link
+        val changedId = isAttached && old.id != link.id
+        // Unregister while the OLD id is still attached to its token.
+        if (changedId) unregister()
         this.link = link
         link.controller = controller
-        if (isAttached && old.id != link.id) {
-            unregister()
+        if (changedId) {
             register()
+            if (focused) controller?.onFocused(link.id)
         }
     }
 

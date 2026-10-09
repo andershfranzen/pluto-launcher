@@ -399,10 +399,17 @@ internal class Stagger(
     }
 
     suspend fun replay() {
-        if (!armed) return
-        clock.snapTo(0f)
-        armed = false
+        if (armed) {
+            clock.snapTo(0f)
+            armed = false
+        }
+        // An interrupted entrance must resume, not leave later rows invisible forever.
         run()
+    }
+
+    suspend fun finish() {
+        armed = false
+        clock.snapTo(totalMs)
     }
 
     /** 0 (not yet shown) .. 1 (in place) for [slot]; reads State, so call it from a draw-phase lambda. */

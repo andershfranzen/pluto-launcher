@@ -107,7 +107,19 @@ class HomeIntentTest {
         // Open another app (Settings) so Pluto is stopped, then come back with Home.
         shell("am start -W -a android.settings.SETTINGS")
         assertTrue(awaitCondition { resumedPluto() == null })
-        SystemClock.sleep(1_000)
+        // Paused is not stopped: on a software-rendered emulator the Settings window
+        // can take longer than a fixed sleep to draw and cover Pluto. Wait for the
+        // lifecycle state this test's returning-from-another-app contract requires.
+        assertTrue("Pluto was not stopped behind Settings", awaitCondition(10_000) {
+            var stopped = false
+            instrumentation.runOnMainSync {
+                stopped = ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(Stage.STOPPED)
+                    .filterIsInstance<MainActivity>()
+                    .any { it.viewModel === vm }
+            }
+            stopped
+        })
         pressHome()
         assertTrue(awaitCondition { resumedPluto() != null })
         SystemClock.sleep(500)

@@ -65,6 +65,19 @@ something.
   always crossfade in place instead of gliding tiles across cells, and 1 to 2 character
   queries no longer match package names ("ch" found Google and Pluto through
   `googlequicksearchbox` / `launcher`).
+- **Interface polish (2026-10-09)**: the drawer now uses a genuinely translucent sheet,
+  with alpha-masked scroll edges instead of solid gradient strips. Search stays in a fixed
+  field above the category chips; typing no longer replaces the header. Its state-based
+  editor also prevents rapid native key events from duplicating/dropping characters while
+  results recompose, and pending query echoes cannot undo Clear. Back first leaves an
+  active search (including an empty one), then closes the drawer. Outgoing search cells drop
+  immediately so rapid typing cannot leave overlapping icons/focus targets. Settings is
+  divided into Appearance, Layout, Apps and General, with pinned navigation and grouped
+  controls. Choice chips reserve their check-mark slot so selecting one does not reflow the
+  row. Interrupted drawer entrances, high-velocity spring overshoot and stale focus IDs
+  have regression tests. These changes still need release-build frame-time measurements
+  and a visual/controller review on the reference phone; earlier timings above are not
+  measurements of this revision.
 - **Reorder in Edit**: rows that swap places slide past each other, so for a moment one row
   passes over the other's controls.
 
@@ -76,11 +89,10 @@ something.
   the header's **Search** button (it opens the drawer with the keyboard up), whose screen
   reader action and long press named "All apps" open it without the keyboard, and through
   controller Y. Swipe up anywhere on home still pulls the drawer up with the finger.
-- **The drawer's "Actions" toggle became a ⋮ inside the search pill.** At the user's request
-  the labelled header button is gone; long press (touch), X (controller) and the "App
-  actions" screen-reader action reach an app's actions. Because the spec requires no
-  long-press-only actions, the ⋮ (shown while the search field is empty) still turns on the
-  mode in which tapping an app opens its actions.
+- **The drawer's "Actions" toggle is a ⋮ beside its title.** Long press (touch), X
+  (controller) and the "App actions" screen-reader action also reach an app's actions.
+  The ⋮ remains visible while searching (except in the keyboard-compact landscape header),
+  and turns on the mode in which tapping an app opens its actions.
 - **The alphabet fast-scroll rail is touch-only** and hidden from screen readers: it is a
   shortcut, and the grid itself remains fully reachable by scrolling, D-pad and TalkBack.
 

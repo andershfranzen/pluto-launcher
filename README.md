@@ -89,7 +89,16 @@ Pluto never forces rotation on the app you are using.
 
 ## Install
 
-Pluto is a 0.1 prototype and isn't on any app store yet. Build it yourself:
+Pluto is a 0.1 prototype and isn't on any app store yet. Download the APK from the
+[latest GitHub release](https://github.com/andershfranzen/pluto-launcher/releases/latest),
+open it on your phone, and choose **Update** (or **Install** for a first installation).
+Android may ask you to allow APK installs from your browser.
+
+Published builds use the maintainer's local development signing key. A build made on
+another machine can have a different key; if Android reports a signing conflict, do
+not uninstall a daily-use Pluto build just to bypass it, as that deletes its data.
+
+Or build it yourself:
 
 ```sh
 # JDK 17 and the Android SDK (platform 36) are required; the Gradle wrapper does the rest.
@@ -108,6 +117,25 @@ signed with your local debug key, so it installs over a debug build and keeps yo
 To apply the baseline profile at install time, see [docs/SETUP.md](docs/SETUP.md).
 
 ## Development
+
+[scripts/dev.sh](scripts/dev.sh) wraps the local loop on a headless emulator (AVD `pluto36`:
+API 36, 1080×2412 at 440 dpi like the reference phone, D-pad and keyboard enabled, KVM
+accelerated). The SDK lives in `~/Android/Sdk`; `scripts/dev.sh setup` reinstalls it.
+
+```sh
+scripts/dev.sh emu start          # boot emulator-5554 headless (emu stop / restart / --wipe)
+scripts/dev.sh run                # build debug, install, launch (run release for the R8 build)
+scripts/dev.sh ui                 # on-screen text with bounds, for tap targets
+scripts/dev.sh shot               # screenshot to captures/
+scripts/dev.sh pad DPAD_RIGHT BUTTON_A    # gamepad-source key events (key … for keyboard)
+scripts/dev.sh rotate landscape   # portrait | landscape | auto
+scripts/dev.sh logcat             # Pluto's process only
+scripts/dev.sh doctor             # check SDK, JDK, KVM, AVD, device
+```
+
+The script always targets `emulator-5554` (override with `PLUTO_SERIAL`). Injected gamepad
+keys come from a virtual device, so they exercise key handling but not controller detection
+or Handheld mode; those still need hardware ([docs/CONTROLLER_TESTS.md](docs/CONTROLLER_TESTS.md)).
 
 ```sh
 ./gradlew testDebugUnitTest             # JVM tests: modes, search, reorder, stick repeat, Coverflow maths…

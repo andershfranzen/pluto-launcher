@@ -23,7 +23,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
  */
 @Stable
 class DrawerRevealState(initiallyOpen: Boolean = false) {
-    private val anim = Animatable(if (initiallyOpen) 1f else 0f)
+    private val anim = Animatable(if (initiallyOpen) 1f else 0f).apply {
+        // Fling velocity must not pull the sheet beyond either resting edge.
+        updateBounds(lowerBound = 0f, upperBound = 1f)
+    }
 
     val progress: Float get() = anim.value
 

@@ -277,10 +277,14 @@ internal fun LayerScaffold(
     dialogOpen: Boolean = false,
     maxWidth: Dp = 720.dp,
     scrollable: Boolean = true,
+    contentKey: Any? = Unit,
+    headerContent: @Composable () -> Unit = {},
     overlay: @Composable BoxScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val covered = dialogOpen || LocalFocusInert.current.value
+    // Each settings section starts at its own top instead of inheriting a stale scroll.
+    val bodyScroll = androidx.compose.runtime.key(contentKey) { rememberScrollState() }
     Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen)) {
         ModalScrim(onTap = null)
         Surface(
@@ -298,12 +302,13 @@ internal fun LayerScaffold(
             CompositionLocalProvider(LocalFocusInert provides focusInert(covered)) {
                 Column {
                     PanelHeader(title, "$idPrefix:close", onClose, leading = null)
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    headerContent()
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
                     val body = Modifier.weight(1f).fillMaxWidth()
                     if (scrollable) {
                         Column(
                             body
-                                .verticalScroll(rememberScrollState())
+                                .verticalScroll(bodyScroll)
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
@@ -726,21 +731,15 @@ internal fun <T> ChoiceGroup(
                         .padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // The check mark grows in beside the label (small element; neighbours reflow with it).
-                    AnimatedVisibility(
-                        visible = isSelected,
-                        enter = fadeIn(PlutoMotion.fadeIn()) + expandHorizontally(PlutoMotion.spatialFast()),
-                        exit = fadeOut(PlutoMotion.fadeOut()) + shrinkHorizontally(PlutoMotion.spatialFast()),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Rounded.Check,
-                                contentDescription = null,
-                                tint = colors.inverseOnSurface,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                        }
+                    // Reserve the check slot. Selecting a chip must not change its width,
+                    // wrap the row or shift the control out from under the user's finger.
+                    Box(Modifier.width(24.dp), contentAlignment = Alignment.CenterStart) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = null,
+                            tint = colors.inverseOnSurface,
+                            modifier = Modifier.size(18.dp).graphicsLayer { alpha = selection.value },
+                        )
                     }
                     Text(
                         text,
@@ -767,57 +766,60 @@ internal fun StepperRow(
     supporting: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 12.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
-            if (supporting != null) {
-                Text(supporting, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-            }
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+        if (supporting != null) {
+            Text(supporting, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         }
-        IconAction(
-            id = "$idPrefix:dec",
-            icon = Icons.Rounded.Remove,
-            label = "${KitText.DECREASE} $label, $valueText",
-            onClick = { onDecrease?.invoke() },
-            enabled = onDecrease != null,
-        )
-        // The value rolls up when it grows and down when it shrinks. One polite live region
-        // carries the current value; the animated copies are hidden from accessibility.
-        AnimatedContent(
-            targetState = valueText,
-            modifier = Modifier
-                .widthIn(min = 64.dp)
-                .clearAndSetSemantics {
-                    contentDescription = valueText
-                    liveRegion = LiveRegionMode.Polite
+        Row(
+            Modifier.fillMaxWidth().padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+        ) {
+            IconAction(
+                id = "$idPrefix:dec",
+                icon = Icons.Rounded.Remove,
+                label = "${KitText.DECREASE} $label, $valueText",
+                onClick = { onDecrease?.invoke() },
+                enabled = onDecrease != null,
+            )
+            // The value rolls up when it grows and down when it shrinks. One polite live region
+            // carries the current value; the animated copies are hidden from accessibility.
+            AnimatedContent(
+                targetState = valueText,
+                modifier = Modifier
+                    .widthIn(min = 64.dp)
+                    .clearAndSetSemantics {
+                        contentDescription = valueText
+                        liveRegion = LiveRegionMode.Polite
+                    },
+                transitionSpec = {
+                    val up = numericValue(targetState) >= numericValue(initialState)
+                    val enter = slideInVertically(PlutoMotion.slideSpring) { h -> if (up) h / 2 else -h / 2 } + fadeIn(PlutoMotion.fadeIn())
+                    val exit = slideOutVertically(PlutoMotion.slideSpring) { h -> if (up) -h / 2 else h / 2 } + fadeOut(PlutoMotion.fadeOut())
+                    (enter togetherWith exit).using(SizeTransform(clip = false) { _, _ -> PlutoMotion.spatialFast() })
                 },
-            transitionSpec = {
-                val up = numericValue(targetState) >= numericValue(initialState)
-                val enter = slideInVertically(PlutoMotion.slideSpring) { h -> if (up) h / 2 else -h / 2 } + fadeIn(PlutoMotion.fadeIn())
-                val exit = slideOutVertically(PlutoMotion.slideSpring) { h -> if (up) -h / 2 else h / 2 } + fadeOut(PlutoMotion.fadeOut())
-                (enter togetherWith exit).using(SizeTransform(clip = false) { _, _ -> PlutoMotion.spatialFast() })
-            },
-            contentAlignment = Alignment.Center,
-            label = "stepperValue",
-        ) { shown ->
-            Text(
-                shown,
-                style = MaterialTheme.typography.titleMedium,
-                color = colors.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(min = 64.dp),
+                contentAlignment = Alignment.Center,
+                label = "stepperValue",
+            ) { shown ->
+                Text(
+                    shown,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.widthIn(min = 64.dp),
+                )
+            }
+            IconAction(
+                id = "$idPrefix:inc",
+                icon = Icons.Rounded.Add,
+                label = "${KitText.INCREASE} $label, $valueText",
+                onClick = { onIncrease?.invoke() },
+                enabled = onIncrease != null,
             )
         }
-        IconAction(
-            id = "$idPrefix:inc",
-            icon = Icons.Rounded.Add,
-            label = "${KitText.INCREASE} $label, $valueText",
-            onClick = { onIncrease?.invoke() },
-            enabled = onIncrease != null,
-        )
     }
 }
 

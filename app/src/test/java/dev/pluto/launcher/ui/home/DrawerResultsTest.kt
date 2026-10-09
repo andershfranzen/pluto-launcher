@@ -11,6 +11,14 @@ class DrawerResultsTest {
     private fun app(name: String) = AppEntry(AppKey("pkg.$name/.Main", 0), name)
 
     @Test
+    fun countLabelsUseNaturalSingularAndPlural() {
+        assertEquals("1 app", drawerCountLabel(1, searching = false))
+        assertEquals("20 apps", drawerCountLabel(20, searching = false))
+        assertEquals("1 result", drawerCountLabel(1, searching = true))
+        assertEquals("0 results", drawerCountLabel(0, searching = true))
+    }
+
+    @Test
     fun partialResultsKeepShownAppsAndAddNewOnesTopFirst() {
         val all = listOf("a", "b", "c", "d", "e", "f").map(::app)
         val keep = setOf(all[4].key) // "e" was already showing

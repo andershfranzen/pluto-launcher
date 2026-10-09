@@ -139,6 +139,7 @@ import dev.pluto.launcher.ui.settings.ControllerSettingsScreen
 import dev.pluto.launcher.ui.settings.HiddenAppsScreen
 import dev.pluto.launcher.ui.settings.OnboardingScreen
 import dev.pluto.launcher.ui.settings.SettingsScreen
+import dev.pluto.launcher.ui.theme.LocalReducedMotion
 import dev.pluto.launcher.ui.theme.PlutoTheme
 import dev.pluto.launcher.ui.theme.WallpaperScrim
 import dev.pluto.launcher.ui.theme.XmbBackground
@@ -638,7 +639,7 @@ private fun LauncherContent(
 
     LayerPredictiveBack(
         top = slots.getOrNull(topIndex)?.let { host.entries[it.key] },
-        drawerSearchActive = state.session.searchText.isNotEmpty(),
+        drawerSearchActive = state.session.searchActive || state.session.searchText.isNotEmpty(),
         reveal = reveal,
         vm = vm,
     )
@@ -924,12 +925,19 @@ private fun LayerFrame(
     val backOwner = if (present && realBack != null) realBack else inertBack
     val origins = LocalOriginRegistry.current
 
-    // Layers move in the draw phase only; the gliding ring fades in as its layer settles.
+    // Draw-only transforms don't move focus geometry. Show the ring only at rest,
+    // rather than drawing it detached from the control as the layer slides in.
+    val interactionReady by remember(entry, reveal) {
+        derivedStateOf {
+            if (entry.kind == LayerKind.DRAWER) reveal.progress >= 0.995f && !reveal.isDragging
+            else entry.progress.value >= 0.995f
+        }
+    }
     val ringVisibility: () -> Float = remember(entry, reveal) {
         if (entry.kind == LayerKind.DRAWER) {
-            { ((reveal.progress - 0.75f) / 0.25f).coerceIn(0f, 1f) }
+            { if (reveal.progress >= 0.995f && !reveal.isDragging) 1f else 0f }
         } else {
-            { ((entry.progress.value - 0.6f) / 0.4f).coerceIn(0f, 1f) }
+            { if (entry.progress.value >= 0.995f) 1f else 0f }
         }
     }
     CompositionLocalProvider(
@@ -943,9 +951,11 @@ private fun LayerFrame(
                 .hiddenFromAccessibility(!active)
                 .beneathMotion(beneath, reveal, rtl),
         ) {
-            // Pointer input is blocked on the moving surface only while leaving, so a tap
-            // during an exit can't activate it again; uncovered areas stay usable.
-            val leavingBlock = if (present) Modifier else Modifier.blockPointerInput()
+            // Hit targets are at rest while draw-only entry motion is still moving.
+            // Don't launch a different tile by tapping a visual tile mid-transition.
+            // A drawer drag that already owns the pointer stream remains uninterrupted.
+            val draggingDrawer = entry.kind == LayerKind.DRAWER && reveal.isDragging
+            val leavingBlock = if (present && (interactionReady || draggingDrawer)) Modifier else Modifier.blockPointerInput()
             when (entry.kind) {
                 LayerKind.DRAWER -> {
                     val drawerState = rememberParkedState(state, parked)
@@ -1167,23 +1177,29 @@ private fun LayerPredictiveBack(
     vm: LauncherViewModel,
 ) {
     val scope = rememberCoroutineScope()
+    val reducedMotion = LocalReducedMotion.current
+    val restoration = remember { arrayOfNulls<Job>(1) }
+    DisposableEffect(top) { onDispose { restoration[0]?.cancel() } }
     val enabled = top != null && top.kind != LayerKind.ONBOARDING &&
         !(top.kind == LayerKind.DRAWER && drawerSearchActive)
     PredictiveBackHandler(enabled = enabled) { events ->
         val target = top
+        restoration[0]?.cancel()
+        // Starting Back halfway through entry must not snap the layer fully open.
+        val initialProgress = if (target?.kind == LayerKind.DRAWER) reveal.progress else target?.progress?.value ?: 1f
         var dragging = false
         try {
             events.collect { event ->
                 when {
-                    target == null -> Unit
+                    target == null || reducedMotion -> Unit
                     target.kind == LayerKind.DRAWER -> {
                         if (!dragging) {
                             reveal.beginDrag()
                             dragging = true
                         }
-                        reveal.dragBy(LayerMotion.backScrub(event.progress) - reveal.progress, 1f)
+                        reveal.dragBy(initialProgress * LayerMotion.backScrub(event.progress) - reveal.progress, 1f)
                     }
-                    else -> target.progress.snapTo(LayerMotion.backScrub(event.progress))
+                    else -> target.progress.snapTo(initialProgress * LayerMotion.backScrub(event.progress))
                 }
             }
             if (dragging) reveal.endDrag(open = false)
@@ -1192,7 +1208,7 @@ private fun LayerPredictiveBack(
             if (dragging) {
                 reveal.endDrag(open = true)
             } else if (target != null && target.kind != LayerKind.DRAWER) {
-                scope.launch { target.progress.animateTo(1f, PlutoMotion.spatial()) }
+                restoration[0] = scope.launch { target.progress.animateTo(1f, PlutoMotion.spatial()) }
             }
             throw e
         }

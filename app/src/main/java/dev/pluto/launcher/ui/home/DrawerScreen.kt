@@ -1,19 +1,17 @@
 package dev.pluto.launcher.ui.home
 
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import dev.pluto.launcher.ui.components.LocalLabelsOnWallpaper
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -48,7 +46,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.collect
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -152,7 +154,6 @@ private const val MAX_PENDING_ECHOES = 32
 
 /** Focus id of the drawer's search field; LauncherRoot focuses it for Y / Search. */
 const val DRAWER_SEARCH_ID = "drawer:search"
-private const val DR_SEARCH_OPEN = "drawer:searchopen"
 private const val DR_SEARCH_CLOSE = "drawer:searchclose"
 private const val DR_CLOSE = "drawer:close"
 private const val DR_CLEAR = "drawer:clear"
@@ -179,7 +180,7 @@ private val EdgeFadeBottom = 28.dp
 private fun drawerAppId(key: AppKey) = "drawer:${key.encode()}"
 
 /**
- * The app drawer (layer Drawer): a full-height, brand-tinted sheet with a pinned search pill,
+ * The app drawer (layer Drawer): a translucent, brand-tinted sheet with a pinned search field,
  * category chips with a sliding indicator, and one alphabetical grid of state.drawerApps
  * (filtering and accent-insensitive matching are done by the view model), with an alphabet
  * fast-scroll rail, soft edge fades and a useful empty state.
@@ -199,8 +200,8 @@ private fun drawerAppId(key: AppKey) = "drawer:${key.encode()}"
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
-    // Opaque surface: tile labels skip the wallpaper text shadow (see TileLabel).
-    CompositionLocalProvider(LocalLabelsOnWallpaper provides false) { DrawerScreenContent(state, vm) }
+    // The wallpaper is visible through the drawer: keep the label contrast shadow.
+    CompositionLocalProvider(LocalLabelsOnWallpaper provides true) { DrawerScreenContent(state, vm) }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -208,6 +209,7 @@ fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
 private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val reveal = LocalDrawerReveal.current
     val launcher = LocalAppLauncher.current
     val outerInert = LocalFocusInert.current
@@ -258,11 +260,16 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
             stagger.arm()
         }
     }
-    LaunchedEffect(isTop) { if (isTop) stagger.replay() }
+    LaunchedEffect(isTop) { if (isTop) stagger.replay() else stagger.finish() }
 
     // The field keeps its own value (cursor, selection); the VM holds the text itself.
     val field = remember { SearchField(session.searchText) }
     LaunchedEffect(session.searchText) { field.onVmText(session.searchText) }
+    LaunchedEffect(field) {
+        snapshotFlow { field.state.text.toString() }.collect { text ->
+            field.onUserText(text)?.let(vm::setSearchText)
+        }
+    }
 
     val firstAppId = gridKeys.firstOrNull()
     val defaultId = if (session.searchActive) DRAWER_SEARCH_ID else firstAppId ?: DRAWER_SEARCH_ID
@@ -296,7 +303,9 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         }
         if (!session.searchActive && was) {
             keyboard?.hide()
-            if (focus.focusedId == DRAWER_SEARCH_ID) {
+            field.clear()
+            focusManager.clearFocus()
+            if (focus.inputMode == InputMode.CONTROLLER) {
                 currentFirstApp?.let { focus.requestFocus(it) } ?: focus.requestFocus(DR_CLOSE)
             }
         }
@@ -375,7 +384,8 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         }
     }
 
-    val sheet = sheetColor()
+    // A genuinely translucent sheet, not the near-opaque body used by menus and folders.
+    val sheet = sheetColor().copy(alpha = 0.58f)
     val sheetShape = remember { RoundedCornerShape(topStart = PlutoDimens.PanelCorner, topEnd = PlutoDimens.PanelCorner) }
     Box(
         Modifier
@@ -394,64 +404,31 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         ) {
             if (!compact) SheetHandle(Modifier.align(Alignment.CenterHorizontally))
 
-            // One row: back, then either the category chips or (while searching) the search
-            // field, which unfolds from the search button over the chips.
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 4.dp, end = 8.dp, top = if (compact) 2.dp else 4.dp, bottom = 4.dp)
-                    .graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
-                verticalAlignment = Alignment.CenterVertically,
+            // Keep search in one place. Replacing this row with an expanding text field
+            // used to change its width twice (trailing buttons + AnimatedContent) while the
+            // IME resized the panel, producing clipped text and a jumping header.
+            Column(
+                Modifier.graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
             ) {
-                PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", { vm.back() })
-                AnimatedContent(
-                    targetState = searchMode,
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.CenterEnd,
-                    transitionSpec = {
-                        if (targetState) {
-                            // The field grows leftwards out of the search button; the chips give way.
-                            (expandHorizontally(PlutoMotion.spatialFast(), expandFrom = Alignment.End) + fadeIn(PlutoMotion.fadeIn()))
-                                .togetherWith(fadeOut(PlutoMotion.fadeOut()) + slideOutHorizontally(PlutoMotion.slideSpring) { -it / 6 })
-                        } else {
-                            (fadeIn(PlutoMotion.fadeIn()) + slideInHorizontally(PlutoMotion.slideSpring) { -it / 6 })
-                                .togetherWith(shrinkHorizontally(PlutoMotion.spatialFast(), shrinkTowards = Alignment.End) + fadeOut(PlutoMotion.fadeOut()))
-                        }.using(SizeTransform(clip = true))
-                    },
-                    label = "drawerHeader",
-                ) { searching ->
-                    if (searching) {
-                        DrawerSearchField(
-                            field = field,
-                            compact = compact,
-                            onTextChanged = vm::setSearchText,
-                            onClear = { vm.clearSearch() },
-                            onCollapse = {
-                                keyboard?.hide()
-                                vm.setSearchActive(false)
-                            },
-                            onSearchAction = {
-                                keyboard?.hide()
-                                if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
-                            },
-                            onFieldActivated = { keyboard?.show() },
-                            onFieldFocused = { if (!currentState.session.searchActive) vm.setSearchActive(true) },
-                        )
-                    } else if (categories.size > 1) {
-                        CategoryTabs(
-                            categories = categories,
-                            selected = activeCategory,
-                            onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
-                            idPrefix = CHIP_PREFIX,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    } else {
-                        Spacer(Modifier.fillMaxWidth())
-                    }
-                }
-                if (!searchMode) {
-                    PlutoIconButton(DR_SEARCH_OPEN, Icons.Outlined.Search, "Search apps", { vm.setSearchActive(true) })
-                    if (!compact) {
+                if (!compact) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", {
+                            keyboard?.hide()
+                            focusManager.clearFocus()
+                            vm.setSearchActive(false)
+                            vm.back()
+                        })
+                        Column(Modifier.weight(1f).padding(start = 8.dp)) {
+                            Text("All apps", style = MaterialTheme.typography.titleLarge)
+                            Text(
+                                drawerCountLabel(state.drawerApps.size, session.searchText.isNotBlank()),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                         PlutoIconButton(
                             id = DR_ACTIONS,
                             icon = if (actionsMode) Icons.Outlined.Check else Icons.Outlined.MoreVert,
@@ -459,6 +436,29 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                             onClick = { actionsMode = !actionsMode },
                         )
                     }
+                }
+                Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (compact) 4.dp else 6.dp)) {
+                    DrawerSearchField(
+                        field = field,
+                        compact = compact,
+                        onClear = { vm.clearSearch() },
+                        onCollapse = { vm.setSearchActive(false) },
+                        onSearchAction = {
+                            keyboard?.hide()
+                            if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
+                        },
+                        onFieldActivated = { vm.setSearchActive(true); keyboard?.show() },
+                        onFieldFocused = { if (isTop && !currentState.session.searchActive) vm.setSearchActive(true) },
+                    )
+                }
+                if (!compact && categories.size > 1) {
+                    CategoryTabs(
+                        categories = categories,
+                        selected = activeCategory,
+                        onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
+                        idPrefix = CHIP_PREFIX,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
                 }
             }
 
@@ -488,7 +488,6 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                         stagger = stagger,
                         staggerFrame = staggerFrame,
                         pageShift = pageShift,
-                        fadeColor = sheet.copy(alpha = 1f),
                         onLaunchApp = onLaunchApp,
                         onAppActions = onAppActions,
                         onAppFocused = onAppFocused,
@@ -511,6 +510,11 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
             }
         }
     }
+}
+
+internal fun drawerCountLabel(count: Int, searching: Boolean): String {
+    val noun = if (searching) "result" else "app"
+    return "$count $noun${if (count == 1) "" else "s"}"
 }
 
 /** True while the window minus system bars, cutout and keyboard is shorter than [CompactImeHeight]. */
@@ -555,7 +559,6 @@ private fun SheetHandle(modifier: Modifier = Modifier) {
 private fun DrawerSearchField(
     field: SearchField,
     compact: Boolean,
-    onTextChanged: (String) -> Unit,
     onClear: () -> Unit,
     onCollapse: () -> Unit,
     onSearchAction: () -> Unit,
@@ -564,12 +567,15 @@ private fun DrawerSearchField(
 ) {
     var focused by remember { mutableStateOf(false) }
     val scheme = MaterialTheme.colorScheme
-    val pillShape = CircleShape
-    val value = field.value
+    val pillShape = RoundedCornerShape(18.dp)
+    val borderColor by animateColorAsState(
+        if (focused) scheme.primary.copy(alpha = 0.75f) else scheme.outlineVariant.copy(alpha = 0.35f),
+        PlutoMotion.fadeIn(), label = "searchFocus",
+    )
+    val text = field.state.text
     BasicTextField(
-        value = value,
-        onValueChange = { new -> field.onUserEdit(new)?.let(onTextChanged) },
-        singleLine = true,
+        state = field.state,
+        lineLimits = TextFieldLineLimits.SingleLine,
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface),
         cursorBrush = SolidColor(scheme.primary),
         keyboardOptions = KeyboardOptions(
@@ -577,23 +583,24 @@ private fun DrawerSearchField(
             autoCorrectEnabled = false,
             imeAction = ImeAction.Search,
         ),
-        keyboardActions = KeyboardActions(onSearch = { onSearchAction() }),
+        onKeyboardAction = { onSearchAction() },
         modifier = Modifier
             .fillMaxWidth()
+            .semantics { contentDescription = "Search apps" }
             .onFocusChanged { focused = it.isFocused }
             .controllerFocusTarget(
                 id = DRAWER_SEARCH_ID,
                 onActivate = onFieldActivated,
                 onFocused = onFieldFocused,
             ),
-        decorationBox = { inner ->
+        decorator = { inner ->
             Row(
                 Modifier
                     .heightIn(min = if (compact) 48.dp else 52.dp)
-                    .background(sheetRaisedColor(), pillShape)
+                    .background(sheetRaisedColor().copy(alpha = 0.86f), pillShape)
                     .border(
                         width = 1.dp,
-                        color = if (focused) scheme.primary.copy(alpha = 0.55f) else scheme.outlineVariant.copy(alpha = 0.6f),
+                        color = borderColor,
                         shape = pillShape,
                     )
                     .padding(start = 16.dp, end = 4.dp),
@@ -607,7 +614,7 @@ private fun DrawerSearchField(
                 )
                 Spacer(Modifier.width(12.dp))
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    if (value.text.isEmpty()) {
+                    if (text.isEmpty()) {
                         Text(
                             "Search apps",
                             style = MaterialTheme.typography.bodyLarge,
@@ -618,10 +625,16 @@ private fun DrawerSearchField(
                     }
                     inner()
                 }
-                if (value.text.isNotEmpty()) {
-                    PlutoIconButton(DR_CLEAR, Icons.Outlined.Clear, "Clear search", onClear)
-                } else {
+                if (text.isNotEmpty()) {
+                    PlutoIconButton(DR_CLEAR, Icons.Outlined.Clear, "Clear search", {
+                        field.clear()
+                        onClear()
+                    })
+                } else if (focused) {
                     PlutoIconButton(DR_SEARCH_CLOSE, Icons.Outlined.Close, "Close search", onCollapse)
+                } else {
+                    // Reserve the clear target: typing must never change the text's width.
+                    Spacer(Modifier.size(48.dp))
                 }
             }
         },
@@ -667,7 +680,6 @@ private fun DrawerGrid(
     stagger: Stagger,
     staggerFrame: StaggerFrame,
     pageShift: Animatable<Float, *>,
-    fadeColor: Color,
     onLaunchApp: (AppKey, String) -> Unit,
     onAppActions: (AppKey) -> Unit,
     onAppFocused: (AppKey, String) -> Unit,
@@ -695,7 +707,8 @@ private fun DrawerGrid(
                     alpha = 1f - abs(shift) * 0.6f
                 }
             }
-            .edgeFades(gridState, fadeColor),
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+            .edgeFades(gridState),
     ) {
         itemsIndexed(apps, key = { _, entry -> itemKey(entry.key) }, contentType = { _, _ -> "app" }) { index, entry ->
             val id = drawerAppId(entry.key)
@@ -727,20 +740,17 @@ private val ResultFadeIn: FiniteAnimationSpec<Float> = PlutoMotion.fadeIn()
 private val ResultFadeOut: FiniteAnimationSpec<Float> = PlutoMotion.fadeOut()
 private val ResultPlacement: FiniteAnimationSpec<IntOffset> = PlutoMotion.spatialFast()
 
-/** After a heavy change the old results are gone (SWAP_MS) before the new ones fade in. */
-private val SwapFadeIn: FiniteAnimationSpec<Float> =
-    tween(PlutoMotion.MEDIUM_MS, delayMillis = PlutoMotion.SWAP_MS, easing = PlutoMotion.EmphasizedDecelerate)
-private val SwapFadeOut: FiniteAnimationSpec<Float> = tween(PlutoMotion.SWAP_MS, easing = PlutoMotion.EmphasizedAccelerate)
-
 /**
  * Item motion for the drawer: appearing/disappearing tiles fade; when most of the list
  * stayed (refining a search, an install) the rest glide to their new cells with a short,
  * fast spring. When most of it changed (first character, Clear, another category) tiles
- * would fly on long diagonals across each other, so they cross-fade in place instead.
+ * would fly across each other, so outgoing cells drop immediately and new ones fade in.
  */
 private fun LazyGridItemScope.resultItem(heavy: Boolean): Modifier =
     if (heavy) {
-        Modifier.animateItem(fadeInSpec = SwapFadeIn, placementSpec = null, fadeOutSpec = SwapFadeOut)
+        // Retaining outgoing tiles also retained duplicate focus targets during rapid
+        // typing. Drop them immediately; only the new cells fade in, without a dead delay.
+        Modifier.animateItem(fadeInSpec = ResultFadeIn, placementSpec = null, fadeOutSpec = null)
     } else {
         Modifier.animateItem(fadeInSpec = ResultFadeIn, placementSpec = ResultPlacement, fadeOutSpec = ResultFadeOut)
     }
@@ -762,9 +772,8 @@ private class ResultsFeed(initial: List<AppEntry>) {
 
     /**
      * Grid-key generation per app. On a heavy change tiles do not glide (placementSpec is
-     * null), so a kept tile that has to move to another cell gets a fresh key: its old
-     * cell fades out with the departing tiles and it fades in at its new cell only after
-     * SWAP_MS, so no cell ever shows two tiles at once.
+     * null), so a kept tile that moves gets a fresh key. Its old cell is dropped
+     * immediately and its new cell fades in, avoiding overlapping icons or focus targets.
      */
     private val generations = HashMap<AppKey, Int>()
     private var generation = 0
@@ -866,25 +875,25 @@ internal fun partialResults(results: List<AppEntry>, keep: Set<AppKey>, budget: 
     }
 }
 
-/** Draws the sheet colour over the grid's top and bottom edges where it can scroll further. */
-private fun Modifier.edgeFades(gridState: LazyGridState, color: Color): Modifier = drawWithContent {
+/** Fade the tiles themselves, never paint an opaque stripe over the wallpaper. */
+private fun Modifier.edgeFades(gridState: LazyGridState): Modifier = drawWithContent {
     drawContent()
     val top = EdgeFadeTop.toPx()
-    // Grows in with the first few pixels of scroll instead of popping in.
     val topAmount = if (gridState.firstVisibleItemIndex > 0) 1f else (gridState.firstVisibleItemScrollOffset / top).coerceIn(0f, 1f)
     if (topAmount > 0f) {
         drawRect(
-            Brush.verticalGradient(0f to color, 1f to Color.Transparent, startY = 0f, endY = top),
+            Brush.verticalGradient(0f to Color.Black.copy(alpha = 1f - topAmount), 1f to Color.Black, startY = 0f, endY = top),
             size = Size(size.width, top),
-            alpha = topAmount,
+            blendMode = BlendMode.DstIn,
         )
     }
     if (gridState.canScrollForward) {
         val bottom = EdgeFadeBottom.toPx()
         drawRect(
-            Brush.verticalGradient(0f to Color.Transparent, 1f to color, startY = size.height - bottom, endY = size.height),
+            Brush.verticalGradient(0f to Color.Black, 1f to Color.Transparent, startY = size.height - bottom, endY = size.height),
             topLeft = Offset(0f, size.height - bottom),
             size = Size(size.width, bottom),
+            blendMode = BlendMode.DstIn,
         )
     }
 }
@@ -951,29 +960,36 @@ private class DrawerStaggerNode(var stagger: Stagger, var frame: StaggerFrame, v
  * an older keystroke arriving after newer ones (fast typing, conflated state) never rewinds it.
  */
 @Stable
-private class SearchField(initial: String) {
-    var value by mutableStateOf(TextFieldValue(initial, TextRange(initial.length)))
-        private set
+internal class SearchField(initial: String) {
+    // Value-based BasicTextField could receive another native key before recomposition
+    // handed its new TextFieldValue back, duplicating/dropping characters. TextFieldState
+    // performs each edit atomically inside the editor, independent of result-grid work.
+    val state = TextFieldState(initial)
     private val sent = ArrayDeque<String>().apply { add(initial) }
 
-    /** The user edited the field; returns the text to send to the VM, or null if unchanged. */
-    fun onUserEdit(new: TextFieldValue): String? {
-        value = new
-        if (new.text == sent.lastOrNull()) return null
-        sent.addLast(new.text)
+    fun onUserText(text: String): String? {
+        if (text == sent.lastOrNull()) return null
+        sent.addLast(text)
         if (sent.size > MAX_PENDING_ECHOES) sent.removeFirst()
-        return new.text
+        return text
+    }
+
+    fun clear() {
+        // Keep outstanding echoes until the empty-query acknowledgement arrives.
+        sent.addLast("")
+        if (sent.size > MAX_PENDING_ECHOES) sent.removeFirst()
+        state.setTextAndPlaceCursorAtEnd("")
     }
 
     fun onVmText(text: String) {
-        val echo = sent.indexOf(text)
+        val echo = sent.lastIndexOf(text)
         if (echo >= 0) {
-            // Our own keystroke: drop it and everything older; the field is already ahead.
+            // Query results may be behind the native editor. Never rewind an own echo.
             repeat(echo) { sent.removeFirst() }
         } else {
             sent.clear()
             sent.add(text)
-            value = TextFieldValue(text, TextRange(text.length))
+            state.setTextAndPlaceCursorAtEnd(text)
         }
     }
 }
