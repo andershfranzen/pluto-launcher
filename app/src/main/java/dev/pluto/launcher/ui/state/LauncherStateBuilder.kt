@@ -11,6 +11,7 @@ import dev.pluto.launcher.model.Category
 import dev.pluto.launcher.model.ControllerInfo
 import dev.pluto.launcher.model.Folder
 import dev.pluto.launcher.model.HomeItem
+import dev.pluto.launcher.model.HomeWidget
 import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.model.Organization
 import dev.pluto.launcher.model.RecentLaunch
@@ -64,7 +65,7 @@ class LauncherStateBuilder {
     private val byKeyMemo = Memo<List<AppEntry>, Map<AppKey, AppEntry>>(identity = true)
     private val appsMemo = Memo<Pair<List<AppEntry>, Set<AppKey>>, List<AppEntry>>()
     private val foldersMemo = Memo<Triple<Map<Long, Folder>, List<AppEntry>, Set<AppKey>>, Map<Long, FolderUi>>()
-    private val homeMemo = Memo<Triple<List<HomeItem>, Map<Long, FolderUi>, List<AppEntry>>, List<HomeTile>>()
+    private val homeMemo = Memo<Pair<Triple<List<HomeItem>, Map<Long, FolderUi>, List<AppEntry>>, Map<Int, HomeWidget>>, List<HomeTile>>()
     private val dockMemo = Memo<Triple<List<AppKey?>, List<AppEntry>, Set<AppKey>>, List<AppEntry?>>()
     private val categoriesMemo = Memo<List<Category>, List<Category>>()
     private val categoryAppsMemo = Memo<Triple<List<AppEntry>, Long?, Set<AppKey>?>, List<AppEntry>>()
@@ -124,11 +125,12 @@ class LauncherStateBuilder {
         val folders = foldersMemo.get(Triple(org.folders, allApps, hidden)) {
             org.folders.mapValues { (_, folder) -> FolderUi(folder, folder.apps.mapNotNull(::visible)) }
         }
-        val homeTiles = homeMemo.get(Triple(org.homeItems, folders, apps)) {
+        val homeTiles = homeMemo.get(Triple(org.homeItems, folders, apps) to org.widgets) {
             org.homeItems.mapNotNull { item ->
                 when (item) {
                     is HomeItem.App -> visible(item.key)?.let(HomeTile::App)
                     is HomeItem.FolderRef -> folders[item.folderId]?.let(HomeTile::FolderTile)
+                    is HomeItem.Widget -> org.widgets[item.appWidgetId]?.let(HomeTile::Widget)
                 }
             }
         }

@@ -4,14 +4,36 @@ import dev.pluto.launcher.model.HandheldAppearance
 import dev.pluto.launcher.model.RotationPreference
 import dev.pluto.launcher.model.ThemePreference
 
-/** What is drawn behind the launcher. */
-enum class BackgroundStyle {
+/** What is drawn behind the launcher; normal and console (handheld) mode each have their own. */
+enum class BackgroundChoice {
     /** The system wallpaper (with the contrast scrim). */
     WALLPAPER,
-    /** PS3 XMB-style animated waves in console (handheld) mode; the wallpaper elsewhere. */
-    XMB_CONSOLE,
-    /** XMB waves everywhere. */
-    XMB_EVERYWHERE,
+    /** Pluto from New Horizons' colour map, turning slowly among stars and drifting particles. */
+    PLUTO,
+    /** PS3 XMB-style animated waves in an [XmbColor]. */
+    XMB,
+}
+
+/** How often the Pluto background animates: smoother costs more battery. */
+enum class BackgroundFrameRate(val effectsFps: Int, val globeFps: Int) {
+    /** Stars and dust at 60 fps, the slowly turning globe at 30. */
+    SMOOTH(60, 30),
+    /** Stars and dust at 30 fps, the globe at 20. */
+    BATTERY_SAVER(30, 20),
+}
+
+/** How the console's carousel lays out its cards (in the spirit of Aurora's coverflow styles). */
+enum class CarouselStyle {
+    /** Side cards tilt towards the centre like the walls of a corridor. */
+    COVERFLOW,
+    /** A flat, evenly spaced row; neighbours a little smaller. */
+    SHOWCASE,
+    /** Cards follow a gentle arc, tipping as they go. */
+    ARC,
+    /** Cards stand on a turning ring, facing outwards. */
+    RING,
+    /** What comes next waits in a stack behind the selection; what is passed slides away. */
+    DECK,
 }
 
 /** Base colour of the XMB background. AUTO changes with the month, like the PS3 did. */
@@ -149,8 +171,13 @@ data class LauncherSettings(
     /** Launcher text multiplier on top of the system font scale, 0.85..1.5. */
     val textScale: Float = 1f,
     val reducedMotion: Boolean = false,
-    val backgroundStyle: BackgroundStyle = BackgroundStyle.WALLPAPER,
+    val normalBackground: BackgroundChoice = BackgroundChoice.PLUTO,
+    val consoleBackground: BackgroundChoice = BackgroundChoice.XMB,
     val xmbColor: XmbColor = XmbColor.AUTO,
+    val backgroundFrameRate: BackgroundFrameRate = BackgroundFrameRate.SMOOTH,
+    val carouselStyle: CarouselStyle = CarouselStyle.COVERFLOW,
+    /** Package of the chosen icon pack; null for the apps' own icons. */
+    val iconPack: String? = null,
     val rotation: RotationPreference = RotationPreference.FOLLOW_SYSTEM,
     val handheldAppearance: HandheldAppearance = HandheldAppearance.AUTOMATIC,
     val historyEnabled: Boolean = true,

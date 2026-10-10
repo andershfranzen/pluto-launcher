@@ -78,3 +78,13 @@ data class RecentLaunchEntity(
     @PrimaryKey val appKey: String,
     val launchedAt: Long,
 )
+
+/** A widget on the home grid ([dev.pluto.launcher.model.HomeItem.Widget]): its host id, provider and height. */
+@Entity(tableName = "home_widget")
+data class HomeWidgetEntity(
+    @PrimaryKey val appWidgetId: Int,
+    /** The provider's flattened ComponentName. */
+    val provider: String,
+    /** Height in home grid rows. */
+    val rows: Int,
+)

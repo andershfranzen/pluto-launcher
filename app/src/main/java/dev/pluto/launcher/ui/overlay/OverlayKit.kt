@@ -80,6 +80,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
+import dev.pluto.launcher.ui.components.symmetricHorizontalSafeDrawing
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -120,6 +129,9 @@ import kotlin.math.roundToInt
 internal val PanelShape = RoundedCornerShape(24.dp)
 internal val ControlShape = RoundedCornerShape(16.dp)
 private const val MODAL_SCRIM_ALPHA = 0.4f
+
+/** Opacity of full-screen pages (settings): enough to read comfortably, the background still shows. */
+private const val PAGE_ALPHA = 0.74f
 
 // --- Focus helpers ----------------------------------------------------------------
 
@@ -263,7 +275,7 @@ private fun PanelHeader(title: String, closeId: String, onClose: () -> Unit, lea
 
 /**
  * A full-height layer (settings, edit, …): modal scrim plus a centred panel with a title
- * bar and Close button. [overlay] hosts nested dialogs above the panel; while one is open
+ * bar and Close button, or with [fullScreen] a page filling the window (settings). [overlay] hosts nested dialogs above the panel; while one is open
  * ([dialogOpen]) the panel underneath is inert for focus and hidden from screen readers,
  * so neither a controller nor TalkBack can reach controls covered by the dialog.
  * The body scrolls vertically unless [scrollable] is false (for screens using lazy lists).
@@ -278,6 +290,7 @@ internal fun LayerScaffold(
     maxWidth: Dp = 720.dp,
     scrollable: Boolean = true,
     contentKey: Any? = Unit,
+    fullScreen: Boolean = false,
     headerContent: @Composable () -> Unit = {},
     overlay: @Composable BoxScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
@@ -286,21 +299,39 @@ internal fun LayerScaffold(
     // Each settings section starts at its own top instead of inheriting a stale scroll.
     val bodyScroll = androidx.compose.runtime.key(contentKey) { rememberScrollState() }
     Box(Modifier.fillMaxSize().focusTrap(trapFocus && !dialogOpen)) {
-        ModalScrim(onTap = null)
-        Surface(
-            modifier = Modifier
+        if (!fullScreen) ModalScrim(onTap = null)
+        val frame = if (fullScreen) {
+            Modifier.fillMaxSize()
+        } else {
+            Modifier
                 .align(Alignment.Center)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(12.dp)
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .then(if (covered) Modifier.clearAndSetSemantics { } else Modifier.semantics { paneTitle = title }),
-            shape = PanelShape,
-            color = panelColor(),
+        }
+        Surface(
+            modifier = frame.then(if (covered) Modifier.clearAndSetSemantics { } else Modifier.semantics { paneTitle = title }),
+            shape = if (fullScreen) RectangleShape else PanelShape,
+            // Full-screen pages let the background (Pluto, waves or wallpaper) glow through.
+            color = if (fullScreen) MaterialTheme.colorScheme.surfaceContainer.copy(alpha = PAGE_ALPHA) else panelColor(),
         ) {
             CompositionLocalProvider(LocalFocusInert provides focusInert(covered)) {
-                Column {
+                // Full screen: edge to edge behind the system bars, content inside them and
+                // centred at [maxWidth] on wide screens.
+                val columnModifier = if (fullScreen) {
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))
+                        .symmetricHorizontalSafeDrawing()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                        .widthIn(max = maxWidth)
+                        .fillMaxSize()
+                } else {
+                    Modifier
+                }
+                Column(columnModifier) {
                     PanelHeader(title, "$idPrefix:close", onClose, leading = null)
                     headerContent()
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
@@ -686,10 +717,11 @@ internal fun CheckRow(
 }
 
 /**
- * Single-choice group rendered as wrapping chips. The selected chip is filled and
- * carries a check mark, so selection never relies on colour alone.
+ * Single-choice group. Up to [SEGMENT_MAX] short options form a segmented control (equal
+ * widths, never wrapping); more or longer options form a vertical list with a check on the
+ * chosen row. Selection never relies on colour alone: the chosen option carries a check mark
+ * and is announced as selected.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun <T> ChoiceGroup(
     idPrefix: String,
@@ -705,52 +737,123 @@ internal fun <T> ChoiceGroup(
         if (supporting != null) {
             Text(supporting, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         }
-        Spacer(Modifier.size(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            options.forEach { (value, text) ->
-                val isSelected = value == selected
-                val selection = animateFloatAsState(if (isSelected) 1f else 0f, PlutoMotion.effects(), label = "chipSelection")
-                Row(
+        Spacer(Modifier.size(10.dp))
+        val segmented = options.size <= SEGMENT_MAX && options.all { it.second.length <= SEGMENT_MAX_CHARS }
+        if (segmented) {
+            SegmentedChoices(idPrefix, label, options, selected, onSelect)
+        } else {
+            ListChoices(idPrefix, label, options, selected, onSelect)
+        }
+    }
+}
+
+@Composable
+private fun <T> SegmentedChoices(idPrefix: String, label: String, options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(SegmentShape)
+            .background(colors.onSurface.copy(alpha = 0.06f))
+            .border(1.dp, colors.outlineVariant.copy(alpha = 0.35f), SegmentShape)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        options.forEach { (value, text) ->
+            val isSelected = value == selected
+            val selection = animateFloatAsState(if (isSelected) 1f else 0f, PlutoMotion.effects(), label = "segmentSelection")
+            val fill = colors.inverseSurface
+            Row(
+                Modifier
+                    .weight(1f)
+                    .heightIn(min = 44.dp)
+                    .controllerFocusable(
+                        id = "$idPrefix:$value",
+                        onActivate = { onSelect(value) },
+                        contentDescription = "$label: $text" + if (isSelected) ", ${KitText.SELECTED}" else "",
+                        shape = SegmentItemShape,
+                    )
+                    .clip(SegmentItemShape)
+                    // The selected fill fades in (draw phase only).
+                    .drawBehind { drawRect(fill.copy(alpha = fill.alpha * selection.value)) }
+                    .padding(horizontal = 6.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (isSelected) {
+                    Icon(Icons.Rounded.Check, contentDescription = null, tint = colors.inverseOnSurface, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(
+                    text,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = lerp(colors.onSurface, colors.inverseOnSurface, selection.value),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun <T> ListChoices(idPrefix: String, label: String, options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(SegmentShape)
+            .background(colors.onSurface.copy(alpha = 0.04f))
+            .border(1.dp, colors.outlineVariant.copy(alpha = 0.35f), SegmentShape),
+    ) {
+        options.forEachIndexed { index, (value, text) ->
+            if (index > 0) HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.25f), modifier = Modifier.padding(horizontal = 14.dp))
+            val isSelected = value == selected
+            val selection = animateFloatAsState(if (isSelected) 1f else 0f, PlutoMotion.effects(), label = "listSelection")
+            val tint = colors.onSurface
+            val mark = colors.inverseSurface
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
+                    .controllerFocusable(
+                        id = "$idPrefix:$value",
+                        onActivate = { onSelect(value) },
+                        contentDescription = "$label: $text" + if (isSelected) ", ${KitText.SELECTED}" else "",
+                        shape = SegmentShape,
+                    )
+                    .drawBehind { drawRect(tint.copy(alpha = 0.07f * selection.value)) }
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(text, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(12.dp))
+                // A radio mark: an outlined ring, filled with a check when chosen.
+                Box(
                     Modifier
-                        .heightIn(min = 48.dp)
-                        .controllerFocusable(
-                            id = "$idPrefix:$value",
-                            onActivate = { onSelect(value) },
-                            contentDescription = "$label: $text" + if (isSelected) ", ${KitText.SELECTED}" else "",
-                            shape = ControlShape,
-                        )
-                        .clip(ControlShape)
-                        // Selected fill and the thicker border fade in as the plain outline fades out.
-                        .selectionBackground(
-                            selection,
-                            colors.inverseSurface,
-                            colors.inverseSurface,
-                            SelectedBorderWidth,
-                            unselectedBorder = colors.outline,
-                        )
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                        .size(22.dp)
+                        .clip(CircleShape)
+                        .border(1.5.dp, lerp(colors.outline, mark, selection.value), CircleShape)
+                        .drawBehind { drawCircle(mark.copy(alpha = selection.value)) },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    // Reserve the check slot. Selecting a chip must not change its width,
-                    // wrap the row or shift the control out from under the user's finger.
-                    Box(Modifier.width(24.dp), contentAlignment = Alignment.CenterStart) {
-                        Icon(
-                            Icons.Rounded.Check,
-                            contentDescription = null,
-                            tint = colors.inverseOnSurface,
-                            modifier = Modifier.size(18.dp).graphicsLayer { alpha = selection.value },
-                        )
-                    }
-                    Text(
-                        text,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (isSelected) colors.inverseOnSurface else colors.onSurface,
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = colors.inverseOnSurface,
+                        modifier = Modifier.size(14.dp).graphicsLayer { alpha = selection.value },
                     )
                 }
             }
         }
     }
 }
+
+/** Segmented controls take at most this many options of at most this many characters. */
+private const val SEGMENT_MAX = 3
+private const val SEGMENT_MAX_CHARS = 13
+private val SegmentShape = RoundedCornerShape(16.dp)
+private val SegmentItemShape = RoundedCornerShape(12.dp)
 
 /**
  * Slider replacement that works with D-pad LEFT/RIGHT: a "−" button, the value and a
@@ -766,17 +869,23 @@ internal fun StepperRow(
     supporting: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+    // Label on the left, the stepper on the right: one row, not two.
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
-        if (supporting != null) {
-            Text(supporting, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+            if (supporting != null) {
+                Text(supporting, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            }
         }
+        Spacer(Modifier.width(8.dp))
         Row(
-            Modifier.fillMaxWidth().padding(top = 4.dp),
+            Modifier
+                .clip(SegmentShape)
+                .background(colors.onSurface.copy(alpha = 0.06f)),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End,
         ) {
             IconAction(
                 id = "$idPrefix:dec",
@@ -790,7 +899,7 @@ internal fun StepperRow(
             AnimatedContent(
                 targetState = valueText,
                 modifier = Modifier
-                    .widthIn(min = 64.dp)
+                    .widthIn(min = 56.dp)
                     .clearAndSetSemantics {
                         contentDescription = valueText
                         liveRegion = LiveRegionMode.Polite
@@ -809,7 +918,7 @@ internal fun StepperRow(
                     style = MaterialTheme.typography.titleMedium,
                     color = colors.onSurface,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.widthIn(min = 64.dp),
+                    modifier = Modifier.widthIn(min = 56.dp),
                 )
             }
             IconAction(
@@ -872,19 +981,22 @@ internal fun BodyText(text: String, modifier: Modifier = Modifier) {
 @Composable
 internal fun NoticeCard(text: String, modifier: Modifier = Modifier, isError: Boolean = false, icon: ImageVector = Icons.Rounded.Info) {
     val colors = MaterialTheme.colorScheme
-    val container = if (isError) colors.errorContainer else colors.tertiaryContainer
-    val content = if (isError) colors.onErrorContainer else colors.onTertiaryContainer
+    // Information is a quiet tinted note; only errors get a strong container.
+    val container = if (isError) colors.errorContainer else colors.onSurface.copy(alpha = 0.07f)
+    val content = if (isError) colors.onErrorContainer else colors.onSurface
+    val iconTint = if (isError) colors.onErrorContainer else colors.primary
     Row(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 6.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp)
             .clip(ControlShape)
             .background(container)
-            .padding(12.dp)
+            .border(1.dp, if (isError) Color.Transparent else colors.outlineVariant.copy(alpha = 0.3f), ControlShape)
+            .padding(14.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.Top,
     ) {
-        Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(20.dp))
+        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(12.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, color = content)
     }

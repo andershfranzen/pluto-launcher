@@ -1,6 +1,9 @@
 package dev.pluto.launcher.ui.settings
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.SystemClock
@@ -26,6 +29,16 @@ internal tailrec fun Context.findActivity(): Activity? = when (this) {
 internal fun openDefaultAppsSettings(context: Context) {
     val activity = context.findActivity() ?: return
     runCatching { HomeRole.openDefaultAppsSettings(activity) }
+}
+
+/** Opens [url] in the browser; with no app to handle it, nothing happens. */
+internal fun openLink(context: Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        // No browser installed.
+    }
 }
 
 /**

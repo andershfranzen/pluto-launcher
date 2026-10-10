@@ -52,7 +52,7 @@ class ModelsTest {
         assertNull(HomeItem.decode(""))
         assertNull(HomeItem.decode("folder:abc"))
         assertNull(HomeItem.decode("app:not-a-key"))
-        assertNull(HomeItem.decode("widget:1"))
+        assertNull(HomeItem.decode("gadget:1"))
     }
 
     @Test
@@ -60,5 +60,13 @@ class ModelsTest {
         val org = Organization()
         assertEquals(Organization.DOCK_SLOTS, org.dock.size)
         assertEquals(List(5) { null }, org.dock)
+    }
+
+    @Test
+    fun widgetItemsRoundTrip() {
+        val item = HomeItem.Widget(42)
+        org.junit.Assert.assertEquals("widget:42", item.id)
+        org.junit.Assert.assertEquals(item, HomeItem.decode(item.id))
+        org.junit.Assert.assertNull(HomeItem.decode("widget:x"))
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -31,7 +33,6 @@ import androidx.compose.runtime.remember
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.ButtonLegend
-import dev.pluto.launcher.ui.components.ClockHeader
 import dev.pluto.launcher.ui.components.Legends
 import dev.pluto.launcher.ui.components.PlutoPanel
 import dev.pluto.launcher.ui.components.activeMapping
@@ -86,14 +87,14 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         val shortWindow = maxHeight < SideDockMaxHeight
-        Column(Modifier.fillMaxSize().swipeUpToOpenDrawer(vm)) {
+        Column(Modifier.fillMaxSize().swipeUpToOpenDrawer(vm).swipeDownForNotifications()) {
             Row(
                 Modifier
                     .fillMaxWidth()
                     .padding(start = 20.dp, end = 16.dp, top = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ClockHeader(Modifier.weight(1f), compact = true)
+                Spacer(Modifier.weight(1f))
                 HomeToolbar(vm)
             }
 
@@ -144,6 +145,7 @@ private fun FavouritesGrid(
         if (tiles.isEmpty()) {
             EmptyFavourites(vm, Modifier.align(Alignment.Center))
         } else {
+            val (entries, dragProbe) = rememberDragAwareTiles(tiles, gridState)
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = iconSize + 44.dp),
                 state = gridState,
@@ -153,10 +155,25 @@ private fun FavouritesGrid(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().then(dragProbe),
             ) {
-                items(tiles, key = { it.id }, contentType = { if (it is HomeTile.App) "app" else "folder" }) { tile ->
-                    HomeTileView(tile, iconSize, homeTileFocusId(tile), vm, plutoItem())
+                items(entries, key = { it.key }, span = { entry ->
+                    // A widget takes the whole row.
+                    if (entry is HomeGridEntry.Tile && entry.tile is HomeTile.Widget) GridItemSpan(maxLineSpan) else GridItemSpan(1)
+                }, contentType = { entry ->
+                    when (entry) {
+                        HomeGridEntry.Gap -> "gap"
+                        is HomeGridEntry.Tile -> when (entry.tile) {
+                            is HomeTile.App -> "app"
+                            is HomeTile.FolderTile -> "folder"
+                            is HomeTile.Widget -> "widget"
+                        }
+                    }
+                }) { entry ->
+                    when (entry) {
+                        HomeGridEntry.Gap -> DragGap(iconSize, plutoItem())
+                        is HomeGridEntry.Tile -> HomeTileView(entry.tile, iconSize, homeTileFocusId(entry.tile), vm, plutoItem())
+                    }
                 }
             }
         }

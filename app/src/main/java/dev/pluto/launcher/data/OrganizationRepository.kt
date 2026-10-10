@@ -7,6 +7,8 @@ import dev.pluto.launcher.data.db.FolderAppEntity
 import dev.pluto.launcher.data.db.FolderEntity
 import dev.pluto.launcher.data.db.HiddenAppEntity
 import dev.pluto.launcher.data.db.HomeItemEntity
+import dev.pluto.launcher.model.HomeWidget
+import dev.pluto.launcher.data.db.HomeWidgetEntity
 import dev.pluto.launcher.data.db.LauncherDao
 import dev.pluto.launcher.data.db.RecentLaunchEntity
 import dev.pluto.launcher.domain.RecentHistory
@@ -32,7 +34,8 @@ import kotlinx.coroutines.sync.withLock
  * - An app appears on the home grid at most once: either directly (HomeItem.App) or inside
  *   exactly one folder (a folder is itself a HomeItem.FolderRef).
  * - The dock is independent of the home grid; max 5 slots, an app occupies at most one slot.
- * - Built-in categories ALL, GAMES and TOOLS exist after [ensureDefaults]; ALL cannot be deleted.
+ * - Built-in categories ALL and GAMES exist after [ensureDefaults] (older installs may also
+ *   have TOOLS); ALL cannot be deleted.
  *
  * Edits that span several DAO calls are serialised by [writeLock] so concurrent
  * read-modify-write sequences never interleave. The observed [organization] is also
@@ -50,13 +53,17 @@ class OrganizationRepository(private val dao: LauncherDao) {
     ) { home, dock, folders, folderApps, categories ->
         StructureRows(home, dock, folders, folderApps, categories)
     }.combine(
-        combine(dao.observeCategoryApps(), dao.observeHidden(), dao.observeRecents()) { members, hidden, recents ->
-            MembershipRows(members, hidden, recents)
+        combine(dao.observeCategoryApps(), dao.observeHidden(), dao.observeRecents(), dao.observeWidgets()) { members, hidden, recents, widgets ->
+            MembershipRows(members, hidden, recents, widgets)
         },
     ) { structure, membership -> buildOrganization(structure, membership) }
         .distinctUntilChanged()
 
-    /** Seeds built-in categories (names "All apps", "Games", "Tools") when the table is empty. */
+    /**
+     * Seeds the default categories ("All apps" and "Games") when the table is empty. Users add
+     * as many of their own as they like; TOOLS is no longer seeded but stays a known built-in
+     * for installs that already have it.
+     */
     suspend fun ensureDefaults(): Unit = writeLock.withLock {
         val existing = dao.categories()
         if (existing.isNotEmpty()) {
@@ -70,7 +77,7 @@ class OrganizationRepository(private val dao: LauncherDao) {
             return@withLock
         }
         dao.insertCategories(
-            BuiltInCategory.entries.mapIndexed { i, b -> CategoryEntity(name = DEFAULT_NAMES.getValue(b), builtIn = b.name, position = i) },
+            SEEDED.mapIndexed { i, b -> CategoryEntity(name = DEFAULT_NAMES.getValue(b), builtIn = b.name, position = i) },
         )
     }
 
@@ -134,6 +141,23 @@ class OrganizationRepository(private val dao: LauncherDao) {
         // REPLACE on the appKey primary key moves apps out of any other folder.
         dao.replaceFolderApps(folderId, apps.map { it.encode() })
         folderId
+    }
+
+    /** Adds a bound widget to the end of the home grid. */
+    suspend fun addWidget(appWidgetId: Int, provider: String, rows: Int): Unit = writeLock.withLock {
+        dao.insertWidget(HomeWidgetEntity(appWidgetId, provider, rows.coerceIn(HomeWidget.MIN_ROWS, HomeWidget.MAX_ROWS)))
+        val home = dao.homeItems()
+        dao.insertHomeItems(listOf(HomeItemEntity(HomeItem.Widget(appWidgetId).id, (home.maxOfOrNull { it.position } ?: -1) + 1)))
+    }
+
+    /** Takes a widget off the grid (the caller frees its host id). */
+    suspend fun removeWidget(appWidgetId: Int): Unit = writeLock.withLock {
+        dao.deleteHomeItemById(HomeItem.Widget(appWidgetId).id)
+        dao.deleteWidget(appWidgetId)
+    }
+
+    suspend fun setWidgetRows(appWidgetId: Int, rows: Int): Unit = writeLock.withLock {
+        dao.setWidgetRows(appWidgetId, rows.coerceIn(HomeWidget.MIN_ROWS, HomeWidget.MAX_ROWS))
     }
 
     suspend fun renameFolder(id: Long, name: String): Unit = writeLock.withLock {
@@ -255,9 +279,13 @@ class OrganizationRepository(private val dao: LauncherDao) {
         val members: List<CategoryAppEntity>,
         val hidden: List<HiddenAppEntity>,
         val recents: List<RecentLaunchEntity>,
+        val widgets: List<HomeWidgetEntity>,
     )
 
     companion object {
+        /** Built-in categories a fresh install starts with, in order. */
+        val SEEDED = listOf(BuiltInCategory.ALL, BuiltInCategory.GAMES)
+
         val DEFAULT_NAMES: Map<BuiltInCategory, String> = mapOf(
             BuiltInCategory.ALL to "All apps",
             BuiltInCategory.GAMES to "Games",
@@ -272,11 +300,13 @@ class OrganizationRepository(private val dao: LauncherDao) {
             }
             val inFolders = folders.values.flatMapTo(HashSet()) { it.apps }
 
+            val widgets = m.widgets.associate { it.appWidgetId to HomeWidget(it.appWidgetId, it.provider, it.rows) }
             val home = s.home.mapNotNull { HomeItem.decode(it.itemId) }
                 .filter { item ->
                     when (item) {
                         is HomeItem.App -> item.key !in inFolders
                         is HomeItem.FolderRef -> item.folderId in folders
+                        is HomeItem.Widget -> item.appWidgetId in widgets
                     }
                 }
                 .distinct()
@@ -313,6 +343,7 @@ class OrganizationRepository(private val dao: LauncherDao) {
                 recents = m.recents.mapNotNull { r -> AppKey.decode(r.appKey)?.let { RecentLaunch(it, r.launchedAt) } }
                     .distinctBy { it.key }
                     .take(RecentHistory.MAX_ENTRIES),
+                widgets = widgets,
             )
         }
     }

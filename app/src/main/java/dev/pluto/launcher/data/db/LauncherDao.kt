@@ -78,6 +78,26 @@ interface LauncherDao {
         insertHomeItems(orderedIds.distinct().mapIndexed { i, id -> HomeItemEntity(id, i) })
     }
 
+    // --- Widgets ------------------------------------------------------------
+
+    @Query("SELECT * FROM home_widget")
+    fun observeWidgets(): Flow<List<HomeWidgetEntity>>
+
+    @Query("SELECT * FROM home_widget")
+    suspend fun widgets(): List<HomeWidgetEntity>
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun insertWidget(widget: HomeWidgetEntity)
+
+    @Query("DELETE FROM home_widget WHERE appWidgetId = :id")
+    suspend fun deleteWidget(id: Int)
+
+    @Query("UPDATE home_widget SET `rows` = :rows WHERE appWidgetId = :id")
+    suspend fun setWidgetRows(id: Int, rows: Int)
+
+    @Query("DELETE FROM home_item WHERE itemId = :itemId")
+    suspend fun deleteHomeItemById(itemId: String)
+
     // --- Dock ---------------------------------------------------------------
 
     @Query("DELETE FROM dock_slot")

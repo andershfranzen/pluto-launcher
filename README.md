@@ -47,9 +47,12 @@ Pluto never forces rotation on the app you are using.
 - Favourites grid and folders, plus a five-slot dock, shared by every orientation.
 - A drawer that follows your finger: swipe up anywhere on home, or tap search. It has
   accent- and case-insensitive search, category chips and an A–Z fast-scroll rail.
-- Categories (All apps, Games, Tools and your own); an app can be in several.
-- An explicit Edit mode (Move up / down / before / after), so organising works with touch or
-  a controller and never needs drag and drop.
+- Categories (All apps, Games and as many of your own as you like); an app can be in several.
+- Drag and drop on Home: press, hold and move to rearrange, drop on an app to make a folder,
+  onto the dock, or out of the drawer. The explicit Edit mode (Move up / down / before /
+  after) still works with touch or a controller.
+- Widgets in the home grid (a full row each, resizable in height) and icon packs (the
+  ADW / Nova format most packs use).
 - Launcher-only hidden apps, with a screen to bring them back.
 
 **Console mode**
@@ -82,8 +85,8 @@ Pluto never forces rotation on the app you are using.
 **Privacy**
 - Fully offline: no account, ads, analytics, cloud sync or network access.
 - No usage, notification, accessibility or overlay permissions. The only declared
-  permission is for the optional Uninstall action, which always goes through Android's
-  own confirmation.
+  permissions are for the optional Uninstall action, which always goes through Android's
+  own confirmation, and for pulling down the notification shade when you swipe down on Home.
 - Recent launches covers only apps opened from Pluto. It can be cleared or switched off,
   and switching it off deletes what was stored.
 
@@ -161,8 +164,7 @@ Pluto 0.1 is a working prototype, but it isn't finished:
   have not all been measured on the reference hardware (a 144 Hz OnePlus phone with a
   GameSir controller).
 - Work profiles and Private Space are not shown in 0.1. Pluto says so in Settings.
-- Widgets, drag and drop, backup/import, icon packs and app shortcuts are planned for later
-  releases.
+- Backup/import and app shortcuts are planned for later releases.
 
 [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) lists the rest, candidly.
 

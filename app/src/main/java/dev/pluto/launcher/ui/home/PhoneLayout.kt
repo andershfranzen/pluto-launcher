@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
@@ -34,8 +37,8 @@ import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.ButtonLegend
-import dev.pluto.launcher.ui.components.ClockHeader
 import dev.pluto.launcher.ui.components.EmptyState
+import dev.pluto.launcher.ui.components.GlassPanel
 import dev.pluto.launcher.ui.components.Legends
 import dev.pluto.launcher.ui.components.PlutoIconButton
 import dev.pluto.launcher.ui.components.PlutoPanel
@@ -45,10 +48,10 @@ import dev.pluto.launcher.ui.components.rememberEqual
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 
 /**
- * Portrait home: clock and date, a toolbar (Search, Edit, Settings), the favourites grid and
- * the five-slot dock. The drawer opens by swiping up anywhere (the panel follows the finger),
- * by the Search button (one tap; its "All apps" accessibility action / long press opens the
- * drawer without the keyboard) and by controller Y; there is no separate "All apps" button.
+ * Portrait home: the favourites grid and a glass five-slot dock (no clock: the status bar has it).
+ * Portrait is touch-first: Search, Edit and Settings live in a menu opened by pressing and
+ * holding empty space (also screen-reader actions on the home surface), not in a toolbar.
+ * The drawer opens by swiping up anywhere (the panel follows the finger) and by controller Y.
  */
 @Composable
 fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
@@ -64,24 +67,19 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
     TrackFocusOrder(HOME_SURFACE, focusIds) { gridState.scrollToItem(it) }
     TrackGridNavigation(HOME_SURFACE, gridState, focusIds)
-    val defaultId = focusIds.firstOrNull() ?: ID_SEARCH
+    val defaultId = focusIds.firstOrNull() ?: ID_EMPTY_EDIT
     SideEffect { focus.setDefaultFocus(defaultId) }
 
+    val menu = remember { HomeMenuState() }
     Column(
         Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .swipeUpToOpenDrawer(vm),
+            .homeMenuOnLongPress(menu, vm)
+            .swipeUpToOpenDrawer(vm).swipeDownForNotifications(),
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            ClockHeader(Modifier.weight(1f).padding(top = 8.dp))
-            HomeToolbar(vm)
-        }
+        // No clock: the status bar already shows the time; Home starts with the favourites.
+        Spacer(Modifier.height(16.dp))
 
         PhoneFavourites(tiles, vm, iconSize, gridState, Modifier.weight(1f).fillMaxWidth())
 
@@ -91,6 +89,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 .align(Alignment.CenterHorizontally)
                 .widthIn(max = 560.dp)
                 .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
+            glass = true,
         )
 
         if (showControllerHints(state, focus)) {
@@ -103,6 +102,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
             )
         }
     }
+    HomeMenu(menu, vm)
 }
 
 /**
@@ -121,6 +121,7 @@ private fun PhoneFavourites(
         if (tiles.isEmpty()) {
             EmptyFavourites(vm, Modifier.align(Alignment.Center))
         } else {
+            val (entries, dragProbe) = rememberDragAwareTiles(tiles, gridState)
             LazyVerticalGrid(
                 columns = AdaptiveCountCells(minCell = iconSize + 36.dp, minCount = 3, maxCount = 6, extra = 24.dp),
                 state = gridState,
@@ -130,10 +131,25 @@ private fun PhoneFavourites(
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().then(dragProbe),
             ) {
-                items(tiles, key = { it.id }, contentType = { if (it is HomeTile.App) "app" else "folder" }) { tile ->
-                    HomeTileView(tile, iconSize, homeTileFocusId(tile), vm, plutoItem())
+                items(entries, key = { it.key }, span = { entry ->
+                    // A widget takes the whole row.
+                    if (entry is HomeGridEntry.Tile && entry.tile is HomeTile.Widget) GridItemSpan(maxLineSpan) else GridItemSpan(1)
+                }, contentType = { entry ->
+                    when (entry) {
+                        HomeGridEntry.Gap -> "gap"
+                        is HomeGridEntry.Tile -> when (entry.tile) {
+                            is HomeTile.App -> "app"
+                            is HomeTile.FolderTile -> "folder"
+                            is HomeTile.Widget -> "widget"
+                        }
+                    }
+                }) { entry ->
+                    when (entry) {
+                        HomeGridEntry.Gap -> DragGap(iconSize, plutoItem())
+                        is HomeGridEntry.Tile -> HomeTileView(entry.tile, iconSize, homeTileFocusId(entry.tile), vm, plutoItem())
+                    }
                 }
             }
         }
@@ -178,12 +194,18 @@ internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     }
 }
 
-/** The five dock slots in a row, on a panel. */
+/** The five dock slots in a row, on a panel, or on frosted glass ([glass], portrait home). */
 @Composable
-internal fun HorizontalDock(dock: List<AppEntry?>, vm: LauncherViewModel, iconSize: Dp, modifier: Modifier = Modifier) {
-    PlutoPanel(modifier.fillMaxWidth()) {
+internal fun HorizontalDock(
+    dock: List<AppEntry?>,
+    vm: LauncherViewModel,
+    iconSize: Dp,
+    modifier: Modifier = Modifier,
+    glass: Boolean = false,
+) {
+    val slots = @Composable {
         Row(
-            Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            Modifier.padding(horizontal = 8.dp, vertical = if (glass) 10.dp else 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -194,7 +216,10 @@ internal fun HorizontalDock(dock: List<AppEntry?>, vm: LauncherViewModel, iconSi
             }
         }
     }
+    if (glass) GlassPanel(modifier.fillMaxWidth()) { slots() } else PlutoPanel(modifier.fillMaxWidth()) { slots() }
 }
+
+private const val ID_EMPTY_EDIT = "home:empty:edit"
 
 @Composable
 internal fun EmptyFavourites(vm: LauncherViewModel, modifier: Modifier = Modifier) {
@@ -205,6 +230,6 @@ internal fun EmptyFavourites(vm: LauncherViewModel, modifier: Modifier = Modifie
         icon = Icons.Outlined.Star,
         modifier = modifier,
     ) {
-        PlutoTextButton(id = "home:empty:edit", text = "Add favourite", onClick = { vm.openLayer(Layer.Edit) }, emphasized = true)
+        PlutoTextButton(id = ID_EMPTY_EDIT, text = "Add favourite", onClick = { vm.openLayer(Layer.Edit) }, emphasized = true)
     }
 }

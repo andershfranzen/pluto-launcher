@@ -287,6 +287,7 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = SettingsText.CONTROLLER_TITLE,
         idPrefix = "controller",
         onClose = { vm.back() },
+        fullScreen = true,
         trapFocus = isTop,
         dialogOpen = capturing != null,
         overlay = {

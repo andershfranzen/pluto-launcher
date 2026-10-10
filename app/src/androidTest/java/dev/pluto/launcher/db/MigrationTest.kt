@@ -14,6 +14,7 @@ import dev.pluto.launcher.data.db.FolderAppEntity
 import dev.pluto.launcher.data.db.FolderEntity
 import dev.pluto.launcher.data.db.HiddenAppEntity
 import dev.pluto.launcher.data.db.HomeItemEntity
+import dev.pluto.launcher.data.db.HomeWidgetEntity
 import dev.pluto.launcher.data.db.LauncherDatabase
 import dev.pluto.launcher.data.db.RecentLaunchEntity
 import kotlinx.coroutines.flow.first
@@ -114,6 +115,19 @@ class MigrationTest {
             dao.deleteFolder(7)
             assertTrue(dao.folderApps(7).isEmpty())
             assertEquals(2, dao.homeItems().size)
+        }
+    }
+
+    @Test
+    fun migrate1To2_keepsTheLayoutAndAddsAnEmptyWidgetTable() {
+        helper.createDatabase(TEST_DB, 1).use { db -> seedVersion1(db) }
+        helper.runMigrationsAndValidate(TEST_DB, 2, true, LauncherDatabase.MIGRATION_1_2).close()
+        val dao = openWithRoom(TEST_DB).dao()
+        runBlocking {
+            assertEquals(listOf(HomeItemEntity("app:$KEY_MAPS", 0), HomeItemEntity("folder:7", 1)), dao.homeItems())
+            assertTrue(dao.widgets().isEmpty())
+            dao.insertWidget(HomeWidgetEntity(5, "com.example/.Clock", 2))
+            assertEquals(listOf(HomeWidgetEntity(5, "com.example/.Clock", 2)), dao.widgets())
         }
     }
 

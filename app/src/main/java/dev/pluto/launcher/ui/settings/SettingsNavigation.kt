@@ -22,6 +22,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import dev.pluto.launcher.ui.focus.controllerFocusable
 
 /** Stable sections keep settings navigable on phones and with a D-pad. */
@@ -36,8 +38,16 @@ internal enum class SettingsPage(val title: String, val description: String) {
 internal fun SettingsNavigation(selectedPage: SettingsPage, onSelect: (SettingsPage) -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth()) {
+        // One segmented bar: the chosen page is a filled pill inside a quiet track.
+        val track = RoundedCornerShape(18.dp)
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .clip(track)
+                .background(colors.onSurface.copy(alpha = 0.06f))
+                .border(1.dp, colors.outlineVariant.copy(alpha = 0.35f), track)
+                .padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             SettingsPage.entries.forEach { page ->
@@ -53,14 +63,15 @@ internal fun SettingsNavigation(selectedPage: SettingsPage, onSelect: (SettingsP
                         )
                         .semantics { selected = picked }
                         .clip(shape)
-                        .background(if (picked) colors.inverseSurface else colors.surfaceContainerHigh)
-                        .padding(horizontal = 4.dp, vertical = 12.dp),
+                        .background(if (picked) colors.inverseSurface else Color.Transparent)
+                        .padding(horizontal = 4.dp, vertical = 10.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         page.title,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelLarge,
                         color = if (picked) colors.inverseOnSurface else colors.onSurfaceVariant,
+                        maxLines = 1,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -70,26 +81,27 @@ internal fun SettingsNavigation(selectedPage: SettingsPage, onSelect: (SettingsP
             selectedPage.description,
             style = MaterialTheme.typography.bodyMedium,
             color = colors.onSurfaceVariant,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 12.dp),
         )
     }
 }
 
-/** A quiet card with a real section boundary, rather than an endless stack of rows. */
+/** A glassy card with a real section boundary, rather than an endless stack of rows. */
 @Composable
 internal fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
         Text(
-            title,
-            style = MaterialTheme.typography.titleSmall,
-            color = colors.primary,
-            modifier = Modifier.padding(start = 12.dp, top = 8.dp, bottom = 10.dp).semantics { heading() },
+            title.uppercase(),
+            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp).semantics { heading() },
         )
-        val shape = RoundedCornerShape(20.dp)
+        val shape = RoundedCornerShape(22.dp)
         Column(
-            Modifier.fillMaxWidth().clip(shape).background(colors.surfaceContainerLow)
-                .border(1.dp, colors.outlineVariant.copy(alpha = 0.25f), shape)
+            Modifier.fillMaxWidth().clip(shape)
+                .background(colors.surfaceContainerHigh.copy(alpha = 0.55f))
+                .border(1.dp, colors.outlineVariant.copy(alpha = 0.3f), shape)
                 .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             content = content,

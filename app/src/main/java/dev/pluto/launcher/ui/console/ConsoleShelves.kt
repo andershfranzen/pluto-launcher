@@ -7,7 +7,7 @@ import dev.pluto.launcher.ui.HomeTile
 
 /**
  * Identity of one Handheld ("console") shelf: the tab row reads
- * Recent launches · Favourites · then every category (All apps, Games, Tools, user categories).
+ * Recent launches · Favourites · then every category (All apps, Games, user categories).
  * [key] is the stable string form kept in SessionState / SavedStateHandle.
  */
 sealed interface ShelfId {
@@ -105,6 +105,7 @@ object ConsoleShelves {
                 when (tile) {
                     is HomeTile.App -> if (seen.add(tile.entry.key)) add(tile.entry)
                     is HomeTile.FolderTile -> tile.folder.apps.forEach { if (seen.add(it.key)) add(it) }
+                    is HomeTile.Widget -> Unit
                 }
             }
         }

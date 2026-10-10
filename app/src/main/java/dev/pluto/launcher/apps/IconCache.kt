@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import java.util.concurrent.ConcurrentHashMap
@@ -112,6 +113,31 @@ class IconCache(context: Context) {
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    /** The chosen icon pack, loaded; null for the system icons. */
+    @Volatile private var pack: IconPack? = null
+    @Volatile private var packName: String? = null
+
+    /**
+     * Uses [packageName]'s icons (null: the apps' own). Loads the pack off the main thread,
+     * then drops every cached icon so everything shown reloads in the new style. A pack
+     * that is missing or unreadable falls back to the system icons.
+     */
+    suspend fun setIconPack(packageName: String?) {
+        if (packageName == packName) return
+        packName = packageName
+        pack = packageName?.let { name -> withContext(Dispatchers.IO) { IconPack.load(appContext, name) } }
+        reloadAll()
+    }
+
+    /** Drops every cached icon and tells every composed icon to load again (icon style changed). */
+    private fun reloadAll() {
+        val packages = (cache.snapshot().keys.map { it.app.packageName } + _versions.value.keys).toSet()
+        cache.evictAll()
+        _versions.update { current -> current + packages.associateWith { (current[it] ?: 0) + 1 } }
+        val bump = { packages.forEach { versionState[it] = (versionState[it] ?: 0) + 1 } }
+        if (Looper.myLooper() == Looper.getMainLooper()) bump() else mainHandler.post(bump)
+    }
+
     init {
         try {
             launcherApps.registerCallback(invalidator, mainHandler)
@@ -161,6 +187,13 @@ class IconCache(context: Context) {
     }
 
     fun invalidatePackage(packageName: String) {
+        if (packageName == packName) {
+            // The icon pack itself was updated or removed: reload it, then every icon.
+            decodeScope.launch {
+                pack = IconPack.load(appContext, packageName)
+                reloadAll()
+            }
+        }
         LauncherActivityInfos.forget(packageName)
         cache.snapshot().keys
             .filter { it.app.packageName == packageName }
@@ -194,7 +227,7 @@ class IconCache(context: Context) {
         if (key.userSerial != mySerial) return null
         return try {
             val info = LauncherActivityInfos.get(key) ?: query(key) ?: return null
-            val bitmap = rasterize(info.getBadgedIcon(0), sizePx)
+            val bitmap = packIcon(info, sizePx) ?: rasterize(info.getBadgedIcon(0), sizePx)
             // Start the GPU upload on the RenderThread now rather than in the first frame that draws it.
             bitmap.prepareToDraw()
             bitmap.asImageBitmap()
@@ -203,6 +236,14 @@ class IconCache(context: Context) {
             Log.w(TAG, "Icon decode failed for $key", e)
             null
         }
+    }
+
+    /** The icon pack's icon for [info] (its own, or the app's themed its way), or null to use the app's. */
+    private fun packIcon(info: LauncherActivityInfo, sizePx: Int): Bitmap? {
+        val pack = pack ?: return null
+        pack.iconFor(info.componentName)?.let { return it.toBitmap(sizePx, sizePx) }
+        if (!pack.themesOthers) return null
+        return pack.theme(info.getIcon(0), info.componentName, sizePx)
     }
 
     /**

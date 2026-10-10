@@ -489,7 +489,7 @@ private fun readBattery(deviceId: Int): BatteryReading? = try {
  * same from the focused card.
  */
 @Composable
-internal fun ConsoleTitle(stage: CoverflowState, subtitle: String, modifier: Modifier = Modifier) {
+internal fun ConsoleTitle(stage: CoverflowState, modifier: Modifier = Modifier) {
     val entry = stage.selectedEntry
     val title = entry?.label.orEmpty()
     val lastChange = remember { longArrayOf(0L) }
@@ -521,14 +521,19 @@ internal fun ConsoleTitle(stage: CoverflowState, subtitle: String, modifier: Mod
             textAlign = TextAlign.Center,
             modifier = Modifier.graphicsLayer { this.alpha = alpha.value },
         )
-        Text(
-            if (entry == null) subtitle else "$subtitle · ${stage.selectedIndex + 1} of ${stage.count}",
-            style = MaterialTheme.typography.bodyMedium.overWallpaper(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
     }
+}
+
+/** "3 of 9": where the selected card is in the shelf, for the bottom left corner. Decorative (cards announce their position). */
+@Composable
+internal fun ConsoleCounter(stage: CoverflowState, modifier: Modifier = Modifier) {
+    if (stage.selectedEntry == null) return
+    Text(
+        "${stage.selectedIndex + 1} of ${stage.count}",
+        style = MaterialTheme.typography.bodyMedium.overWallpaper(),
+        maxLines = 1,
+        modifier = modifier.clearAndSetSemantics { },
+    )
 }
 
 /** Opacity a calmly changed title fades up from. */

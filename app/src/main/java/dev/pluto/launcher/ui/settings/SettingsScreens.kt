@@ -14,7 +14,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import dev.pluto.launcher.data.prefs.XmbColor
-import dev.pluto.launcher.data.prefs.BackgroundStyle
+import dev.pluto.launcher.data.prefs.BackgroundChoice
+import dev.pluto.launcher.data.prefs.CarouselStyle
+import dev.pluto.launcher.data.prefs.BackgroundFrameRate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +26,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
@@ -88,7 +94,7 @@ private const val SCRIM_STEP = 0.05f
 private const val ICON_STEP = 0.1f
 private const val TEXT_STEP = 0.05f
 
-private enum class SettingsDialog { DISABLE_HISTORY, CLEAR_HISTORY }
+private enum class SettingsDialog { DISABLE_HISTORY, CLEAR_HISTORY, ICON_PACK }
 
 /** Appearance, layout & rotation, history, organisation links, controller, default launcher, about/limitations. */
 @Composable
@@ -101,6 +107,7 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val requestHomeRole = rememberHomeRoleRequest(onDeclined = { vm.showMessage(SettingsText.HOME_ROLE_DECLINED) })
     val versionName = rememberVersionName()
     val isTop = state.session.topLayer == Layer.Settings
+    val iconPacks = rememberIconPacks()
 
     fun open(which: SettingsDialog, opener: String) {
         dialogOpener = opener
@@ -118,6 +125,7 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = SettingsText.SETTINGS,
         idPrefix = "settings",
         contentKey = page,
+        fullScreen = true,
         headerContent = { SettingsNavigation(page) { page = it } },
         onClose = { vm.back() },
         trapFocus = isTop,
@@ -133,6 +141,15 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                         destructive = true,
                         onConfirm = {
                             vm.setHistoryEnabled(false)
+                            close()
+                        },
+                        onDismiss = ::close,
+                    )
+                    SettingsDialog.ICON_PACK -> IconPackDialog(
+                        current = settings.iconPack,
+                        packs = iconPacks,
+                        onPick = { pack ->
+                            update { it.copy(iconPack = pack) }
                             close()
                         },
                         onDismiss = ::close,
@@ -166,30 +183,58 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     selected = settings.theme,
                     onSelect = { theme -> update { it.copy(theme = theme) } },
                 )
-                ChoiceGroup(
+                BackgroundChoiceGroup(
                     idPrefix = "settings:background",
                     label = "Background",
-                    supporting = "Use your wallpaper, or a gently animated wave background.",
-                    options = listOf(
-                        BackgroundStyle.WALLPAPER to "Wallpaper",
-                        BackgroundStyle.XMB_CONSOLE to "XMB in console mode",
-                        BackgroundStyle.XMB_EVERYWHERE to "XMB everywhere",
-                    ),
-                    selected = settings.backgroundStyle,
-                    onSelect = { style -> update { it.copy(backgroundStyle = style) } },
+                    supporting = "Home, folders and the app drawer in normal mode.",
+                    selected = settings.normalBackground,
+                    onSelect = { choice -> update { it.copy(normalBackground = choice) } },
                 )
-                ExpandingSection(visible = settings.backgroundStyle != BackgroundStyle.WALLPAPER) {
+                BackgroundChoiceGroup(
+                    idPrefix = "settings:consolebackground",
+                    label = "Console background",
+                    supporting = "Behind the console (handheld) mode.",
+                    selected = settings.consoleBackground,
+                    onSelect = { choice -> update { it.copy(consoleBackground = choice) } },
+                )
+                ExpandingSection(visible = settings.normalBackground == BackgroundChoice.XMB || settings.consoleBackground == BackgroundChoice.XMB) {
                     XmbColorRow(selected = settings.xmbColor, onSelect = { c -> update { it.copy(xmbColor = c) } })
                 }
-                StepperRow(
-                    idPrefix = "settings:scrim",
-                    label = SettingsText.SCRIM,
-                    supporting = SettingsText.SCRIM_HELP,
-                    valueText = percent(settings.scrimAlpha),
-                    onDecrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, -1)
-                        ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
-                    onIncrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, 1)
-                        ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
+                ExpandingSection(visible = settings.normalBackground == BackgroundChoice.PLUTO || settings.consoleBackground == BackgroundChoice.PLUTO) {
+                    ChoiceGroup(
+                        idPrefix = "settings:backgroundfps",
+                        label = "Background animation",
+                        supporting = "Smooth looks fluid; Battery saver redraws half as often.",
+                        options = listOf(
+                            BackgroundFrameRate.SMOOTH to "Smooth",
+                            BackgroundFrameRate.BATTERY_SAVER to "Battery saver",
+                        ),
+                        selected = settings.backgroundFrameRate,
+                        onSelect = { rate -> update { it.copy(backgroundFrameRate = rate) } },
+                    )
+                }
+                // Only meaningful where the wallpaper actually shows.
+                ExpandingSection(visible = settings.normalBackground == BackgroundChoice.WALLPAPER || settings.consoleBackground == BackgroundChoice.WALLPAPER) {
+                    StepperRow(
+                        idPrefix = "settings:scrim",
+                        label = SettingsText.SCRIM,
+                        supporting = SettingsText.SCRIM_HELP,
+                        valueText = percent(settings.scrimAlpha),
+                        onDecrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, -1)
+                            ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
+                        onIncrease = stepped(settings.scrimAlpha, SCRIM_STEP, 0f..LauncherSettings.SCRIM_MAX, 1)
+                            ?.let { v -> { update { it.copy(scrimAlpha = v) } } },
+                    )
+                }
+            }
+            SettingsSection(SettingsText.ICONS) {
+                ActionRow(
+                    id = "settings:iconpack:open",
+                    label = SettingsText.ICON_PACK,
+                    supporting = iconPackLabel(settings.iconPack, iconPacks),
+                    icon = Icons.Rounded.Palette,
+                    trailing = { Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null) },
+                    onClick = { open(SettingsDialog.ICON_PACK, "settings:iconpack:open") },
                 )
             }
             SettingsSection("Size & motion") {
@@ -249,6 +294,20 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     ),
                     selected = settings.handheldAppearance,
                     onSelect = { appearance -> update { it.copy(handheldAppearance = appearance) } },
+                )
+                ChoiceGroup(
+                    idPrefix = "settings:carousel",
+                    label = SettingsText.CAROUSEL,
+                    supporting = SettingsText.CAROUSEL_HELP,
+                    options = listOf(
+                        CarouselStyle.COVERFLOW to "Coverflow",
+                        CarouselStyle.SHOWCASE to "Showcase: a flat row",
+                        CarouselStyle.ARC to "Arc",
+                        CarouselStyle.RING to "Ring: a turning drum",
+                        CarouselStyle.DECK to "Deck: next games stacked",
+                    ),
+                    selected = settings.carouselStyle,
+                    onSelect = { style -> update { it.copy(carouselStyle = style) } },
                 )
 
             }
@@ -341,8 +400,19 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 BodyText(SettingsText.version(versionName))
                 BodyText(SettingsText.LICENSE)
                 BodyText(SettingsText.PRIVACY)
-                BodyText(SettingsText.PROFILES_NOTICE)
                 BodyText(SettingsText.LIMITATIONS)
+            }
+
+            SettingsSection(SettingsText.SUPPORT) {
+                val context = LocalContext.current
+                ActionRow(
+                    id = "settings:kofi",
+                    label = SettingsText.KOFI,
+                    supporting = SettingsText.KOFI_URL,
+                    icon = Icons.Rounded.Favorite,
+                    trailing = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null) },
+                    onClick = { openLink(context, "https://${SettingsText.KOFI_URL}") },
+                )
             }
         }
         Spacer(Modifier.heightIn(min = 16.dp))
@@ -361,6 +431,7 @@ fun HiddenAppsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = SettingsText.HIDDEN_TITLE,
         idPrefix = "hidden",
         onClose = { vm.back() },
+        fullScreen = true,
         trapFocus = isTop,
     ) {
         NoticeCard(SettingsText.HIDDEN_EXPLANATION, icon = Icons.Rounded.VisibilityOff)
@@ -433,6 +504,7 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
         title = SettingsText.CATEGORIES_TITLE,
         idPrefix = "categories",
         onClose = { vm.back() },
+        fullScreen = true,
         trapFocus = isTop,
         dialogOpen = dialogKind != null,
         overlay = {
@@ -558,6 +630,29 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
     }
 }
 
+
+/** Wallpaper, Pluto or XMB waves, for one of the two backgrounds. */
+@Composable
+private fun BackgroundChoiceGroup(
+    idPrefix: String,
+    label: String,
+    supporting: String,
+    selected: BackgroundChoice,
+    onSelect: (BackgroundChoice) -> Unit,
+) {
+    ChoiceGroup(
+        idPrefix = idPrefix,
+        label = label,
+        supporting = supporting,
+        options = listOf(
+            BackgroundChoice.WALLPAPER to "Wallpaper",
+            BackgroundChoice.PLUTO to "Pluto",
+            BackgroundChoice.XMB to "XMB waves",
+        ),
+        selected = selected,
+        onSelect = onSelect,
+    )
+}
 
 /** XMB colour swatches: Auto (follows the month, shown as a colour wheel) and the fixed colours. */
 @OptIn(ExperimentalLayoutApi::class)

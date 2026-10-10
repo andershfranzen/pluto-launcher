@@ -12,6 +12,7 @@ import dev.pluto.launcher.model.Category
 import dev.pluto.launcher.model.ControllerInfo
 import dev.pluto.launcher.model.Folder
 import dev.pluto.launcher.model.HomeItem
+import dev.pluto.launcher.model.HomeWidget
 import dev.pluto.launcher.model.LauncherMode
 
 /** A layer stacked above the home surface. Back pops the top layer. */
@@ -30,6 +31,10 @@ sealed interface Layer {
     data class ShelfPicker(val categoryId: Long) : Layer
     data object ControllerSettings : Layer
     data object Onboarding : Layer
+    /** Choose a widget to add to Home. */
+    data object WidgetPicker : Layer
+    /** Resize or remove one widget on Home. */
+    data class WidgetActions(val appWidgetId: Int) : Layer
 
     companion object {
         fun encode(layer: Layer): String = when (layer) {
@@ -45,6 +50,8 @@ sealed interface Layer {
             is ShelfPicker -> "shelfpicker:${layer.categoryId}"
             ControllerSettings -> "controller"
             Onboarding -> "onboarding"
+            WidgetPicker -> "widgetpicker"
+            is WidgetActions -> "widgetactions:${layer.appWidgetId}"
         }
 
         fun decode(value: String): Layer? {
@@ -62,6 +69,8 @@ sealed interface Layer {
                 "shelfpicker" -> arg.toLongOrNull()?.let(::ShelfPicker)
                 "controller" -> ControllerSettings
                 "onboarding" -> Onboarding
+                "widgetpicker" -> WidgetPicker
+                "widgetactions" -> arg.toIntOrNull()?.let(::WidgetActions)
                 else -> null
             }
         }
@@ -177,6 +186,10 @@ sealed interface HomeTile {
 
     data class FolderTile(val folder: FolderUi) : HomeTile {
         override val id: String get() = HomeItem.FolderRef(folder.folder.id).id
+    }
+
+    data class Widget(val widget: HomeWidget) : HomeTile {
+        override val id: String get() = HomeItem.Widget(widget.appWidgetId).id
     }
 }
 

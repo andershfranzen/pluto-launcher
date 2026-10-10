@@ -67,8 +67,14 @@ class SettingsRepository(context: Context) {
         val ICON_SCALE = floatPreferencesKey("icon_scale")
         val TEXT_SCALE = floatPreferencesKey("text_scale")
         val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
-        val BACKGROUND = stringPreferencesKey("background_style")
+        /** Before separate normal/console backgrounds: WALLPAPER, XMB_CONSOLE or XMB_EVERYWHERE. Read only. */
+        val LEGACY_BACKGROUND = stringPreferencesKey("background_style")
+        val BACKGROUND_NORMAL = stringPreferencesKey("background_normal")
+        val BACKGROUND_CONSOLE = stringPreferencesKey("background_console")
         val XMB_COLOR = stringPreferencesKey("xmb_color")
+        val BACKGROUND_FPS = stringPreferencesKey("background_frame_rate")
+        val ICON_PACK = stringPreferencesKey("icon_pack")
+        val CAROUSEL = stringPreferencesKey("carousel_style")
         val ROTATION = stringPreferencesKey("rotation")
         val HANDHELD = stringPreferencesKey("handheld_appearance")
         val HISTORY = booleanPreferencesKey("history_enabled")
@@ -109,6 +115,14 @@ class SettingsRepository(context: Context) {
             Keys.RECOVERED to true,
         )
 
+        /** The old single background setting, split into its normal or console half. */
+        private fun legacyBackground(value: String?, console: Boolean): BackgroundChoice? = when (value) {
+            "WALLPAPER" -> BackgroundChoice.WALLPAPER
+            "XMB_CONSOLE" -> if (console) BackgroundChoice.XMB else BackgroundChoice.WALLPAPER
+            "XMB_EVERYWHERE" -> BackgroundChoice.XMB
+            else -> null
+        }
+
         private inline fun <reified E : Enum<E>> enumOr(value: String?, fallback: E): E =
             value?.let { v -> enumValues<E>().firstOrNull { it.name == v } } ?: fallback
 
@@ -120,8 +134,12 @@ class SettingsRepository(context: Context) {
                 iconScale = (p[Keys.ICON_SCALE] ?: d.iconScale).coerceIn(LauncherSettings.ICON_SCALE_RANGE),
                 textScale = (p[Keys.TEXT_SCALE] ?: d.textScale).coerceIn(LauncherSettings.TEXT_SCALE_RANGE),
                 reducedMotion = p[Keys.REDUCED_MOTION] ?: d.reducedMotion,
-                backgroundStyle = enumOr<BackgroundStyle>(p[Keys.BACKGROUND], d.backgroundStyle),
+                normalBackground = enumOr(p[Keys.BACKGROUND_NORMAL], legacyBackground(p[Keys.LEGACY_BACKGROUND], console = false) ?: d.normalBackground),
+                consoleBackground = enumOr(p[Keys.BACKGROUND_CONSOLE], legacyBackground(p[Keys.LEGACY_BACKGROUND], console = true) ?: d.consoleBackground),
                 xmbColor = enumOr<XmbColor>(p[Keys.XMB_COLOR], d.xmbColor),
+                backgroundFrameRate = enumOr<BackgroundFrameRate>(p[Keys.BACKGROUND_FPS], d.backgroundFrameRate),
+                iconPack = p[Keys.ICON_PACK]?.takeIf { it.isNotBlank() },
+                carouselStyle = enumOr<CarouselStyle>(p[Keys.CAROUSEL], d.carouselStyle),
                 rotation = enumOr<RotationPreference>(p[Keys.ROTATION], d.rotation),
                 handheldAppearance = enumOr<HandheldAppearance>(p[Keys.HANDHELD], d.handheldAppearance),
                 historyEnabled = p[Keys.HISTORY] ?: d.historyEnabled,
@@ -146,8 +164,12 @@ class SettingsRepository(context: Context) {
             p[Keys.ICON_SCALE] = s.iconScale.coerceIn(LauncherSettings.ICON_SCALE_RANGE)
             p[Keys.TEXT_SCALE] = s.textScale.coerceIn(LauncherSettings.TEXT_SCALE_RANGE)
             p[Keys.REDUCED_MOTION] = s.reducedMotion
-            p[Keys.BACKGROUND] = s.backgroundStyle.name
+            p[Keys.BACKGROUND_NORMAL] = s.normalBackground.name
+            p[Keys.BACKGROUND_CONSOLE] = s.consoleBackground.name
             p[Keys.XMB_COLOR] = s.xmbColor.name
+            p[Keys.BACKGROUND_FPS] = s.backgroundFrameRate.name
+            if (s.iconPack != null) p[Keys.ICON_PACK] = s.iconPack else p.remove(Keys.ICON_PACK)
+            p[Keys.CAROUSEL] = s.carouselStyle.name
             p[Keys.ROTATION] = s.rotation.name
             p[Keys.HANDHELD] = s.handheldAppearance.name
             p[Keys.HISTORY] = s.historyEnabled

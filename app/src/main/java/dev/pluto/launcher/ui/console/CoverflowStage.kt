@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.console
 
+import androidx.compose.runtime.staticCompositionLocalOf
+import dev.pluto.launcher.data.prefs.CarouselStyle
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -278,6 +280,7 @@ internal fun CoverflowStage(
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
+    val style = LocalCarouselStyle.current
     val artPx = with(LocalDensity.current) { ConsoleArtSize.roundToPx() }
     val window by remember(stage) {
         derivedStateOf { CoverflowMath.window(stage.position, stage.selectedIndex, stage.count) }
@@ -389,16 +392,18 @@ internal fun CoverflowStage(
         stage.cardWidthPx = card.toFloat()
         val fixed = Constraints.fixed(card, card)
         val placeables = measurables.map { it.measure(fixed) to (it.layoutId as? Int ?: 0) }
-        // Card plus its reflection plus the clearance, centred: the mirror never reaches the title.
-        val top = headroom + ((height - headroom - clearance - card * (1f + STAGE_REFLECTION_SPACE)) / 2f).roundToInt().coerceAtLeast(0)
+        // Card plus its reflection plus the clearance, a little below centre (the free space is
+        // shared [STAGE_VERTICAL_BIAS] above, the rest below): the mirror never reaches the title.
+        val free = height - headroom - clearance - card * (1f + STAGE_REFLECTION_SPACE)
+        val top = headroom + (free * STAGE_VERTICAL_BIAS).roundToInt().coerceAtLeast(0)
         layout(width, height) {
             // Placement only: reading the flow position here re-places cards each frame, no recomposition.
             val position = stage.position
             val pageShift = page.offset() * width
             for ((placeable, index) in placeables) {
                 val d = index - position
-                val x = width / 2f + CoverflowMath.offset(d) * card - card / 2f + pageShift
-                placeable.place(x.roundToInt(), top, zIndex = -abs(d))
+                val x = width / 2f + CoverflowMath.offset(d, style) * card - card / 2f + pageShift
+                placeable.place(x.roundToInt(), top, zIndex = if (style == CarouselStyle.COVERFLOW) -abs(d) else CoverflowMath.transform(d, style).z)
             }
         }
     }
@@ -406,8 +411,11 @@ internal fun CoverflowStage(
 
 private const val ACCESSIBILITY_PAGE = 3
 
+/** Share of the stage's free height above the cards (0.5 = centred); the flow sits a bit low. */
+private const val STAGE_VERTICAL_BIAS = 0.7f
+
 /** Space kept free above the cards, below the top bar. */
-private val StageHeadroom = 28.dp
+private val StageHeadroom = 52.dp
 
 /** Card side for a stage of [width] x [height] px: big and front-facing, bounded so neighbours stay visible. */
 private fun cardSizePx(width: Int, height: Int, density: Float): Int {
@@ -436,6 +444,7 @@ private fun CoverCard(
     upTarget: () -> FocusRequester,
     downTarget: () -> FocusRequester,
 ) {
+    val style = LocalCarouselStyle.current
     val requester = remember { FocusRequester() }
     val anchor = remember { OriginAnchor() }
     DisposableEffect(stage, entry.key) {
@@ -453,7 +462,7 @@ private fun CoverCard(
         Modifier
             .layoutId(index)
             .graphicsLayer {
-                val t = CoverflowMath.transform(index - stage.position)
+                val t = CoverflowMath.transform(index - stage.position, style)
                 val heroScale = if (index == stage.selectedIndex) {
                     HeroEmphasis.IDLE_SCALE + (1f - HeroEmphasis.IDLE_SCALE) * hero.emphasis + hero.lift
                 } else {
@@ -469,7 +478,7 @@ private fun CoverCard(
                 onDrawBehind {
                     // Side cards dim with distance, and the hero dims while focus is up in the
                     // header (draw-phase reads of the flow position and the emphasis).
-                    val dim = maxOf(CoverflowMath.transform(index - stage.position).dim, heroDim(index))
+                    val dim = maxOf(CoverflowMath.transform(index - stage.position, style).dim, heroDim(index))
                     val glow = if (index == stage.selectedIndex) hero.focus * hero.emphasis else 0f
                     if (glow > 0.01f) look.drawGlow(this, glow)
                     look.drawReflection(this, art, (1f - dim) * iconAlpha)
@@ -503,11 +512,16 @@ private fun CoverCard(
     )
 }
 
+/** The console carousel's layout style; provided by the console from settings. */
+internal val LocalCarouselStyle = staticCompositionLocalOf { CarouselStyle.COVERFLOW }
+
 /** Layer properties shared by real and ghost cards: the whole card turns as one plane about its centre. */
 private fun GraphicsLayerScope.applyCardLayer(t: CoverflowMath.CardTransform, extraScale: Float, page: PageMotion) {
     scaleX = t.scale * extraScale
     scaleY = t.scale * extraScale
     rotationY = t.rotationY
+    rotationZ = t.rotationZ
+    translationY = t.offsetY * size.width
     // In camera units (72 px each), proportional to the card so every screen sees the same tilt.
     cameraDistance = CAMERA_DISTANCE_CARDS * size.width / 72f
     alpha = (t.alpha * page.alpha()).coerceIn(0f, 1f)
@@ -609,11 +623,12 @@ private data class GhostKey(val slot: Int)
 /** A placeholder slot after a short shelf's last card: a faint outline on the same plane, never focusable. */
 @Composable
 private fun GhostCard(stage: CoverflowState, slot: Int, page: PageMotion) {
+    val style = LocalCarouselStyle.current
     Spacer(
         Modifier
             .layoutId(slot)
             .graphicsLayer {
-                val t = CoverflowMath.transform(slot - stage.position)
+                val t = CoverflowMath.transform(slot - stage.position, style)
                 applyCardLayer(t, 1f, page)
                 alpha *= GHOST_ALPHA
             }

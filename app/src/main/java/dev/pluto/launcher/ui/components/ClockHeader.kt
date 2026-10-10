@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -92,12 +93,13 @@ fun rememberMinuteClock(): Long {
 /**
  * Compact time and date drawn over the wallpaper. Respects the system 12/24-hour setting
  * and locale. [compact] puts time and an abbreviated date on one line (landscape / handheld
- * headers); [quiet] sets the compact time at tab size and regular weight. Texts never clip mid-glyph at large font sizes: they ellipsize, the compact
+ * headers); [quiet] sets the compact time at tab size and regular weight; [centered] centres
+ * the full-size time and date (portrait home). Texts never clip mid-glyph at large font sizes: they ellipsize, the compact
  * date gives way first (it shrinks to nothing before the time does), and the full-size
  * date may wrap to a second line.
  */
 @Composable
-fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false, quiet: Boolean = false) {
+fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false, quiet: Boolean = false, centered: Boolean = false) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales.get(0) ?: Locale.getDefault()
     val now = rememberMinuteClock()
@@ -130,9 +132,19 @@ fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false, quiet: 
             )
         }
     } else {
-        Column(semanticsModifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(
+            semanticsModifier,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
+        ) {
             AnimatedClockText(time, style = MaterialTheme.typography.displayMedium.overWallpaper())
-            Text(day, style = MaterialTheme.typography.titleMedium.overWallpaper(), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(
+                day,
+                style = MaterialTheme.typography.titleMedium.overWallpaper(),
+                textAlign = if (centered) TextAlign.Center else null,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

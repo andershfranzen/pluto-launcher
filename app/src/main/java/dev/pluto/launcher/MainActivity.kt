@@ -1,6 +1,15 @@
 package dev.pluto.launcher
 
 import android.app.ActivityOptions
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import dev.pluto.launcher.widgets.HOME_ROW_HEIGHT_DP
+import dev.pluto.launcher.widgets.LocalWidgetBinder
+import dev.pluto.launcher.widgets.LocalWidgetHost
+import dev.pluto.launcher.widgets.WidgetBinder
+import dev.pluto.launcher.widgets.WidgetHost
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.database.ContentObserver
@@ -125,6 +134,8 @@ class MainActivity : ComponentActivity() {
                 LocalControllerRouter provides router,
                 LocalIconCache provides container.icons,
                 LocalLaunchSourceFactory provides launchSources,
+                LocalWidgetHost provides container.widgets,
+                LocalWidgetBinder provides widgetBinder,
             ) {
                 LauncherRoot(vm, actions)
             }
@@ -158,6 +169,69 @@ class MainActivity : ComponentActivity() {
             null
         }
         return LaunchSource(screen, options)
+    }
+
+    // --- Widgets: bind (asking the user if needed), configure, then add to Home ---
+
+    private class PendingWidget(val id: Int, val info: AppWidgetProviderInfo)
+
+    private var pendingWidget: PendingWidget? = null
+
+    private val bindWidget = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val pending = pendingWidget ?: return@registerForActivityResult
+        if (result.resultCode == RESULT_OK) configureOrAddWidget(pending) else cancelWidget(pending)
+    }
+
+    private val widgetBinder = WidgetBinder { info ->
+        pendingWidget?.let(::cancelWidget)
+        val id = container.widgets.allocate()
+        val pending = PendingWidget(id, info)
+        pendingWidget = pending
+        if (container.widgets.bindIfAllowed(id, info)) {
+            configureOrAddWidget(pending)
+        } else {
+            bindWidget.launch(
+                Intent(AppWidgetManager.ACTION_APPWIDGET_BIND)
+                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, info.provider)
+                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER_PROFILE, info.profile),
+            )
+        }
+    }
+
+    private fun configureOrAddWidget(pending: PendingWidget) {
+        val optional = Build.VERSION.SDK_INT >= 28 &&
+            pending.info.widgetFeatures and AppWidgetProviderInfo.WIDGET_FEATURE_CONFIGURATION_OPTIONAL != 0
+        if (pending.info.configure == null || optional) {
+            addWidget(pending)
+            return
+        }
+        try {
+            container.widgets.startConfigure(this, pending.id, REQUEST_CONFIGURE_WIDGET)
+        } catch (e: RuntimeException) {
+            // No reachable configuration screen: add it as it is.
+            addWidget(pending)
+        }
+    }
+
+    @Deprecated("AppWidgetHost reports configuration through onActivityResult")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_CONFIGURE_WIDGET) return
+        val pending = pendingWidget ?: return
+        if (resultCode == RESULT_OK) addWidget(pending) else cancelWidget(pending)
+    }
+
+    private fun addWidget(pending: PendingWidget) {
+        pendingWidget = null
+        val rows = WidgetHost.defaultRows(pending.info, resources.displayMetrics.density, HOME_ROW_HEIGHT_DP)
+        vm.addWidget(pending.id, pending.info.provider.flattenToString(), rows)
+    }
+
+    private fun cancelWidget(pending: PendingWidget) {
+        if (pendingWidget === pending) pendingWidget = null
+        container.widgets.delete(pending.id)
     }
 
     private fun readSystemAnimatorScale() {
@@ -229,7 +303,13 @@ class MainActivity : ComponentActivity() {
         vm.onResume(HomeRole.isDefaultHome(this))
     }
 
+    override fun onStart() {
+        super.onStart()
+        container.widgets.startListening()
+    }
+
     override fun onStop() {
+        container.widgets.stopListening()
         visibleSinceResume = false
         super.onStop()
     }
@@ -259,3 +339,5 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 }
+
+private const val REQUEST_CONFIGURE_WIDGET = 0x5701

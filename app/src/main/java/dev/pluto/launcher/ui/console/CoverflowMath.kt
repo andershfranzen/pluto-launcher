@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui.console
 
+import dev.pluto.launcher.data.prefs.CarouselStyle
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
@@ -46,7 +47,10 @@ object CoverflowMath {
      */
     const val FLING_PROJECTION_S = 0.16f
 
-    /** Visual transform of one card. [offsetX] is in card widths from the stage centre. */
+    /**
+     * Visual transform of one card. [offsetX] and [offsetY] are in card widths from the stage
+     * centre (y down); [z] orders drawing (higher in front).
+     */
     data class CardTransform(
         val offsetX: Float,
         val scale: Float,
@@ -54,17 +58,90 @@ object CoverflowMath {
         val dim: Float,
         val alpha: Float,
         val z: Float,
+        val offsetY: Float = 0f,
+        val rotationZ: Float = 0f,
     )
 
-    /** Horizontal offset of a card at distance [d], in card widths (continuous and monotonic in d). */
-    fun offset(d: Float): Float {
+    /** Horizontal offset of a card at distance [d], in card widths, for [style]. */
+    fun offset(d: Float, style: CarouselStyle = CarouselStyle.COVERFLOW): Float =
+        if (style == CarouselStyle.COVERFLOW) coverflowOffset(d) else transform(d, style).offsetX
+
+    /** The classic flow's offset (continuous and monotonic in d). */
+    private fun coverflowOffset(d: Float): Float {
         val a = abs(d)
         val near = minOf(a, 1f) * FIRST_GAP
         val far = (a - 1f).coerceAtLeast(0f) * SIDE_GAP
         return sign(d) * (near + far)
     }
 
-    fun transform(d: Float): CardTransform {
+    fun transform(d: Float, style: CarouselStyle = CarouselStyle.COVERFLOW): CardTransform = when (style) {
+        CarouselStyle.COVERFLOW -> coverflow(d)
+        CarouselStyle.SHOWCASE -> showcase(d)
+        CarouselStyle.ARC -> arc(d)
+        CarouselStyle.RING -> ring(d)
+        CarouselStyle.DECK -> deck(d)
+    }
+
+    /** Fade towards the edge of the composed window, shared by every style. */
+    private fun edgeAlpha(a: Float): Float = when {
+        a <= FADE_START -> 1f
+        a >= RADIUS -> 0f
+        else -> 1f - (a - FADE_START) / (RADIUS - FADE_START)
+    }
+
+    private fun showcase(d: Float): CardTransform {
+        val a = abs(d)
+        val near = minOf(a, 1f)
+        val far = (a - 1f).coerceAtLeast(0f)
+        val scale = (1f - 0.2f * near - 0.05f * far).coerceAtLeast(MIN_SCALE)
+        // Spacing follows the shrinking cards, so the gaps between them stay even and airy.
+        val x = sign(d) * (near * 1.04f + far * 0.9f)
+        val dim = (0.32f * near + 0.07f * far).coerceAtMost(MAX_DIM)
+        return CardTransform(x, scale, 0f, dim, edgeAlpha(a), -a)
+    }
+
+    private fun arc(d: Float): CardTransform {
+        val a = abs(d)
+        val near = minOf(a, 1f)
+        val far = (a - 1f).coerceAtLeast(0f)
+        val scale = (1f - 0.18f * near - 0.05f * far).coerceAtLeast(MIN_SCALE)
+        val x = sign(d) * (near * 0.92f + far * 0.8f)
+        // Down a gentle curve, tipping outwards with it; it flattens out so far cards stay clear of the title.
+        val y = 0.07f * a * a / (1f + 0.15f * a)
+        val dim = (0.3f * near + 0.08f * far).coerceAtMost(MAX_DIM)
+        return CardTransform(x, scale, 0f, dim, edgeAlpha(a), -a, offsetY = y, rotationZ = d * RING_TIP)
+    }
+
+    private fun ring(d: Float): CardTransform {
+        val a = abs(d)
+        val angle = (d * RING_STEP).coerceIn(-RING_MAX, RING_MAX)
+        val radians = Math.toRadians(angle.toDouble())
+        val depth = kotlin.math.cos(radians).toFloat() // 1 in front, 0 at the side
+        val x = kotlin.math.sin(radians).toFloat() * RING_RADIUS
+        val scale = (0.58f + 0.42f * depth).coerceAtLeast(MIN_SCALE)
+        // Faces outwards, like cards stood around a drum.
+        val dim = ((1f - depth) * 0.9f).coerceAtMost(MAX_DIM)
+        val alpha = edgeAlpha(a) * ((depth - 0.1f) / 0.3f).coerceIn(0f, 1f)
+        return CardTransform(x, scale, angle, dim, alpha, depth, offsetY = -0.08f * (1f - depth))
+    }
+
+    private fun deck(d: Float): CardTransform {
+        val a = abs(d)
+        return if (d >= 0f) {
+            // Waiting cards: a stack behind and to the right, each a little smaller and higher.
+            val scale = (1f - 0.08f * d).coerceAtLeast(MIN_SCALE)
+            val x = 0.36f * d
+            val dim = (0.2f * d).coerceAtMost(MAX_DIM)
+            CardTransform(x, scale, 0f, dim, edgeAlpha(a), -a, offsetY = -0.035f * d)
+        } else {
+            // Passed cards slide away to the left and fade out.
+            val x = d * 1.15f
+            val alpha = (1f + d * 0.9f).coerceIn(0f, 1f)
+            CardTransform(x, 1f + 0.04f * d, 0f, (0.4f * a).coerceAtMost(MAX_DIM), alpha, -a)
+        }
+    }
+
+    private fun coverflow(d: Float): CardTransform {
         val a = abs(d)
         val near = minOf(a, 1f)
         val far = (a - 1f).coerceAtLeast(0f)
@@ -72,13 +149,16 @@ object CoverflowMath {
         // Inner edges recede: side cards face the centre like the walls of a corridor.
         val rotation = -sign(d) * near * SIDE_ANGLE
         val dim = (SIDE_DIM * near + DIM_STEP * far).coerceAtMost(MAX_DIM)
-        val alpha = when {
-            a <= FADE_START -> 1f
-            a >= RADIUS -> 0f
-            else -> 1f - (a - FADE_START) / (RADIUS - FADE_START)
-        }
-        return CardTransform(offset(d), scale, rotation, dim, alpha, -a)
+        return CardTransform(coverflowOffset(d), scale, rotation, dim, edgeAlpha(a), -a)
     }
+
+    /** Ring: degrees between neighbours, the furthest turn shown, and the drum radius in card widths. */
+    private const val RING_STEP = 25f
+    private const val RING_MAX = 88f
+    private const val RING_RADIUS = 2.15f
+
+    /** Arc: degrees each card tips per step from the centre. */
+    private const val RING_TIP = 5f
 
     /** Nearest card to a flow position. */
     fun nearest(position: Float, count: Int): Int =

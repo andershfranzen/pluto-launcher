@@ -59,6 +59,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import dev.pluto.launcher.ui.widgets.WidgetActionsSheet
+import dev.pluto.launcher.ui.widgets.WidgetPickerScreen
+import dev.pluto.launcher.ui.home.HomeDragOverlay
+import dev.pluto.launcher.ui.home.LocalHomeDrag
+import dev.pluto.launcher.ui.home.HomeDragController
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -143,8 +150,10 @@ import dev.pluto.launcher.ui.theme.LocalReducedMotion
 import dev.pluto.launcher.ui.theme.PlutoTheme
 import dev.pluto.launcher.ui.theme.WallpaperScrim
 import dev.pluto.launcher.ui.theme.XmbBackground
+import dev.pluto.launcher.ui.theme.PlutoBackground
+import dev.pluto.launcher.data.prefs.BackgroundChoice
 import dev.pluto.launcher.ui.theme.xmbBaseColor
-import dev.pluto.launcher.ui.theme.xmbIn
+import dev.pluto.launcher.ui.theme.backgroundFor
 import android.os.Looper
 import android.os.MessageQueue
 import androidx.compose.ui.unit.Constraints
@@ -233,11 +242,24 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
         onDispose { lifecycle.removeObserver(observer) }
     }
 
+    // Drag and drop on Home: started by a tile, followed here (the root sees every pointer first).
+    val haptics = LocalHapticFeedback.current
+    val drag = remember(vm) {
+        HomeDragController(
+            onStart = { source ->
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                vm.beginHomeDrag(fromDrawer = source is DragSource.Drawer)
+            },
+            onDrop = { source, target -> vm.applyDrop(source, target) },
+        )
+    }
+
     CompositionLocalProvider(
         LocalIconCache provides iconCache,
         LocalDrawerReveal provides reveal,
         LocalOriginRegistry provides origins,
         LocalAppLauncher provides appLauncher,
+        LocalHomeDrag provides drag,
     ) {
         PlutoTheme(state.settings) {
             ProvideControllerFocus(focus) {
@@ -261,6 +283,15 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                                 while (true) {
                                     val event = awaitPointerEvent(PointerEventPass.Initial)
                                     if (event.type == PointerEventType.Press) focus.onTouch()
+                                    // A drag in progress follows its finger wherever the tile that started it went.
+                                    if (drag.isActive) {
+                                        val change = event.changes.firstOrNull { it.id == drag.pointerId }
+                                        when {
+                                            change == null -> if (event.changes.none { it.pressed }) drag.cancel()
+                                            change.pressed -> drag.move(change.position)
+                                            else -> drag.release()
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -280,10 +311,10 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                         ModeResolver.resolve(widthDp, heightDp, state.controllerConnected, state.settings.handheldAppearance)
                     }
 
-                    if (state.settings.xmbIn(console = mode == LauncherMode.HANDHELD)) {
-                        XmbBackground(state.settings.xmbBaseColor(), animate = !state.settings.reducedMotion)
-                    } else {
-                        WallpaperScrim(state.settings)
+                    when (state.settings.backgroundFor(console = mode == LauncherMode.HANDHELD)) {
+                        BackgroundChoice.PLUTO -> PlutoBackground(state.settings.backgroundFrameRate, animate = !state.settings.reducedMotion)
+                        BackgroundChoice.XMB -> XmbBackground(state.settings.xmbBaseColor(), animate = !state.settings.reducedMotion)
+                        BackgroundChoice.WALLPAPER -> WallpaperScrim(state.settings)
                     }
                     val storageError = state.storageError
                     if (storageError != null) {
@@ -303,6 +334,7 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                             .widthIn(max = 560.dp),
                     )
+                    HomeDragOverlay(drag, state.iconSize())
                     LaunchVeil(veil, MaterialTheme.colorScheme.surface, Modifier.matchParentSize())
                 }
                 }
@@ -348,6 +380,7 @@ private fun PrewarmIcons(state: LauncherUiState, cache: dev.pluto.launcher.apps.
                 when (tile) {
                     is HomeTile.App -> add(tile.entry.key)
                     is HomeTile.FolderTile -> tile.folder.apps.forEach { add(it.key) }
+                    is HomeTile.Widget -> Unit
                 }
             }
         }
@@ -422,8 +455,8 @@ private val Layer.kind: LayerKind
         Layer.Drawer -> LayerKind.DRAWER
         is Layer.FolderLayer -> LayerKind.FOLDER
         // Bottom-sheet/dialog style; they draw their own ModalPanel scrim.
-        is Layer.AppActions, is Layer.CategoryMembership, is Layer.MoveToFolder -> LayerKind.SHEET
-        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker -> LayerKind.PAGE
+        is Layer.AppActions, is Layer.CategoryMembership, is Layer.MoveToFolder, is Layer.WidgetActions -> LayerKind.SHEET
+        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker, Layer.WidgetPicker -> LayerKind.PAGE
         Layer.Onboarding -> LayerKind.ONBOARDING
     }
 
@@ -644,9 +677,6 @@ private fun LauncherContent(
         vm = vm,
     )
 
-    // Where the drawer panel's opaque body starts (inset + gap + corner radius), for clipping home.
-    val density = LocalDensity.current
-    val panelTopPx = WindowInsets.safeDrawing.getTop(density) + with(density) { DrawerPanelTopClearance.toPx() }
     Box(Modifier.fillMaxSize().onPlaced { host.windowOffset = it.positionInWindow() }) {
         if (showBase) {
             val covered = layers.isNotEmpty()
@@ -659,7 +689,7 @@ private fun LauncherContent(
                         // Home has no text input: the keyboard (drawer search, rename dialogs)
                         // must not reflow the layout beneath the layer that raised it.
                         .consumeWindowInsets(HomeImeInsets)
-                        .beneathMotion(beneath, reveal, rtl, panelTopPx),
+                        .beneathMotion(beneath, reveal, rtl),
                 ) {
                     ModeCrossfade(mode, landscapeWindow, rememberHomeView(state), vm)
                 }
@@ -724,9 +754,6 @@ private const val VM_SYNC_GRACE_MS = 600L
 /** The keyboard's share of the insets beyond the system bars and cutout (consumed for home). */
 private val HomeImeInsets: WindowInsets
     @Composable get() = WindowInsets.ime.exclude(WindowInsets.systemBars.union(WindowInsets.displayCutout))
-
-/** Drawer panel gap (8dp) plus its corner radius: home stays visible down to here. */
-private val DrawerPanelTopClearance = 8.dp + 24.dp
 
 /** What decides whether the closed drawer may stay composed. */
 private data class ParkKey(val covered: Boolean)
@@ -1073,7 +1100,7 @@ private fun LayerFrame(
  * drawer; anything under an arriving page shifts toward the start and fades out (shared
  * axis), so dropping it once the page has settled is invisible.
  */
-private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, rtl: Boolean, panelTopPx: Float = 0f): Modifier =
+private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, rtl: Boolean): Modifier =
     if (beneath === NothingAbove) {
         this
     } else {
@@ -1085,9 +1112,9 @@ private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, 
                 scaleX = s
                 scaleY = s
                 a *= LayerMotion.recedeAlpha(d)
-                // The drawer's opaque panel hides everything below its top edge (plus its
-                // rounded corners); only the strip above it is drawn.
-                if (d > 0f) clipBottom = LayerMotion.drawerOffset(d, height) + panelTopPx
+                // The full-screen drawer hides everything below its top edge; only the strip
+                // above it is drawn.
+                if (d > 0f) clipBottom = LayerMotion.drawerOffset(d, height)
                 // Receded home stays translucent for as long as the drawer is open: no
                 // full-window offscreen buffer for it (only the strip above the panel shows).
                 modulateAlpha = beneath.covers.isEmpty()
@@ -1221,6 +1248,8 @@ private fun LayerContent(layer: Layer, state: LauncherUiState, vm: LauncherViewM
         Layer.Drawer -> DrawerScreen(state, vm)
         is Layer.FolderLayer -> FolderOverlay(state, vm, layer.folderId)
         is Layer.AppActions -> AppActionsSheet(layer.key, state, vm)
+        Layer.WidgetPicker -> WidgetPickerScreen(state, vm)
+        is Layer.WidgetActions -> WidgetActionsSheet(layer.appWidgetId, state, vm)
         is Layer.CategoryMembership -> CategoryMembershipDialog(layer.key, state, vm)
         is Layer.MoveToFolder -> MoveToFolderDialog(layer.key, state, vm)
         Layer.Edit -> EditScreen(state, vm)

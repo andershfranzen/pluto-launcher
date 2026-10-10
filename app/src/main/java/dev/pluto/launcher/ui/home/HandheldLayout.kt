@@ -46,6 +46,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -62,6 +63,7 @@ import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.ButtonLegend
 import dev.pluto.launcher.ui.components.ClockHeader
+import dev.pluto.launcher.ui.components.symmetricHorizontalSafeDrawing
 import dev.pluto.launcher.ui.components.EmptyState
 import dev.pluto.launcher.ui.components.LocalIconCache
 import dev.pluto.launcher.ui.components.PlutoIconButton
@@ -81,8 +83,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import dev.pluto.launcher.ui.console.ConsoleTitle
+import dev.pluto.launcher.ui.console.LocalCarouselStyle
+import dev.pluto.launcher.ui.console.ConsoleCounter
 import dev.pluto.launcher.ui.theme.ConsoleTheme
-import dev.pluto.launcher.ui.theme.xmbIn
+import dev.pluto.launcher.data.prefs.BackgroundChoice
 import dev.pluto.launcher.ui.console.ConsoleTopBar
 import dev.pluto.launcher.ui.console.ControllerBattery
 import dev.pluto.launcher.ui.console.PhoneBattery
@@ -294,10 +298,10 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
 
     // --- Layout -------------------------------------------------------------------------------
     val selectedCardFocus: () -> FocusRequester = { switch.stage.let { if (it.count > 0) it.selectedRequester() else FocusRequester.Default } }
-    CompositionLocalProvider(LocalShowTouchSelection provides true) {
+    CompositionLocalProvider(LocalShowTouchSelection provides true, LocalCarouselStyle provides state.settings.carouselStyle) {
         Box(Modifier.fillMaxSize()) {
-            // With the XMB background on, the root draws it behind the console instead.
-            if (!state.settings.xmbIn(console = true)) {
+            // With an animated console background, the root draws it behind the console instead.
+            if (state.settings.consoleBackground == BackgroundChoice.WALLPAPER) {
                 ConsoleBackdrop(
                     stage = { switch.stage },
                     artPx = artPx,
@@ -307,7 +311,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
             }
             // Only vertical insets here: the stage and title are centred on the whole screen
             // (a landscape camera cutout would otherwise push them off-centre); the top bar and
-            // legend take the horizontal insets themselves.
+            // legend take the horizontal insets themselves, equal on both sides so their corners
+            // match.
             Column(
                 Modifier
                     .fillMaxSize()
@@ -316,7 +321,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                 ConsoleTopBar(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                        .symmetricHorizontalSafeDrawing()
                         .padding(start = 12.dp, end = 8.dp, top = 6.dp),
                     tabs = {
                         ShelfTabs(
@@ -408,7 +413,6 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                 if (apps.isNotEmpty()) {
                     ConsoleTitle(
                         stage = stage,
-                        subtitle = shelf.subtitle,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp),
@@ -419,16 +423,20 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                        .symmetricHorizontalSafeDrawing()
                         .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = ConsoleBottomClearance),
                     contentAlignment = Alignment.CenterEnd,
                 ) {
-                    if (hints) {
-                        ButtonLegend(
-                            mapping,
-                            if (apps.isNotEmpty()) ConsoleLegend else ConsoleLegendEmpty,
-                            Modifier.align(Alignment.CenterStart),
-                        )
+                    // Bottom left, opposite the buttons: the position in the shelf, then the hints.
+                    Row(
+                        Modifier.align(Alignment.CenterStart),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(20.dp),
+                    ) {
+                        if (apps.isNotEmpty()) ConsoleCounter(stage)
+                        if (hints) {
+                            ButtonLegend(mapping, if (apps.isNotEmpty()) ConsoleLegend else ConsoleLegendEmpty)
+                        }
                     }
                     // Up from these returns to the selected card.
                     val up = Modifier.focusProperties { up = selectedCardFocus() }
@@ -666,3 +674,4 @@ private fun <T> rememberEqualList(value: List<T>): List<T> {
 private class ListHolder<T> {
     var value: List<T>? = null
 }
+

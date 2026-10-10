@@ -259,9 +259,9 @@ are in place for the first real migration.
   lists through `rememberEqual`: an equal new list keeps the previous instance and children
   (grid, dock, chips) skip. The drawer's search bar reads only its own field state; the grid
   reads only its list.
-- **The drawer** (`DrawerScreen`) is a full-height sheet: brand-tinted surface
-  (`ui/theme/Surfaces.kt`) with a light rim, a grab handle, a pinned search pill, category
-  chips with a sliding indicator, one `LazyVerticalGrid` for every category (switching swaps
+- **The drawer** (`DrawerScreen`) is a full-screen page, edge to edge behind the status bar:
+  a translucent brand-tinted surface (`ui/theme/Surfaces.kt`) whose top row holds Close, the
+  category chips (with a sliding indicator) and ⋮, then a pinned search pill, one `LazyVerticalGrid` for every category (switching swaps
   its list, apps in both stay composed, the new list slides in from its side), an A–Z
   `FastScrollRail`, and edge fades drawn in the sheet colour (no offscreen layer). Large
   result changes (Clear) are fed in over frames (`ResultsFeed`), and heavy changes

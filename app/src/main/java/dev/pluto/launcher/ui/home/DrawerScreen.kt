@@ -43,7 +43,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
@@ -57,6 +56,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.MoreVert
@@ -82,6 +82,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import dev.pluto.launcher.ui.DragSource
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
@@ -132,6 +133,7 @@ import dev.pluto.launcher.ui.components.PlutoTextButton
 import dev.pluto.launcher.ui.components.ScrollSections
 import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.components.rememberEqual
+import dev.pluto.launcher.ui.components.symmetricHorizontalSafeDrawing
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
 import dev.pluto.launcher.ui.focus.LocalFocusInert
@@ -140,10 +142,8 @@ import dev.pluto.launcher.ui.motion.DrawerRevealState
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.LocalDrawerReveal
 import dev.pluto.launcher.ui.motion.PlutoMotion
-import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.sheetColor
 import dev.pluto.launcher.ui.theme.sheetRaisedColor
-import dev.pluto.launcher.ui.theme.sheetRimBrush
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -159,12 +159,10 @@ private const val DR_CLOSE = "drawer:close"
 private const val DR_CLEAR = "drawer:clear"
 private const val CHIP_PREFIX = "drawer:cat"
 private const val DR_ACTIONS = "drawer:actions"
+private const val DR_CATEGORIES = "drawer:categories"
 
 /** Below this panel height, with the keyboard up, the drawer drops everything but search and results. */
 private val CompactImeHeight = 300.dp
-
-/** Gap between the status bar and the sheet's top edge (LauncherRoot clips home to match). */
-private val SheetTopGap = 8.dp
 
 /** The alphabet rail appears for lists at least this long (shorter ones scroll in a flick). */
 private const val RAIL_MIN_APPS = 24
@@ -180,8 +178,9 @@ private val EdgeFadeBottom = 28.dp
 private fun drawerAppId(key: AppKey) = "drawer:${key.encode()}"
 
 /**
- * The app drawer (layer Drawer): a translucent, brand-tinted sheet with a pinned search field,
- * category chips with a sliding indicator, and one alphabetical grid of state.drawerApps
+ * The app drawer (layer Drawer): a full-screen, translucent, brand-tinted page whose top row
+ * holds Close, the category chips (with a sliding indicator) and ⋮, then a pinned search
+ * field and one alphabetical grid of state.drawerApps
  * (filtering and accent-insensitive matching are done by the view model), with an alphabet
  * fast-scroll rail, soft edge fades and a useful empty state.
  *
@@ -384,137 +383,119 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         }
     }
 
-    // A genuinely translucent sheet, not the near-opaque body used by menus and folders.
+    // A genuinely translucent page, not the near-opaque body used by menus and folders. It
+    // runs edge to edge behind the status bar, so the drawer reads as a screen, not a sheet.
     val sheet = sheetColor().copy(alpha = 0.58f)
-    val sheetShape = remember { RoundedCornerShape(topStart = PlutoDimens.PanelCorner, topEnd = PlutoDimens.PanelCorner) }
-    Box(
+    Column(
         Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-            .padding(top = SheetTopGap),
+            .background(sheet)
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Top))
+            // Equal side margins even with a cutout on one side (landscape).
+            .symmetricHorizontalSafeDrawing()
+            .revealDrag(closeDriver, opening = false),
     ) {
+        // Keep search in one place. Replacing this row with an expanding text field
+        // used to change its width twice (trailing buttons + AnimatedContent) while the
+        // IME resized the panel, producing clipped text and a jumping header.
         Column(
-            Modifier
-                .fillMaxSize()
-                .background(sheet, sheetShape)
-                .border(1.dp, sheetRimBrush(), sheetShape)
-                // The sheet runs edge to edge; cutout and side system bars pad its content.
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
-                .revealDrag(closeDriver, opening = false),
+            Modifier.graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
         ) {
-            if (!compact) SheetHandle(Modifier.align(Alignment.CenterHorizontally))
-
-            // Keep search in one place. Replacing this row with an expanding text field
-            // used to change its width twice (trailing buttons + AnimatedContent) while the
-            // IME resized the panel, producing clipped text and a jumping header.
-            Column(
-                Modifier.graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
-            ) {
-                if (!compact) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, bottom = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", {
-                            keyboard?.hide()
-                            focusManager.clearFocus()
-                            vm.setSearchActive(false)
-                            vm.back()
-                        })
-                        Column(Modifier.weight(1f).padding(start = 8.dp)) {
-                            Text("All apps", style = MaterialTheme.typography.titleLarge)
-                            Text(
-                                drawerCountLabel(state.drawerApps.size, session.searchText.isNotBlank()),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        PlutoIconButton(
-                            id = DR_ACTIONS,
-                            icon = if (actionsMode) Icons.Outlined.Check else Icons.Outlined.MoreVert,
-                            label = if (actionsMode) DrawerText.ACTIONS_DONE else DrawerText.ACTIONS,
-                            onClick = { actionsMode = !actionsMode },
+            if (!compact) {
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", {
+                        keyboard?.hide()
+                        focusManager.clearFocus()
+                        vm.setSearchActive(false)
+                        vm.back()
+                    })
+                    if (categories.size > 1) {
+                        CategoryTabs(
+                            categories = categories,
+                            selected = activeCategory,
+                            onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
+                            idPrefix = CHIP_PREFIX,
+                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
                         )
+                    } else {
+                        Spacer(Modifier.weight(1f))
                     }
-                }
-                Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (compact) 4.dp else 6.dp)) {
-                    DrawerSearchField(
-                        field = field,
-                        compact = compact,
-                        onClear = { vm.clearSearch() },
-                        onCollapse = { vm.setSearchActive(false) },
-                        onSearchAction = {
-                            keyboard?.hide()
-                            if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
-                        },
-                        onFieldActivated = { vm.setSearchActive(true); keyboard?.show() },
-                        onFieldFocused = { if (isTop && !currentState.session.searchActive) vm.setSearchActive(true) },
-                    )
-                }
-                if (!compact && categories.size > 1) {
-                    CategoryTabs(
-                        categories = categories,
-                        selected = activeCategory,
-                        onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
-                        idPrefix = CHIP_PREFIX,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    // Categories are unlimited: add, rename and reorder them from here.
+                    PlutoIconButton(DR_CATEGORIES, Icons.Outlined.Add, DrawerText.MANAGE_CATEGORIES, { vm.openLayer(Layer.Categories) })
+                    PlutoIconButton(
+                        id = DR_ACTIONS,
+                        icon = if (actionsMode) Icons.Outlined.Check else Icons.Outlined.MoreVert,
+                        label = if (actionsMode) DrawerText.ACTIONS_DONE else DrawerText.ACTIONS,
+                        onClick = { actionsMode = !actionsMode },
                     )
                 }
             }
-
-            AnimatedVisibility(visible = actionsMode && !compact, enter = ExpandIn, exit = ShrinkOut) {
-                ActionsModeBanner(onDone = { actionsMode = false })
-            }
-
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                if (apps.isEmpty()) {
-                    DrawerEmptyState(
-                        query = session.searchText,
-                        category = activeCategory,
-                        onClear = { vm.clearSearch() },
-                        onShowAll = { vm.selectCategory(null) },
-                        onHiddenApps = { vm.openLayer(Layer.HiddenApps) },
-                        modifier = Modifier.align(Alignment.Center).fadeInOnAppear(),
-                    )
-                } else {
-                    DrawerGrid(
-                        apps = apps,
-                        gridState = gridState,
-                        iconSize = tileIcon,
-                        compact = compact,
-                        heavyChange = feed.heavy,
-                        itemKey = feed::itemKey,
-                        actionsMode = actionsMode,
-                        stagger = stagger,
-                        staggerFrame = staggerFrame,
-                        pageShift = pageShift,
-                        onLaunchApp = onLaunchApp,
-                        onAppActions = onAppActions,
-                        onAppFocused = onAppFocused,
-                    )
-                    if (!searchMode && !compact && apps.size >= RAIL_MIN_APPS) {
-                        val sections = remember(apps) { ScrollSections.of(apps.map { it.label }) }
-                        if (sections.size >= RAIL_MIN_SECTIONS) FastScrollRail(sections, gridState)
-                    }
-                }
-            }
-
-            if (showControllerHints(state, focus) && !compact) {
-                ButtonLegend(
-                    state.activeMapping(),
-                    Legends.Drawer,
-                    Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 8.dp, start = 12.dp, end = 12.dp),
+            Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (compact) 4.dp else 6.dp)) {
+                DrawerSearchField(
+                    field = field,
+                    compact = compact,
+                    onClear = { vm.clearSearch() },
+                    onCollapse = { vm.setSearchActive(false) },
+                    onSearchAction = {
+                        keyboard?.hide()
+                        if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
+                    },
+                    onFieldActivated = { vm.setSearchActive(true); keyboard?.show() },
+                    onFieldFocused = { if (isTop && !currentState.session.searchActive) vm.setSearchActive(true) },
                 )
             }
         }
-    }
-}
 
-internal fun drawerCountLabel(count: Int, searching: Boolean): String {
-    val noun = if (searching) "result" else "app"
-    return "$count $noun${if (count == 1) "" else "s"}"
+        AnimatedVisibility(visible = actionsMode && !compact, enter = ExpandIn, exit = ShrinkOut) {
+            ActionsModeBanner(onDone = { actionsMode = false })
+        }
+
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (apps.isEmpty()) {
+                DrawerEmptyState(
+                    query = session.searchText,
+                    category = activeCategory,
+                    onClear = { vm.clearSearch() },
+                    onShowAll = { vm.selectCategory(null) },
+                    onHiddenApps = { vm.openLayer(Layer.HiddenApps) },
+                    modifier = Modifier.align(Alignment.Center).fadeInOnAppear(),
+                )
+            } else {
+                DrawerGrid(
+                    apps = apps,
+                    gridState = gridState,
+                    iconSize = tileIcon,
+                    compact = compact,
+                    heavyChange = feed.heavy,
+                    itemKey = feed::itemKey,
+                    actionsMode = actionsMode,
+                    stagger = stagger,
+                    staggerFrame = staggerFrame,
+                    pageShift = pageShift,
+                    onLaunchApp = onLaunchApp,
+                    onAppActions = onAppActions,
+                    onAppFocused = onAppFocused,
+                )
+                if (!searchMode && !compact && apps.size >= RAIL_MIN_APPS) {
+                    val sections = remember(apps) { ScrollSections.of(apps.map { it.label }) }
+                    if (sections.size >= RAIL_MIN_SECTIONS) FastScrollRail(sections, gridState)
+                }
+            }
+        }
+
+        if (showControllerHints(state, focus) && !compact) {
+            ButtonLegend(
+                state.activeMapping(),
+                Legends.Drawer,
+                Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 8.dp, start = 12.dp, end = 12.dp),
+            )
+        }
+    }
 }
 
 /** True while the window minus system bars, cutout and keyboard is shorter than [CompactImeHeight]. */
@@ -536,18 +517,6 @@ private const val CONTENT_FADE_START = 0.05f
 
 /** 0 until the drawer is [start] of the way open, then rising to 1 by the time it is fully open. */
 private fun revealFade(progress: Float, start: Float): Float = ((progress - start) / (1f - start)).coerceIn(0f, 1f)
-
-/** The sheet's grab handle: decorative, it says "this pulls down". */
-@Composable
-private fun SheetHandle(modifier: Modifier = Modifier) {
-    val color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-    Box(
-        modifier
-            .padding(top = 8.dp, bottom = 2.dp)
-            .size(width = 36.dp, height = 4.dp)
-            .background(color, CircleShape),
-    )
-}
 
 /**
  * The search field, shown in the header row while searching: a pill with the search icon,
@@ -722,7 +691,10 @@ private fun DrawerGrid(
                 },
                 onActions = { onAppActions(entry.key) },
                 actionsOnTap = actionsMode,
-                modifier = resultItem(heavyChange).then(DrawerStaggerElement(stagger, staggerFrame, index)),
+                modifier = resultItem(heavyChange)
+                    .then(DrawerStaggerElement(stagger, staggerFrame, index))
+                    // Hold and move: the drawer closes and the app can be dropped on Home or the dock.
+                    .homeDragSource(source = { DragSource.Drawer(entry.key) }, look = { DragLook.App(entry) }),
                 // Keyboard-compact rows show icons only so no tile is cut off; names stay in semantics.
                 showLabel = !compact,
                 focusId = id,
@@ -1009,6 +981,7 @@ private class CategorySwitch(var categoryId: Long?) {
 internal object DrawerText {
     const val ACTIONS = "Choose an app to see its actions"
     const val ACTIONS_DONE = "Done choosing apps"
+    const val MANAGE_CATEGORIES = "Add or edit categories"
     const val ACTIONS_HINT = "Tap an app to see its actions: pin, dock, folder, categories, hide, app info."
 }
 

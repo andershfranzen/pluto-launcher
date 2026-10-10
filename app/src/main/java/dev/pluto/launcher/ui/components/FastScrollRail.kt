@@ -44,6 +44,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import java.text.Normalizer
+import kotlin.math.roundToInt
 
 /**
  * Sections of an alphabetical list for [FastScrollRail]: the rail's letters, the first item
@@ -190,8 +191,8 @@ fun BoxScope.FastScrollRail(
                     if (active) {
                         drawRoundRect(track, cornerRadius = CornerRadius(size.width / 2f, size.width / 2f))
                     }
-                    // The section of the first visible item (read here, so scrolling only redraws the rail).
-                    val current = if (active) state.section else sections.sectionOf(gridState.firstVisibleItemIndex)
+                    // The section under the reading point (read here, so scrolling only redraws the rail).
+                    val current = if (active) state.section else sections.sectionOf(readingItem(gridState))
                     layouts.forEachIndexed { i, layout ->
                         val cy = top + row * (i + 0.5f)
                         val selected = i == current
@@ -207,6 +208,24 @@ fun BoxScope.FastScrollRail(
             },
     )
     RailBubble(state, sections, Modifier.align(Alignment.TopEnd).padding(end = FastScrollRailWidth + 12.dp))
+}
+
+/**
+ * The item whose letter the rail highlights: the first visible item at the top of the list,
+ * the last one at the end, and in between a point that moves down the visible rows as the
+ * list scrolls. Using only the first visible item left the rail stuck on a middle letter
+ * at the end, where the last screenful of sections can never reach the top.
+ */
+private fun readingItem(grid: LazyGridState): Int {
+    val info = grid.layoutInfo
+    val visible = info.visibleItemsInfo
+    if (visible.isEmpty()) return grid.firstVisibleItemIndex
+    val first = visible.first().index
+    val last = visible.last().index
+    if (!grid.canScrollForward) return last
+    val hidden = info.totalItemsCount - (last - first + 1)
+    val progress = if (hidden <= 0) 0f else (first.toFloat() / hidden).coerceIn(0f, 1f)
+    return first + ((last - first) * progress).roundToInt()
 }
 
 /** The letter bubble beside the finger; it grows out of the rail and follows in the layer phase. */

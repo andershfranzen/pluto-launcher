@@ -85,15 +85,30 @@ sealed interface HomeItem {
         override val id: String get() = FOLDER_PREFIX + folderId
     }
 
+    /** An app widget hosted on the grid; its provider and size live in [Organization.widgets]. */
+    data class Widget(val appWidgetId: Int) : HomeItem {
+        override val id: String get() = WIDGET_PREFIX + appWidgetId
+    }
+
     companion object {
         const val APP_PREFIX = "app:"
         const val FOLDER_PREFIX = "folder:"
+        const val WIDGET_PREFIX = "widget:"
 
         fun decode(id: String): HomeItem? = when {
             id.startsWith(APP_PREFIX) -> AppKey.decode(id.removePrefix(APP_PREFIX))?.let(::App)
             id.startsWith(FOLDER_PREFIX) -> id.removePrefix(FOLDER_PREFIX).toLongOrNull()?.let(::FolderRef)
+            id.startsWith(WIDGET_PREFIX) -> id.removePrefix(WIDGET_PREFIX).toIntOrNull()?.let(::Widget)
             else -> null
         }
+    }
+}
+
+/** A widget on Home: the host's id, the provider (flattened ComponentName) and its height in grid rows. */
+data class HomeWidget(val appWidgetId: Int, val provider: String, val rows: Int) {
+    companion object {
+        const val MIN_ROWS = 1
+        const val MAX_ROWS = 5
     }
 }
 
@@ -118,6 +133,8 @@ data class Organization(
     val hidden: Set<AppKey> = emptySet(),
     /** Most recent first, at most 12 entries. */
     val recents: List<RecentLaunch> = emptyList(),
+    /** Widgets on Home, by app widget id. */
+    val widgets: Map<Int, HomeWidget> = emptyMap(),
 ) {
     companion object {
         const val DOCK_SLOTS = 5

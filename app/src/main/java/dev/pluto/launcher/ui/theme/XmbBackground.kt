@@ -23,7 +23,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import dev.pluto.launcher.data.prefs.BackgroundStyle
+import dev.pluto.launcher.data.prefs.BackgroundChoice
 import dev.pluto.launcher.data.prefs.LauncherSettings
 import dev.pluto.launcher.data.prefs.XmbColor
 import java.util.Calendar
@@ -38,12 +38,8 @@ fun LauncherSettings.xmbBaseColor(month: Int = Calendar.getInstance().get(Calend
     return Color(c.argb)
 }
 
-/** True when the XMB background replaces the wallpaper in this place. */
-fun LauncherSettings.xmbIn(console: Boolean): Boolean = when (backgroundStyle) {
-    BackgroundStyle.WALLPAPER -> false
-    BackgroundStyle.XMB_CONSOLE -> console
-    BackgroundStyle.XMB_EVERYWHERE -> true
-}
+/** The background chosen for normal or console (handheld) mode. */
+fun LauncherSettings.backgroundFor(console: Boolean): BackgroundChoice = if (console) consoleBackground else normalBackground
 
 /**
  * A PS3 XMB-style animated background.

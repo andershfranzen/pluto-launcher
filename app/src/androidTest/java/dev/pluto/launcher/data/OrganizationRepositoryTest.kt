@@ -48,8 +48,8 @@ class OrganizationRepositoryTest {
         repo.ensureDefaults()
         repo.ensureDefaults()
         val categories = org().categories
-        assertEquals(listOf("All apps", "Games", "Tools"), categories.map { it.name })
-        assertEquals(listOf(BuiltInCategory.ALL, BuiltInCategory.GAMES, BuiltInCategory.TOOLS), categories.map { it.builtIn })
+        assertEquals(listOf("All apps", "Games"), categories.map { it.name })
+        assertEquals(listOf(BuiltInCategory.ALL, BuiltInCategory.GAMES), categories.map { it.builtIn })
         assertEquals(List(Organization.DOCK_SLOTS) { null }, org().dock)
     }
 

@@ -1,6 +1,17 @@
 package dev.pluto.launcher.ui.home
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import dev.pluto.launcher.system.NotificationShade
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -28,6 +39,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import dev.pluto.launcher.model.HomeItem
+import dev.pluto.launcher.ui.DragSource
+import dev.pluto.launcher.ui.widgets.HomeWidgetView
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
@@ -65,12 +79,18 @@ internal const val HOME_SURFACE = "home"
 
 /** Home copy shared by the layouts (inline for 0.1). */
 internal object HomeText {
-    const val EMPTY_FAVOURITES = "Swipe up or tap search to find apps, then pin favourites. " +
+    const val EMPTY_FAVOURITES = "Swipe up to find apps, then pin favourites. " +
         "Pressing and holding an app opens its actions; Add favourite works without gestures."
 
     /** Accessibility custom action (on the home Search button) that opens the full drawer. */
     const val ALL_APPS_ACTION = "All apps"
+
+    /** The drop bar that takes an app off Home or out of the dock. */
+    const val REMOVE = "Remove"
 }
+
+/** A widget row is a tile's height: the icon plus room for its label. */
+internal val WidgetRowExtra = 44.dp
 
 internal fun homeTileFocusId(tile: HomeTile): String = "home:${tile.id}"
 internal fun dockFocusId(slot: Int): String = "dock:$slot"
@@ -99,6 +119,31 @@ internal fun HomeTileView(
     modifier: Modifier = Modifier,
     showLabel: Boolean = true,
 ) {
+    if (tile is HomeTile.Widget) {
+        HomeWidgetView(tile.widget, iconSize + WidgetRowExtra, vm, modifier)
+        return
+    }
+    // Press, hold and move: the tile lifts off as a drag (see HomeDrag).
+    val draggable = modifier
+        .dragFeedback(tile.id)
+        .homeDragSource(
+            source = {
+                DragSource.Home(
+                    when (tile) {
+                        is HomeTile.App -> HomeItem.App(tile.entry.key)
+                        is HomeTile.FolderTile -> HomeItem.FolderRef(tile.folder.folder.id)
+                        is HomeTile.Widget -> HomeItem.Widget(tile.widget.appWidgetId)
+                    },
+                )
+            },
+            look = {
+                when (tile) {
+                    is HomeTile.App -> DragLook.App(tile.entry)
+                    is HomeTile.FolderTile -> DragLook.Folder(tile.folder)
+                    is HomeTile.Widget -> null
+                }
+            },
+        )
     when (tile) {
         is HomeTile.App -> {
             val key = tile.entry.key
@@ -108,7 +153,7 @@ internal fun HomeTileView(
                 iconSize = iconSize,
                 onLaunch = { launcher.launch(key, focusId) },
                 onActions = { vm.openLayer(Layer.AppActions(key)) },
-                modifier = modifier,
+                modifier = draggable,
                 focusId = focusId,
                 showLabel = showLabel,
                 onFocused = {
@@ -128,11 +173,12 @@ internal fun HomeTileView(
                     vm.setEditSelection(tile.id)
                     vm.openLayer(Layer.Edit)
                 },
-                modifier = modifier,
+                modifier = draggable,
                 showLabel = showLabel,
                 onFocused = { vm.onControlFocused(focusId) },
             )
         }
+        is HomeTile.Widget -> Unit
     }
 }
 
@@ -147,6 +193,8 @@ internal fun DockSlot(
 ) {
     val focusId = dockFocusId(slot)
     val landing = rememberDockLanding(entry?.key)
+    // Every slot (empty or not) takes drops; an app in it can be dragged out.
+    val target = modifier.dockDropTarget(slot)
     if (entry != null) {
         val launcher = LocalAppLauncher.current
         AppTile(
@@ -154,7 +202,9 @@ internal fun DockSlot(
             iconSize = iconSize,
             onLaunch = { launcher.launch(entry.key, focusId) },
             onActions = { vm.openLayer(Layer.AppActions(entry.key)) },
-            modifier = modifier.graphicsLayer {
+            modifier = target
+                .homeDragSource(source = { DragSource.Dock(slot, entry.key) }, look = { DragLook.App(entry) })
+                .graphicsLayer {
                 val scale = landing.scale()
                 scaleX = scale
                 scaleY = scale
@@ -169,7 +219,7 @@ internal fun DockSlot(
         )
     } else {
         Box(
-            modifier
+            target
                 .size(iconSize + 12.dp)
                 .controllerFocusable(
                     id = focusId,
@@ -383,6 +433,59 @@ internal fun TrackGridNavigation(surface: String, gridState: LazyGridState, ids:
 internal fun Modifier.swipeUpToOpenDrawer(vm: LauncherViewModel): Modifier {
     val driver = rememberRevealDragDriver(opening = true) { open -> if (open) vm.openDrawer() }
     return revealDrag(driver, opening = true)
+}
+
+/**
+ * Swipe down anywhere on the home surface to pull down the notification shade, as stock
+ * launchers do: drags on non-scrolling areas, and downward drag the favourites grid leaves
+ * over at its top. Fires once per gesture.
+ */
+@Composable
+internal fun Modifier.swipeDownForNotifications(): Modifier {
+    val context = LocalContext.current
+    val gesture = remember { ShadeGesture() }
+    gesture.expand = { NotificationShade.expand(context) }
+    return this
+        // Observes (never consumes) the finger, so one gesture can open the shade only once.
+        .pointerInput(gesture) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    val pressed = event.changes.any { it.pressed }
+                    if (pressed && !gesture.pointerDown) gesture.fired = false
+                    gesture.pointerDown = pressed
+                }
+            }
+        }
+        .nestedScroll(gesture)
+        .pointerInput(gesture) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                awaitVerticalTouchSlopOrCancellation(down.id) { change, over ->
+                    if (over > 0f) {
+                        change.consume()
+                        gesture.fire()
+                    }
+                }
+            }
+        }
+}
+
+private class ShadeGesture : NestedScrollConnection {
+    var expand: () -> Unit = {}
+    var pointerDown = false
+    var fired = false
+
+    fun fire() {
+        if (fired) return
+        fired = true
+        expand()
+    }
+
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+        if (source == NestedScrollSource.UserInput && pointerDown && available.y > 0f) fire()
+        return Offset.Zero
+    }
 }
 
 /** Index of the first dock slot holding [key], or -1. */

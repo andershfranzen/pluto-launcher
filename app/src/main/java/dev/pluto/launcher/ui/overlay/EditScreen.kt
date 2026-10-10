@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
@@ -67,6 +68,7 @@ private sealed interface EditTarget {
             get() = when (tile) {
                 is HomeTile.App -> tile.entry.label
                 is HomeTile.FolderTile -> tile.folder.folder.name
+                is HomeTile.Widget -> OverlayText.WIDGET
             }
     }
 
@@ -329,6 +331,15 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                         lift = true,
                         onClick = { toggle(tile.id) },
                     )
+                    is HomeTile.Widget -> ActionRow(
+                        id = rowId(tile.id),
+                        label = OverlayText.WIDGET,
+                        supporting = OverlayText.widgetRows(tile.widget.rows),
+                        icon = Icons.Rounded.Widgets,
+                        selected = selected,
+                        lift = true,
+                        onClick = { toggle(tile.id) },
+                    )
                 }
                 ExpandingSection(visible = selected && item != null) {
                     val last = state.homeTiles.lastIndex
@@ -359,6 +370,11 @@ fun EditScreen(state: LauncherUiState, vm: LauncherViewModel) {
                                 }
                                 EditControl("edit:ctl:delete", OverlayText.DELETE_FOLDER, Icons.Rounded.Delete, destructive = true) {
                                     openDialog(EditDialog.DELETE_FOLDER, "edit:ctl:delete")
+                                }
+                            }
+                            is HomeTile.Widget -> {
+                                EditControl("edit:ctl:widget", OverlayText.WIDGET_OPTIONS, Icons.Rounded.Widgets) {
+                                    vm.openLayer(Layer.WidgetActions(tile.widget.appWidgetId))
                                 }
                             }
                         }
@@ -543,6 +559,7 @@ private fun TargetPicker(
             when (tile) {
                 is HomeTile.App -> Triple(tile.id, tile.entry.label, tile.entry)
                 is HomeTile.FolderTile -> Triple(tile.id, OverlayText.folderHeader(tile.folder.folder.name), null)
+                is HomeTile.Widget -> Triple(tile.id, OverlayText.WIDGET, null)
             }
         }
         is EditTarget.Dock -> (0 until Organization.DOCK_SLOTS).filter { it != target.slot }.map { slot ->

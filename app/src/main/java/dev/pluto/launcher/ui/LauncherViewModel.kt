@@ -188,6 +188,9 @@ class LauncherViewModel(
         viewModelScope.launch { showOnboardingWhenNeeded() }
         viewModelScope.launch { keepSelectionByIdentity() }
         viewModelScope.launch { pruneStaleLayers() }
+        viewModelScope.launch {
+            settingsState.filterNotNull().map { it.iconPack }.distinctUntilChanged().collect { container.icons.setIconPack(it) }
+        }
     }
 
     override fun onCleared() {
@@ -247,6 +250,45 @@ class LauncherViewModel(
             }
         }
         return handled
+    }
+
+    /**
+     * A press-and-hold turned into a drag: the app actions menu it opened goes away, and a
+     * drag out of the drawer closes the drawer so Home is there to drop onto.
+     */
+    fun beginHomeDrag(fromDrawer: Boolean) = updateSession { s ->
+        s.copy(
+            layers = s.layers.filterNot { it is Layer.AppActions || (fromDrawer && it == Layer.Drawer) },
+            searchActive = if (fromDrawer) false else s.searchActive,
+            searchText = if (fromDrawer) "" else s.searchText,
+        )
+    }
+
+    /** A bound (and configured) widget joins the end of Home; the picker closes. */
+    fun addWidget(appWidgetId: Int, provider: String, rows: Int) {
+        updateSession { s -> s.copy(layers = s.layers.filterNot { it == Layer.WidgetPicker }) }
+        lockedPersist { repository.addWidget(appWidgetId, provider, rows) }
+    }
+
+    /** Takes a widget off Home and frees its host id. */
+    fun removeWidget(appWidgetId: Int) {
+        updateSession { s -> s.copy(layers = s.layers.filterNot { it == Layer.WidgetActions(appWidgetId) }) }
+        lockedPersist { repository.removeWidget(appWidgetId) }
+        boundary("free widget id") { container.widgets.delete(appWidgetId) }
+    }
+
+    fun setWidgetRows(appWidgetId: Int, rows: Int) = lockedPersist { repository.setWidgetRows(appWidgetId, rows) }
+
+    /** Applies a drag-and-drop to Home, the dock or a folder (see [DropPlan]). */
+    fun applyDrop(source: DragSource, target: DropTarget) = edit { org ->
+        val inFolder = org.folders.values.flatMapTo(HashSet()) { it.apps }
+        val plan = DropPlan.of(org.homeItems, DropPlan.padded(org.dock), inFolder, source, target)
+        if (plan.isEmpty) return@edit
+        plan.unpin?.let { repository.unpin(it) }
+        plan.dock?.let { repository.setDock(it) }
+        plan.home?.let { repository.setHomeOrder(it) }
+        plan.newFolder?.let { repository.createFolder(DEFAULT_FOLDER_NAME, it.apps, it.homeIndex) }
+        plan.intoFolder?.let { (key, folderId) -> repository.moveAppToFolder(key, folderId) }
     }
 
     fun closeAllLayers() = updateSession { s ->
@@ -712,6 +754,7 @@ class LauncherViewModel(
                         is Layer.AppActions -> layer.key in available
                         is Layer.CategoryMembership -> layer.key in available
                         is Layer.MoveToFolder -> layer.key in available
+                        is Layer.WidgetActions -> ui.homeTiles.any { it is HomeTile.Widget && it.widget.appWidgetId == layer.appWidgetId }
                         else -> true
                     }
                 }

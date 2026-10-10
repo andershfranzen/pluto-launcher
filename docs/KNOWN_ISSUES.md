@@ -103,13 +103,14 @@ something.
   Pluto discloses this when such profiles exist. Use the system or another launcher to reach
   those apps. Because of this, Pluto should not be described as a fully compatible launcher
   yet.
-- **No widgets.**
-- **No drag and drop.** Organising uses the explicit Edit controls (move up / down / before /
-  after), which work with both touch and controller.
+- **Widgets take a full row** of the home grid; their height is set in rows from the widget's
+  options (press and hold it). Widgets cannot go in folders or the dock.
+- **Drag and drop covers Home, the dock and the drawer**, not folder contents; inside a folder,
+  use the explicit Edit controls.
 - **No backup or import/export.** Android backup is disabled; uninstalling Pluto or clearing
   its data loses your organisation.
-- **No icon packs**, custom cover artwork, configurable grid sizes, app shortcuts or
-  notification dots.
+- **No custom cover artwork**, configurable grid sizes, app shortcuts or notification dots.
+  Icon packs must use the common appfilter format (ADW / Nova); others fall back to system icons.
 - **Games are not detected automatically**; add apps to the Games category yourself.
 - **Playtime tracking, ROM indexing, emulator configuration and cloud libraries** are out of
   scope.

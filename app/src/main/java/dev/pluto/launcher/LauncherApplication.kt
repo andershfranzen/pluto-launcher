@@ -3,6 +3,7 @@ package dev.pluto.launcher
 import android.app.Application
 import dev.pluto.launcher.apps.AppCatalog
 import dev.pluto.launcher.apps.IconCache
+import dev.pluto.launcher.widgets.WidgetHost
 import dev.pluto.launcher.data.DefaultLayoutSeeder
 import dev.pluto.launcher.data.OrganizationRepository
 import dev.pluto.launcher.data.db.LauncherDatabase
@@ -16,6 +17,7 @@ class AppContainer(app: Application) {
     val settings: SettingsRepository by lazy { SettingsRepository(app) }
     val catalog: AppCatalog by lazy { AppCatalog(app) }
     val icons: IconCache by lazy { IconCache(app) }
+    val widgets: WidgetHost by lazy { WidgetHost(app) }
     val controllers: ControllerMonitor by lazy { ControllerMonitor(app) }
     val layoutSeeder: DefaultLayoutSeeder by lazy { DefaultLayoutSeeder(app) }
 }

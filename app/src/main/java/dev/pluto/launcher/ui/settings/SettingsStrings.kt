@@ -71,11 +71,23 @@ internal object SettingsText {
     const val PROFILES_NOTICE = "Work profile and Private Space apps are not shown in this version."
 
     const val ABOUT = "About"
+    const val SUPPORT = "Support Pluto"
+    const val ICONS = "Icons"
+    const val CAROUSEL = "Console carousel"
+    const val CAROUSEL_HELP = "How games and apps are laid out in console mode."
+    const val ICON_PACK = "Icon pack"
+    const val SYSTEM_ICONS = "System icons"
+    const val SYSTEM_ICONS_HELP = "Each app's own icon"
+    const val ICON_PACKS_LOADING = "Looking for icon packs…"
+    const val NO_ICON_PACKS = "No icon packs installed. Install one from your app store (most support Nova or ADW launchers), then choose it here."
+    const val ICON_PACK_MISSING = "Icon pack not installed: using system icons"
+    const val KOFI = "Buy me a coffee on Ko-fi"
+    const val KOFI_URL = "ko-fi.com/anderslc"
     fun version(name: String) = if (name.isBlank()) "Pluto" else "Pluto $name"
     const val LICENSE = "Open source under the MIT licence."
     const val PRIVACY = "No account, ads, analytics or network access."
     const val LIMITATIONS = "Known limitations: work profile and Private Space apps are not supported yet; " +
-        "widgets, icon packs and drag and drop are planned for later releases."
+        "widgets always take a full row of the home grid."
 
     // Hidden apps
     const val HIDDEN_TITLE = "Hidden apps"
