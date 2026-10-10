@@ -78,8 +78,10 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
         Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .homeMenuOnLongPress(menu, vm)
+            // Outside the long press: the tap detector consumes its down, and inside it the
+            // home menu would never see one.
             .doubleTapToLock(state.settings.doubleTapToLock, vm)
+            .homeMenuOnLongPress(menu, vm)
             .swipeUpToOpenDrawer(vm).swipeDownForAction(state.settings.swipeDownAction, vm),
     ) {
         // No clock: the status bar already shows the time; Home starts with the favourites.
@@ -200,7 +202,8 @@ internal fun HorizontalDock(
                         .graphicsLayer { alpha = shown.coerceIn(0f, 1f) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    // A folded slot keeps its node (and drop target) but is not focusable or drawn.
+                    // A folded slot composes nothing (no focus target, no drop target); every slot
+                    // unfolds as soon as a drag starts, so drops always have their targets.
                     if (shown > 0.01f) DockSlot(slot, entry, vm, iconSize)
                 }
             }

@@ -52,6 +52,11 @@ enum class HandheldAppearance {
     ALWAYS,
     /** Never switch to Handheld automatically; landscape stays the touch layout. */
     NEVER,
+    /**
+     * Always Handheld, and the launcher held in landscape whatever the rotation setting (console
+     * mode is never shown in portrait): for Android consoles and devices used only as one.
+     */
+    EVERYWHERE,
 }
 
 /** Built-in categories. ALL is virtual (every visible app); others hold explicit members. */

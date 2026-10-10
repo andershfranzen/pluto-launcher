@@ -86,8 +86,6 @@ internal object HomeText {
     const val EMPTY_FAVOURITES = "Swipe up to find apps, then pin favourites. " +
         "Pressing and holding an app opens its actions; Add favourite works without gestures."
 
-    /** Accessibility custom action (on the home Search button) that opens the full drawer. */
-
     /** The drop bar that takes an app off Home or out of the dock. */
     const val REMOVE = "Remove"
 }

@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui.overlay
 
+import androidx.compose.ui.geometry.Size
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.home.iconSize
 import dev.pluto.launcher.ui.components.pressScale
@@ -93,7 +94,7 @@ private val TileIconInset = 6.dp
 @Composable
 internal fun AppQuickMenu(
     entry: AppEntry,
-    anchor: Rect,
+    anchor: () -> Rect?,
     state: LauncherUiState,
     vm: LauncherViewModel,
     onMore: () -> Unit,
@@ -104,15 +105,13 @@ internal fun AppQuickMenu(
     val inDock = state.isInDock(key)
     val isHidden = key in state.hidden
     val iconSize = state.iconSize()
-    val origin = remember { floatArrayOf(Float.NaN, Float.NaN) }
+    val origin = remember { floatArrayOf(0f, 0f) }
 
     Box(
         Modifier
             .fillMaxSize()
-            .onPlaced {
-                // The layer's own window position, once: the entrance scale must not move the card.
-                if (origin[0].isNaN()) it.positionInWindow().let { p -> origin[0] = p.x; origin[1] = p.y }
-            },
+            // The layer's window position (layer motion is draw-only, so this is its resting place).
+            .onPlaced { it.positionInWindow().let { p -> origin[0] = p.x; origin[1] = p.y } },
     ) {
         Box(
             Modifier
@@ -142,8 +141,9 @@ internal fun AppQuickMenu(
             val icon = measurables[0].measure(Constraints())
             val card = measurables[1].measure(Constraints(minWidth = width, maxWidth = width, maxHeight = constraints.maxHeight - 2 * margin))
             layout(constraints.maxWidth, constraints.maxHeight) {
-                val o = if (origin[0].isNaN()) Offset.Zero else Offset(origin[0], origin[1])
-                val tile = anchor.translate(-o)
+                // The tile gone (scrolled away, rotated off): centre the card instead.
+                val tile = anchor()?.translate(-Offset(origin[0], origin[1]))
+                    ?: Rect(Offset(constraints.maxWidth / 2f, constraints.maxHeight / 2f), Size.Zero)
                 icon.place((tile.center.x - icon.width / 2f).roundToInt(), (tile.top + with(density) { TileIconInset.toPx() }).roundToInt())
                 val gap = with(density) { QuickMenuGap.roundToPx() }
                 val x = (tile.center.x - card.width / 2f).roundToInt()

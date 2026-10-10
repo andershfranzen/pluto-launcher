@@ -30,16 +30,19 @@ internal object SettingsText {
     const val LAYOUT = "Layout & rotation"
     const val ROTATION = "Rotation"
     const val ROTATION_HELP = "Applies to the launcher only. Apps you open keep their own orientation."
+    const val ROTATION_HELD_BY_CONSOLE = "Console mode is set to Always, so the launcher stays in landscape."
     const val ROTATION_FOLLOW = "Follow system"
     const val ROTATION_PORTRAIT = "Portrait"
     const val ROTATION_LANDSCAPE = "Landscape"
     const val ROTATION_CONTROLLER = "Landscape when controller connected"
-    const val HANDHELD = "Handheld appearance"
-    const val HANDHELD_HELP = "Phone mode is always used in portrait. In landscape, Handheld shows a controller-friendly " +
-        "layout with category tabs and button hints."
+    const val HANDHELD = "Console mode"
+    const val HANDHELD_HELP = "Console mode is a controller-friendly carousel with shelves and button hints. Automatic " +
+        "uses it in landscape while a controller is connected. Always keeps Pluto in console mode and in landscape, " +
+        "for an Android console or a handheld."
     const val HANDHELD_AUTO = "Automatic"
     const val HANDHELD_ALWAYS = "Always in landscape"
     const val HANDHELD_NEVER = "Never"
+    const val HANDHELD_EVERYWHERE = "Always (launcher stays in landscape)"
 
     const val ORGANISATION = "Organisation"
     const val CATEGORIES = "Categories…"
@@ -101,8 +104,8 @@ internal object SettingsText {
     const val HIDDEN_TITLE = "Hidden apps"
     const val HIDDEN_EXPLANATION = "Hiding only removes apps from Pluto's lists. It is not a security or privacy feature; " +
         "hidden apps can still be opened from Settings or other apps."
-    const val HIDDEN_EMPTY = "No hidden apps. To hide one, open All apps, tap Actions, choose the app and pick Hide " +
-        "(or press and hold the app, or press X with a controller)."
+    const val HIDDEN_EMPTY = "No hidden apps. To hide one, press and hold it on Home or in All apps and choose Hide " +
+        "(or press X on it with a controller)."
     const val RESTORE = "Restore"
     const val RESTORE_ALL = "Restore all"
 
@@ -178,6 +181,7 @@ internal object SettingsText {
     }
 
     // Onboarding
+    const val ONBOARDING_TITLE = "Set up Pluto"
     const val WELCOME_TITLE = "Welcome to Pluto"
     const val WELCOME_TEXT = "Pluto is a home screen for everyday phone use and for gaming with a controller. " +
         "It adapts when you rotate the phone or connect a controller, and keeps your favourites, folders and categories the same everywhere."
@@ -187,13 +191,13 @@ internal object SettingsText {
     const val NO_APPS_PROBLEM = "Pluto could not find any apps to show. Check that apps are installed and not restricted, " +
         "then reopen Pluto. Until apps appear, keep your current Home app."
     const val STEP_GAMES_TITLE = "Pick your games (optional)"
-    const val STEP_GAMES_TEXT = "Apps you tick go into the Games category, which Handheld mode shows as its own tab. " +
-        "You can change this any time from an app's actions: tap Actions in All apps, or press and hold an app."
+    const val STEP_GAMES_TEXT = "Apps you tick go into the Games category, which console mode shows as its own shelf. " +
+        "You can change this any time: press and hold an app, choose More… and then Categories."
     const val NO_GAMES_CATEGORY = "The Games category is not available. You can create categories later in Settings."
     fun gamesSelected(n: Int) = if (n == 1) "1 app in Games" else "$n apps in Games"
     const val STEP_CONTROLLER_TITLE = "Controller controls"
     const val STEP_CONTROLLER_TEXT = "Everything in Pluto works with touch or a game controller. Connect a controller at any time; " +
-        "in landscape Pluto then switches to the Handheld layout."
+        "in landscape Pluto then switches to console mode."
     const val CONTROLLER_NOW = "A controller is connected. Try moving around this screen with it."
     const val STEP_HOME_TITLE = "Set Pluto as your Home app"
     const val STEP_HOME_TEXT = "Make Pluto open when you press Home. Android asks you to confirm."

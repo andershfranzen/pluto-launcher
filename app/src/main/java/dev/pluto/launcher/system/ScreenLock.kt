@@ -1,5 +1,6 @@
 package dev.pluto.launcher.system
 
+import androidx.compose.runtime.mutableStateOf
 import android.accessibilityservice.AccessibilityService
 import android.content.ComponentName
 import android.content.Context
@@ -17,15 +18,22 @@ import android.view.accessibility.AccessibilityEvent
 class ScreenLockService : AccessibilityService() {
     override fun onServiceConnected() {
         instance = this
+        connected.value = true
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        if (instance === this) instance = null
+        if (instance === this) {
+            instance = null
+            connected.value = false
+        }
         return super.onUnbind(intent)
     }
 
     override fun onDestroy() {
-        if (instance === this) instance = null
+        if (instance === this) {
+            instance = null
+            connected.value = false
+        }
         super.onDestroy()
     }
 
@@ -38,8 +46,11 @@ class ScreenLockService : AccessibilityService() {
 
         @Volatile private var instance: ScreenLockService? = null
 
+        /** Snapshot state, so Settings updates when the user turns the service on or off. */
+        private val connected = mutableStateOf(false)
+
         /** True while the user has the service turned on and Android has connected it. */
-        val isReady: Boolean get() = instance != null
+        val isReady: Boolean get() = connected.value
 
         /** Locks the screen; false when the service is off (the caller explains how to turn it on). */
         fun lock(): Boolean {

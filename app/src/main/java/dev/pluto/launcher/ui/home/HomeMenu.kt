@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Lifecycle
@@ -89,6 +90,9 @@ internal class HomeMenuState {
     }
 }
 
+/** Spoken for the home surface; its actions are the home menu's entries. */
+private const val HOME_SURFACE_LABEL = "Home screen. Actions: search, add widget, edit home, settings"
+
 private class HomeMenuEntry(val label: String, val icon: ImageVector, val run: (LauncherViewModel) -> Unit)
 
 private val HomeMenuEntries = listOf(
@@ -108,6 +112,8 @@ internal fun Modifier.homeMenuOnLongPress(menu: HomeMenuState, vm: LauncherViewM
     val haptics = LocalHapticFeedback.current
     return this
         .semantics {
+            // A described node, so screen readers focus it and offer the menu as its actions.
+            contentDescription = HOME_SURFACE_LABEL
             customActions = HomeMenuEntries.map { entry -> CustomAccessibilityAction(entry.label) { entry.run(vm); true } }
         }
         .onPlaced { menu.origin = it.positionInWindow() }

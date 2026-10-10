@@ -195,7 +195,7 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 BackgroundChoiceGroup(
                     idPrefix = "settings:consolebackground",
                     label = "Console background",
-                    supporting = "Behind the console (handheld) mode.",
+                    supporting = "Behind console mode.",
                     selected = settings.consoleBackground,
                     onSelect = { choice -> update { it.copy(consoleBackground = choice) } },
                 )
@@ -275,7 +275,11 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 ChoiceGroup(
                     idPrefix = "settings:rotation",
                     label = SettingsText.ROTATION,
-                    supporting = SettingsText.ROTATION_HELP,
+                    supporting = if (settings.handheldAppearance == HandheldAppearance.EVERYWHERE) {
+                        SettingsText.ROTATION_HELD_BY_CONSOLE
+                    } else {
+                        SettingsText.ROTATION_HELP
+                    },
                     options = listOf(
                         RotationPreference.FOLLOW_SYSTEM to SettingsText.ROTATION_FOLLOW,
                         RotationPreference.PORTRAIT to SettingsText.ROTATION_PORTRAIT,
@@ -292,6 +296,7 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     options = listOf(
                         HandheldAppearance.AUTOMATIC to SettingsText.HANDHELD_AUTO,
                         HandheldAppearance.ALWAYS to SettingsText.HANDHELD_ALWAYS,
+                        HandheldAppearance.EVERYWHERE to SettingsText.HANDHELD_EVERYWHERE,
                         HandheldAppearance.NEVER to SettingsText.HANDHELD_NEVER,
                     ),
                     selected = settings.handheldAppearance,

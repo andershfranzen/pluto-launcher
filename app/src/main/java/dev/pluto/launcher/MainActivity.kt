@@ -1,5 +1,6 @@
 package dev.pluto.launcher
 
+import dev.pluto.launcher.model.HandheldAppearance
 import android.app.ActivityOptions
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
@@ -66,6 +67,7 @@ import kotlin.math.roundToInt
  * - Applies settings.rotation to requestedOrientation: FOLLOW_SYSTEM -> SCREEN_ORIENTATION_USER,
  *   PORTRAIT -> USER_PORTRAIT, LANDSCAPE -> USER_LANDSCAPE (both directions),
  *   LANDSCAPE_WHEN_CONTROLLER -> USER_LANDSCAPE while a controller is connected, else USER.
+ *   Console mode "Always" (HandheldAppearance.EVERYWHERE) overrides it with USER_LANDSCAPE.
  *   Only affects the launcher window, never the foreground app.
  * - onResume: vm.onResume(HomeRole.isDefaultHome()), which refreshes catalog and controllers.
  * - onPause / onWindowFocusChanged(false): router.reset().
@@ -251,7 +253,7 @@ class MainActivity : ComponentActivity() {
                 }
                 launch {
                     vm.state
-                        .map { orientationFor(it.settings.rotation, it.controllerConnected) }
+                        .map { orientationFor(it.settings.rotation, it.controllerConnected, it.settings.handheldAppearance) }
                         .distinctUntilChanged()
                         .collect { orientation ->
                             if (requestedOrientation != orientation) requestedOrientation = orientation
@@ -269,8 +271,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun orientationFor(rotation: RotationPreference, controllerConnected: Boolean): Int =
-        when (rotation) {
+    private fun orientationFor(rotation: RotationPreference, controllerConnected: Boolean, appearance: HandheldAppearance): Int =
+        // Console mode always: it is a landscape layout, so the launcher stays in landscape.
+        if (appearance == HandheldAppearance.EVERYWHERE) ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE else when (rotation) {
             RotationPreference.FOLLOW_SYSTEM -> ActivityInfo.SCREEN_ORIENTATION_USER
             RotationPreference.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
             RotationPreference.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE

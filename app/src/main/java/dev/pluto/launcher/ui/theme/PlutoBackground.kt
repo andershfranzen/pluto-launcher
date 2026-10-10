@@ -159,7 +159,14 @@ private fun rememberGlobeShader(): GlobeShader? {
     val shader by produceState<GlobeShader?>(null, context) {
         value = withContext(Dispatchers.IO) {
             try {
-                val bitmap = context.assets.open(PLUTO_MAP_ASSET).use { BitmapFactory.decodeStream(it) }
+                // The visible half of the map spans the globe (about 0.84 of the short side):
+                // decode at about twice that width, not the full 3072 px (19 MB) everywhere.
+                val metrics = context.resources.displayMetrics
+                val needed = 2f * GLOBE_SHORT_SIDE * minOf(metrics.widthPixels, metrics.heightPixels)
+                var sample = 1
+                while (PLUTO_MAP_WIDTH / (sample * 2) >= needed) sample *= 2
+                val options = BitmapFactory.Options().apply { inSampleSize = sample }
+                val bitmap = context.assets.open(PLUTO_MAP_ASSET).use { BitmapFactory.decodeStream(it, null, options) }
                 bitmap?.let { GlobeShader(it) }
             } catch (e: Exception) {
                 Log.w("PlutoBackground", "Couldn't load the Pluto map", e)
@@ -305,6 +312,10 @@ private val StarGlow = Color(0xFF9DB4FF)
 private val DustColor = Color(0xFFC9D6FF)
 
 private const val PLUTO_MAP_ASSET = "pluto_map.jpg"
+private const val PLUTO_MAP_WIDTH = 3072
+
+/** The globe's diameter as a share of the screen's short side (portrait placement). */
+private const val GLOBE_SHORT_SIDE = 0.84f
 private const val STEADY_STARS = 260
 private const val TWINKLING_STARS = 40
 private const val DUST_PARTICLES = 46

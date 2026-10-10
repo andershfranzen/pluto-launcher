@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.settings
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -27,11 +29,11 @@ import androidx.compose.ui.graphics.Color
 import dev.pluto.launcher.ui.focus.controllerFocusable
 
 /** Stable sections keep settings navigable on phones and with a D-pad. */
-internal enum class SettingsPage(val title: String, val description: String) {
-    APPEARANCE("Appearance", "Make Pluto feel like home."),
-    LAYOUT("Layout", "Rotation, handheld mode and controller controls."),
-    APPS("Apps", "Organise your library and manage recent launches."),
-    GENERAL("General", "Default launcher, privacy and app information."),
+internal enum class SettingsPage(val title: String) {
+    APPEARANCE("Appearance"),
+    LAYOUT("Layout"),
+    APPS("Apps"),
+    GENERAL("General"),
 }
 
 @Composable
@@ -77,12 +79,7 @@ internal fun SettingsNavigation(selectedPage: SettingsPage, onSelect: (SettingsP
                 }
             }
         }
-        Text(
-            selectedPage.description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 12.dp),
-        )
+        Spacer(Modifier.height(4.dp))
     }
 }
 

@@ -144,6 +144,9 @@ private const val SELECTION_COMMIT_DELAY_MS = 400L
 /** How far a switching flow slides, as a fraction of the stage width. */
 private const val SHELF_SLIDE = 0.25f
 
+/** How fast the incoming page fades in after the handover (reaches full opacity early). */
+private const val INCOMING_ALPHA_GAIN = 1.6f
+
 /** Shelf switch progress at which the outgoing page has faded out and the incoming one begins. */
 private const val SHELF_HANDOVER = 0.45f
 
@@ -636,6 +639,8 @@ private class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
     var outgoingShelf: ShelfId? = null
     var outgoingStage: CoverflowState? by mutableStateOf(null)
     var direction = 1
+    /** The leaving page's direction, kept when a quick second switch changes [direction]. */
+    var outgoingDirection = 1
     var progress by mutableFloatStateOf(1f)
     var focusedAtSwitch: String? = null
 
@@ -648,7 +653,21 @@ private class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
      */
     fun begin(next: ShelfId, nextStage: CoverflowState, order: List<ShelfId>, mirror: Int) {
         val leaving = outgoingShelf
-        if (progress < 1f && leaving != null && progress < SHELF_HANDOVER) {
+        val leavingStage = outgoingStage
+        if (progress < SHELF_HANDOVER && leaving != null && leavingStage != null) {
+            if (next == leaving) {
+                // Straight back to the page still fading out: it returns from where it is,
+                // from the side it left by, at the opacity it had.
+                val shown = (1f - progress / SHELF_HANDOVER).coerceIn(0f, 1f)
+                direction = -outgoingDirection
+                outgoingDirection = direction
+                outgoingShelf = shelf
+                outgoingStage = stage
+                shelf = leaving
+                stage = leavingStage
+                progress = SHELF_HANDOVER + shown * (1f - SHELF_HANDOVER) / INCOMING_ALPHA_GAIN
+                return
+            }
             direction = mirror * ConsoleShelves.direction(order, leaving, next)
             shelf = next
             stage = nextStage
@@ -656,6 +675,7 @@ private class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
         }
         val shown = if (progress < 1f) incomingMotion.alpha().coerceIn(0f, 1f) else 1f
         direction = mirror * ConsoleShelves.direction(order, shelf, next)
+        outgoingDirection = direction
         outgoingShelf = shelf
         outgoingStage = stage
         shelf = next
@@ -668,10 +688,10 @@ private class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
         offset = { direction * (1f - progress) * SHELF_SLIDE },
         // Sequenced, never overlapping: the outgoing page is gone (progress 0.45) before
         // the incoming one starts to show.
-        alpha = { (progress - SHELF_HANDOVER) / (1f - SHELF_HANDOVER) * 1.6f },
+        alpha = { (progress - SHELF_HANDOVER) / (1f - SHELF_HANDOVER) * INCOMING_ALPHA_GAIN },
     )
     val outgoingMotion = PageMotion(
-        offset = { -direction * progress * SHELF_SLIDE },
+        offset = { -outgoingDirection * progress * SHELF_SLIDE },
         alpha = { 1f - progress / SHELF_HANDOVER },
     )
 }

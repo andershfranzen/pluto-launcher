@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -136,7 +135,7 @@ fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
     BackHandler(enabled = index > 0) { goTo(steps[index - 1]) }
 
     LayerScaffold(
-        title = SettingsText.WELCOME_TITLE,
+        title = SettingsText.ONBOARDING_TITLE,
         idPrefix = "onboarding",
         onClose = ::finish,
         trapFocus = isTop,
@@ -368,6 +367,8 @@ private fun ControllerStep(state: LauncherUiState) {
     }
 }
 
+private val LegendKeyWidth = 128.dp
+
 /** One "button → action" line of the controller preview, read as a single item by screen readers. */
 @Composable
 private fun LegendRow(keys: String, action: String) {
@@ -383,7 +384,8 @@ private fun LegendRow(keys: String, action: String) {
             keys,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.widthIn(min = 96.dp, max = 200.dp),
+            // One column width for every row, so the actions line up (long keys wrap).
+            modifier = Modifier.width(LegendKeyWidth),
         )
         Spacer(Modifier.width(16.dp))
         Text(action, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))

@@ -13,8 +13,8 @@ class ModeResolverTest {
         ModeResolver.resolve(window.first, window.second, controller, appearance)
 
     @Test
-    fun portraitIsAlwaysPhone() {
-        for (appearance in HandheldAppearance.entries) {
+    fun portraitIsPhoneUnlessConsoleEverywhere() {
+        for (appearance in HandheldAppearance.entries - HandheldAppearance.EVERYWHERE) {
             for (controller in listOf(false, true)) {
                 assertEquals("$appearance controller=$controller", LauncherMode.PHONE, resolve(portrait, controller, appearance))
             }

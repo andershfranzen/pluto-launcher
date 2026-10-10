@@ -59,11 +59,11 @@ fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) 
     // A touch long press in normal mode gets the small menu beside the tile; More… (and a
     // controller, or a tile that is gone) gets the full sheet.
     var expanded by rememberSaveable(key.encode()) { mutableStateOf(false) }
-    val anchor = remember(key) { origins.boundsOf(originId) }
-    val quick = entry != null && anchor != null && !expanded &&
+    val quick = entry != null && originId != null && !expanded &&
         state.mode != LauncherMode.HANDHELD && controller.inputMode != InputMode.CONTROLLER
     if (quick) {
-        AppQuickMenu(entry!!, anchor!!, state, vm, onMore = { expanded = true })
+        // Read at placement, so a rotation while the menu is open follows the tile.
+        AppQuickMenu(entry!!, anchor = { origins.boundsOf(originId) }, state, vm, onMore = { expanded = true })
     } else {
         AppActionsPanel(key, entry, state, vm)
     }

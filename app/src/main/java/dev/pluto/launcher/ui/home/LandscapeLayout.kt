@@ -103,8 +103,9 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
         Column(
             Modifier
                 .fillMaxSize()
-                .homeMenuOnLongPress(menu, vm)
+                // Outside the long press (see PhoneLayout).
                 .doubleTapToLock(state.settings.doubleTapToLock, vm)
+                .homeMenuOnLongPress(menu, vm)
                 .swipeUpToOpenDrawer(vm)
                 .swipeDownForAction(state.settings.swipeDownAction, vm),
         ) {

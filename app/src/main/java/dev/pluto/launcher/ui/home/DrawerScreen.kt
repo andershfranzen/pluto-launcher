@@ -304,7 +304,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
             field.clear()
             focusManager.clearFocus()
             if (focus.inputMode == InputMode.CONTROLLER) {
-                currentFirstApp?.let { focus.requestFocus(it) } ?: focus.requestFocus(DRAWER_SEARCH_ID)
+                currentFirstApp?.let { focus.requestFocus(it) } ?: focus.requestFocus(DR_CATEGORIES)
             }
         }
     }
@@ -351,7 +351,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         withFrameNanos { }
         if (focus.inputMode != InputMode.CONTROLLER || currentState.session.topLayer != Layer.Drawer) return@LaunchedEffect
         val keys = currentKeys
-        val target = kept?.takeIf { it in keys } ?: keys.firstOrNull() ?: DRAWER_SEARCH_ID
+        val target = kept?.takeIf { it in keys } ?: keys.firstOrNull() ?: DR_CATEGORIES
         val index = keys.indexOf(target)
         if (index >= 0 && gridState.layoutInfo.visibleItemsInfo.none { it.index == index }) gridState.scrollToItem(index)
         focus.requestFocusWhenReady(target)
