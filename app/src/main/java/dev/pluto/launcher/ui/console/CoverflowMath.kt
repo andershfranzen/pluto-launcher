@@ -37,9 +37,12 @@ object CoverflowMath {
     const val DIM_STEP = 0.08f
     const val MAX_DIM = 0.65f
 
-    /** Cards further than this are not composed; they fade out from [FADE_START]. */
+    /**
+     * Cards further than this are not composed; they fade out from [FADE_START], so the flow
+     * thins out gradually instead of ending on a fully opaque card.
+     */
     const val RADIUS = 4
-    const val FADE_START = 3.1f
+    const val FADE_START = 1.6f
 
     /**
      * How far a fling carries the flow: about the distance a decaying fling covers, in seconds

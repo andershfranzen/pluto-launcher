@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import dev.pluto.launcher.system.ScreenLockService
+import dev.pluto.launcher.data.prefs.SwipeDownAction
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -79,11 +82,11 @@ internal const val HOME_SURFACE = "home"
 
 /** Home copy shared by the layouts (inline for 0.1). */
 internal object HomeText {
+    const val LOCK_NEEDS_SERVICE = "To lock with a double tap, turn on “Pluto screen lock” in Accessibility settings."
     const val EMPTY_FAVOURITES = "Swipe up to find apps, then pin favourites. " +
         "Pressing and holding an app opens its actions; Add favourite works without gestures."
 
     /** Accessibility custom action (on the home Search button) that opens the full drawer. */
-    const val ALL_APPS_ACTION = "All apps"
 
     /** The drop bar that takes an app off Home or out of the dock. */
     const val REMOVE = "Remove"
@@ -436,15 +439,19 @@ internal fun Modifier.swipeUpToOpenDrawer(vm: LauncherViewModel): Modifier {
 }
 
 /**
- * Swipe down anywhere on the home surface to pull down the notification shade, as stock
- * launchers do: drags on non-scrolling areas, and downward drag the favourites grid leaves
- * over at its top. Fires once per gesture.
+ * Swipe down anywhere on the home surface for the user's chosen [SwipeDownAction]: by default
+ * pull down the notification shade, as stock launchers do. Drags on non-scrolling areas, and
+ * downward drag the favourites grid leaves over at its top. Fires once per gesture.
  */
 @Composable
-internal fun Modifier.swipeDownForNotifications(): Modifier {
+internal fun Modifier.swipeDownForAction(action: SwipeDownAction, vm: LauncherViewModel): Modifier {
     val context = LocalContext.current
     val gesture = remember { ShadeGesture() }
-    gesture.expand = { NotificationShade.expand(context) }
+    if (action == SwipeDownAction.NOTHING) return this
+    gesture.expand = when (action) {
+        SwipeDownAction.SEARCH -> { { vm.openDrawer(withSearch = true) } }
+        else -> { { NotificationShade.expand(context) } }
+    }
     return this
         // Observes (never consumes) the finger, so one gesture can open the shade only once.
         .pointerInput(gesture) {
@@ -469,6 +476,25 @@ internal fun Modifier.swipeDownForNotifications(): Modifier {
                 }
             }
         }
+}
+
+/**
+ * Double-tap empty space on the home surface to lock the screen, when the user turned that
+ * on. Tiles and dock slots take their own taps. Without Pluto's screen-lock service enabled
+ * the tap explains why and opens Accessibility settings instead.
+ */
+@Composable
+internal fun Modifier.doubleTapToLock(enabled: Boolean, vm: LauncherViewModel): Modifier {
+    if (!enabled) return this
+    val context = LocalContext.current
+    return pointerInput(vm) {
+        detectTapGestures(onDoubleTap = {
+            if (!ScreenLockService.lock()) {
+                vm.showMessage(HomeText.LOCK_NEEDS_SERVICE)
+                ScreenLockService.openSettings(context)
+            }
+        })
+    }
 }
 
 private class ShadeGesture : NestedScrollConnection {

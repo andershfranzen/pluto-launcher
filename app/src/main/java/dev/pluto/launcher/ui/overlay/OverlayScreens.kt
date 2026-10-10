@@ -10,7 +10,6 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.FolderOff
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.RemoveCircleOutline
 import androidx.compose.material.icons.rounded.Visibility
@@ -20,20 +19,24 @@ import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dev.pluto.launcher.apps.AppShortcut
+import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.model.AppKey
+import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.ui.HomeTile
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.AppIcon
+import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
-import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.LocalOriginRegistry
 
 /*
@@ -46,18 +49,32 @@ import dev.pluto.launcher.ui.motion.LocalOriginRegistry
  * task (Launch, Hide, App info, Uninstall) close the sheet first.
  */
 
-/** Launch, Pin/Unpin, Add to dock/Remove from dock, Categories…, Move to folder…, Hide, App info, Uninstall (system confirmation). */
+/** The app's shortcuts, Pin/Unpin, Add to dock/Remove from dock, Categories…, Move to folder…, Hide, App info, Uninstall (system confirmation). */
 @Composable
 fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) {
     val entry = state.allApps.firstOrNull { it.key == key }
-    val isTop = state.session.topLayer == Layer.AppActions(key)
-    var dockFull by rememberSaveable(key.encode()) { mutableStateOf(false) }
-    rememberScreenFocus(if (entry != null) "actions:launch" else "actions:close")
-    val appLauncher = LocalAppLauncher.current
-    // Launch grows the app out of the tile that opened this sheet, when that tile is on screen.
     val controller = LocalControllerFocus.current
     val origins = LocalOriginRegistry.current
     val originId = remember(key) { controller.openerId?.takeIf { origins.boundsOf(it) != null } }
+    // A touch long press in normal mode gets the small menu beside the tile; More… (and a
+    // controller, or a tile that is gone) gets the full sheet.
+    var expanded by rememberSaveable(key.encode()) { mutableStateOf(false) }
+    val anchor = remember(key) { origins.boundsOf(originId) }
+    val quick = entry != null && anchor != null && !expanded &&
+        state.mode != LauncherMode.HANDHELD && controller.inputMode != InputMode.CONTROLLER
+    if (quick) {
+        AppQuickMenu(entry!!, anchor!!, state, vm, onMore = { expanded = true })
+    } else {
+        AppActionsPanel(key, entry, state, vm)
+    }
+}
+
+@Composable
+private fun AppActionsPanel(key: AppKey, entry: AppEntry?, state: LauncherUiState, vm: LauncherViewModel) {
+    val isTop = state.session.topLayer == Layer.AppActions(key)
+    var dockFull by rememberSaveable(key.encode()) { mutableStateOf(false) }
+    rememberScreenFocus(if (entry != null) "actions:pin" else "actions:close")
+    val shortcuts by produceState<List<AppShortcut>>(emptyList(), key) { value = vm.shortcutsFor(key) }
     // Rows stagger in once per opening (not again after rotation).
     var entrancePlayed by rememberSaveable(key.encode()) { mutableStateOf(false) }
     val stagger = remember { !entrancePlayed }
@@ -82,18 +99,14 @@ fun AppActionsSheet(key: AppKey, state: LauncherUiState, vm: LauncherViewModel) 
                 .map { it.name }
 
             fun Modifier.entrance(index: Int) = staggerIn(index, enabled = stagger)
-            BodyText(entry.packageName, Modifier.entrance(0))
-            ActionRow(
-                id = "actions:launch",
-                label = OverlayText.LAUNCH,
-                icon = Icons.Rounded.PlayArrow,
-                supporting = if (!entry.isEnabled) OverlayText.SUSPENDED else null,
-                modifier = Modifier.entrance(1),
-                onClick = {
-                    vm.back()
-                    appLauncher.launch(key, originId)
-                },
-            )
+            shortcuts.forEach { shortcut ->
+                ActionRow(
+                    id = "actions:shortcut:${shortcut.id}",
+                    label = shortcut.label,
+                    leading = { ShortcutIcon(shortcut, vm) },
+                    onClick = { vm.launchShortcut(key, shortcut) },
+                )
+            }
             // One row per action whose label crossfades when its state flips, so focus stays put.
             ActionRow(
                 id = "actions:pin",

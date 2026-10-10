@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pluto</string>
+    <string name="screen_lock_service_label">Pluto screen lock</string>
+    <string name="screen_lock_service_description">Lets Pluto lock the screen when you double-tap empty space on Home. It only performs the lock action: it does not see what is on screen or what you type.</string>
 </resources>

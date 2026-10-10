@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui
 
+import dev.pluto.launcher.ui.home.HideStatusBarWhile
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
@@ -250,7 +251,12 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 vm.beginHomeDrag(fromDrawer = source is DragSource.Drawer)
             },
-            onDrop = { source, target -> vm.applyDrop(source, target) },
+            onDrop = { source, target ->
+                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                vm.applyDrop(source, target)
+            },
+            // A light tick each time the drop spot changes (a new cell, the dock, Remove, a folder).
+            onTargetChanged = { target -> if (target != null) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick) },
         )
     }
 
@@ -311,6 +317,9 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                         ModeResolver.resolve(widthDp, heightDp, state.controllerConnected, state.settings.handheldAppearance)
                     }
 
+                    // Console mode is immersive for as long as it lasts, including pages opened over
+                    // it (Settings, the shelf picker), so the bar never flips while they animate.
+                    HideStatusBarWhile(mode == LauncherMode.HANDHELD)
                     when (state.settings.backgroundFor(console = mode == LauncherMode.HANDHELD)) {
                         BackgroundChoice.PLUTO -> PlutoBackground(state.settings.backgroundFrameRate, animate = !state.settings.reducedMotion)
                         BackgroundChoice.XMB -> XmbBackground(state.settings.xmbBaseColor(), animate = !state.settings.reducedMotion)
@@ -407,6 +416,9 @@ private fun ActionRouting(
     val currentState by rememberUpdatedState(state)
     val imeVisible by rememberUpdatedState(WindowInsets.isImeVisible)
     val keyboard by rememberUpdatedState(LocalSoftwareKeyboardController.current)
+    // L1 is the left shoulder: it moves towards the left of the screen, which in a
+    // right-to-left layout is the next shelf or category.
+    val rtl by rememberUpdatedState(LocalLayoutDirection.current == LayoutDirection.Rtl)
     // Back goes through the Activity's dispatcher so nested dialogs inside a layer (BackHandler)
     // close first; MainActivity's own callback falls back to vm.back().
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -434,8 +446,12 @@ private fun ActionRouting(
                 LauncherAction.Settings -> if (top != Layer.Settings) vm.openLayer(Layer.Settings)
                 // Category switching only where categories are visible: Handheld home and the drawer.
                 // Phone/Landscape home shows no tabs, so a press there would filter the drawer unseen.
-                LauncherAction.PrevCategory -> if (currentState.browsingCategories()) vm.previousCategory()
-                LauncherAction.NextCategory -> if (currentState.browsingCategories()) vm.nextCategory()
+                LauncherAction.PrevCategory -> if (currentState.browsingCategories()) {
+                    if (rtl) vm.nextCategory() else vm.previousCategory()
+                }
+                LauncherAction.NextCategory -> if (currentState.browsingCategories()) {
+                    if (rtl) vm.previousCategory() else vm.nextCategory()
+                }
                 else -> Unit
             }
         }

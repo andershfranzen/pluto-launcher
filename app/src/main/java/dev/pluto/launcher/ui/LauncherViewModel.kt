@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.pluto.launcher.AppContainer
+import dev.pluto.launcher.apps.AppShortcut
 import dev.pluto.launcher.apps.LaunchResult
 import dev.pluto.launcher.apps.PackageEvent
 import dev.pluto.launcher.data.prefs.LauncherSettings
@@ -434,6 +435,24 @@ class LauncherViewModel(
                     if (result.targetMissing) forgetStale(listOf(key))
                 }
             }
+        }
+    }
+
+    /** [key]'s own shortcuts for its long-press menu (empty when Android withholds them). */
+    suspend fun shortcutsFor(key: AppKey): List<AppShortcut> =
+        withContext(Dispatchers.IO) { runCatching { container.catalog.shortcuts(key) }.getOrDefault(emptyList()) }
+
+    suspend fun shortcutIcon(shortcut: AppShortcut, densityDpi: Int): android.graphics.drawable.Drawable? =
+        withContext(Dispatchers.IO) { container.catalog.shortcutIcon(shortcut, densityDpi) }
+
+    /** Opens one of [key]'s shortcuts; the actions menu that offered it closes. */
+    fun launchShortcut(key: AppKey, shortcut: AppShortcut, sourceBounds: Rect? = null) {
+        updateSession { s -> if (s.topLayer == Layer.AppActions(key)) s.popTop() else s }
+        val result = runCatching { container.catalog.launchShortcut(shortcut, sourceBounds) }
+            .getOrElse { LaunchResult.Failure("That shortcut couldn't be opened.") }
+        when (result) {
+            LaunchResult.Success -> viewModelScope.launch { recordLaunch(key) }
+            is LaunchResult.Failure -> postMessage(result.message)
         }
     }
 

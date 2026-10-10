@@ -23,18 +23,22 @@ Pluto is meant to be the one launcher you keep full-time. Rotate the phone or pl
 gamepad and the presentation adapts, but your apps, favourites, dock, folders and
 categories stay exactly the same.
 
-| Phone | App drawer | Console mode (controller attached) |
+| Phone | App drawer | Press and hold an app |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/phone.png" alt="Phone mode: clock and date, a row of favourites and a five-slot dock" width="230"> | <img src="docs/screenshots/drawer.png" alt="App drawer: search pill, category chips and an alphabetical grid of apps" width="230"> | <img src="docs/screenshots/console.png" alt="Console mode: shelf tabs across the top, a Coverflow of app cards with the selected Settings card in front, its title and Open / Actions buttons" width="480"> |
+| <img src="docs/screenshots/phone.png" alt="Phone mode: a row of favourites over Pluto on a black sky, and a glass dock with four apps" width="230"> | <img src="docs/screenshots/drawer.png" alt="App drawer: an alphabetical grid of apps, with the category chips and the search field at the bottom" width="230"> | <img src="docs/screenshots/menu.png" alt="Long-press menu on Chrome in the dock: the app's New tab shortcut, then Pin, Undock, Info, Hide and Uninstall" width="230"> |
 
-<sub>Screenshots from the Android 16 emulator. Pluto follows your wallpaper and system theme.</sub>
+| Landscape | Console mode (controller attached) |
+| :---: | :---: |
+| <img src="docs/screenshots/landscape.png" alt="Landscape: favourites across the top, Pluto on the right and a glass dock down the side" width="420"> | <img src="docs/screenshots/console.png" alt="Console mode: shelf tabs across the top, a Coverflow of app cards with Drive in front, its title, the position and the touch hint" width="420"> |
+
+<sub>Screenshots from the Android 16 emulator with the Pluto background. Pluto can also show your wallpaper or an XMB-style background.</sub>
 
 ## How it adapts
 
 | Window | Controller | Mode |
 | --- | --- | --- |
-| Portrait | connected or not | **Phone**: clock, favourites, folders, dock |
-| Landscape | not connected | **Landscape**: compact header, wider grid, side or bottom dock |
+| Portrait | connected or not | **Phone**: favourites, folders, widgets, dock |
+| Landscape | not connected | **Landscape**: the same home, with a wider grid and a side or bottom dock |
 | Landscape | connected | **Console**: Coverflow shelves, big titles, button legend |
 
 The mode comes from the window's shape and whether a real gamepad is connected (ordinary
@@ -44,9 +48,17 @@ Pluto never forces rotation on the app you are using.
 ## Features
 
 **Phone and landscape**
-- Favourites grid and folders, plus a five-slot dock, shared by every orientation.
-- A drawer that follows your finger: swipe up anywhere on home, or tap search. It has
-  accent- and case-insensitive search, category chips and an A–Z fast-scroll rail.
+- Favourites grid and folders, plus a five-slot glass dock, shared by every orientation.
+  Empty dock slots fold away and come back while you drag an app. The dock takes on the
+  colour of the background behind it.
+- Press and hold an app for a small menu beside it: the app's own shortcuts (New tab,
+  New event, …) and Pin, Dock, Info, Hide and Uninstall, with More… for everything else.
+  Press and hold empty space for Search, Add widget, Edit home and Settings.
+- A drawer that follows your finger: swipe up anywhere on home. Search and the category
+  chips sit at the bottom, under your thumb. It has accent- and case-insensitive search
+  and an A–Z fast-scroll rail for longer lists.
+- Gestures: choose what a swipe down on Home does (notifications, search or nothing), and
+  optionally double-tap empty space to lock the screen.
 - Categories (All apps, Games and as many of your own as you like); an app can be in several.
 - Drag and drop on Home: press, hold and move to rearrange, drop on an app to make a folder,
   onto the dock, or out of the drawer. The explicit Edit mode (Move up / down / before /
@@ -60,7 +72,13 @@ Pluto never forces rotation on the app you are using.
   continuously when you hold the D-pad or stick, and touch can scrub it or fling it.
 - Shelves switched with L1/R1: *Recent launches*, *Favourites*, then your categories.
   Each shelf remembers its selection.
-- A backdrop tinted from the selected app's icon, a big title, and a persistent button legend.
+- A big title, the position in the shelf, and a button legend that follows focus (Open and
+  Actions on a card, Select on tabs and buttons). Without a controller it says how touch works.
+- The shelf tabs wrap with the D-pad as with L1/R1, and the whole console mirrors for
+  right-to-left languages.
+- The **Pluto background**: the dwarf planet from New Horizons' colour map, held still with
+  its heart facing you, over a true-black sky (OLED pixels stay off) with twinkling stars,
+  drifting dust and the odd shooting star behind it.
 - Optional **XMB-style animated background**, in the spirit of the PS3 menu: flowing light ribbons over
   a gradient. Pick a colour, or *Auto*, which changes the colour every month the way the PS3 did. It can
   run in console mode only or everywhere, and becomes a still image with Reduce motion.
@@ -84,9 +102,13 @@ Pluto never forces rotation on the app you are using.
 
 **Privacy**
 - Fully offline: no account, ads, analytics, cloud sync or network access.
-- No usage, notification, accessibility or overlay permissions. The only declared
-  permissions are for the optional Uninstall action, which always goes through Android's
-  own confirmation, and for pulling down the notification shade when you swipe down on Home.
+- No usage, notification or overlay permissions. The only declared permissions are for the
+  optional Uninstall action, which always goes through Android's own confirmation, and for
+  pulling down the notification shade when you swipe down on Home.
+- Double-tap to lock is off by default. Android only lets a launcher lock the screen (without
+  disabling fingerprint unlock) through an accessibility service, so turning it on asks you
+  to enable "Pluto screen lock". That service performs the lock and nothing else: it listens
+  to no events and cannot read what is on screen.
 - Recent launches covers only apps opened from Pluto. It can be cleared or switched off,
   and switching it off deletes what was stored.
 
@@ -164,7 +186,8 @@ Pluto 0.1 is a working prototype, but it isn't finished:
   have not all been measured on the reference hardware (a 144 Hz OnePlus phone with a
   GameSir controller).
 - Work profiles and Private Space are not shown in 0.1. Pluto says so in Settings.
-- Backup/import and app shortcuts are planned for later releases.
+- Backup/import is planned for a later release. App shortcuts need Pluto to be the default
+  Home app (Android only shares them with that app).
 
 [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) lists the rest, candidly.
 

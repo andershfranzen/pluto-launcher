@@ -53,7 +53,6 @@ import kotlinx.coroutines.flow.collect
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Add
@@ -118,6 +117,7 @@ import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.model.Category
+import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
@@ -155,7 +155,6 @@ private const val MAX_PENDING_ECHOES = 32
 /** Focus id of the drawer's search field; LauncherRoot focuses it for Y / Search. */
 const val DRAWER_SEARCH_ID = "drawer:search"
 private const val DR_SEARCH_CLOSE = "drawer:searchclose"
-private const val DR_CLOSE = "drawer:close"
 private const val DR_CLEAR = "drawer:clear"
 private const val CHIP_PREFIX = "drawer:cat"
 private const val DR_ACTIONS = "drawer:actions"
@@ -305,7 +304,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
             field.clear()
             focusManager.clearFocus()
             if (focus.inputMode == InputMode.CONTROLLER) {
-                currentFirstApp?.let { focus.requestFocus(it) } ?: focus.requestFocus(DR_CLOSE)
+                currentFirstApp?.let { focus.requestFocus(it) } ?: focus.requestFocus(DRAWER_SEARCH_ID)
             }
         }
     }
@@ -352,7 +351,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         withFrameNanos { }
         if (focus.inputMode != InputMode.CONTROLLER || currentState.session.topLayer != Layer.Drawer) return@LaunchedEffect
         val keys = currentKeys
-        val target = kept?.takeIf { it in keys } ?: keys.firstOrNull() ?: DR_CLOSE
+        val target = kept?.takeIf { it in keys } ?: keys.firstOrNull() ?: DRAWER_SEARCH_ID
         val index = keys.indexOf(target)
         if (index >= 0 && gridState.layoutInfo.visibleItemsInfo.none { it.index == index }) gridState.scrollToItem(index)
         focus.requestFocusWhenReady(target)
@@ -373,6 +372,8 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     val shortWindow by rememberShortWindow()
     val compact = imeVisible && shortWindow
     val tileIcon = if (compact) iconSize * 0.75f else iconSize
+    // Normal mode (portrait and landscape) keeps search under the thumb; console mode heads the page.
+    val bottomBar = state.mode != LauncherMode.HANDHELD
 
     val onLaunchApp: (AppKey, String) -> Unit = remember(launcher) { { key, id -> launcher.launch(key, id) } }
     val onAppActions: (AppKey) -> Unit = remember(vm) { { key -> vm.openLayer(Layer.AppActions(key)) } }
@@ -398,20 +399,17 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         // Keep search in one place. Replacing this row with an expanding text field
         // used to change its width twice (trailing buttons + AnimatedContent) while the
         // IME resized the panel, producing clipped text and a jumping header.
+        // In normal mode the whole bar sits at the bottom, under the thumb (search last,
+        // nearest the keyboard); in console mode it heads the page.
+        val header = @Composable {
         Column(
             Modifier.graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
         ) {
             if (!compact) {
                 Row(
-                    Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                    Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    PlutoIconButton(DR_CLOSE, Icons.AutoMirrored.Outlined.ArrowBack, "Close all apps", {
-                        keyboard?.hide()
-                        focusManager.clearFocus()
-                        vm.setSearchActive(false)
-                        vm.back()
-                    })
                     if (categories.size > 1) {
                         CategoryTabs(
                             categories = categories,
@@ -448,6 +446,8 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                 )
             }
         }
+        }
+        if (!bottomBar) header()
 
         AnimatedVisibility(visible = actionsMode && !compact, enter = ExpandIn, exit = ShrinkOut) {
             ActionsModeBanner(onDone = { actionsMode = false })
@@ -485,6 +485,8 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                 }
             }
         }
+
+        if (bottomBar) header()
 
         if (showControllerHints(state, focus) && !compact) {
             ButtonLegend(

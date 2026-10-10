@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pluto's screen-lock service: performs the lock action only. It listens to no events
+     and never reads window content. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/screen_lock_service_description"
+    android:isAccessibilityTool="false"
+    android:notificationTimeout="0" />

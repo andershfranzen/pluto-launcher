@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.components
 
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.runtime.CompositionLocalProvider
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -164,10 +167,14 @@ private fun AnimatedClockText(text: String, style: TextStyle, modifier: Modifier
             maxWidth == Constraints.Infinity ||
                 measurer.measure(text, style, maxLines = 1, softWrap = false).size.width <= maxWidth * FitTolerance
         }
-        if (!fits) {
+        // Per-character slots only work for left-to-right text: a time with right-to-left
+        // characters (Arabic "ص") needs the bidi algorithm, so it is drawn as one Text.
+        val rtlText = remember(text) { text.any { isRightToLeft(it) } }
+        if (!fits || rtlText) {
             Text(text, style = style, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
         } else {
-            Row {
+            // Digits read left to right in every locale: the slots must not mirror with the layout.
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { Row {
                 val length = text.length
                 for (index in 0 until length) {
                     // Keyed by position from the end, so digits keep their slot when the length changes.
@@ -185,9 +192,14 @@ private fun AnimatedClockText(text: String, style: TextStyle, modifier: Modifier
                         }
                     }
                 }
-            }
+            } }
         }
     }
+}
+
+private fun isRightToLeft(c: Char): Boolean = when (Character.getDirectionality(c)) {
+    Character.DIRECTIONALITY_RIGHT_TO_LEFT, Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC -> true
+    else -> false
 }
 
 /** Per-character layout loses kerning; keep a little slack before choosing it. */

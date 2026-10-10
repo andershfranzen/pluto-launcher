@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -88,6 +89,8 @@ internal const val DRAG_PLACEHOLDER_ID = "drag:placeholder"
 class HomeDragController(
     private val onStart: (DragSource) -> Unit,
     private val onDrop: (DragSource, DropTarget) -> Unit,
+    /** Feedback when the finger moves onto a different target (null: off every target). */
+    private val onTargetChanged: (DropTarget?) -> Unit = {},
 ) {
     var source by mutableStateOf<DragSource?>(null)
         private set
@@ -174,6 +177,7 @@ class HomeDragController(
             else -> gridTarget(s, p)
         }
         if (next !is DropTarget.Merge && mergeCandidate != null && gridTargetIsMergeZone(s, p) == null) mergeCandidate = null
+        if (next != target) onTargetChanged(next)
         target = next
         val grid = grid
         if (grid != null) {
@@ -373,6 +377,8 @@ internal fun Modifier.homeDragSource(source: () -> DragSource?, look: () -> Drag
 @Composable
 internal fun Modifier.dockDropTarget(slot: Int): Modifier {
     val drag = LocalHomeDrag.current ?: return this
+    // A folded (empty, hidden) slot must not keep catching drops at its old place.
+    DisposableEffect(drag, slot) { onDispose { drag.dockSlots.remove(slot) } }
     val over = (drag.target as? DropTarget.DockSlot)?.slot == slot
     val glow by animateFloatAsState(if (over) 1f else 0f, label = "dockOver")
     val ring = MaterialTheme.colorScheme.onSurface

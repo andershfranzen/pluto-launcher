@@ -1,5 +1,10 @@
 package dev.pluto.launcher.ui.components
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.foundation.ScrollState
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
@@ -322,6 +327,7 @@ fun CategoryTabs(
         Row(
             Modifier
                 .weight(1f, fill = false)
+                .scrollEdgeFades(scrollState)
                 .horizontalScroll(scrollState)
                 .padding(TabRowPadding)
                 .drawWithContent {
@@ -596,3 +602,34 @@ fun EmptyState(
 
 /** Size of the empty-state mark (orbit ring and disc). */
 private val EmptyIllustrationSize = 88.dp
+
+private val TabEdgeFade = 28.dp
+
+/**
+ * Fades the chips out at an edge that has more to scroll to, so a cut-off chip reads as
+ * "more this way" rather than clipped. Masks the chips' own alpha (no painted stripe).
+ */
+private fun Modifier.scrollEdgeFades(scrollState: ScrollState): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val fade = TabEdgeFade.toPx()
+        // Ramp in over the first fade-width of scrolling, so the fade never pops.
+        val start = (scrollState.value / fade).coerceIn(0f, 1f)
+        val end = ((scrollState.maxValue - scrollState.value) / fade).coerceIn(0f, 1f)
+        if (start > 0f) {
+            drawRect(
+                Brush.horizontalGradient(0f to Color.Black.copy(alpha = 1f - start), 1f to Color.Black, startX = 0f, endX = fade),
+                size = Size(fade, size.height),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+        if (end > 0f) {
+            drawRect(
+                Brush.horizontalGradient(0f to Color.Black, 1f to Color.Black.copy(alpha = 1f - end), startX = size.width - fade, endX = size.width),
+                topLeft = Offset(size.width - fade, 0f),
+                size = Size(fade, size.height),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+    }

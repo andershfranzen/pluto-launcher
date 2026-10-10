@@ -38,8 +38,9 @@ internal object CardLook {
     const val ICON_INSET = 0.18f
     const val ICON_SIDE = 1f - 2f * ICON_INSET
     const val REFLECTION_GAP = 0.035f
-    const val REFLECTION_DEPTH = 0.36f
-    const val REFLECTION_ALPHA = 0.24f
+    // A short, faint mirror: on a black sky a deep one read as a dark smudge under the card.
+    const val REFLECTION_DEPTH = 0.22f
+    const val REFLECTION_ALPHA = 0.16f
 
     /** Reflection opacity [depth] below the card's bottom edge (card fractions): eased to zero. */
     fun fade(depth: Float): Float {

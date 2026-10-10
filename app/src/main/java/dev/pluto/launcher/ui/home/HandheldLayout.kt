@@ -1,5 +1,15 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.foundation.layout.BoxWithConstraints
+import dev.pluto.launcher.data.prefs.ButtonMapping
+import dev.pluto.launcher.ui.console.consoleLegendFor
+import androidx.compose.ui.unit.LayoutDirection
+import dev.pluto.launcher.ui.console.CARD_ID_PREFIX
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -75,7 +85,6 @@ import dev.pluto.launcher.ui.console.ConsoleArtSize
 import dev.pluto.launcher.ui.console.ConsoleBackdrop
 import dev.pluto.launcher.ui.console.ConsoleFocusLinks
 import dev.pluto.launcher.ui.console.ConsoleLegend
-import dev.pluto.launcher.ui.console.ConsoleLegendEmpty
 import dev.pluto.launcher.ui.console.HeroEmphasis
 import dev.pluto.launcher.ui.console.ConsoleShelves
 import androidx.compose.ui.platform.LocalView
@@ -145,7 +154,7 @@ private const val SHELF_HANDOVER = 0.45f
  * touch). The selected app sits centre stage, large and front-facing with a reflection;
  * neighbours tilt away in 3D, smaller and dimmed. D-pad / stick LEFT/RIGHT move the
  * selection (the flow glides continuously while held), A opens the app out of its card, X
- * opens its actions, UP reaches the tabs and DOWN the Open / Options buttons. Touch: drag
+ * opens its actions, UP reaches the tabs and DOWN the buttons at the bottom right. Touch: drag
  * scrubs the flow 1:1, a fling snaps to the nearest card, tapping a side card brings it to
  * the centre and tapping the centre card opens it.
  *
@@ -156,19 +165,19 @@ private const val SHELF_HANDOVER = 0.45f
  */
 @Composable
 fun HandheldLayout(state: LauncherUiState, vm: LauncherViewModel) {
-    HideStatusBarWhileShown()
     ConsoleTheme { HandheldStage(state, vm) }
 }
 
 /**
  * Console mode is immersive: the status bar (a second clock above Pluto's own) is hidden
- * while it shows and comes back with a swipe from the edge; it returns when the mode ends.
- * The navigation bar is left alone so system gestures behave as everywhere else.
+ * while [hidden] and comes back with a swipe from the edge; it returns when the mode ends.
+ * Called by the root, so pages opened over the console keep it hidden too. The navigation
+ * bar is left alone so system gestures behave as everywhere else.
  */
 @Composable
-private fun HideStatusBarWhileShown() {
+internal fun HideStatusBarWhile(hidden: Boolean) {
     val view = LocalView.current
-    if (view.isInEditMode) return
+    if (view.isInEditMode || !hidden) return
     DisposableEffect(view) {
         val window = (view.context as? android.app.Activity)?.window
             ?: (view.context as? android.content.ContextWrapper)?.baseContext?.let { it as? android.app.Activity }?.window
@@ -193,6 +202,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     val currentVersions by rememberUpdatedState(versions)
     val artPx = with(LocalDensity.current) { ConsoleArtSize.roundToPx() }
     val currentState by rememberUpdatedState(state)
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
     // Shelves and the active shelf's apps (list instances reused while their content is equal,
     // so an unrelated session change does not recompose the flow).
@@ -214,18 +224,20 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     }
 
     // --- Shelf switching: the flows slide across, direction-aware -------------------------
+    // Appearing (a controller connected, rotation): continue on the app selected in the other
+    // layout when this shelf has it, so the console picks up where the user was (C02).
     val switch = remember {
-        ShelfSwitch(active, CoverflowState(ConsoleShelves.initialIndex(apps, vm.shelfSelection(active), state.session.selectedApp), apps))
+        ShelfSwitch(active, CoverflowState(ConsoleShelves.initialIndex(apps, state.session.selectedApp, vm.shelfSelection(active)), apps))
     }
     if (switch.shelf != active) {
         // Remember what held focus before the outgoing flow turns focus-inert (read without subscribing).
         switch.focusedAtSwitch = Snapshot.withoutReadObservation { focus.focusedId ?: focus.lastFocusedId }
-        switch.direction = ConsoleShelves.direction(order, switch.shelf, active)
-        switch.outgoingShelf = switch.shelf
-        switch.outgoingStage = switch.stage
-        switch.shelf = active
-        switch.stage = CoverflowState(ConsoleShelves.initialIndex(apps, vm.shelfSelection(active), state.session.selectedApp), apps)
-        switch.progress = 0f
+        switch.begin(
+            next = active,
+            nextStage = CoverflowState(ConsoleShelves.initialIndex(apps, vm.shelfSelection(active), state.session.selectedApp), apps),
+            order = order,
+            mirror = if (rtl) -1 else 1,
+        )
     } else {
         switch.stage.sync(apps)
     }
@@ -288,13 +300,20 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     SideEffect { focus.setDefaultFocus(selectedCardId(stage, active) ?: emptyDefault ?: shelfTabId(active)) }
     // Whenever touch takes over (or switches shelf), the next controller input returns to the
     // selected card, never to whatever top-bar button the controller last visited.
-    LaunchedEffect(focus.inputMode, active, stage.selectedKey) {
-        if (focus.inputMode == InputMode.TOUCH) {
-            focus.rememberFocusTarget(selectedCardId(stage, active) ?: emptyDefault ?: shelfTabId(active))
+    // The selection is observed in a snapshot flow, never read in composition: a D-pad step
+    // must not recompose the console.
+    val currentEmptyDefault by rememberUpdatedState(emptyDefault)
+    LaunchedEffect(focus.inputMode, active, stage) {
+        if (focus.inputMode != InputMode.TOUCH) return@LaunchedEffect
+        snapshotFlow { stage.selectedKey }.collect {
+            focus.rememberFocusTarget(selectedCardId(stage, active) ?: currentEmptyDefault ?: shelfTabId(active))
         }
     }
 
-    ConsoleFocusEffects(state, focus, switch, active, emptyDefault) { selectedCardId(stage, active) }
+    val editable = pickableCategoryId(active, state)
+    ConsoleFocusEffects(state, focus, switch, active, emptyDefault, hasEditButton = editable != null && apps.isNotEmpty()) {
+        selectedCardId(stage, active)
+    }
 
     // --- Layout -------------------------------------------------------------------------------
     val selectedCardFocus: () -> FocusRequester = { switch.stage.let { if (it.count > 0) it.selectedRequester() else FocusRequester.Default } }
@@ -341,7 +360,12 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            ControllerBattery(state.controllers.firstOrNull()?.deviceId)
+                            // One reading per connected controller (two players, a spare pad).
+                            state.controllers.forEachIndexed { i, controller ->
+                                key(controller.deviceId) {
+                                    ControllerBattery(controller.deviceId, number = if (state.controllers.size > 1) i + 1 else null)
+                                }
+                            }
                             PhoneBattery()
                             ClockHeader(compact = true, quiet = true)
                         }
@@ -420,28 +444,38 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                 }
                 // Open and Actions are part of the button legend (bottom right), not separate
                 // buttons: touch opens the centre card with a tap, actions with a long press.
-                Box(
+                Row(
                     Modifier
                         .fillMaxWidth()
                         .symmetricHorizontalSafeDrawing()
                         .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = ConsoleBottomClearance),
-                    contentAlignment = Alignment.CenterEnd,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // Bottom left, opposite the buttons: the position in the shelf, then the hints.
+                    // It takes the room the buttons leave, so the two never overlap (large text).
                     Row(
-                        Modifier.align(Alignment.CenterStart),
+                        Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
                         if (apps.isNotEmpty()) ConsoleCounter(stage)
                         if (hints) {
-                            ButtonLegend(mapping, if (apps.isNotEmpty()) ConsoleLegend else ConsoleLegendEmpty)
+                            ConsoleButtonLegend(mapping, hasApps = apps.isNotEmpty())
+                        } else if (apps.isNotEmpty()) {
+                            // Touch has no legend: say once how to reach an app's options.
+                            Text(
+                                ConsoleText.TOUCH_HINT,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White.copy(alpha = 0.55f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     }
+                    Spacer(Modifier.width(12.dp))
                     // Up from these returns to the selected card.
                     val up = Modifier.focusProperties { up = selectedCardFocus() }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        val editable = pickableCategoryId(active, state)
                         if (editable != null && apps.isNotEmpty()) {
                             PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit ${shelf.title}", { vm.openLayer(Layer.ShelfPicker(editable)) }, up)
                         }
@@ -481,7 +515,7 @@ private fun ShelfPage(
             .fillMaxSize()
             .then(if (leaving) Modifier.clearAndSetSemantics { } else Modifier)
         if (stage.count == 0) {
-            Box(
+            BoxWithConstraints(
                 base.graphicsLayer {
                     translationX = page.offset() * size.width
                     alpha = page.alpha().coerceIn(0f, 1f)
@@ -492,7 +526,9 @@ private fun ShelfPage(
                     title = emptyTitle.first,
                     detail = emptyTitle.second,
                     onWallpaper = true,
-                    icon = Icons.Outlined.Apps,
+                    // The illustration only where the stage has room for it: on a phone in
+                    // landscape it pushed the buttons off the bottom of the stage.
+                    icon = if (maxHeight >= EmptyIllustrationMinStage) Icons.Outlined.Apps else null,
                     // A readable measure, centred; scrolls rather than squashing its buttons
                     // when the stage is short (large text, small landscape windows).
                     modifier = Modifier.widthIn(max = 560.dp).verticalScroll(rememberScrollState()),
@@ -528,6 +564,9 @@ private fun ShelfPage(
     }
 }
 
+/** Stage height from which an empty shelf also shows its illustration (else just text and buttons). */
+private val EmptyIllustrationMinStage = 360.dp
+
 /** Space between the bottom row and the navigation handle, on top of the system inset. */
 private val ConsoleBottomClearance = 20.dp
 
@@ -539,6 +578,12 @@ private val ConsoleBottomClearance = 20.dp
 @Composable
 private fun HeroEmphasisEffect(focus: ControllerFocusController, hero: HeroEmphasis) {
     LaunchedEffect(focus, hero) {
+        // The centre card glows while it holds controller focus.
+        launch {
+            snapshotFlow { focus.inputMode == InputMode.CONTROLLER && focus.focusedId?.startsWith(CARD_ID_PREFIX) == true }
+                .distinctUntilChanged()
+                .collectLatest { onCard -> animate(hero.focus, if (onCard) 1f else 0f, animationSpec = PlutoMotion.fadeIn()) { v, _ -> hero.focus = v } }
+        }
         snapshotFlow {
             val id = focus.focusedId
             focus.inputMode == InputMode.CONTROLLER && id != null &&
@@ -594,6 +639,31 @@ private class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
     var progress by mutableFloatStateOf(1f)
     var focusedAtSwitch: String? = null
 
+    /**
+     * Starts the slide to [next]. [mirror] is -1 in right-to-left layouts, where the next tab
+     * is to the left. A switch during a switch (L1/R1 pressed quickly) continues from what is
+     * on screen instead of popping a page away: while the incoming page has not appeared yet,
+     * the page already leaving keeps leaving and only the arriving one changes; once it
+     * shows, it becomes the leaving page, from the opacity it had reached.
+     */
+    fun begin(next: ShelfId, nextStage: CoverflowState, order: List<ShelfId>, mirror: Int) {
+        val leaving = outgoingShelf
+        if (progress < 1f && leaving != null && progress < SHELF_HANDOVER) {
+            direction = mirror * ConsoleShelves.direction(order, leaving, next)
+            shelf = next
+            stage = nextStage
+            return
+        }
+        val shown = if (progress < 1f) incomingMotion.alpha().coerceIn(0f, 1f) else 1f
+        direction = mirror * ConsoleShelves.direction(order, shelf, next)
+        outgoingShelf = shelf
+        outgoingStage = stage
+        shelf = next
+        stage = nextStage
+        // The outgoing alpha is 1 - progress / HANDOVER: start where the page already is.
+        progress = (1f - shown) * SHELF_HANDOVER
+    }
+
     val incomingMotion = PageMotion(
         offset = { direction * (1f - progress) * SHELF_SLIDE },
         // Sequenced, never overlapping: the outgoing page is gone (progress 0.45) before
@@ -618,11 +688,25 @@ private fun ConsoleFocusEffects(
     switch: ShelfSwitch,
     active: ShelfId,
     emptyDefault: String?,
+    hasEditButton: Boolean,
     selectedCardId: () -> String?,
 ) {
     val currentState by rememberUpdatedState(state)
     val currentSelected by rememberUpdatedState(selectedCardId)
     val currentEmpty by rememberUpdatedState(emptyDefault)
+    val currentHasEdit by rememberUpdatedState(hasEditButton)
+
+    // Back on the console after a layer closed: the layer restores focus to the control that
+    // opened it, but that card may be gone (unpinned or hidden the last app of a shelf). If
+    // focus found nowhere to land, put it on the selected card or the empty state's button.
+    val atHome = state.session.layers.isEmpty()
+    LaunchedEffect(atHome) {
+        if (!atHome) return@LaunchedEffect
+        repeat(RESTORE_GRACE_FRAMES) { withFrameNanos { } }
+        if (focus.inputMode != InputMode.CONTROLLER || focus.focusedId != null) return@LaunchedEffect
+        if (currentState.session.layers.isNotEmpty()) return@LaunchedEffect
+        focus.requestFocusWhenReady(currentSelected() ?: currentEmpty ?: shelfTabId(active))
+    }
 
     // Layout (re)appears or a controller connects: after the first frame, unless focus was
     // already placed (a layer restore).
@@ -647,8 +731,10 @@ private fun ConsoleFocusEffects(
         if (currentState.session.layers.isNotEmpty()) return@LaunchedEffect
         val target = when {
             was != null && was.startsWith(TAB_ID_PREFIX) -> shelfTabId(active)
-            was == null || was.startsWith("hh:card:") || was.startsWith("hh:empty:") || was.startsWith("hh:act:") ->
+            was == null || was.startsWith(CARD_ID_PREFIX) || was.startsWith("hh:empty:") ->
                 currentSelected() ?: currentEmpty ?: shelfTabId(active)
+            // Only user categories with apps have an Edit button: stay in the button row.
+            was == ID_HH_EDIT_SHELF && !currentHasEdit -> ID_HH_SEARCH
             else -> was
         }
         if (focus.inputMode == InputMode.CONTROLLER) {
@@ -660,6 +746,24 @@ private fun ConsoleFocusEffects(
         }
     }
 }
+
+/**
+ * The button legend for where controller focus is ([consoleLegendFor]). Reads focus itself,
+ * so moving focus recomposes only the legend.
+ */
+@Composable
+private fun ConsoleButtonLegend(mapping: ButtonMapping, hasApps: Boolean) {
+    val focus = LocalControllerFocus.current
+    ButtonLegend(mapping, consoleLegendFor(focus.focusedId, hasApps))
+}
+
+/** Console copy (inline for 0.1). */
+internal object ConsoleText {
+    const val TOUCH_HINT = "Tap to open · Press and hold for options"
+}
+
+/** Frames a closing layer gets to restore focus itself before the console steps in. */
+private const val RESTORE_GRACE_FRAMES = 12
 
 /** Returns the previously returned list while [value] is equal to it (content), so skipping works. */
 @Composable

@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.settings
 
+import dev.pluto.launcher.system.ScreenLockService
+import dev.pluto.launcher.data.prefs.SwipeDownAction
 import dev.pluto.launcher.ui.focus.controllerFocusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -310,6 +312,35 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     onSelect = { style -> update { it.copy(carouselStyle = style) } },
                 )
 
+            }
+            SettingsSection(SettingsText.GESTURES) {
+                ChoiceGroup(
+                    idPrefix = "settings:swipedown",
+                    label = SettingsText.SWIPE_DOWN,
+                    supporting = SettingsText.SWIPE_DOWN_HELP,
+                    options = listOf(
+                        SwipeDownAction.NOTIFICATIONS to "Notifications",
+                        SwipeDownAction.SEARCH to "Search apps",
+                        SwipeDownAction.NOTHING to "Nothing",
+                    ),
+                    selected = settings.swipeDownAction,
+                    onSelect = { action -> update { it.copy(swipeDownAction = action) } },
+                )
+                val context = LocalContext.current
+                SwitchRow(
+                    id = "settings:doubletaplock",
+                    label = SettingsText.DOUBLE_TAP_LOCK,
+                    supporting = when {
+                        !settings.doubleTapToLock -> SettingsText.DOUBLE_TAP_LOCK_HELP
+                        ScreenLockService.isReady -> SettingsText.DOUBLE_TAP_LOCK_READY
+                        else -> SettingsText.DOUBLE_TAP_LOCK_NEEDS_SERVICE
+                    },
+                    checked = settings.doubleTapToLock,
+                    onCheckedChange = { on ->
+                        update { it.copy(doubleTapToLock = on) }
+                        if (on && !ScreenLockService.isReady) ScreenLockService.openSettings(context)
+                    },
+                )
             }
         }
 

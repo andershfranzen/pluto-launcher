@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
+import android.content.pm.ShortcutInfo
+import android.graphics.drawable.Drawable
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.net.Uri
@@ -44,6 +46,9 @@ sealed interface LaunchResult {
      */
     data class Failure(val message: String, val targetMissing: Boolean = false) : LaunchResult
 }
+
+/** An app's own shortcut (static, dynamic or pinned), as offered on its long-press menu. */
+class AppShortcut(val id: String, val label: String, internal val info: ShortcutInfo)
 
 /** One successful catalog query. [generation] increases with every successful load. */
 data class CatalogLoad(val generation: Long, val apps: List<AppEntry>)
@@ -389,8 +394,53 @@ class AppCatalog(context: Context) {
         }
     }
 
+    /**
+     * The shortcuts [key]'s app publishes (manifest first, then dynamic, then pinned), at
+     * most [limit]. Empty unless Pluto is the default Home app (the only launcher Android
+     * lets read them). Blocking: call off the main thread.
+     */
+    fun shortcuts(key: AppKey, limit: Int = MAX_SHORTCUTS): List<AppShortcut> {
+        if (key.userSerial != mySerial) return emptyList()
+        if (!runCatching { launcherApps.hasShortcutHostPermission() }.getOrDefault(false)) return emptyList()
+        val query = LauncherApps.ShortcutQuery()
+            .setPackage(key.packageName)
+            .setActivity(ComponentName.unflattenFromString(key.component))
+            .setQueryFlags(
+                LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or
+                    LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or
+                    LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED,
+            )
+        val infos = try {
+            launcherApps.getShortcuts(query, myUser).orEmpty()
+        } catch (e: Exception) {
+            // SecurityException (lost the Home role meanwhile), IllegalStateException (user locked).
+            Log.w(TAG, "Shortcuts unavailable for $key", e)
+            return emptyList()
+        }
+        return infos
+            .filter { it.isEnabled && (it.isDeclaredInManifest || it.isDynamic) }
+            .sortedWith(compareBy<ShortcutInfo>({ if (it.isDeclaredInManifest) 0 else 1 }, { it.rank }))
+            .take(limit)
+            .map { AppShortcut(it.id, (it.shortLabel ?: it.longLabel ?: it.id).toString(), it) }
+    }
+
+    /** The shortcut's icon at [density] (DisplayMetrics density dpi), or null. Blocking. */
+    fun shortcutIcon(shortcut: AppShortcut, density: Int): Drawable? =
+        runCatching { launcherApps.getShortcutIconDrawable(shortcut.info, density) }.getOrNull()
+
+    /** Starts [shortcut]. Never throws. */
+    fun launchShortcut(shortcut: AppShortcut, sourceBounds: Rect? = null): LaunchResult = try {
+        launcherApps.startShortcut(shortcut.info, sourceBounds, null)
+        LaunchResult.Success
+    } catch (e: Exception) {
+        // ActivityNotFoundException, SecurityException, IllegalStateException (disabled since).
+        Log.w(TAG, "Shortcut ${shortcut.id} failed", e)
+        LaunchResult.Failure("“${shortcut.label}” couldn't be opened.")
+    }
+
     private companion object {
         const val TAG = "AppCatalog"
         const val RELOAD_DEBOUNCE_MS = 150L
+        const val MAX_SHORTCUTS = 4
     }
 }

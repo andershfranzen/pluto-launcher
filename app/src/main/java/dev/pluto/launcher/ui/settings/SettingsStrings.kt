@@ -4,6 +4,14 @@ import dev.pluto.launcher.data.prefs.ControllerAction
 
 /** Plain-English texts for settings, management screens and onboarding (inline for 0.1). */
 internal object SettingsText {
+    const val GESTURES = "Gestures"
+    const val SWIPE_DOWN = "Swipe down on Home"
+    const val SWIPE_DOWN_HELP = "What a downward swipe over Home opens."
+    const val DOUBLE_TAP_LOCK = "Double-tap to lock"
+    const val DOUBLE_TAP_LOCK_HELP = "Double-tap empty space on Home to turn the screen off. Needs Pluto's screen-lock service."
+    const val DOUBLE_TAP_LOCK_READY = "On. Double-tap empty space on Home to lock."
+    const val DOUBLE_TAP_LOCK_NEEDS_SERVICE = "Turn on “Pluto screen lock” in Accessibility settings. It only performs the lock; it can't see the screen."
+
     // Settings
     const val SETTINGS = "Settings"
     const val APPEARANCE = "Appearance"

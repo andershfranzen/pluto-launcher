@@ -47,38 +47,32 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * An animated Pluto: the New Horizons global colour map (NASA/JHUAPL/SwRI, PIA11707; the
- * unimaged south filled with a darkened mirror of the north) wrapped on a sphere by an AGSL
- * shader, lit from the upper left with a soft terminator, a blue haze at the limb like
- * Pluto's real atmosphere, and turning once every [SPIN_SECONDS].
+ * Pluto over black space: the New Horizons global colour map (NASA/JHUAPL/SwRI, PIA11707)
+ * wrapped on a sphere by an AGSL shader, lit from the upper left with a soft terminator and
+ * a blue haze at the limb like Pluto's real atmosphere. The globe holds still with the
+ * heart (Tombaugh Regio) facing the screen: the side New Horizons saw sharply. The far side
+ * was only seen from afar (and the south not at all), so it never turns into view.
  *
- * Around it: deep-space gradient and faint nebulae (static layer, drawn once), a star field
- * with a twinkling subset, slowly drifting dust particles and an occasional shooting star.
- * Everything moves in the draw phase from one time value, updated at [rate]; the clock runs only while the
- * launcher is started, and with [animate] false (Reduce motion) it is a still frame. Before
- * Android 13 (no runtime shaders) the globe is left out and the space scene remains.
+ * Around it: true black (OLED pixels stay off) with very faint nebulae (static layer, drawn
+ * once), a star field with a twinkling subset, slowly drifting dust and an occasional
+ * shooting star, all behind the globe. They move in the draw phase from one time value,
+ * updated at [rate]; the clock runs only while the launcher is started, and with [animate]
+ * false (Reduce motion) it is a still frame. Before Android 13 (no runtime shaders) the
+ * globe is left out and the space scene remains.
  */
 @Composable
 fun PlutoBackground(rate: BackgroundFrameRate, animate: Boolean, modifier: Modifier = Modifier) {
-    // Two clocks: the globe turns so slowly that it needs fewer updates than the twinkles and
-    // dust. Each drives its own cached layer; the loop checks twice per update interval and
-    // changes state only when an update is due.
+    // One clock for the twinkles, dust and shooting stars; the globe is drawn once.
     val fxTime = remember { mutableFloatStateOf(PLUTO_STILL_TIME) }
-    val globeTime = remember { mutableFloatStateOf(PLUTO_STILL_TIME) }
     val lifecycle = LocalLifecycleOwner.current
     if (animate) {
         LaunchedEffect(lifecycle, rate) {
             val fxNanos = 1_000_000_000L / rate.effectsFps
-            val globeNanos = 1_000_000_000L / rate.globeFps
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val start = withFrameNanos { it } - (fxTime.floatValue * 1e9f).toLong()
-                val spin = UpdateSchedule(globeNanos)
                 var next = System.nanoTime()
                 while (true) {
-                    withFrameNanos { now ->
-                        fxTime.floatValue = (now - start) / 1e9f
-                        if (spin.due(now)) globeTime.floatValue = fxTime.floatValue
-                    }
+                    withFrameNanos { now -> fxTime.floatValue = (now - start) / 1e9f }
                     // Sleep until the next update is due, so every frame requested here is one
                     // update. Due times follow each other (not the frame that took them), so the
                     // average rate holds on any refresh rate; after a stall it restarts from now.
@@ -97,37 +91,32 @@ fun PlutoBackground(rate: BackgroundFrameRate, animate: Boolean, modifier: Modif
     val cached = Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
 
     Box(modifier.fillMaxSize().clearAndSetSemantics { }) {
-        // Static: space, nebulae and the steady stars.
+        // Static: black space, faint nebulae and the steady stars.
         Spacer(
             cached.drawWithCache {
                 val w = size.width
                 val h = size.height
-                val space = Brush.verticalGradient(
-                    0f to Color(0xFF0C0814),
-                    0.5f to Color(0xFF07050D),
-                    1f to Color(0xFF030206),
-                )
                 val nebulaA = Brush.radialGradient(
-                    0f to Color(0xFF4A2F7A).copy(alpha = 0.16f),
+                    0f to Color(0xFF4A2F7A).copy(alpha = 0.06f),
                     1f to Color.Transparent,
                     center = Offset(w * 0.18f, h * 0.22f),
                     radius = max(w, h) * 0.55f,
                 )
                 val nebulaB = Brush.radialGradient(
-                    0f to Color(0xFF6E3A78).copy(alpha = 0.10f),
+                    0f to Color(0xFF6E3A78).copy(alpha = 0.04f),
                     1f to Color.Transparent,
                     center = Offset(w * 0.92f, h * 0.48f),
                     radius = max(w, h) * 0.45f,
                 )
                 val placement = GlobePlacement.of(size)
                 val glow = Brush.radialGradient(
-                    0f to Color(0xFF7A6CFF).copy(alpha = 0.08f),
+                    0f to Color(0xFF7A6CFF).copy(alpha = 0.05f),
                     1f to Color.Transparent,
                     center = placement.center,
                     radius = placement.radius * 2.1f,
                 )
                 onDrawBehind {
-                    drawRect(space)
+                    drawRect(Color.Black)
                     drawRect(nebulaA)
                     drawRect(nebulaB)
                     stars.drawSteady(this)
@@ -135,38 +124,19 @@ fun PlutoBackground(rate: BackgroundFrameRate, animate: Boolean, modifier: Modif
                 }
             },
         )
-        // Twinkling stars, behind the globe.
-        Spacer(Modifier.fillMaxSize().drawBehind { stars.drawTwinkling(this, fxTime.floatValue) })
-        // The globe: its own cached layer, re-rendered only when the globe clock ticks.
-        if (globe != null) {
-            Spacer(
-                cached.drawBehind { globe.draw(this, GlobePlacement.of(size), globeTime.floatValue) },
-            )
-        }
-        // Dust and shooting stars, in front.
+        // Everything that moves, behind the globe: twinkles, dust and shooting stars.
         Spacer(
             Modifier.fillMaxSize().drawBehind {
                 val t = fxTime.floatValue
+                stars.drawTwinkling(this, t)
                 stars.drawDust(this, t, density)
                 stars.drawShootingStar(this, t, density)
             },
         )
-    }
-}
-
-/**
- * Updates at an average of one per [interval] on any refresh rate: each due time follows the
- * previous one (not the frame that happened to take it), so 60 updates a second stay 60 on a
- * 90 or 144 Hz screen instead of rounding to every second vsync. After a pause (screen off,
- * launcher stopped) it restarts from now rather than catching up.
- */
-private class UpdateSchedule(private val interval: Long) {
-    private var next = 0L
-
-    fun due(now: Long): Boolean {
-        if (now < next - SCHEDULE_TOLERANCE_NANOS) return false
-        next = if (now - next > interval) now + interval else next + interval
-        return true
+        // The globe: its own cached layer, rendered once (it holds still) and then only composited.
+        if (globe != null) {
+            Spacer(cached.drawBehind { globe.draw(this, GlobePlacement.of(size)) })
+        }
     }
 }
 
@@ -216,12 +186,12 @@ private class GlobeShader(bitmap: android.graphics.Bitmap) {
         shader.setFloatUniform("light", -0.62f, 0.42f, 0.66f)
     }
 
-    fun draw(scope: DrawScope, placement: GlobePlacement, time: Float) {
+    fun draw(scope: DrawScope, placement: GlobePlacement) {
         val c = placement.center
         val r = placement.radius
         shader.setFloatUniform("center", c.x, c.y)
         shader.setFloatUniform("radius", r)
-        shader.setFloatUniform("spin", (time / SPIN_SECONDS * 2f * PI.toFloat()) % (2f * PI.toFloat()))
+        shader.setFloatUniform("spin", GLOBE_SPIN)
         // Only the globe and its haze: the shader never runs over the whole screen.
         val extent = r * HAZE_EXTENT
         scope.drawRect(brush, topLeft = Offset(c.x - extent, c.y - extent), size = Size(extent * 2f, extent * 2f))
@@ -338,7 +308,6 @@ private const val PLUTO_MAP_ASSET = "pluto_map.jpg"
 private const val STEADY_STARS = 260
 private const val TWINKLING_STARS = 40
 private const val DUST_PARTICLES = 46
-private const val SPIN_SECONDS = 160f
 private const val SHOOTING_PERIOD = 11f
 private const val SHOOTING_DURATION = 0.9f
 private const val HAZE_EXTENT = 1.12f
@@ -346,11 +315,12 @@ private const val HAZE_EXTENT = 1.12f
 /** North pole tipped towards the viewer (radians): the well-imaged north faces the screen. */
 private const val GLOBE_TILT = 0.38f
 
-/** Frame timestamps jitter slightly: an update this close to due counts as due. */
-private const val SCHEDULE_TOLERANCE_NANOS = 1_000_000L
 
-/** The still frame for Reduce motion: the heart (Tombaugh Regio) in view. */
+/** The still frame's effects time for Reduce motion. */
 private const val PLUTO_STILL_TIME = 2f
+
+/** Longitude turned to face the screen (radians): the heart (Tombaugh Regio), sharply imaged. */
+private const val GLOBE_SPIN = 0.0785f
 
 /**
  * Sphere mapping of an equirectangular map. The view normal n is turned into body

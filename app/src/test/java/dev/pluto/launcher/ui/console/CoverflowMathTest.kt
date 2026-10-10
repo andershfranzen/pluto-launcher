@@ -57,9 +57,13 @@ class CoverflowMathTest {
 
     @Test
     fun edgeCardsFadeOutBeforeLeavingTheWindow() {
-        assertEquals(1f, CoverflowMath.transform(3f).alpha, eps)
-        val fading = CoverflowMath.transform(3.5f).alpha
-        assertTrue(fading > 0f && fading < 1f)
+        // The selection and its neighbours are solid; further out the flow thins gradually,
+        // so the outermost resting card is already translucent rather than a hard end.
+        assertEquals(1f, CoverflowMath.transform(0f).alpha, eps)
+        assertEquals(1f, CoverflowMath.transform(1f).alpha, eps)
+        val second = CoverflowMath.transform(2f).alpha
+        val third = CoverflowMath.transform(3f).alpha
+        assertTrue(second in 0f..1f && third < second && third > 0f)
         assertEquals(0f, CoverflowMath.transform(CoverflowMath.RADIUS.toFloat()).alpha, eps)
     }
 

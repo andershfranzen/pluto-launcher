@@ -1,5 +1,14 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.Lifecycle
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
@@ -36,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -58,7 +66,6 @@ import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherViewModel
-import dev.pluto.launcher.ui.components.GlassPanel
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import kotlin.math.roundToInt
 
@@ -129,9 +136,17 @@ internal fun Modifier.homeMenuOnLongPress(menu: HomeMenuState, vm: LauncherViewM
         }
 }
 
-/** The home menu: a small glass card at the press point (above the finger when it fits). */
+/** The home menu: a small card at the press point (above the finger when it fits). */
 @Composable
 internal fun HomeMenu(menu: HomeMenuState, vm: LauncherViewModel) {
+    // Leaving the launcher (Home pressed while in front, an app opening, screen off) pauses
+    // it first: the menu belongs to the moment it was opened in, so it closes.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, menu) {
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_PAUSE) menu.hide() }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     if (!menu.visible.currentState && !menu.visible.targetState) return
     val density = LocalDensity.current
     val position = remember(menu.anchor, density) { HomeMenuPosition(menu.anchor, with(density) { 12.dp.roundToPx() }) }
@@ -146,10 +161,15 @@ internal fun HomeMenu(menu: HomeMenuState, vm: LauncherViewModel) {
             exit = fadeOut(PlutoMotion.fadeOut()) + scaleOut(PlutoMotion.fadeOut(), targetScale = 0.92f, transformOrigin = position.origin),
         ) {
             val scheme = MaterialTheme.colorScheme
-            GlassPanel(
-                Modifier.width(232.dp),
-                shape = RoundedCornerShape(20.dp),
-                fill = SolidColor(scheme.surfaceContainerHigh.copy(alpha = 0.92f)),
+            // The same opaque card as an app's long-press menu: nothing shows through the text.
+            val shape = RoundedCornerShape(24.dp)
+            Box(
+                Modifier
+                    .width(232.dp)
+                    .shadow(16.dp, shape)
+                    .background(scheme.surfaceContainerHigh, shape)
+                    .border(1.dp, scheme.outlineVariant.copy(alpha = 0.3f), shape)
+                    .clip(shape),
             ) {
                 Column {
                     HomeMenuEntries.forEachIndexed { index, entry ->

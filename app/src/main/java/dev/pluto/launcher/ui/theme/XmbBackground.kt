@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.theme
 
+import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,17 +60,26 @@ fun LauncherSettings.backgroundFor(console: Boolean): BackgroundChoice = if (con
 fun XmbBackground(base: Color, animate: Boolean, modifier: Modifier = Modifier) {
     val time = remember { mutableFloatStateOf(XMB_STILL_TIME) }
     val lifecycle = LocalLifecycleOwner.current
+    val view = LocalView.current
     if (animate) {
-        LaunchedEffect(lifecycle) {
+        LaunchedEffect(lifecycle, view) {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // The waves move slowly: redrawing every other refresh (72 fps on a 144 Hz
+                // screen) looks the same and halves the GPU work. The loop sleeps between
+                // updates instead of asking for the frames it would skip, so Choreographer
+                // isn't kept busy every vsync for nothing.
+                val refresh = view.display?.refreshRate?.takeIf { it > 1f } ?: 60f
+                val interval = (XMB_FRAME_DIVISOR * 1_000_000_000L / refresh).toLong()
                 val start = withFrameNanos { it } - (time.floatValue * 1e9f).toLong()
-                // The waves move slowly: redrawing every other frame (72 fps on a 144 Hz
-                // screen) looks the same and halves the GPU work.
-                var frame = 0
+                var next = System.nanoTime()
                 while (true) {
-                    withFrameNanos { now ->
-                        if (frame++ % XMB_FRAME_DIVISOR == 0) time.floatValue = (now - start) / 1e9f
-                    }
+                    withFrameNanos { now -> time.floatValue = (now - start) / 1e9f }
+                    next += interval
+                    val nowNanos = System.nanoTime()
+                    if (nowNanos - next > interval) next = nowNanos
+                    // Wake a little early: the next frame callback lands on the vsync after it.
+                    val waitMs = (next - nowNanos) / 1_000_000L - 2L
+                    if (waitMs > 0) delay(waitMs)
                 }
             }
         }
@@ -115,6 +127,8 @@ fun XmbBackground(base: Color, animate: Boolean, modifier: Modifier = Modifier) 
                     val glowA = lerp(base, Color.White, 0.55f)
                     val glowB = lerp(base, Color.White, 0.35f)
                     val poolRadius = maxOf(w, h) * 0.42f
+                    val poolA = Brush.radialGradient(0f to glowA.copy(alpha = 0.16f), 1f to Color.Transparent, center = Offset.Zero, radius = poolRadius)
+                    val poolB = Brush.radialGradient(0f to glowB.copy(alpha = 0.12f), 1f to Color.Transparent, center = Offset.Zero, radius = poolRadius * 0.8f)
                     val bandBrush = Brush.verticalGradient(
                         0f to Color.White.copy(alpha = 0f),
                         0.35f to Color.White.copy(alpha = 0.13f),
@@ -166,14 +180,13 @@ fun XmbBackground(base: Color, animate: Boolean, modifier: Modifier = Modifier) 
                         // Two pools of light wandering slowly across the gradient.
                         val p1 = Offset(w * (0.3f + 0.2f * sin(t * 0.05f)), h * (0.3f + 0.12f * cos(t * 0.04f)))
                         val p2 = Offset(w * (0.72f + 0.18f * cos(t * 0.035f)), h * (0.62f + 0.1f * sin(t * 0.045f)))
-                        drawCircle(
-                            Brush.radialGradient(0f to glowA.copy(alpha = 0.16f), 1f to Color.Transparent, center = p1, radius = poolRadius),
-                            radius = poolRadius, center = p1, blendMode = BlendMode.Screen,
-                        )
-                        drawCircle(
-                            Brush.radialGradient(0f to glowB.copy(alpha = 0.12f), 1f to Color.Transparent, center = p2, radius = poolRadius * 0.8f),
-                            radius = poolRadius * 0.8f, center = p2, blendMode = BlendMode.Screen,
-                        )
+                        // The pools' brushes are built once around the origin and moved here.
+                        translate(p1.x, p1.y) {
+                            drawCircle(poolA, radius = poolRadius, center = Offset.Zero, blendMode = BlendMode.Screen)
+                        }
+                        translate(p2.x, p2.y) {
+                            drawCircle(poolB, radius = poolRadius * 0.8f, center = Offset.Zero, blendMode = BlendMode.Screen)
+                        }
 
                         // The translucent band under the main bundle.
                         wave(ys, t, 0f, 1f, WAVE_Y)

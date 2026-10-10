@@ -1,5 +1,9 @@
 package dev.pluto.launcher.ui.console
 
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import android.os.BatteryManager
@@ -117,6 +121,20 @@ val ConsoleLegend = listOf(
 /** The legend on an empty shelf: nothing to open or act on. */
 val ConsoleLegendEmpty = ConsoleLegend.filter { it.action != ControllerAction.CONFIRM && it.action != ControllerAction.ACTIONS }
 
+/** The legend away from the cards (tabs, buttons, an empty shelf's buttons): A selects. */
+val ConsoleLegendControls = listOf(LegendItem(ControllerAction.CONFIRM, "Select")) + ConsoleLegendEmpty
+
+/**
+ * The legend for where controller focus is: a card can be opened and has actions; anything
+ * else (a tab, a button) is just selected. Before focus lands, the cards' legend when there
+ * are cards.
+ */
+internal fun consoleLegendFor(focusedId: String?, hasApps: Boolean): List<LegendItem> = when {
+    focusedId?.startsWith(CARD_ID_PREFIX) == true -> ConsoleLegend
+    focusedId == null -> if (hasApps) ConsoleLegend else ConsoleLegendEmpty
+    else -> ConsoleLegendControls
+}
+
 internal const val TAB_ID_PREFIX = "hh:tab:"
 
 internal fun shelfTabId(id: ShelfId): String = "$TAB_ID_PREFIX${id.key}"
@@ -135,7 +153,8 @@ internal class ConsoleFocusLinks {
 // ---------------------------------------------------------------------------------------
 
 private val MinInlineTabsWidth = 320.dp
-private val HeaderGap = 12.dp
+/** Between the tab row and the status cluster: the tabs fade out well clear of the clock. */
+private val HeaderGap = 32.dp
 
 /**
  * Header with the shelf tabs, the status cluster (clock, controller battery) and the icon
@@ -205,19 +224,29 @@ internal fun ShelfTabs(
 ) {
     val scroll = rememberScrollState()
     val bounds = remember { HashMap<String, IntRangeHolder>() }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     links.activeShelfKey = active.key
     val marginPx = with(LocalDensity.current) { TabScrollMargin.roundToPx() }
-    LaunchedEffect(active, scroll) {
+    // Also when the row's width changes (rotation, the status cluster growing, a restored
+    // scroll position from another width): the selected tab never stays half under the fade.
+    LaunchedEffect(active, scroll, scroll.viewportSize, scroll.maxValue) {
         // Once the tab is placed, centre it when it isn't comfortably visible.
         withFrameNanos { }
-        val b = bounds[active.key] ?: return@LaunchedEffect
+        val placed = bounds[active.key] ?: return@LaunchedEffect
         val viewport = scroll.viewportSize
         if (viewport <= 0) return@LaunchedEffect
+        // Scroll offsets count from the row's start, which is its right edge in right-to-left:
+        // measure the tab from there too.
+        val content = scroll.maxValue + viewport
+        val b = if (rtl) IntRangeHolder(content - placed.end, content - placed.start) else placed
         if (b.start < scroll.value + marginPx || b.end > scroll.value + viewport - marginPx) {
             val to = ((b.start + b.end) / 2 - viewport / 2).coerceIn(0, scroll.maxValue)
             scroll.animateScrollTo(to, PlutoMotion.spatial())
         }
     }
+    // The row wraps like L1/R1: past the last tab the D-pad continues at the first.
+    val firstKey = shelves.firstOrNull()?.first?.key
+    val lastKey = shelves.lastOrNull()?.first?.key
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (prevKey != null) KeyChip(prevKey, Modifier.padding(horizontal = 4.dp))
         val fadePx = with(LocalDensity.current) { TabEdgeFade.toPx() }
@@ -228,8 +257,11 @@ internal fun ShelfTabs(
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                 .drawWithContent {
                     drawContent()
-                    val start = if (scroll.value > 0) fadePx else 0f
-                    val end = if (scroll.value < scroll.maxValue) fadePx else 0f
+                    // Physical edges: in right-to-left the scrolled-past start is on the right.
+                    val behind = scroll.value > 0
+                    val ahead = scroll.value < scroll.maxValue
+                    val start = if (if (rtl) ahead else behind) fadePx else 0f
+                    val end = if (if (rtl) behind else ahead) fadePx else 0f
                     if (start > 0f) {
                         drawRect(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = start), blendMode = BlendMode.DstIn)
                     }
@@ -253,6 +285,8 @@ internal fun ShelfTabs(
                         onClick = { onSelect(id) },
                         links = links,
                         downTarget = downTarget,
+                        wrapBefore = if (index == 0 && shelves.size > 1) ({ lastKey?.let(links.tabs::get) ?: FocusRequester.Default }) else null,
+                        wrapAfter = if (index == shelves.lastIndex && shelves.size > 1) ({ firstKey?.let(links.tabs::get) ?: FocusRequester.Default }) else null,
                         onBounds = { start, end -> bounds[id.key] = IntRangeHolder(start, end) },
                     )
                 }
@@ -287,9 +321,13 @@ private fun ShelfTab(
     onClick: () -> Unit,
     links: ConsoleFocusLinks,
     downTarget: () -> FocusRequester,
+    /** Where the D-pad goes past this tab's start / end edge (the row's ends wrap), or null. */
+    wrapBefore: (() -> FocusRequester)?,
+    wrapAfter: (() -> FocusRequester)?,
     onBounds: (Int, Int) -> Unit,
 ) {
     val requester = remember { FocusRequester() }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val focus = LocalControllerFocus.current
     DisposableEffect(id.key, requester) {
         links.tabs[id.key] = requester
@@ -326,7 +364,12 @@ private fun ShelfTab(
             .pressScale(press, pressedScale = 0.95f)
             .defaultMinSize(minHeight = PlutoDimens.MinTouchTarget)
             .focusRequester(requester)
-            .focusProperties { down = downTarget() }
+            .focusProperties {
+                down = downTarget()
+                // Physical sides: the row's start is on the right in right-to-left layouts.
+                wrapBefore?.let { if (rtl) right = it() else left = it() }
+                wrapAfter?.let { if (rtl) left = it() else right = it() }
+            }
             .onFocusChanged { hasFocus = it.hasFocus }
             .controllerFocusable(
                 id = shelfTabId(id),
@@ -386,7 +429,7 @@ private fun ShelfTab(
  * off the main thread (the query is a binder call).
  */
 @Composable
-internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier) {
+internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier, number: Int? = null) {
     if (deviceId == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
     var reading by remember(deviceId) { mutableStateOf<BatteryReading?>(null) }
     val lifecycle = LocalLifecycleOwner.current
@@ -404,12 +447,14 @@ internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier) {
         r.percent <= 15 -> Icons.Outlined.BatteryAlert
         else -> Icons.Outlined.BatteryStd
     }
-    val spoken = "Controller battery ${r.percent} percent" + if (r.charging) ", charging" else ""
+    val spoken = "Controller ${number ?: ""} battery ${r.percent} percent".replace("  ", " ") + if (r.charging) ", charging" else ""
     Row(
         modifier.clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Outlined.SportsEsports, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
+        // With several controllers, each reading says which one it is.
+        if (number != null) Text("$number", style = MaterialTheme.typography.labelSmall.overWallpaper(), maxLines = 1)
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
         Text("${r.percent}%", style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
     }
@@ -423,17 +468,41 @@ internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier) {
 internal fun PhoneBattery(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var reading by remember { mutableStateOf<BatteryReading?>(null) }
-    DisposableEffect(context) {
+    // Listens only while the launcher is started, like the clock and the controller battery;
+    // the sticky broadcast brings it up to date at once on every return.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(context, lifecycle) {
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(c: Context?, intent: Intent?) {
                 reading = intent?.let(::batteryFrom) ?: reading
             }
         }
-        val sticky = ContextCompat.registerReceiver(
-            context, receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
-        sticky?.let(::batteryFrom)?.let { reading = it }
-        onDispose { runCatching { context.unregisterReceiver(receiver) } }
+        var registered = false
+        fun register() {
+            if (registered) return
+            registered = true
+            val sticky = ContextCompat.registerReceiver(
+                context, receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+            sticky?.let(::batteryFrom)?.let { reading = it }
+        }
+        fun unregister() {
+            if (!registered) return
+            registered = false
+            runCatching { context.unregisterReceiver(receiver) }
+        }
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> register()
+                Lifecycle.Event.ON_STOP -> unregister()
+                else -> Unit
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
+            unregister()
+        }
     }
     val r = reading ?: return
     val icon = when {
@@ -471,7 +540,11 @@ private fun readBattery(deviceId: Int): BatteryReading? = try {
     if (state == null || !state.isPresent || capacity.isNaN() || capacity < 0f) {
         null
     } else {
-        BatteryReading((capacity * 100f).roundToInt().coerceIn(0, 100), state.status == BatteryState.STATUS_CHARGING)
+        BatteryReading(
+            (capacity * 100f).roundToInt().coerceIn(0, 100),
+            // Plugged in and full counts as charging, as for the phone's own battery.
+            state.status == BatteryState.STATUS_CHARGING || state.status == BatteryState.STATUS_FULL,
+        )
     }
 } catch (e: RuntimeException) {
     null
@@ -530,7 +603,8 @@ internal fun ConsoleCounter(stage: CoverflowState, modifier: Modifier = Modifier
     if (stage.selectedEntry == null) return
     Text(
         "${stage.selectedIndex + 1} of ${stage.count}",
-        style = MaterialTheme.typography.bodyMedium.overWallpaper(),
+        // Direction from the words, not the layout: "1 of 2" must not reorder in right-to-left.
+        style = MaterialTheme.typography.bodyMedium.overWallpaper().copy(textDirection = TextDirection.Content),
         maxLines = 1,
         modifier = modifier.clearAndSetSemantics { },
     )

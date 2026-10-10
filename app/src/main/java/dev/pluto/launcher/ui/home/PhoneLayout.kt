@@ -1,5 +1,10 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
+import dev.pluto.launcher.ui.focus.InputMode
+import dev.pluto.launcher.ui.motion.PlutoMotion
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,15 +24,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import dev.pluto.launcher.ui.theme.rememberDockFill
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.AppEntry
@@ -40,7 +44,6 @@ import dev.pluto.launcher.ui.components.ButtonLegend
 import dev.pluto.launcher.ui.components.EmptyState
 import dev.pluto.launcher.ui.components.GlassPanel
 import dev.pluto.launcher.ui.components.Legends
-import dev.pluto.launcher.ui.components.PlutoIconButton
 import dev.pluto.launcher.ui.components.PlutoPanel
 import dev.pluto.launcher.ui.components.PlutoTextButton
 import dev.pluto.launcher.ui.components.activeMapping
@@ -76,7 +79,8 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .homeMenuOnLongPress(menu, vm)
-            .swipeUpToOpenDrawer(vm).swipeDownForNotifications(),
+            .doubleTapToLock(state.settings.doubleTapToLock, vm)
+            .swipeUpToOpenDrawer(vm).swipeDownForAction(state.settings.swipeDownAction, vm),
     ) {
         // No clock: the status bar already shows the time; Home starts with the favourites.
         Spacer(Modifier.height(16.dp))
@@ -90,6 +94,7 @@ fun PhoneLayout(state: LauncherUiState, vm: LauncherViewModel) {
                 .widthIn(max = 560.dp)
                 .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
             glass = true,
+            fill = rememberDockFill(state.settings),
         )
 
         if (showControllerHints(state, focus)) {
@@ -157,44 +162,18 @@ private fun PhoneFavourites(
 }
 
 /**
- * Search, Edit and Settings as visible buttons (no long-press needed). Search opens the
- * drawer with the keyboard up; its "All apps" accessibility action (also a long press or X)
- * opens the drawer without it.
+ * Whether the dock shows its empty slots. They only take room while they are useful: during a
+ * drag (as drop targets), for a controller (Edit fills them), or when the dock has nothing
+ * else to show. Otherwise the apps spread over the dock and the empty slots fold away.
  */
 @Composable
-internal fun HomeToolbar(vm: LauncherViewModel, modifier: Modifier = Modifier) {
-    // Separate discs with a clear gap, not a touching chain.
-    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        PlutoIconButton(
-            id = ID_SEARCH,
-            icon = Icons.Outlined.Search,
-            label = "Search apps",
-            onClick = { vm.openDrawer(withSearch = true) },
-            onWallpaper = true,
-            onFocused = { vm.onControlFocused(ID_SEARCH) },
-            onSecondary = { vm.openDrawer() },
-            secondaryLabel = HomeText.ALL_APPS_ACTION,
-        )
-        PlutoIconButton(
-            id = ID_EDIT,
-            icon = Icons.Outlined.Edit,
-            label = "Edit home",
-            onClick = { vm.openLayer(Layer.Edit) },
-            onWallpaper = true,
-            onFocused = { vm.onControlFocused(ID_EDIT) },
-        )
-        PlutoIconButton(
-            id = ID_SETTINGS,
-            icon = Icons.Outlined.Settings,
-            label = "Launcher settings",
-            onClick = { vm.openLayer(Layer.Settings) },
-            onWallpaper = true,
-            onFocused = { vm.onControlFocused(ID_SETTINGS) },
-        )
-    }
+internal fun showEmptyDockSlots(dock: List<AppEntry?>): Boolean {
+    val drag = LocalHomeDrag.current
+    val focus = LocalControllerFocus.current
+    return drag?.isActive == true || focus.inputMode == InputMode.CONTROLLER || dock.none { it != null }
 }
 
-/** The five dock slots in a row, on a panel, or on frosted glass ([glass], portrait home). */
+/** The dock's apps in a row, on a panel, or on frosted glass ([glass], portrait home). */
 @Composable
 internal fun HorizontalDock(
     dock: List<AppEntry?>,
@@ -202,7 +181,10 @@ internal fun HorizontalDock(
     iconSize: Dp,
     modifier: Modifier = Modifier,
     glass: Boolean = false,
+    /** Tinted glass for [glass] (see rememberDockFill); null for the neutral glass. */
+    fill: Brush? = null,
 ) {
+    val showEmpty = showEmptyDockSlots(dock)
     val slots = @Composable {
         Row(
             Modifier.padding(horizontal = 8.dp, vertical = if (glass) 10.dp else 6.dp),
@@ -210,16 +192,28 @@ internal fun HorizontalDock(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             repeat(Organization.DOCK_SLOTS) { slot ->
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    DockSlot(slot, dock.getOrNull(slot), vm, iconSize)
+                val entry = dock.getOrNull(slot)
+                val shown by animateFloatAsState(if (entry != null || showEmpty) 1f else 0f, PlutoMotion.spatialFast(), label = "dockSlot")
+                Box(
+                    Modifier
+                        .weight(shown.coerceAtLeast(0.001f))
+                        .graphicsLayer { alpha = shown.coerceIn(0f, 1f) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    // A folded slot keeps its node (and drop target) but is not focusable or drawn.
+                    if (shown > 0.01f) DockSlot(slot, entry, vm, iconSize)
                 }
             }
         }
     }
-    if (glass) GlassPanel(modifier.fillMaxWidth()) { slots() } else PlutoPanel(modifier.fillMaxWidth()) { slots() }
+    if (glass) {
+        if (fill != null) GlassPanel(modifier.fillMaxWidth(), fill = fill) { slots() } else GlassPanel(modifier.fillMaxWidth()) { slots() }
+    } else {
+        PlutoPanel(modifier.fillMaxWidth()) { slots() }
+    }
 }
 
-private const val ID_EMPTY_EDIT = "home:empty:edit"
+internal const val ID_EMPTY_EDIT = "home:empty:edit"
 
 @Composable
 internal fun EmptyFavourites(vm: LauncherViewModel, modifier: Modifier = Modifier) {

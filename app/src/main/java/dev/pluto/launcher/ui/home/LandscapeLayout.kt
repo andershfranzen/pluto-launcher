@@ -1,5 +1,15 @@
 package dev.pluto.launcher.ui.home
 
+import dev.pluto.launcher.ui.theme.rememberDockFill
+import dev.pluto.launcher.ui.motion.PlutoMotion
+import dev.pluto.launcher.ui.components.GlassPanel
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -60,10 +70,11 @@ internal fun sideDockIconSize(availableHeight: Dp, preferredIcon: Dp): Dp? {
 }
 
 /**
- * Landscape touch home: compact header (time, search, edit, settings), a wider
- * vertically-scrolling favourites grid, and a dock at the side or bottom chosen from the
- * measured space (not the orientation). The side dock sizes its slots to the height left
- * below the header, so no slot is ever clipped or hidden behind a scroll.
+ * Landscape touch home, the same model as portrait: a wider vertically-scrolling favourites
+ * grid and a glass dock at the side or bottom chosen from the measured space (not the
+ * orientation). Search, Edit and Settings live in the menu opened by pressing and holding
+ * empty space (also screen-reader actions), not in a toolbar. The side dock sizes its slots
+ * to the height available, so no slot is ever clipped or hidden behind a scroll.
  */
 @Composable
 fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
@@ -78,33 +89,32 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
     RestoreHomeFocusEffect(state, focus, gridState, gridKeys)
     TrackFocusOrder(HOME_SURFACE, focusIds) { gridState.scrollToItem(it) }
     TrackGridNavigation(HOME_SURFACE, gridState, focusIds)
-    val defaultId = focusIds.firstOrNull() ?: ID_SEARCH
+    val defaultId = focusIds.firstOrNull() ?: ID_EMPTY_EDIT
     SideEffect { focus.setDefaultFocus(defaultId) }
 
+    val menu = remember { HomeMenuState() }
+    val dockFill = rememberDockFill(state.settings)
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         val shortWindow = maxHeight < SideDockMaxHeight
-        Column(Modifier.fillMaxSize().swipeUpToOpenDrawer(vm).swipeDownForNotifications()) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 16.dp, top = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Spacer(Modifier.weight(1f))
-                HomeToolbar(vm)
-            }
-
-            // Measured below the header (and above the legend), so the dock choice uses the real space left.
+        Column(
+            Modifier
+                .fillMaxSize()
+                .homeMenuOnLongPress(menu, vm)
+                .doubleTapToLock(state.settings.doubleTapToLock, vm)
+                .swipeUpToOpenDrawer(vm)
+                .swipeDownForAction(state.settings.swipeDownAction, vm),
+        ) {
+            // Measured above the legend, so the dock choice uses the real space left.
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                 val sideIcon = if (shortWindow) sideDockIconSize(maxHeight, iconSize * 0.9f) else null
                 if (sideIcon != null) {
                     Row(Modifier.fillMaxSize()) {
                         FavouritesGrid(tiles, vm, iconSize, gridState, Modifier.weight(1f).fillMaxHeight())
-                        VerticalDock(dock, vm, sideIcon, Modifier.padding(end = 16.dp, top = 4.dp, bottom = 8.dp))
+                        VerticalDock(dock, vm, sideIcon, dockFill, Modifier.padding(end = 16.dp, top = 8.dp, bottom = 8.dp))
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {
@@ -115,6 +125,8 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
                                 .align(Alignment.CenterHorizontally)
                                 .widthIn(max = 640.dp)
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
+                            glass = true,
+                            fill = dockFill,
                         )
                     }
                 }
@@ -131,6 +143,7 @@ fun LandscapeLayout(state: LauncherUiState, vm: LauncherViewModel) {
             }
         }
     }
+    HomeMenu(menu, vm)
 }
 
 @Composable
@@ -181,12 +194,15 @@ private fun FavouritesGrid(
 }
 
 /**
- * Dock stacked vertically at the end edge. [slotIconSize] comes from [sideDockIconSize], so
- * all five slots always fit the panel's bounded height; nothing scrolls or hides.
+ * Glass dock stacked vertically at the end edge, like portrait's dock turned on its side.
+ * [slotIconSize] comes from [sideDockIconSize], so all five slots always fit the panel's
+ * bounded height; empty ones fold away as in portrait ([showEmptyDockSlots]).
  */
 @Composable
-private fun VerticalDock(dock: List<AppEntry?>, vm: LauncherViewModel, slotIconSize: Dp, modifier: Modifier = Modifier) {
-    PlutoPanel(modifier.fillMaxHeight()) {
+private fun VerticalDock(dock: List<AppEntry?>, vm: LauncherViewModel, slotIconSize: Dp, fill: Brush?, modifier: Modifier = Modifier) {
+    val showEmpty = showEmptyDockSlots(dock)
+    val shape = RoundedCornerShape(32.dp)
+    val slots = @Composable {
         Column(
             Modifier
                 .fillMaxHeight()
@@ -195,8 +211,16 @@ private fun VerticalDock(dock: List<AppEntry?>, vm: LauncherViewModel, slotIconS
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             repeat(Organization.DOCK_SLOTS) { slot ->
-                DockSlot(slot, dock.getOrNull(slot), vm, slotIconSize)
+                val entry = dock.getOrNull(slot)
+                AnimatedVisibility(
+                    visible = entry != null || showEmpty,
+                    enter = expandVertically(PlutoMotion.spatialFast()) + fadeIn(PlutoMotion.fadeIn()),
+                    exit = shrinkVertically(PlutoMotion.spatialFast()) + fadeOut(PlutoMotion.fadeOut()),
+                ) {
+                    DockSlot(slot, entry, vm, slotIconSize)
+                }
             }
         }
     }
+    if (fill != null) GlassPanel(modifier.fillMaxHeight(), shape = shape, fill = fill) { slots() } else GlassPanel(modifier.fillMaxHeight(), shape = shape) { slots() }
 }

@@ -78,6 +78,8 @@ class SettingsRepository(context: Context) {
         val ROTATION = stringPreferencesKey("rotation")
         val HANDHELD = stringPreferencesKey("handheld_appearance")
         val HISTORY = booleanPreferencesKey("history_enabled")
+        val SWIPE_DOWN = stringPreferencesKey("swipe_down_action")
+        val DOUBLE_TAP_LOCK = booleanPreferencesKey("double_tap_to_lock")
         val ONBOARDED = booleanPreferencesKey("onboarding_complete")
         val DEAD_ZONE = floatPreferencesKey("stick_dead_zone")
         val REPEAT_DELAY = intPreferencesKey("repeat_delay_ms")
@@ -143,6 +145,8 @@ class SettingsRepository(context: Context) {
                 rotation = enumOr<RotationPreference>(p[Keys.ROTATION], d.rotation),
                 handheldAppearance = enumOr<HandheldAppearance>(p[Keys.HANDHELD], d.handheldAppearance),
                 historyEnabled = p[Keys.HISTORY] ?: d.historyEnabled,
+                swipeDownAction = enumOr<SwipeDownAction>(p[Keys.SWIPE_DOWN], d.swipeDownAction),
+                doubleTapToLock = p[Keys.DOUBLE_TAP_LOCK] ?: d.doubleTapToLock,
                 onboardingComplete = p[Keys.ONBOARDED] ?: d.onboardingComplete,
                 stickDeadZone = (p[Keys.DEAD_ZONE] ?: d.stickDeadZone).coerceIn(LauncherSettings.DEAD_ZONE_RANGE),
                 repeatDelayMs = (p[Keys.REPEAT_DELAY] ?: d.repeatDelayMs).coerceIn(150, 1000),
@@ -173,6 +177,8 @@ class SettingsRepository(context: Context) {
             p[Keys.ROTATION] = s.rotation.name
             p[Keys.HANDHELD] = s.handheldAppearance.name
             p[Keys.HISTORY] = s.historyEnabled
+            p[Keys.SWIPE_DOWN] = s.swipeDownAction.name
+            p[Keys.DOUBLE_TAP_LOCK] = s.doubleTapToLock
             p[Keys.ONBOARDED] = s.onboardingComplete
             p[Keys.DEAD_ZONE] = s.stickDeadZone
             p[Keys.REPEAT_DELAY] = s.repeatDelayMs

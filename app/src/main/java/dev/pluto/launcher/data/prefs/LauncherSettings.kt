@@ -14,12 +14,12 @@ enum class BackgroundChoice {
     XMB,
 }
 
-/** How often the Pluto background animates: smoother costs more battery. */
-enum class BackgroundFrameRate(val effectsFps: Int, val globeFps: Int) {
-    /** Stars and dust at 60 fps, the slowly turning globe at 30. */
-    SMOOTH(60, 30),
-    /** Stars and dust at 30 fps, the globe at 20. */
-    BATTERY_SAVER(30, 20),
+/** How often the Pluto background's stars and dust animate: smoother costs more battery. */
+enum class BackgroundFrameRate(val effectsFps: Int) {
+    /** Stars and dust at 60 fps. */
+    SMOOTH(60),
+    /** Stars and dust at 30 fps. */
+    BATTERY_SAVER(30),
 }
 
 /** How the console's carousel lays out its cards (in the spirit of Aurora's coverflow styles). */
@@ -68,6 +68,15 @@ enum class XmbColor(val argb: Long) {
             else -> RED
         }
     }
+}
+
+/** What a swipe down over Home does. */
+enum class SwipeDownAction {
+    /** Pull down the notification shade, as stock launchers do. */
+    NOTIFICATIONS,
+    /** Open the app drawer with the keyboard up. */
+    SEARCH,
+    NOTHING,
 }
 
 /** Launcher actions a controller button can trigger. Movement (D-pad / stick) is not remappable. */
@@ -181,6 +190,9 @@ data class LauncherSettings(
     val rotation: RotationPreference = RotationPreference.FOLLOW_SYSTEM,
     val handheldAppearance: HandheldAppearance = HandheldAppearance.AUTOMATIC,
     val historyEnabled: Boolean = true,
+    val swipeDownAction: SwipeDownAction = SwipeDownAction.NOTIFICATIONS,
+    /** Double-tap empty space on Home to lock the screen (needs Pluto's accessibility service). */
+    val doubleTapToLock: Boolean = false,
     val onboardingComplete: Boolean = false,
     val stickDeadZone: Float = 0.25f,
     val repeatDelayMs: Int = 350,
