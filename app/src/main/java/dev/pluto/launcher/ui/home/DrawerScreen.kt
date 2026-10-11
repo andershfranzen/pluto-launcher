@@ -65,6 +65,10 @@ import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import dev.pluto.launcher.domain.SearchResult
+import dev.pluto.launcher.system.RomLauncher
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -230,9 +234,25 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     val parked = outerInert.value && Layer.Drawer !in session.layers
     val searchMode = session.searchActive || session.searchText.isNotEmpty()
 
+    var actionsMode by rememberSaveable { mutableStateOf(false) }
+    val richerSearch = session.searchText.isNotBlank() && !actionsMode
+    val libraries by vm.romLibraries.collectAsState()
+    val shortcuts by vm.searchShortcuts.collectAsState()
+    val shortcutGeneration by vm.shortcutGeneration.collectAsState()
+    LaunchedEffect(isTop, state.apps, state.isDefaultHome, shortcutGeneration) {
+        if (isTop) vm.refreshSearchShortcuts()
+    }
+    val eligibleLibraries = if (activeCategory == null || activeCategory.isAll) libraries else emptyList()
+    val batch by rememberRichSearch(if (richerSearch) session.searchText else "", categoryId,
+        state.categoryApps, eligibleLibraries, shortcuts)
+    val currentBatch = batch?.takeIf { it.query == session.searchText && it.category == categoryId &&
+        it.apps == state.categoryApps && it.libraries == eligibleLibraries && it.shortcuts == shortcuts }
+    val richResults = if (richerSearch) currentBatch?.results ?: state.drawerApps.map(SearchResult::App) else emptyList()
+    val pendingSearch = richerSearch && currentBatch == null
+
     val feed = rememberResultsFeed(rememberEqual(state.drawerApps), spread = !parked, query = state.session.searchText)
     val apps = feed.shown
-    val gridKeys = remember(apps) { apps.map { drawerAppId(it.key) } }
+    val gridKeys = remember(apps, richResults, richerSearch) { if (richerSearch) richResults.map { it.key } else apps.map { drawerAppId(it.key) } }
     val currentKeys by rememberUpdatedState(gridKeys)
 
     val gridState = rememberAnchoredGridState(SURFACE, state, gridKeys)
@@ -242,7 +262,6 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     // background: it must not move the logical scroll anchor.
     if (!parked) ReportScrollAnchor(SURFACE, gridState, state, vm, gridKeys)
 
-    var actionsMode by rememberSaveable { mutableStateOf(false) }
     // The drawer stays composed while closed; per-visit modes still end when it closes.
     LaunchedEffect(parked) { if (parked) actionsMode = false }
 
@@ -358,6 +377,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     val shortWindow by rememberShortWindow()
     val compact = imeVisible && shortWindow
     val tileIcon = if (compact) iconSize * 0.75f else iconSize
+    PrewarmGridIcons(gridState, apps, tileIcon, enabled = !parked && !richerSearch) { listOf(it.key) }
     // Normal mode (portrait and landscape) keeps search under the thumb; console mode heads the page.
     val bottomBar = state.mode != LauncherMode.HANDHELD
 
@@ -396,7 +416,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                 ) {
                     if (categories.size > 1) {
                         CategoryTabs(
-                            categories = categories,
+                            categories = if (richerSearch) categories.map { if (it.isAll) it.copy(name = "Everything") else it } else categories,
                             selected = activeCategory,
                             onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
                             idPrefix = CHIP_PREFIX,
@@ -449,9 +469,45 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         }
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            if (apps.isEmpty()) {
+            if (richerSearch && richResults.isNotEmpty()) {
+                val context = LocalContext.current
+                RichSearchResults(richResults, gridState, compact,
+                    emulatorName = { pkg -> state.allApps.firstOrNull { it.packageName == pkg }?.label },
+                    onActivate = { result ->
+                        keyboard?.hide()
+                        when (result) {
+                            is SearchResult.App -> launcher.launch(result.entry.key, result.key)
+                            is SearchResult.Shortcut -> vm.launchSearchShortcut(result.shortcut)
+                            is SearchResult.Game -> {
+                                val library = libraries.firstOrNull { it.id == result.library.id }
+                                val game = library?.games?.firstOrNull { it.uri == result.game.uri }
+                                if (library == null || game == null) vm.showMessage("That game is no longer available. Refresh its ROM tab.")
+                                else {
+                                    vm.rememberRomSelection(library.id, game.uri)
+                                    RomLauncher.launch(context, library, game)?.let(vm::showMessage)
+                                }
+                            }
+                        }
+                    },
+                    onActions = { result -> when (result) {
+                        is SearchResult.App -> onAppActions(result.entry.key)
+                        is SearchResult.Shortcut -> onAppActions(result.shortcut.app.key)
+                        is SearchResult.Game -> vm.openLayer(Layer.RomLibraries)
+                    } },
+                    onFocused = { result ->
+                        vm.onControlFocused(result.key)
+                        when (result) {
+                            is SearchResult.App -> vm.onAppSelected(result.entry.key)
+                            is SearchResult.Shortcut -> vm.onAppSelected(result.shortcut.app.key)
+                            is SearchResult.Game -> Unit
+                        }
+                    })
+            } else if (pendingSearch) {
+                Text("Searching…", modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else if (if (richerSearch) richResults.isEmpty() else apps.isEmpty()) {
                 DrawerEmptyState(
                     query = session.searchText,
+                    richSearch = richerSearch,
                     category = activeCategory,
                     onClear = { vm.clearSearch() },
                     onShowAll = { vm.selectCategory(null) },
@@ -551,7 +607,7 @@ private fun DrawerSearchField(
             .fillMaxWidth()
             .semantics {
                 contentDescription = "Search apps"
-                val scope = category?.let { "Searching ${it.name}" } ?: "Searching all apps"
+                val scope = category?.let { "Searching apps and shortcuts in ${it.name}" } ?: "Searching all apps, games and shortcuts"
                 stateDescription = if (actionsMode) "$scope. Tap an app for actions." else scope
             }
             .onFocusChanged { focused = it.isFocused }
@@ -583,7 +639,7 @@ private fun DrawerSearchField(
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                     if (text.isEmpty()) {
                         Text(
-                            category?.let { "Search ${it.name}" } ?: "Search apps",
+                            category?.let { "Search ${it.name}" } ?: "Search apps, games and shortcuts",
                             style = MaterialTheme.typography.bodyLarge,
                             color = scheme.onSurfaceVariant,
                             maxLines = 1,
@@ -932,6 +988,7 @@ internal object DrawerText {
 @Composable
 private fun DrawerEmptyState(
     query: String,
+    richSearch: Boolean = false,
     category: Category?,
     onClear: () -> Unit,
     onShowAll: () -> Unit,
@@ -947,7 +1004,7 @@ private fun DrawerEmptyState(
         Row(modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = when {
-                    query.isNotBlank() -> "No apps match “$query”"
+                    query.isNotBlank() -> if (richSearch) "No results for “$query”" else "No apps match “$query”"
                     category != null && !category.isAll -> "No apps in ${category.name} yet"
                     else -> "No apps to show"
                 },
@@ -958,7 +1015,7 @@ private fun DrawerEmptyState(
                 modifier = Modifier.weight(1f).padding(horizontal = 8.dp, vertical = 4.dp),
             )
             if (query.isNotBlank() && category != null && !category.isAll) {
-                PlutoTextButton("drawer:empty:all", "Search all apps", onShowAll)
+                PlutoTextButton("drawer:empty:all", if (richSearch) "Search everything" else "Search all apps", onShowAll)
             }
         }
         return
@@ -966,18 +1023,18 @@ private fun DrawerEmptyState(
     Column(modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
         when {
             query.isNotBlank() -> EmptyState(
-                title = "No apps match “$query”",
+                title = if (richSearch) "No results for “$query”" else "No apps match “$query”",
                 compact = shortWindow,
                 icon = Icons.Outlined.SearchOff,
                 detail = if (category != null && !category.isAll) {
-                    "Searching in ${category.name}. Try All apps or a shorter name."
+                    "Searching in ${category.name}. Try Everything or a shorter name."
                 } else {
-                    "Search looks at app names and package names."
+                    if (richSearch) "Search looks at apps, ROM titles and app shortcuts." else "Search looks at app names and package names."
                 },
             ) {
                 PlutoTextButton("drawer:empty:clear", "Clear search", onClear, emphasized = true)
                 if (category != null && !category.isAll) {
-                    PlutoTextButton("drawer:empty:all", "Search all apps", onShowAll)
+                    PlutoTextButton("drawer:empty:all", if (richSearch) "Search everything" else "Search all apps", onShowAll)
                 }
             }
             category != null && !category.isAll -> EmptyState(

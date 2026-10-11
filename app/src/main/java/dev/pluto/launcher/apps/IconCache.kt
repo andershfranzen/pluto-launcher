@@ -20,11 +20,13 @@ import android.util.LruCache
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.core.graphics.drawable.toBitmap
 import dev.pluto.launcher.model.AppKey
-import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
@@ -36,8 +38,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * App icons, rasterised at the size they are shown and kept in a memory-sized LruCache.
@@ -65,15 +66,17 @@ class IconCache(context: Context) {
 
     /** Sized in bytes: roughly 1/16 of the heap the VM may grow to. LruCache is internally synchronised. */
     private val cache = object : LruCache<IconKey, ImageBitmap>(cacheBytes()) {
-        override fun sizeOf(key: IconKey, value: ImageBitmap): Int = value.width * value.height * 4
+        override fun sizeOf(key: IconKey, value: ImageBitmap): Int = value.asAndroidBitmap().allocationByteCount
     }
 
-    /** Decodes in flight, shared by everyone asking for the same icon. */
-    private val inFlight = ConcurrentHashMap<IconKey, Deferred<ImageBitmap?>>()
+    private val retentionEpoch = AtomicLong()
+    private val retentionLock = Any()
+    private val styleGeneration = AtomicLong()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val decodeDispatcher = Dispatchers.IO.limitedParallelism(DECODE_PARALLELISM)
     private val decodeScope = CoroutineScope(SupervisorJob() + decodeDispatcher)
+    private val loads = SharedAssetLoads<IconKey, ImageBitmap?>(decodeScope)
 
     private val _versions = MutableStateFlow<Map<String, Int>>(emptyMap())
 
@@ -131,7 +134,9 @@ class IconCache(context: Context) {
 
     /** Drops every cached icon and tells every composed icon to load again (icon style changed). */
     private fun reloadAll() {
-        val packages = (cache.snapshot().keys.map { it.app.packageName } + _versions.value.keys).toSet()
+        styleGeneration.incrementAndGet()
+        val packages = (cache.snapshot().keys.map { it.app.packageName } +
+            loads.keysSnapshot().map { it.app.packageName } + _versions.value.keys).toSet()
         cache.evictAll()
         _versions.update { current -> current + packages.associateWith { (current[it] ?: 0) + 1 } }
         val bump = { packages.forEach { versionState[it] = (versionState[it] ?: 0) + 1 } }
@@ -147,14 +152,14 @@ class IconCache(context: Context) {
     }
 
     /** Returns the cached bitmap or null without decoding. Cheap; safe (and meant) for composition. */
-    fun peek(key: AppKey, sizePx: Int): ImageBitmap? = cache.get(IconKey(key, sizePx))
+    fun peek(key: AppKey, sizePx: Int): ImageBitmap? = cache.get(iconKey(key, sizePx))
 
     /** Suspends while decoding on the background pool. Returns null if the activity is gone. */
     suspend fun load(key: AppKey, sizePx: Int): ImageBitmap? {
         if (sizePx <= 0) return null
-        val iconKey = IconKey(key, sizePx)
+        val iconKey = iconKey(key, sizePx)
         cache.get(iconKey)?.let { return it }
-        return decodeShared(iconKey).await()
+        return decodeShared(iconKey)
     }
 
     /**
@@ -171,12 +176,12 @@ class IconCache(context: Context) {
             for (size in sizes) {
                 if (size <= 0) continue
                 for (key in keys) {
-                    val iconKey = IconKey(key, size)
+                    val iconKey = iconKey(key, size)
                     if (cache.get(iconKey) != null) continue
                     window.acquire()
                     launch {
                         try {
-                            decodeShared(iconKey).await()
+                            decodeShared(iconKey)
                         } finally {
                             window.release()
                         }
@@ -195,31 +200,43 @@ class IconCache(context: Context) {
             }
         }
         LauncherActivityInfos.forget(packageName)
+        _versions.update { it + (packageName to ((it[packageName] ?: 0) + 1)) }
         cache.snapshot().keys
             .filter { it.app.packageName == packageName }
             .forEach { cache.remove(it) }
-        _versions.update { it + (packageName to ((it[packageName] ?: 0) + 1)) }
         val bump = { versionState[packageName] = (versionState[packageName] ?: 0) + 1 }
         if (Looper.myLooper() == Looper.getMainLooper()) bump() else mainHandler.post(bump)
     }
 
-    private fun decodeShared(iconKey: IconKey): Deferred<ImageBitmap?> {
-        inFlight[iconKey]?.let { return it }
-        val placeholder = CompletableDeferred<ImageBitmap?>()
-        val existing = inFlight.putIfAbsent(iconKey, placeholder)
-        if (existing != null) return existing
-        decodeScope.launch {
-            val result = try {
-                cache.get(iconKey) ?: decode(iconKey.app, iconKey.sizePx)?.also { cache.put(iconKey, it) }
-            } catch (e: Throwable) {
-                Log.w(TAG, "Icon decode failed for ${iconKey.app}", e)
-                null
-            } finally {
-                inFlight.remove(iconKey, placeholder)
-            }
-            placeholder.complete(result)
+    /** Release cache ownership only; displayed bitmaps remain valid and are never recycled. */
+    fun trimMemory(level: Int) {
+        val target = AssetMemoryPolicy.targetBytes(cache.maxSize(), level) ?: return
+        synchronized(retentionLock) {
+            retentionEpoch.incrementAndGet()
+            cache.trimToSize(target)
         }
-        return placeholder
+    }
+
+    /** Optional warming cannot consume more than one quarter of the icon cache, or 64 icons. */
+    fun prewarmLimit(sizePx: Int): Int = if (sizePx <= 0) 0 else
+        (cache.maxSize().toLong() / 4 / (sizePx.toLong() * sizePx * 4)).coerceIn(0, 64).toInt()
+
+    private suspend fun decodeShared(key: IconKey): ImageBitmap? = loads.load(key) {
+        val epoch = retentionEpoch.get()
+        try {
+            cache.get(key) ?: decode(key.app, key.sizePx)?.also {
+                currentCoroutineContext().ensureActive()
+                // A package/style change or memory trim must not be undone by an older decode.
+                synchronized(retentionLock) {
+                    if (epoch == retentionEpoch.get() && key == iconKey(key.app, key.sizePx)) cache.put(key, it)
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Icon decode failed for ${key.app}", e)
+            null
+        }
     }
 
     private fun decode(key: AppKey, sizePx: Int): ImageBitmap? {
@@ -275,7 +292,10 @@ class IconCache(context: Context) {
     }
 
     /** Cache key: an app at a pixel size (no string building per lookup). */
-    private data class IconKey(val app: AppKey, val sizePx: Int)
+    private fun iconKey(app: AppKey, sizePx: Int) =
+        IconKey(app, sizePx, _versions.value[app.packageName] ?: 0, styleGeneration.get())
+
+    private data class IconKey(val app: AppKey, val sizePx: Int, val version: Int, val style: Long)
 
     private companion object {
         const val TAG = "IconCache"

@@ -10,6 +10,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -106,6 +109,7 @@ fun ButtonLegend(
     items: List<LegendItem>,
     modifier: Modifier = Modifier,
     visible: Boolean = true,
+    quiet: Boolean = false,
 ) {
     val entries = buildList<Pair<List<String>, String>> {
         for (item in items) {
@@ -134,10 +138,12 @@ fun ButtonLegend(
     ) {
         val spoken = shown.joinToString(", ") { (keys, label) -> keys.joinToString(" or ") + " " + label }
         Surface(
-            modifier = Modifier.clearAndSetSemantics { contentDescription = "Controller buttons: $spoken" },
+            modifier = Modifier.clearAndSetSemantics { contentDescription = "Controller buttons: $spoken" }
+                .then(if (quiet) Modifier.background(Color(0xFF17191D).copy(alpha = 0.45f), RoundedCornerShape(16.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp)) else Modifier),
             shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f),
-            contentColor = MaterialTheme.colorScheme.onSurface,
+            color = if (quiet) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f),
+            contentColor = if (quiet) Color.White.copy(alpha = 0.70f) else MaterialTheme.colorScheme.onSurface,
         ) {
             AnimatedContent(
                 targetState = shown,

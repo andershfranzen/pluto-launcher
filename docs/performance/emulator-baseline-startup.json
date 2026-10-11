@@ -1,0 +1,234 @@
+{
+  "purpose": "Emulator diagnostic comparing uncompiled startup with the required shipped baseline profile; not a hardware performance acceptance result.",
+  "recordedDate": "2026-10-11",
+  "deviceSerial": "emulator-5554",
+  "variant": "benchmarkRelease (R8 release settings, with profile-only fixtures)",
+  "fixture": {
+    "launcherAliases": 32,
+    "homeIcons": 8,
+    "dockIcons": 4,
+    "romShelves": 2,
+    "romsPerShelf": 48,
+    "dynamicShortcut": true
+  },
+  "startupMode": "COLD",
+  "compilerModes": {
+    "startupNoCompilation": "CompilationMode.None()",
+    "startupBaselineProfile": "CompilationMode.Partial(BaselineProfileMode.Require), warmupIterations=0"
+  },
+  "suppressErrors": [
+    "EMULATOR"
+  ],
+  "generatedProfiles": {
+    "app/src/main/generated/baselineProfiles/baseline-prof.txt": {
+      "rules": 29655,
+      "sha256": "d940b5246d2f4fafa3f6c795b1fea81f4c93a0478dce8fcc303edf5ee213b2f3"
+    },
+    "app/src/main/generated/baselineProfiles/startup-prof.txt": {
+      "rules": 22508,
+      "sha256": "dd62abfdfaebb1bcc2ef72d6ff9335b2f3ee063987993c30f1f17325f215a615"
+    }
+  },
+  "observedLaunchStates": {
+    "logcat-dev.pluto.launcher.baselineprofile.StartupBenchmarks-startupNoCompilation.txt": {
+      "cold": 10,
+      "warm": 0
+    },
+    "logcat-dev.pluto.launcher.baselineprofile.StartupBenchmarks-startupBaselineProfile.txt": {
+      "cold": 10,
+      "warm": 0
+    }
+  },
+  "interpretation": "Median initial-display time is effectively unchanged in this noisy single emulator comparison; no reliable hardware speedup is established.",
+  "rawBenchmarkData": {
+    "context": {
+      "build": {
+        "brand": "google",
+        "device": "emu64xa",
+        "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys",
+        "id": "BE2A.250530.026.F3",
+        "model": "sdk_gphone64_x86_64",
+        "type": "userdebug",
+        "version": {
+          "codename": "REL",
+          "sdk": 36
+        }
+      },
+      "cpuCoreCount": 4,
+      "cpuLocked": false,
+      "cpuMaxFreqHz": 2000,
+      "memTotalBytes": 4110135296,
+      "sustainedPerformanceModeEnabled": false,
+      "artMainlineVersion": 360527520,
+      "osCodenameAbbreviated": "REL",
+      "compilationMode": "run-from-apk",
+      "payload": {}
+    },
+    "benchmarks": [
+      {
+        "name": "startupNoCompilation",
+        "params": {},
+        "className": "dev.pluto.launcher.baselineprofile.StartupBenchmarks",
+        "totalRunTimeNs": 60893259906,
+        "metrics": {
+          "timeToInitialDisplayMs": {
+            "minimum": 642.101362,
+            "maximum": 1021.256244,
+            "median": 896.142644,
+            "coefficientOfVariation": 0.13101302930440328,
+            "runs": [
+              811.061778,
+              923.947513,
+              1017.020943,
+              969.211931,
+              912.364916,
+              795.227944,
+              642.101362,
+              838.441427,
+              1021.256244,
+              879.920372
+            ]
+          }
+        },
+        "sampledMetrics": {},
+        "warmupIterations": 0,
+        "repeatIterations": 10,
+        "thermalThrottleSleepSeconds": 0,
+        "profilerOutputs": [
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 0",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter000_2026-10-11-15-42-21.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 1",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter001_2026-10-11-15-42-27.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 2",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter002_2026-10-11-15-42-33.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 3",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter003_2026-10-11-15-42-39.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 4",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter004_2026-10-11-15-42-45.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 5",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter005_2026-10-11-15-42-51.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 6",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter006_2026-10-11-15-42-56.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 7",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter007_2026-10-11-15-43-02.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 8",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter008_2026-10-11-15-43-08.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 9",
+            "filename": "StartupBenchmarks_startupNoCompilation_iter009_2026-10-11-15-43-14.perfetto-trace"
+          }
+        ]
+      },
+      {
+        "name": "startupBaselineProfile",
+        "params": {},
+        "className": "dev.pluto.launcher.baselineprofile.StartupBenchmarks",
+        "totalRunTimeNs": 57865329148,
+        "metrics": {
+          "timeToInitialDisplayMs": {
+            "minimum": 411.866963,
+            "maximum": 1057.006847,
+            "median": 887.912222,
+            "coefficientOfVariation": 0.2590786126947741,
+            "runs": [
+              869.52533,
+              952.793908,
+              896.646553,
+              879.177891,
+              899.79419,
+              568.179942,
+              985.430147,
+              597.662875,
+              1057.006847,
+              411.866963
+            ]
+          }
+        },
+        "sampledMetrics": {},
+        "warmupIterations": 0,
+        "repeatIterations": 10,
+        "thermalThrottleSleepSeconds": 0,
+        "profilerOutputs": [
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 0",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter000_2026-10-11-15-43-25.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 1",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter001_2026-10-11-15-43-30.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 2",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter002_2026-10-11-15-43-36.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 3",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter003_2026-10-11-15-43-42.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 4",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter004_2026-10-11-15-43-47.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 5",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter005_2026-10-11-15-43-53.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 6",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter006_2026-10-11-15-43-58.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 7",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter007_2026-10-11-15-44-04.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 8",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter008_2026-10-11-15-44-10.perfetto-trace"
+          },
+          {
+            "type": "PerfettoTrace",
+            "label": "Trace Iteration 9",
+            "filename": "StartupBenchmarks_startupBaselineProfile_iter009_2026-10-11-15-44-15.perfetto-trace"
+          }
+        ]
+      }
+    ]
+  }
+}

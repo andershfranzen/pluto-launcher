@@ -1,6 +1,7 @@
 package dev.pluto.launcher
 
 import dev.pluto.launcher.model.HandheldAppearance
+import android.annotation.SuppressLint
 import android.app.ActivityOptions
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
@@ -333,6 +334,9 @@ class MainActivity : ComponentActivity() {
     private fun isHomeIntent(intent: Intent): Boolean =
         intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)
 
+    // Forward unhandled keys through the Activity override; AndroidX marks its inherited
+    // implementation restricted, but overriding Window.Callback requires this super call.
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean =
         router.onKeyEvent(event) || super.dispatchKeyEvent(event)
 

@@ -78,6 +78,34 @@ class CoverflowMathTest {
     }
 
     @Test
+    fun largeJumpsComposeOnlyVisibleAndFocusNeighborhoods() {
+        val indices = CoverflowMath.composedIndices(100.2f, 900, 1000)
+        assertEquals((96..104).toList() + (896..904).toList(), indices)
+        assertTrue(indices.size <= 2 * (CoverflowMath.RADIUS * 2 + 1))
+        assertEquals(indices.distinct().sorted(), indices)
+        // Held D-pad and ordinary scrubbing retain the original contiguous neighborhood.
+        assertEquals((5..16).toList(), CoverflowMath.composedIndices(9.2f, 12, 20))
+        assertEquals((0..4).toList(), CoverflowMath.composedIndices(0f, 0, 20))
+        assertTrue(CoverflowMath.composedIndices(0f, 0, 0).isEmpty())
+    }
+
+    @Test
+    fun boundedCompositionNeverOmitsVisibleOrSelectedNeighbors() {
+        for (position in listOf(0f, 9.2f, 250.5f, 499f)) {
+            for (selected in listOf(0, 10, 300, 499)) {
+                val indices = CoverflowMath.composedIndices(position, selected, 500)
+                assertTrue(indices.size <= 18)
+                assertTrue(selected in indices)
+                for (index in 0 until 500) {
+                    if (CoverflowMath.transform(index - position).alpha > 0f) {
+                        assertTrue("visible index=$index at position=$position", index in indices)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     fun snapGoesToNearestCardWithoutVelocity() {
         assertEquals(3, CoverflowMath.snapTarget(3.4f, 0f, 10))
         assertEquals(4, CoverflowMath.snapTarget(3.6f, 0f, 10))

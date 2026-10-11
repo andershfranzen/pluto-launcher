@@ -70,12 +70,17 @@ class LauncherStateBuilder {
     private val categoriesMemo = Memo<List<Category>, List<Category>>()
     private val categoryAppsMemo = Memo<Triple<List<AppEntry>, Long?, Set<AppKey>?>, List<AppEntry>>()
     private val drawerMemo = Memo<Pair<List<AppEntry>, String>, List<AppEntry>>()
+    private val appSearchIndexMemo = Memo<List<AppEntry>, SearchMatcher.Index>(identity = true)
     private val recentsMemo = Memo<Triple<List<RecentLaunch>, List<AppEntry>, Boolean>, List<AppEntry>>()
 
     private var previous: LauncherUiState? = null
 
     /** Number of times the expensive alphabetical sort ran (for tests). */
     internal var sortCount = 0
+        private set
+
+    /** Normalized app projection builds; search keystrokes reuse the scoped projection. */
+    internal var appSearchIndexCount = 0
         private set
 
     /**
@@ -148,7 +153,14 @@ class LauncherStateBuilder {
             if (members == null) apps else apps.filter { it.key in members }
         }
         val drawerApps = drawerMemo.get(categoryApps to session.searchText) {
-            SearchMatcher.filter(categoryApps, session.searchText)
+            if (session.searchText.isBlank()) {
+                categoryApps
+            } else {
+                appSearchIndexMemo.get(categoryApps) {
+                    appSearchIndexCount++
+                    SearchMatcher.Index(categoryApps)
+                }.filter(session.searchText)
+            }
         }
 
         val recents = recentsMemo.get(Triple(org.recents, apps, settings.historyEnabled)) {

@@ -1,0 +1,232 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Only the profile-generation APK contains this fixture provider. -->
+    <application>
+        <activity android:name=".MainActivity" />
+        <provider android:name=".profile.ProfileFixtures" android:authorities="${applicationId}.profile-fixtures"
+            android:exported="true" android:grantUriPermissions="true" />
+        <activity-alias android:name=".profile.App00" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 00">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App01" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 01">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App02" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 02">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App03" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 03">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App04" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 04">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App05" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 05">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App06" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 06">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App07" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 07">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App08" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 08">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App09" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 09">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App10" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 10">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App11" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 11">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App12" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 12">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App13" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 13">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App14" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 14">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App15" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 15">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App16" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 16">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App17" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 17">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App18" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 18">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App19" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 19">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App20" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 20">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App21" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 21">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App22" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 22">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App23" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 23">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App24" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 24">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App25" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 25">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App26" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 26">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App27" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 27">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App28" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 28">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App29" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 29">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App30" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 30">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".profile.App31" android:targetActivity=".MainActivity"
+            android:exported="true" android:label="Profile app 31">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+    </application>
+</manifest>

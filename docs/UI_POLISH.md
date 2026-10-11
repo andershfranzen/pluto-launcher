@@ -169,3 +169,88 @@ The release APK is `app/build/outputs/apk/release/app-release.apk`, signed with 
 Android debug key as configured by this project. Installing over a build signed with a
 *different* key will be refused; do not uninstall a daily-use build without backing up
 anything you want to keep.
+
+## Console refinement
+
+- Charcoal glass shelf tabs and a shared glass capsule for Browse, Edit, Search, All apps
+  and Settings. The selected shelf keeps an underline and a brighter rim.
+- Coverflow neighbours use a gentler 28-degree tilt, lighter dimming and neutral card
+  surfaces. Reflections are faint; artwork supplies a restrained glow over wallpaper
+  and built-in console backgrounds.
+- Shelves crossfade at fixed positions over 220 ms, settling from 108% size. Reversing
+  preserves current opacity and scale; rapid changes retain the most visible outgoing
+  page. Reduce motion fixes the scale at 100%.
+- The title has a stable secondary line for its shelf and, for ROMs, the default emulator.
+  Clock, battery and position are quieter. Shoulder prompts are consolidated in the legend.
+- Browse opens a lazy overview grid for either apps or ROMs. Controller navigation reveals
+  off-screen rows. Choosing returns to the matching carousel card; Back retains the old
+  selection. Reopening the grid reveals and marks the selected entry.
+- Validation: 254 JVM tests passed, including interrupted/reversed shelf motion and layer
+  persistence; six focused Android tests passed for selection, cancellation, shelf changes,
+  carousel traversal and a 48-ROM grid. Spyro and its overview were visually reviewed over
+  orange XMB on the emulator. Hardware controller timing remains unmeasured.
+
+## Richer search
+
+- A nonblank drawer query shows labelled Apps, Games and Shortcuts sections. Clearing
+  returns to the alphabetical app grid, with its existing 108% fade entrance retained.
+- Matching is accent/case insensitive. ROMs match title, filename or tab name; shortcuts
+  match action labels or parent app names. Games retain their tab/default-emulator context.
+- Everything includes cached ROM libraries. Category searches include only their visible
+  apps and those apps' shortcuts; Search everything broadens without losing the query.
+- Shortcut metadata is refreshed in bulk on drawer entry, resume and Android shortcut or
+  catalog changes, when Pluto has default-Home access. Hidden apps' actions stay excluded.
+  No contacts permission is requested. Existing personal-profile access remains the scope.
+- Matching runs off the UI thread. Changed queries and source lists invalidate old results;
+  launch rechecks current games/shortcuts. Failed launches preserve the query.
+- Validation: 261 JVM tests passed. Three richer-search Android tests passed for query
+  replacement/Clear, ROM category scope and failed launch, and dynamic shortcut removal;
+  the three existing drawer keyboard/actions tests passed with Gboard selected. Debug
+  and optimized release builds, including release lint checks, succeeded.
+- Console search was visually reviewed with the existing Spyro artwork and DuckStation
+  subtitle on the emulator. The matching-key release APK and dex metadata were installed
+  over the OnePlus build with data preserved; dex optimization reports speed-profile/install-dm.
+
+## Notification dots
+
+- Optional small iOS-red dots with a narrow charcoal rim sit inside icon bounds. Shared
+  icons cover Home, dock, drawer and search; folders aggregate all members without adding
+  dots to the tiny preview icons. Console app cards and overview tiles also show dots.
+- Settings → Apps → Notification dots opens Android's notification-access screen when
+  needed. The preference defaults off; returning from Android settings refreshes access.
+- The listener rebuilds package/profile sets from Android's active list on posts, removals,
+  connection and ranking changes. Channel badge settings are respected; blocked, ongoing,
+  foreground-service and group-summary notifications are excluded. Multiple notifications
+  keep one dot until the final eligible notification is removed. Opening an app does not
+  dismiss its notifications. Contents and notification history are never retained.
+- Release requests listener access only. Debug builds additionally request permission to
+  post fixture notifications for instrumentation; that permission is absent from release.
+- Validation: all 263 JVM tests and both focused Android tests passed. Instrumentation
+  checked real posts/removals, multiple alerts, ongoing alerts, channels without badges,
+  and the dot's exact rendered colour/position and accessible state clearing. Release
+  build and release lint checks passed. Test notification access was revoked afterwards.
+
+## Performance review
+
+A three-agent review implemented search indexing, cached wave sampling, bounded Console
+composition, shared/bounded artwork decoding, accurate bitmap budgets and lifecycle-aware
+icon warming. Cross-review covered invalidation, cancellation, hidden/category scope,
+listener reconnect and controller focus. See [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md)
+for diagnostic measurements and limits. All 277 JVM tests and 18 focused Android tests
+passed; optimized release and release lint checks succeeded. The updated release APK and
+dex metadata were installed on the OnePlus without clearing data.
+
+
+## Performance follow-up
+
+The six follow-up improvements add cached app fallback matching, retained off-Main ROM
+projection, no-change scan transactions with two concurrent scans, viewport/budget-limited
+icon warming, memory-pressure trimming and last-consumer asset cancellation, and strict
+profile journeys with isolated app/ROM/cover/shortcut fixtures. All 290 JVM tests and 23
+focused Android regressions passed with required default-Home access; full release lint
+passed. See [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md) for validation details.
+
+Startup and interaction profiles were regenerated with strict populated-Home, search,
+Console-cover and gamepad-shelf assertions. Both generation tests passed and converged.
+The optimized release and corrected Android 16 dex metadata were installed on the OnePlus
+with app data preserved; Android reports `speed-profile` compilation.

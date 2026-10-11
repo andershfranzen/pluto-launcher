@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,8 +75,6 @@ import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -89,47 +86,25 @@ private val DesaturateFilter = ColorFilter.colorMatrix(ColorMatrix().apply { set
 private const val DisabledAlpha = 0.5f
 
 /**
- * One snapshot-state mirror of [IconCache.versions] for the whole process, collected once,
- * instead of a flow and a coroutine per icon. Icons read the per-package counter in
- * composition; a package event (rare) recomposes the icons on screen.
- */
-private object IconVersions {
-    private var cache: IconCache? = null
-    private var job: Job? = null
-    private var state: MutableState<Map<String, Int>> = mutableStateOf(emptyMap())
-
-    /** Main thread only (composition). */
-    fun of(cache: IconCache): State<Map<String, Int>> {
-        if (this.cache !== cache) {
-            this.cache = cache
-            job?.cancel()
-            val mirror = mutableStateOf(cache.versions.value)
-            state = mirror
-            job = MainScope().launch { cache.versions.collect { mirror.value = it } }
-        }
-        return state
-    }
-}
-
-/**
  * App icon from [LocalIconCache]. A cached icon is drawn synchronously by a single draw
  * node (no state, no coroutine, no animation); an icon that still has to be decoded shows a
  * neutral placeholder and fades in once it is ready (decoding happens off the main thread).
  * Decorative: no semantics (the tile carries the label).
  */
 @Composable
-fun AppIcon(entry: AppEntry, size: Dp, modifier: Modifier = Modifier) {
+fun AppIcon(entry: AppEntry, size: Dp, modifier: Modifier = Modifier, showDot: Boolean = true) {
+    val decorated = modifier.notificationDot(showDot && LocalNotificationApps.current.hasDot(entry))
     val cache = LocalIconCache.current
     val sizePx = with(LocalDensity.current) { size.roundToPx() }.coerceAtLeast(1)
     // A package update keeps the AppKey, so the cache's per-package version is part of the key:
     // after an update (or a decode that failed mid-install) the icon peeks and loads again.
-    val version = IconVersions.of(cache).value[entry.packageName] ?: 0
+    val version = cache.versionOf(entry.packageName)
     // peek() is a cheap memory-cache lookup; decoding only ever happens in load() off the main thread.
     val cached = remember(entry.key, sizePx, version) { safePeek(cache, entry, sizePx) }
     if (cached != null) {
-        Spacer(modifier.size(size).then(IconImageElement(cached, enabled = entry.isEnabled)))
+        Spacer(decorated.size(size).then(IconImageElement(cached, enabled = entry.isEnabled)))
     } else {
-        LoadingIcon(entry, size, sizePx, version, modifier)
+        LoadingIcon(entry, size, sizePx, version, decorated)
     }
 }
 
@@ -523,6 +498,7 @@ fun FolderTile(
     val press = remember { MutableInteractionSource() }
     val origin = rememberTileOrigin(focusId)
     val count = folder.apps.size
+    val hasNotifications = folder.apps.any { LocalNotificationApps.current.hasDot(it) }
     val description = "Folder ${folder.folder.name}, " + when (count) {
         0 -> "empty"
         1 -> "1 app"
@@ -555,6 +531,7 @@ fun FolderTile(
         Box(
             Modifier
                 .size(iconSize)
+                .notificationDot(hasNotifications)
                 .clip(RoundedCornerShape(iconSize * 0.3f))
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = PlutoDimens.TileBackdropAlpha)),
             contentAlignment = Alignment.Center,
@@ -572,7 +549,7 @@ fun FolderTile(
                 Column(verticalArrangement = Arrangement.spacedBy(iconSize * 0.06f)) {
                     preview.chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(iconSize * 0.06f)) {
-                            row.forEach { AppIcon(it, mini) }
+                            row.forEach { AppIcon(it, mini, showDot = false) }
                             if (row.size == 1) Spacer(Modifier.size(mini))
                         }
                     }

@@ -50,6 +50,7 @@ import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -351,6 +352,22 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         }
 
         if (page == SettingsPage.APPS) {
+            val context = LocalContext.current
+            val dotAccess by dev.pluto.launcher.system.NotificationDots.access.collectAsState()
+            SettingsSection("Notifications") {
+                SwitchRow(id = "settings:notificationdots", label = "Notification dots",
+                    supporting = if (dotAccess) "Small red dots for active notifications" else "Requires Android notification access",
+                    checked = settings.notificationDots,
+                    onCheckedChange = { on ->
+                        update { it.copy(notificationDots = on) }
+                        if (on && !dotAccess) dev.pluto.launcher.system.NotificationDots.openSettings(context)
+                    })
+                if (settings.notificationDots) ActionRow(id = "settings:notificationaccess",
+                    label = "Notification access", icon = Icons.Rounded.SettingsApplications,
+                    supporting = if (dotAccess) "Allowed · ongoing notifications do not show dots" else "Allow Pluto to show notification dots",
+                    onClick = { dev.pluto.launcher.system.NotificationDots.openSettings(context) })
+            }
+
             SettingsSection(SettingsText.ORGANISATION) {
                 ActionRow(
                     id = "settings:categories",

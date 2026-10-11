@@ -18,7 +18,13 @@ class AppContainer(app: Application) {
     val updates by lazy { dev.pluto.launcher.updates.UpdateRepository(app) }
     val settings: SettingsRepository by lazy { SettingsRepository(app) }
     val catalog: AppCatalog by lazy { AppCatalog(app) }
-    val icons: IconCache by lazy { IconCache(app) }
+    private val iconStore = lazy { IconCache(app) }
+    val icons: IconCache by iconStore
+
+    fun trimAssets(level: Int) {
+        if (iconStore.isInitialized()) iconStore.value.trimMemory(level)
+        dev.pluto.launcher.ui.console.ConsoleArtCache.trimMemory(level)
+    }
     val widgets: WidgetHost by lazy { WidgetHost(app) }
     val controllers: ControllerMonitor by lazy { ControllerMonitor(app) }
     val layoutSeeder: DefaultLayoutSeeder by lazy { DefaultLayoutSeeder(app) }
@@ -27,6 +33,16 @@ class AppContainer(app: Application) {
 class LauncherApplication : Application() {
     lateinit var container: AppContainer
         private set
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        container.trimAssets(level)
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        container.trimAssets(android.content.ComponentCallbacks2.TRIM_MEMORY_COMPLETE)
+    }
 
     override fun onCreate() {
         super.onCreate()

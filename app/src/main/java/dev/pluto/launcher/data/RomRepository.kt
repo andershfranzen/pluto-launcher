@@ -7,28 +7,26 @@ import dev.pluto.launcher.data.db.RomDao
 import dev.pluto.launcher.data.db.RomGameEntity
 import dev.pluto.launcher.data.db.RomLibraryEntity
 import dev.pluto.launcher.domain.RomFiles
-import dev.pluto.launcher.model.RomGame
-import dev.pluto.launcher.model.RomLaunchMode
 import dev.pluto.launcher.model.RomLibrary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
 
 /** Cached document metadata only: ROMs and cover files are never copied or deleted. */
 class RomRepository(context: Context, private val dao: RomDao) {
     private val resolver = context.applicationContext.contentResolver
-    val libraries = dao.observeLibraries().map { rows ->
-        rows.map { row ->
-            val lib = row.library
-            RomLibrary(lib.id, lib.name, lib.treeUri, lib.emulatorPackage,
-                runCatching { RomLaunchMode.valueOf(lib.launchMode) }.getOrDefault(RomLaunchMode.AUTOMATIC),
-                row.games.map { RomGame(it.uri, it.fileName, it.title, it.modified, it.coverUri) }
-                    .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title }),
-            )
-        }
-    }
+    private val scanPermits = Semaphore(2)
+    val libraries = flow {
+        // Each collector owns its previous projection; sorting never runs on the UI thread.
+        val projector = RomLibraryProjector()
+        dao.observeLibraries().collect { emit(projector.project(it)) }
+    }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     suspend fun save(library: RomLibrary): Long {
         val row = RomLibraryEntity(library.id, library.name.trim().take(40), library.treeUri, library.emulatorPackage, library.launchMode.name)
@@ -40,7 +38,10 @@ class RomRepository(context: Context, private val dao: RomDao) {
     suspend fun delete(id: Long) = dao.deleteLibrary(id)
 
     /** A complete scan replaces the cache atomically. Failed scans keep the last good list. */
-    suspend fun scan(id: Long): Int = withContext(Dispatchers.IO) {
+    suspend fun scan(id: Long): Int = scanPermits.withPermit { scanDocuments(id) }
+
+    /** Bound provider I/O across shelves; a cancelled waiter never begins scanning. */
+    private suspend fun scanDocuments(id: Long): Int = withContext(Dispatchers.IO) {
         val library = dao.library(id) ?: return@withContext 0
         val tree = Uri.parse(library.treeUri)
         data class Document(val uri: Uri, val name: String, val path: String, val modified: Long)

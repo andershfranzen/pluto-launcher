@@ -22,10 +22,10 @@ object CoverflowMath {
 
     /**
      * Tilt of every side card, degrees. The whole card turns as one plane (the icon is part of
-     * it, never scaled on its own), and 38° keeps about 4/5 of its width (cos 38° ≈ 0.79), so
+     * it, never scaled on its own), and 28° keeps about 4/5 of its width (cos 38° ≈ 0.88), so
      * a round icon still reads as round instead of an oval.
      */
-    const val SIDE_ANGLE = 38f
+    const val SIDE_ANGLE = 28f
 
     /** Scale of the first neighbour, and how much each further one shrinks. */
     const val SIDE_SCALE = 0.8f
@@ -33,8 +33,8 @@ object CoverflowMath {
     const val MIN_SCALE = 0.5f
 
     /** Dim over the first neighbour, plus this much per further card. */
-    const val SIDE_DIM = 0.38f
-    const val DIM_STEP = 0.08f
+    const val SIDE_DIM = 0.27f
+    const val DIM_STEP = 0.06f
     const val MAX_DIM = 0.65f
 
     /**
@@ -185,6 +185,27 @@ object CoverflowMath {
         val lo = (minOf(p, selected) - RADIUS).coerceAtLeast(0)
         val hi = (maxOf(p, selected) + RADIUS).coerceAtMost(count - 1)
         return lo..hi
+    }
+
+    /**
+     * Only the visible and focus-target neighborhoods need nodes. A long fling or overview
+     * jump can put them far apart; every intervening card has zero alpha, so composing the
+     * whole span would make layout and focus registration grow with the shelf size.
+     */
+    fun composedIndices(position: Float, selected: Int, count: Int): List<Int> {
+        if (count <= 0) return emptyList()
+        val p = nearest(position, count)
+        val target = selected.coerceIn(0, count - 1)
+        val first = minOf(p, target)
+        val second = maxOf(p, target)
+        val lo = (first - RADIUS).coerceAtLeast(0)
+        val firstHi = (first + RADIUS).coerceAtMost(count - 1)
+        val secondLo = (second - RADIUS).coerceAtLeast(firstHi + 1)
+        val hi = (second + RADIUS).coerceAtMost(count - 1)
+        return buildList {
+            for (index in lo..firstHi) add(index)
+            for (index in secondLo..hi) add(index)
+        }
     }
 
     /**

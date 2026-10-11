@@ -134,7 +134,7 @@ fun PlutoBackground(rate: BackgroundFrameRate, animate: Boolean, modifier: Modif
             },
         )
         // The globe: its own cached layer, rendered once (it holds still) and then only composited.
-        if (globe != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && globe != null) {
             Spacer(cached.drawBehind { globe.draw(this, GlobePlacement.of(size)) })
         }
     }

@@ -66,6 +66,7 @@ class SettingsRepository(context: Context) {
         val SCRIM = floatPreferencesKey("scrim_alpha")
         val ICON_SCALE = floatPreferencesKey("icon_scale")
         val TEXT_SCALE = floatPreferencesKey("text_scale")
+        val NOTIFICATION_DOTS = booleanPreferencesKey("notification_dots")
         val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
         /** Before separate normal/console backgrounds: WALLPAPER, XMB_CONSOLE or XMB_EVERYWHERE. Read only. */
         val LEGACY_BACKGROUND = stringPreferencesKey("background_style")
@@ -141,6 +142,7 @@ class SettingsRepository(context: Context) {
                 scrimAlpha = (p[Keys.SCRIM] ?: d.scrimAlpha).coerceIn(0f, LauncherSettings.SCRIM_MAX),
                 iconScale = (p[Keys.ICON_SCALE] ?: d.iconScale).coerceIn(LauncherSettings.ICON_SCALE_RANGE),
                 textScale = (p[Keys.TEXT_SCALE] ?: d.textScale).coerceIn(LauncherSettings.TEXT_SCALE_RANGE),
+                notificationDots = p[Keys.NOTIFICATION_DOTS] ?: d.notificationDots,
                 reducedMotion = p[Keys.REDUCED_MOTION] ?: d.reducedMotion,
                 normalBackground = enumOr(p[Keys.BACKGROUND_NORMAL], legacyBackground(p[Keys.LEGACY_BACKGROUND], console = false) ?: d.normalBackground),
                 consoleBackground = enumOr(p[Keys.BACKGROUND_CONSOLE], legacyBackground(p[Keys.LEGACY_BACKGROUND], console = true) ?: d.consoleBackground),
@@ -175,6 +177,7 @@ class SettingsRepository(context: Context) {
             p[Keys.SCRIM] = s.scrimAlpha.coerceIn(0f, LauncherSettings.SCRIM_MAX)
             p[Keys.ICON_SCALE] = s.iconScale.coerceIn(LauncherSettings.ICON_SCALE_RANGE)
             p[Keys.TEXT_SCALE] = s.textScale.coerceIn(LauncherSettings.TEXT_SCALE_RANGE)
+            p[Keys.NOTIFICATION_DOTS] = s.notificationDots
             p[Keys.REDUCED_MOTION] = s.reducedMotion
             p[Keys.BACKGROUND_NORMAL] = s.normalBackground.name
             p[Keys.BACKGROUND_CONSOLE] = s.consoleBackground.name

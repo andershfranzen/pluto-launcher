@@ -17,8 +17,10 @@ import dev.pluto.launcher.apps.AppShortcut
 import dev.pluto.launcher.apps.LaunchResult
 import dev.pluto.launcher.apps.PackageEvent
 import dev.pluto.launcher.data.prefs.LauncherSettings
+import dev.pluto.launcher.domain.SearchShortcut
 import dev.pluto.launcher.domain.FocusAnchor
 import dev.pluto.launcher.domain.Reorder
+import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.model.HomeItem
 import dev.pluto.launcher.model.LauncherMode
@@ -333,6 +335,7 @@ class LauncherViewModel(
         this.isDefaultHome.value = isDefaultHome
         boundary("refresh app catalog") { container.catalog.refreshIfStale() }
         boundary("refresh controllers") { container.controllers.refresh() }
+        if (session.value.topLayer == Layer.Drawer) refreshSearchShortcuts()
         viewModelScope.launch { restoreUpdatesJob.join(); container.updates.resumeInstallationIfAllowed() }
         checkForUpdatesAutomatically()
     }
@@ -557,6 +560,49 @@ class LauncherViewModel(
                     // The activity no longer resolves: drop the reference if it is really gone.
                     if (result.targetMissing) forgetStale(listOf(key))
                 }
+            }
+        }
+    }
+
+    private val _searchShortcuts = MutableStateFlow<List<SearchShortcut>>(emptyList())
+    val searchShortcuts = _searchShortcuts.asStateFlow()
+    val shortcutGeneration = container.catalog.shortcutGeneration
+    private var searchShortcutJob: kotlinx.coroutines.Job? = null
+    private var searchShortcutApps: List<AppEntry>? = null
+    private var searchShortcutGeneration: Long? = null
+    private var searchShortcutHome = false
+
+    /** Refresh once on search/drawer entry and shortcut/catalog changes, never on each keystroke. */
+    fun refreshSearchShortcuts() {
+        val apps = _uiState.value.apps
+        val generation = shortcutGeneration.value
+        val defaultHome = _uiState.value.isDefaultHome
+        val sameSource = searchShortcutApps == apps && searchShortcutGeneration == generation && searchShortcutHome == defaultHome
+        // Resume and drawer effects often request the same refresh together.
+        if (sameSource && searchShortcutJob?.isActive == true) return
+        searchShortcutJob?.cancel()
+        if (searchShortcutApps != apps || !defaultHome) _searchShortcuts.value = emptyList()
+        searchShortcutApps = apps
+        searchShortcutGeneration = generation
+        searchShortcutHome = defaultHome
+        searchShortcutJob = viewModelScope.launch {
+            val found = withContext(Dispatchers.IO) { container.catalog.searchShortcuts(apps) }
+            _searchShortcuts.value = found.map { (app, shortcut) -> SearchShortcut(app, shortcut.id, shortcut.label) }
+        }
+    }
+
+    fun launchSearchShortcut(candidate: SearchShortcut) {
+        // Recheck Android's current shortcut list: dynamic actions may have disappeared while search was open.
+        viewModelScope.launch {
+            val current = withContext(Dispatchers.IO) {
+                val app = _uiState.value.apps.firstOrNull { it.key == candidate.app.key }
+                app?.let { container.catalog.searchShortcut(it, candidate.id) }
+            }
+            if (current == null) {
+                refreshSearchShortcuts()
+                showMessage("That shortcut is no longer available.")
+            } else {
+                launchShortcut(candidate.app.key, current)
             }
         }
     }
@@ -869,7 +915,9 @@ class LauncherViewModel(
      */
     private suspend fun keepSelectionByIdentity() {
         var previous: SelectionLists? = null
-        state.map { if (it.loading) null else SelectionLists(it.categoryApps.map { a -> a.key }, it.apps.map { a -> a.key }) }
+        state.distinctUntilChanged { a, b ->
+            a.loading == b.loading && a.categoryApps === b.categoryApps && a.apps === b.apps
+        }.map { if (it.loading) null else SelectionLists(it.categoryApps.map { a -> a.key }, it.apps.map { a -> a.key }) }
             .filterNotNull()
             .distinctUntilChanged()
             .collect { lists ->
@@ -888,7 +936,10 @@ class LauncherViewModel(
 
     /** Drops layers pointing at folders or apps that no longer exist, so no stale target stays open. */
     private suspend fun pruneStaleLayers() {
-        state.collect { ui ->
+        // Search text and environment changes cannot invalidate an app/folder/widget target.
+        state.distinctUntilChanged { a, b ->
+            a.loading == b.loading && a.allApps === b.allApps && a.folders === b.folders && a.homeTiles === b.homeTiles
+        }.collect { ui ->
             if (ui.loading) return@collect
             val available = ui.allApps.mapTo(HashSet()) { it.key }
             updateSession { s ->

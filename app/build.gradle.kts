@@ -14,8 +14,8 @@ android {
         applicationId = "dev.pluto.launcher"
         minSdk = 30
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.1.4"
+        versionCode = 6
+        versionName = "0.1.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -44,6 +44,17 @@ android {
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
+    }
+}
+
+// The profile plugin copies release sources into its generated build types. Add fixtures
+// after that copy so profile/benchmark APKs get them and ordinary release stays clean.
+androidComponents.finalizeDsl { extension ->
+    for (type in listOf("nonMinifiedRelease", "benchmarkRelease")) {
+        extension.sourceSets.getByName(type).apply {
+            java.srcDir("src/nonMinifiedRelease/java")
+            manifest.srcFile("src/nonMinifiedRelease/AndroidManifest.xml")
+        }
     }
 }
 

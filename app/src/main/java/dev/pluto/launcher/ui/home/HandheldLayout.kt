@@ -3,13 +3,17 @@ package dev.pluto.launcher.ui.home
 import androidx.compose.foundation.layout.BoxWithConstraints
 import dev.pluto.launcher.data.prefs.ButtonMapping
 import dev.pluto.launcher.ui.console.consoleLegendFor
-import androidx.compose.ui.unit.LayoutDirection
 import dev.pluto.launcher.ui.console.CARD_ID_PREFIX
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Brush
+import dev.pluto.launcher.ui.components.GlassPanel
+import dev.pluto.launcher.ui.theme.LocalReducedMotion
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -56,7 +60,6 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -134,6 +137,7 @@ private const val ID_HH_ALL_APPS = "hh:allapps"
 private const val ID_HH_SETTINGS = "hh:settings"
 private const val ID_EMPTY_ALL_APPS = "hh:empty:allapps"
 private const val ID_EMPTY_ADD = "hh:empty:add"
+private const val ID_HH_OVERVIEW = "hh:overview"
 private const val ID_HH_EDIT_SHELF = "hh:editshelf"
 
 /** The category behind [shelfId] when its apps can be picked (any category except All apps). */
@@ -143,14 +147,8 @@ private fun pickableCategoryId(shelfId: ShelfId, state: LauncherUiState): Long? 
 /** The selection is mirrored into the shared session only once the flow rests this long (no emission per D-pad step). */
 private const val SELECTION_COMMIT_DELAY_MS = 400L
 
-/** How far a switching flow slides, as a fraction of the stage width. */
-private const val SHELF_SLIDE = 0.25f
-
-/** How fast the incoming page fades in after the handover (reaches full opacity early). */
-private const val INCOMING_ALPHA_GAIN = 1.6f
-
-/** Shelf switch progress at which the outgoing page has faded out and the incoming one begins. */
-private const val SHELF_HANDOVER = 0.45f
+/** Shelf entrances settle from the same 108% scale as the drawer. */
+private const val SHELF_ENTRANCE_SCALE = 0.08f
 
 /**
  * Controller-first landscape layout ("console mode") as a Coverflow.
@@ -209,7 +207,6 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     val currentVersions by rememberUpdatedState(versions)
     val artPx = with(LocalDensity.current) { ConsoleArtSize.roundToPx() }
     val currentState by rememberUpdatedState(state)
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
     // Shelves and the active shelf's apps (list instances reused while their content is equal,
     // so an unrelated session change does not recompose the flow).
@@ -239,7 +236,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
         if (currentState.session.handheldShelf == null) vm.selectShelf(vm.activeShelf(currentState))
     }
 
-    // --- Shelf switching: the flows slide across, direction-aware -------------------------
+    // --- Shelf switching: crossfade and settle in place -------------------------
     // Appearing (a controller connected, rotation): continue on the app selected in the other
     // layout when this shelf has it, so the console picks up where the user was (C02).
     val switch = remember {
@@ -251,8 +248,6 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
         switch.begin(
             next = active,
             nextStage = CoverflowState(initialIndex(false), apps),
-            order = order,
-            mirror = if (rtl) -1 else 1,
         )
     } else {
         switch.stage.sync(apps)
@@ -264,11 +259,20 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
 
     LaunchedEffect(active) {
         if (switch.progress < 1f) {
-            animate(switch.progress, 1f, animationSpec = PlutoMotion.spatial()) { value, _ -> switch.progress = value }
+            animate(switch.progress, 1f, animationSpec = tween(PlutoMotion.MEDIUM_MS, easing = PlutoMotion.Standard)) { value, _ -> switch.progress = value }
         }
         switch.progress = 1f
         switch.outgoingStage = null
         switch.outgoingShelf = null
+    }
+    // A grid choice can arrive before this page has been disposed by its overlay.
+    val appeared = remember(stage) { booleanArrayOf(false) }
+    LaunchedEffect(state.session.layers.isEmpty(), stage) {
+        if (!appeared[0]) {
+            appeared[0] = true
+        } else if (state.session.layers.isEmpty()) {
+            stage.select(initialIndex(false), scope)
+        }
     }
     // After a list change the selection may have shifted: let the flow settle on it.
     LaunchedEffect(stage, apps) { stage.select(stage.selectedIndex, scope) }
@@ -351,15 +355,14 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     val selectedCardFocus: () -> FocusRequester = { switch.stage.let { if (it.count > 0) it.selectedRequester() else FocusRequester.Default } }
     CompositionLocalProvider(LocalShowTouchSelection provides true, LocalCarouselStyle provides state.settings.carouselStyle) {
         Box(Modifier.fillMaxSize()) {
-            // With an animated console background, the root draws it behind the console instead.
-            if (state.settings.consoleBackground == BackgroundChoice.WALLPAPER) {
-                ConsoleBackdrop(
-                    stage = { switch.stage },
-                    artPx = artPx,
-                    versions = { currentVersions },
-                    modifier = Modifier.matchParentSize(),
-                )
-            }
+            // Wallpaper is dimmed here; built-in backgrounds keep their own colour beneath the glow.
+            ConsoleBackdrop(
+                stage = { switch.stage },
+                artPx = artPx,
+                versions = { currentVersions },
+                modifier = Modifier.matchParentSize(),
+                dimWallpaper = state.settings.consoleBackground == BackgroundChoice.WALLPAPER,
+            )
             // Only vertical insets here: the stage and title are centred on the whole screen
             // (a landscape camera cutout would otherwise push them off-centre); the top bar and
             // legend take the horizontal insets themselves, equal on both sides so their corners
@@ -381,14 +384,14 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             onSelect = { vm.selectShelf(it) },
                             links = links,
                             downTarget = selectedCardFocus,
-                            prevKey = if (hints) mapping.promptFor(ControllerAction.PREV_CATEGORY) else null,
-                            nextKey = if (hints) mapping.promptFor(ControllerAction.NEXT_CATEGORY) else null,
+                            prevKey = null,
+                            nextKey = null,
                         )
                     },
                     // Top right: controller and phone battery, then the time and date.
                     status = {
                         Row(
-                            Modifier.padding(end = 8.dp),
+                            Modifier.padding(end = 8.dp).graphicsLayer { alpha = 0.65f },
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
@@ -406,7 +409,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                     buttons = {},
                 )
 
-                // The stage: the outgoing flow (while it slides away) under the active one.
+                // The outgoing flow fades beneath the incoming shelf.
                 Box(
                     Modifier
                         .weight(1f)
@@ -469,6 +472,10 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                 if (apps.isNotEmpty()) {
                     ConsoleTitle(
                         stage = stage,
+                        subtitle = library?.let { lib ->
+                            val emulator = state.allApps.firstOrNull { it.key.packageName == lib.emulatorPackage }?.label
+                            listOfNotNull(shelfTitle, emulator).joinToString(" · ")
+                        } ?: shelfTitle,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp),
@@ -507,13 +514,22 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                     Spacer(Modifier.width(12.dp))
                     // Up from these returns to the selected card.
                     val up = Modifier.focusProperties { up = selectedCardFocus() }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (canEdit && apps.isNotEmpty()) {
-                            PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit $shelfTitle", { vm.openLayer(editable?.let(Layer::ShelfPicker) ?: Layer.RomLibraries) }, up)
+                    GlassPanel(shape = RoundedCornerShape(28.dp),
+                        fill = Brush.verticalGradient(listOf(Color(0xFF202227).copy(alpha = 0.72f), Color(0xFF14161A).copy(alpha = 0.55f)))) {
+                        Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (apps.isNotEmpty()) {
+                                PlutoIconButton(ID_HH_OVERVIEW, Icons.Outlined.GridView, "Browse $shelfTitle", {
+                                    noteSelection(stage, active, stage.selectedIndex)
+                                    vm.openLayer(Layer.ConsoleOverview)
+                                }, up)
+                            }
+                            if (canEdit && apps.isNotEmpty()) {
+                                PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit $shelfTitle", { vm.openLayer(editable?.let(Layer::ShelfPicker) ?: Layer.RomLibraries) }, up)
+                            }
+                            PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, up)
+                            PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, up)
+                            PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, up)
                         }
-                        PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, up)
-                        PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, up)
-                        PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, up)
                     }
                 }
             }
@@ -543,8 +559,14 @@ private fun ShelfPage(
     val icons = LocalIconCache.current
     val versions by icons.versions.collectAsState()
     CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
+        val reducedMotion = LocalReducedMotion.current
         val base = Modifier
             .fillMaxSize()
+            .graphicsLayer {
+                val scale = if (reducedMotion) 1f else page.scale()
+                scaleX = scale
+                scaleY = scale
+            }
             .then(if (leaving) Modifier.clearAndSetSemantics { } else Modifier)
         if (stage.count == 0) {
             BoxWithConstraints(
@@ -621,7 +643,7 @@ private fun HeroEmphasisEffect(focus: ControllerFocusController, hero: HeroEmpha
         snapshotFlow {
             val id = focus.focusedId
             focus.inputMode == InputMode.CONTROLLER && id != null &&
-                (id.startsWith(TAB_ID_PREFIX) || id == ID_HH_SEARCH || id == ID_HH_ALL_APPS || id == ID_HH_SETTINGS || id == ID_HH_EDIT_SHELF)
+                (id.startsWith(TAB_ID_PREFIX) || id == ID_HH_SEARCH || id == ID_HH_ALL_APPS || id == ID_HH_SETTINGS || id == ID_HH_EDIT_SHELF || id == ID_HH_OVERVIEW)
         }.distinctUntilChanged().collectLatest { inHeader ->
             if (inHeader) {
                 hero.lift = 0f
@@ -661,70 +683,66 @@ internal fun emptyTitle(id: ShelfId, name: String, actionsKey: String?): Pair<St
 }
 
 /**
- * The active shelf and its flow, plus the one sliding away. Plain fields are only written
- * during composition when the shelf changes; the slide progress is read in layout/draw only.
+ * The active shelf and the fading outgoing flow. Progress is read in layout/draw only;
+ * interrupted switches preserve the most visible page and reverse continuously.
  */
 @Stable
-private class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
+internal class ShelfSwitch(initialShelf: ShelfId, initialStage: CoverflowState) {
     var shelf: ShelfId = initialShelf
     var stage: CoverflowState by mutableStateOf(initialStage)
     var outgoingShelf: ShelfId? = null
     var outgoingStage: CoverflowState? by mutableStateOf(null)
-    var direction = 1
-    /** The leaving page's direction, kept when a quick second switch changes [direction]. */
-    var outgoingDirection = 1
     var progress by mutableFloatStateOf(1f)
     var focusedAtSwitch: String? = null
+    private var incomingStartAlpha = 0f
+    private var incomingStartScale = 1.08f
+    private var outgoingStartAlpha = 1f
+    private var outgoingStartScale = 1f
 
-    /**
-     * Starts the slide to [next]. [mirror] is -1 in right-to-left layouts, where the next tab
-     * is to the left. A switch during a switch (L1/R1 pressed quickly) continues from what is
-     * on screen instead of popping a page away: while the incoming page has not appeared yet,
-     * the page already leaving keeps leaving and only the arriving one changes; once it
-     * shows, it becomes the leaving page, from the opacity it had reached.
-     */
-    fun begin(next: ShelfId, nextStage: CoverflowState, order: List<ShelfId>, mirror: Int) {
-        val leaving = outgoingShelf
-        val leavingStage = outgoingStage
-        if (progress < SHELF_HANDOVER && leaving != null && leavingStage != null) {
-            if (next == leaving) {
-                // Straight back to the page still fading out: it returns from where it is,
-                // from the side it left by, at the opacity it had.
-                val shown = (1f - progress / SHELF_HANDOVER).coerceIn(0f, 1f)
-                direction = -outgoingDirection
-                outgoingDirection = direction
-                outgoingShelf = shelf
+    fun begin(next: ShelfId, nextStage: CoverflowState) {
+        val inAlpha = incomingMotion.alpha()
+        val inScale = incomingMotion.scale()
+        val outAlpha = outgoingMotion.alpha()
+        val outScale = outgoingMotion.scale()
+        if (next == outgoingShelf && outgoingStage != null) {
+            // Reversing returns to the actual visible page, preserving its opacity and size.
+            val returningStage = outgoingStage!!
+            outgoingStage = stage
+            outgoingShelf = shelf
+            stage = returningStage
+            incomingStartAlpha = outAlpha
+            incomingStartScale = outScale
+            outgoingStartAlpha = inAlpha
+            outgoingStartScale = inScale
+        } else {
+            // Rapid shoulder presses retain the more visible page instead of flashing a
+            // barely arrived shelf. The newly requested shelf always starts immediately.
+            if (outgoingStage == null || inAlpha >= outAlpha) {
                 outgoingStage = stage
-                shelf = leaving
-                stage = leavingStage
-                progress = SHELF_HANDOVER + shown * (1f - SHELF_HANDOVER) / INCOMING_ALPHA_GAIN
-                return
+                outgoingShelf = shelf
+                outgoingStartAlpha = inAlpha
+                outgoingStartScale = inScale
+            } else {
+                outgoingStartAlpha = outAlpha
+                outgoingStartScale = outScale
             }
-            direction = mirror * ConsoleShelves.direction(order, leaving, next)
-            shelf = next
             stage = nextStage
-            return
+            incomingStartAlpha = 0f
+            incomingStartScale = 1f + SHELF_ENTRANCE_SCALE
         }
-        val shown = if (progress < 1f) incomingMotion.alpha().coerceIn(0f, 1f) else 1f
-        direction = mirror * ConsoleShelves.direction(order, shelf, next)
-        outgoingDirection = direction
-        outgoingShelf = shelf
-        outgoingStage = stage
         shelf = next
-        stage = nextStage
-        // The outgoing alpha is 1 - progress / HANDOVER: start where the page already is.
-        progress = (1f - shown) * SHELF_HANDOVER
+        progress = 0f
     }
 
     val incomingMotion = PageMotion(
-        offset = { direction * (1f - progress) * SHELF_SLIDE },
-        // Sequenced, never overlapping: the outgoing page is gone (progress 0.45) before
-        // the incoming one starts to show.
-        alpha = { (progress - SHELF_HANDOVER) / (1f - SHELF_HANDOVER) * INCOMING_ALPHA_GAIN },
+        offset = { 0f },
+        alpha = { incomingStartAlpha + (1f - incomingStartAlpha) * progress },
+        scale = { incomingStartScale + (1f - incomingStartScale) * progress },
     )
     val outgoingMotion = PageMotion(
-        offset = { -outgoingDirection * progress * SHELF_SLIDE },
-        alpha = { 1f - progress / SHELF_HANDOVER },
+        offset = { 0f },
+        alpha = { outgoingStartAlpha * (1f - progress) },
+        scale = { outgoingStartScale + (1.02f - outgoingStartScale) * progress },
     )
 }
 
@@ -806,7 +824,7 @@ private fun ConsoleFocusEffects(
 @Composable
 private fun ConsoleButtonLegend(mapping: ButtonMapping, hasApps: Boolean) {
     val focus = LocalControllerFocus.current
-    ButtonLegend(mapping, consoleLegendFor(focus.focusedId, hasApps))
+    ButtonLegend(mapping, consoleLegendFor(focus.focusedId, hasApps), quiet = true)
 }
 
 /** Console copy (inline for 0.1). */

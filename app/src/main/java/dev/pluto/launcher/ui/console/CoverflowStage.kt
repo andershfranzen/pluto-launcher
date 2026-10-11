@@ -1,5 +1,9 @@
 package dev.pluto.launcher.ui.console
 
+import dev.pluto.launcher.ui.components.LocalNotificationApps
+import dev.pluto.launcher.ui.components.hasDot
+import dev.pluto.launcher.ui.components.drawNotificationDot
+
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -13,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -71,7 +76,7 @@ import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -89,8 +94,8 @@ private val CardShape = RoundedCornerShape(26.dp)
 private const val CARD_CORNER_FRACTION = 0.15f
 
 /** The shared card material: neutral frosted dark glass, the same for every app. */
-private val CardFaceTop = Color(0xE02A2E37)
-private val CardFaceBottom = Color(0xE01B1E25)
+private val CardFaceTop = Color(0xD925272B)
+private val CardFaceBottom = Color(0xD917191D)
 
 /**
  * Room under the card for its reflection, in card heights: the gap and the visible depth of
@@ -134,8 +139,15 @@ internal class CoverflowState(initialIndex: Int, initialApps: List<ConsoleEntry>
     var apps by mutableStateOf(initialApps)
         private set
 
-    /** Bumped when card art finishes loading, so cards redraw (draw-phase read only). */
-    var artTick by mutableIntStateOf(0)
+    // A completion invalidates only the matching card. Prewarming off-screen art must not
+    // rebuild every visible card's cached brushes and geometry.
+    private val artRevisions = HashMap<String, MutableIntState>()
+    private val artIdentities = HashMap<String, Int>()
+    fun artRevision(key: String): MutableIntState = artRevisions.getOrPut(key) { mutableIntStateOf(0) }
+    fun artLoaded(key: String, identity: Int) {
+        val revision = artRevisions[key] ?: return
+        if (artIdentities.put(key, identity) != identity) revision.intValue++
+    }
 
     /** Card width in px from the last layout (plain: only gestures read it). */
     internal var cardWidthPx = 0f
@@ -204,12 +216,17 @@ internal class CoverflowState(initialIndex: Int, initialApps: List<ConsoleEntry>
     fun sync(newApps: List<ConsoleEntry>) {
         val old = Snapshot.withoutReadObservation { apps }
         if (old === newApps) return
-        if (old.map { it.key } == newApps.map { it.key }) {
+        val oldKeys = old.map { it.key }
+        val newKeys = newApps.map { it.key }
+        if (oldKeys == newKeys) {
             apps = newApps
             return
         }
+        val retained = newKeys.toHashSet()
+        artRevisions.keys.retainAll(retained)
+        artIdentities.keys.retainAll(retained)
         val oldSelected = Snapshot.withoutReadObservation { selectedIndex }
-        val keep = FocusAnchor.resolve(old.map { it.key }, newApps.map { it.key }, old.getOrNull(oldSelected)?.key)
+        val keep = FocusAnchor.resolve(oldKeys, newKeys, old.getOrNull(oldSelected)?.key)
         val newIndex = newApps.indexOfFirst { it.key == keep }.coerceAtLeast(0)
         apps = newApps
         if (newApps.isEmpty()) return
@@ -260,7 +277,7 @@ internal class HeroEmphasis {
  * [alpha] multiplies every card's alpha (cards use ModulateAlpha, so no page-sized offscreen layer).
  */
 @Stable
-internal class PageMotion(val offset: () -> Float, val alpha: () -> Float) {
+internal class PageMotion(val offset: () -> Float, val alpha: () -> Float, val scale: () -> Float = { 1f }) {
     companion object {
         val Static = PageMotion({ 0f }, { 1f })
     }
@@ -295,7 +312,7 @@ internal fun CoverflowStage(
     val mirror = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
     val artPx = with(LocalDensity.current) { ConsoleArtSize.roundToPx() }
     val window by remember(stage) {
-        derivedStateOf { CoverflowMath.window(stage.position, stage.selectedIndex, stage.count) }
+        derivedStateOf { CoverflowMath.composedIndices(stage.position, stage.selectedIndex, stage.count) }
     }
     val currentVersions by rememberUpdatedState(versions)
     val currentOnTouchSelect by rememberUpdatedState(onTouchSelect)
@@ -304,15 +321,17 @@ internal fun CoverflowStage(
     // D-pad never piles up work (only the newest window is prepared next). Restarted when an
     // app's icon version changes (an update), so its card gets new art without a move.
     LaunchedEffect(stage, artPx, icons, versions) {
-        snapshotFlow { stage.apps to stage.selectedIndex }.conflate().collect { (apps, selected) ->
-            if (apps.isEmpty()) return@collect
+        snapshotFlow { stage.apps to stage.selectedIndex }.collectLatest { (apps, selected) ->
+            if (apps.isEmpty()) return@collectLatest
             val order = (0..ART_PREWARM * 2).map { step -> selected + if (step % 2 == 0) step / 2 else -(step + 1) / 2 }
             for (i in order) {
                 val entry = apps.getOrNull(i) ?: continue
                 val version = currentVersions[entry.packageName] ?: 0
-                if (ConsoleArtCache.peek(entry, artPx, version) == null) {
-                    if (ConsoleArtCache.load(context, icons, entry, artPx, version) != null) stage.artTick++
-                }
+                val art = ConsoleArtCache.peek(entry, artPx, version)
+                    ?: ConsoleArtCache.load(context, icons, entry, artPx, version)
+                // A shared decode may finish after an older prewarm consumer was canceled.
+                // Notice that cached completion too, once per art identity; no bitmap is retained.
+                if (art != null) stage.artLoaded(entry.key, System.identityHashCode(art))
             }
         }
     }
@@ -459,6 +478,7 @@ private fun CoverCard(
     upTarget: () -> FocusRequester,
     downTarget: () -> FocusRequester,
 ) {
+    val hasNotifications = entry is ConsoleEntry.App && LocalNotificationApps.current.hasDot(entry.entry)
     val style = LocalCarouselStyle.current
     val requester = remember { FocusRequester() }
     val anchor = remember { OriginAnchor() }
@@ -470,7 +490,7 @@ private fun CoverCard(
             if (stage.anchors[entry.key] === anchor) stage.anchors.remove(entry.key)
         }
     }
-    val key = entry.key
+    val artRevision = remember(stage, entry.key) { stage.artRevision(entry.key) }
     val enabled = entry.isEnabled
     fun heroDim(i: Int): Float = if (i == stage.selectedIndex) (1f - hero.emphasis) * HeroEmphasis.IDLE_DIM else 0f
     Spacer(
@@ -486,7 +506,7 @@ private fun CoverCard(
                 applyCardLayer(t, heroScale, page, mirror)
             }
             .drawWithCache {
-                stage.artTick
+                artRevision.intValue
                 val art = ConsoleArtCache.peek(entry, artPx, version)
                 val coverSize = if (entry is ConsoleEntry.Rom && entry.game.coverUri != null && art != null)
                     IntSize(art.icon.width, art.icon.height) else null
@@ -506,6 +526,7 @@ private fun CoverCard(
                         drawCircle(placeholder, radius = look.iconSize.width * 0.42f)
                     }
                     look.drawRim(this)
+                    if (hasNotifications) drawNotificationDot()
                     if (dim > 0.01f) drawRoundRect(Color.Black.copy(alpha = dim), cornerRadius = look.corner)
                 }
             }
@@ -524,7 +545,7 @@ private fun CoverCard(
                 onActivate = { onActivate(index, entry) },
                 onSecondary = { onActions(entry) },
                 secondaryLabel = "Actions for ${entry.label}",
-                contentDescription = "${entry.label}${if (enabled) "" else ", unavailable"}, ${index + 1} of $count",
+                contentDescription = "${entry.label}${if (hasNotifications) ", has notifications" else ""}${if (enabled) "" else ", unavailable"}, ${index + 1} of $count",
                 shape = CardShape,
                 onFocused = { onFocused(index, entry) },
             ),

@@ -34,6 +34,7 @@ class SettingsRepositoryTest {
     @Test
     fun freshInstallIsNotSeededAndHasNoNotice() {
         val fresh = SettingsRepository.fromPreferences(emptyPreferences())
+        assertFalse(fresh.notificationDots)
         assertTrue(fresh.automaticUpdateChecks)
         assertFalse(fresh.updateCheckChoiceMade)
         assertFalse(fresh.layoutSeeded)
@@ -46,6 +47,7 @@ class SettingsRepositoryTest {
         val prefs = mutablePreferencesOf()
         val settings = LauncherSettings(
             theme = ThemePreference.DARK,
+            notificationDots = true,
             historyEnabled = false,
             automaticUpdateChecks = false,
             updateCheckChoiceMade = true,

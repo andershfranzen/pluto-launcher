@@ -180,6 +180,7 @@ data class LauncherSettings(
     /** Launcher text multiplier on top of the system font scale, 0.85..1.5. */
     val textScale: Float = 1f,
     val reducedMotion: Boolean = false,
+    val notificationDots: Boolean = false,
     val normalBackground: BackgroundChoice = BackgroundChoice.PLUTO,
     val consoleBackground: BackgroundChoice = BackgroundChoice.XMB,
     val xmbColor: XmbColor = XmbColor.AUTO,

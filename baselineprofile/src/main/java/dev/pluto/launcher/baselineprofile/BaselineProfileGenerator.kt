@@ -3,6 +3,11 @@ package dev.pluto.launcher.baselineprofile
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import org.junit.FixMethodOrder
+import org.junit.runners.MethodSorters
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,25 +22,43 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class BaselineProfileGenerator {
     @get:Rule
     val rule = BaselineProfileRule()
 
-    /** Cold start to an interactive home: also the startup profile. */
+    @Before
+    fun prepareFixtures() {
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        androidx.test.uiautomator.Configurator.getInstance().waitForIdleTimeout = 1_000L
+        val result = device.executeShellCommand("content call --uri content://$PACKAGE.profile-fixtures --method seed")
+        check(result.contains("status=ready")) { "Profile fixture setup failed: $result" }
+        // Shortcut APIs require Pluto to be the default HOME; this is a disposable emulator.
+        val home = device.executeShellCommand("cmd package set-home-activity $PACKAGE/.MainActivity")
+        check(!home.contains("Error", ignoreCase = true)) { "Could not set fixture HOME: $home" }
+        device.executeShellCommand("am start -W -a android.settings.SETTINGS")
+    }
+
+    /** Home launch code, also included in the startup profile for dex layout. */
     @Test
-    fun startup() = rule.collect(packageName = PACKAGE, includeInStartupProfile = true) {
+    fun startup() = rule.collect(packageName = PACKAGE, maxIterations = 5, stableIterations = 2, includeInStartupProfile = true,
+        filterPredicate = { !it.contains("Ldev/pluto/launcher/profile/") }) {
         startPluto()
         finishOnboarding()
         device.waitForIdle()
+        device.executeShellCommand("am start -W -a android.settings.SETTINGS")
     }
 
-    /** Drawer, search, pages, landscape and Handheld: the interaction hot paths. */
+    /** Drawer, apps/ROM/shortcut search, pages and Console: the interaction hot paths. */
     @Test
-    fun journeys() = rule.collect(packageName = PACKAGE, includeInStartupProfile = false) {
+    fun journeys() = rule.collect(packageName = PACKAGE, maxIterations = 5, stableIterations = 2, includeInStartupProfile = false,
+        filterPredicate = { !it.contains("Ldev/pluto/launcher/profile/") }) {
         startPluto()
         finishOnboarding()
         drawerJourney()
+        richerSearchJourney()
         pagesJourney()
-        handheldJourney()
+        consoleJourney()
+        device.executeShellCommand("am start -W -a android.settings.SETTINGS")
     }
 }

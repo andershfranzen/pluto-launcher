@@ -252,7 +252,7 @@ are in place for the first real migration.
   decoded gets state, a coroutine and a fade), and `TileLabel` lays its text out once in its
   own measure pass with one shared `TextMeasurer` (whose cache also serves tiles scrolling
   back into view). No `BoxWithConstraints`, no per-tile text measurer, no per-tile flow:
-  `IconCache.versions` is mirrored once into snapshot state. A tile reports its window
+  the cache’s existing `versionOf` snapshot mirror is read directly. A tile reports its window
   bounds to `OriginRegistry` only when it is activated (and keeps them current afterwards),
   not on every scroll frame. Lazy items declare a `contentType` so compositions are reused.
 - **Narrow, stable inputs.** `LauncherUiState` is rebuilt on every change, so layouts pass

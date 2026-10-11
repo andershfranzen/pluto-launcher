@@ -36,6 +36,8 @@ abstract class RomDao {
     abstract fun observeLibraries(): Flow<List<RomLibraryRows>>
     @Query("SELECT * FROM rom_library WHERE id = :id")
     abstract suspend fun library(id: Long): RomLibraryEntity?
+    @Query("SELECT * FROM rom_game WHERE libraryId = :id")
+    abstract suspend fun games(id: Long): List<RomGameEntity>
     @Insert abstract suspend fun insertLibrary(library: RomLibraryEntity): Long
     @Update abstract suspend fun updateLibrary(library: RomLibraryEntity)
     @Query("DELETE FROM rom_library WHERE id = :id") abstract suspend fun deleteLibrary(id: Long)
@@ -52,6 +54,15 @@ abstract class RomDao {
     @Transaction
     open suspend fun replaceGames(id: Long, treeUri: String, games: List<RomGameEntity>) {
         if (library(id)?.treeUri != treeUri) return
+        require(games.all { it.libraryId == id }) { "ROM games must belong to this shelf" }
+        // Compare inside the transaction, after validating the folder: a rescan of an
+        // unchanged shelf should neither rewrite its rows nor invalidate Room observers.
+        val existing = games(id)
+        if (existing.size == games.size) {
+            val byUri = HashMap<String, RomGameEntity>(existing.size)
+            existing.forEach { byUri[it.uri] = it }
+            if (games.all { byUri.remove(it.uri) == it }) return
+        }
         clearGames(id)
         insertGames(games)
     }

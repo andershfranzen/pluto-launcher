@@ -11,11 +11,18 @@ import android.util.LruCache
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import dev.pluto.launcher.apps.AssetMemoryPolicy
+import java.util.concurrent.atomic.AtomicLong
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import dev.pluto.launcher.apps.IconCache
+import dev.pluto.launcher.apps.SharedAssetLoads
 import dev.pluto.launcher.model.AppKey
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * What a Coverflow card draws for one app: the icon (shared with [IconCache], not copied),
@@ -25,7 +32,8 @@ import kotlinx.coroutines.withContext
  * bitmap draw (no offscreen layer per card per frame).
  */
 class ConsoleArt(val icon: ImageBitmap, val reflection: ImageBitmap?, val color: Int) {
-    internal val bytes: Int get() = icon.width * icon.height * 4 + (reflection?.let { it.width * it.height * 4 } ?: 0)
+    internal val bytes: Int get() = icon.asAndroidBitmap().allocationByteCount +
+        (reflection?.asAndroidBitmap()?.allocationByteCount ?: 0)
 }
 
 /**
@@ -40,7 +48,7 @@ internal object CardLook {
     const val REFLECTION_GAP = 0.035f
     // A short, faint mirror: on a black sky a deep one read as a dark smudge under the card.
     const val REFLECTION_DEPTH = 0.22f
-    const val REFLECTION_ALPHA = 0.16f
+    const val REFLECTION_ALPHA = 0.14f
 
     /** Reflection opacity [depth] below the card's bottom edge (card fractions): eased to zero. */
     fun fade(depth: Float): Float {
@@ -64,33 +72,77 @@ internal object CardLook {
  * version (an app update brings new art). Sized in bytes like [IconCache].
  */
 object ConsoleArtCache {
-    private val cache = object : LruCache<String, ConsoleArt>(cacheBytes()) {
-        override fun sizeOf(key: String, value: ConsoleArt): Int = value.bytes
+    private sealed interface ArtKey {
+        data class App(val app: AppKey, val size: Int, val version: Int) : ArtKey
+        data class Rom(val library: Long, val uri: String, val modified: Long, val cover: String?, val title: String, val size: Int) : ArtKey
     }
+
+    private val cacheStore = lazy {
+        object : LruCache<ArtKey, ConsoleArt>(cacheBytes()) {
+            override fun sizeOf(key: ArtKey, value: ConsoleArt): Int = value.bytes
+        }
+    }
+    private val cache by cacheStore
+    private val retentionEpoch = AtomicLong()
+    private val retentionLock = Any()
+
+    fun trimMemory(level: Int) {
+        if (!cacheStore.isInitialized()) return
+        val target = AssetMemoryPolicy.targetBytes(cache.maxSize(), level) ?: return
+        synchronized(retentionLock) {
+            retentionEpoch.incrementAndGet()
+            cache.trimToSize(target)
+        }
+    }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val decodeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(3))
+    private val loads = SharedAssetLoads<ArtKey, ConsoleArt?>(decodeScope)
+
+    private fun romKey(entry: ConsoleEntry.Rom, size: Int) = ArtKey.Rom(
+        entry.libraryId, entry.game.uri, entry.game.modified, entry.game.coverUri, entry.game.title, size,
+    )
 
     fun peek(entry: ConsoleEntry, sizePx: Int, version: Int): ConsoleArt? = when (entry) {
         is ConsoleEntry.App -> peek(entry.entry.key, sizePx, version)
-        is ConsoleEntry.Rom -> cache.get("${entry.key}|${entry.game.modified}|${entry.game.coverUri}|$sizePx")
+        is ConsoleEntry.Rom -> cache.get(romKey(entry, sizePx))
     }
 
     suspend fun load(context: android.content.Context, icons: IconCache, entry: ConsoleEntry, sizePx: Int, version: Int): ConsoleArt? {
         if (entry is ConsoleEntry.App) return load(icons, entry.entry.key, sizePx, version)
         entry as ConsoleEntry.Rom
-        val key = "${entry.key}|${entry.game.modified}|${entry.game.coverUri}|$sizePx"
+        if (sizePx <= 0) return null
+        val key = romKey(entry, sizePx)
         cache.get(key)?.let { return it }
-        return withContext(Dispatchers.IO) {
-            val cover = entry.game.coverUri?.let { uri ->
-                runCatching {
-                    val parsed = android.net.Uri.parse(uri)
-                    val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    context.contentResolver.openInputStream(parsed)?.use { android.graphics.BitmapFactory.decodeStream(it, null, bounds) }
-                    var sample = 1
-                    while (bounds.outWidth / sample > sizePx * 2 || bounds.outHeight / sample > sizePx * 2) sample *= 2
-                    val options = android.graphics.BitmapFactory.Options().apply { inSampleSize = sample }
-                    context.contentResolver.openInputStream(parsed)?.use { android.graphics.BitmapFactory.decodeStream(it, null, options) }
-                }.getOrNull()
-            } ?: discArt(sizePx, entry.label)
-            build(cover.asImageBitmap()).also { cache.put(key, it) }
+        val appContext = context.applicationContext
+        return loads.load(key) {
+            val epoch = retentionEpoch.get()
+            cache.get(key) ?: run {
+                val cover = entry.game.coverUri?.let { uri ->
+                    try {
+                        val parsed = android.net.Uri.parse(uri)
+                        // ImageDecoder opens the provider once and decodes directly to the display
+                        // bounds, instead of retaining a cover up to four times the required pixels.
+                        android.graphics.ImageDecoder.decodeBitmap(
+                            android.graphics.ImageDecoder.createSource(appContext.contentResolver, parsed),
+                        ) { decoder, info, _ ->
+                            decoder.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                            val (width, height) = CoverDecodeSize.fit(info.size.width, info.size.height, sizePx)
+                            decoder.setTargetSize(width, height)
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: discArt(sizePx, entry.label)
+                currentCoroutineContext().ensureActive()
+                build(cover.asImageBitmap()).also {
+                    currentCoroutineContext().ensureActive()
+                    synchronized(retentionLock) {
+                        if (epoch == retentionEpoch.get()) cache.put(key, it)
+                    }
+                }
+            }
         }
     }
 
@@ -121,27 +173,41 @@ object ConsoleArtCache {
     /** Cheap memory lookup; safe on the main thread and inside draw. */
     fun peek(key: AppKey, sizePx: Int, version: Int): ConsoleArt? = cache.get(cacheKey(key, sizePx, version))
 
-    /** Loads the icon (IconCache, off main) and builds the art on Dispatchers.Default. Null if the app has no icon. */
+    /** Loads the icon (IconCache, off main) and builds the art on the bounded decode pool. Null if the app has no icon. */
     suspend fun load(icons: IconCache, key: AppKey, sizePx: Int, version: Int): ConsoleArt? {
+        if (sizePx <= 0) return null
         val cacheKey = cacheKey(key, sizePx, version)
         cache.get(cacheKey)?.let { return it }
-        val icon = try {
-            icons.load(key, sizePx)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            null
-        } ?: return null
-        return withContext(Dispatchers.Default) {
-            val art = build(icon)
-            cache.put(cacheKey, art)
-            art
+        return loads.load(cacheKey) {
+            val epoch = retentionEpoch.get()
+            cache.get(cacheKey) ?: run {
+                val icon = try {
+                    icons.load(key, sizePx)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    null
+                }
+                currentCoroutineContext().ensureActive()
+                icon?.let { build(it).also { art ->
+                    currentCoroutineContext().ensureActive()
+                    synchronized(retentionLock) {
+                        if (epoch == retentionEpoch.get()) cache.put(cacheKey, art)
+                    }
+                } }
+            }
         }
     }
 
     private fun build(icon: ImageBitmap): ConsoleArt {
         val source = icon.asAndroidBitmap().toSoftware()
-        return ConsoleArt(icon, reflectionOf(source)?.asImageBitmap(), dominantColor(source))
+        return try {
+            val reflection = reflectionOf(source)?.also { it.prepareToDraw() }?.asImageBitmap()
+            icon.asAndroidBitmap().prepareToDraw()
+            ConsoleArt(icon, reflection, dominantColor(source))
+        } finally {
+            if (source !== icon.asAndroidBitmap()) source.recycle()
+        }
     }
 
     /**
@@ -181,7 +247,7 @@ object ConsoleArtCache {
     private fun Bitmap.toSoftware(): Bitmap =
         if (config == Bitmap.Config.HARDWARE) copy(Bitmap.Config.ARGB_8888, false) else this
 
-    private fun cacheKey(key: AppKey, sizePx: Int, version: Int) = "$sizePx|$version|${key.encode()}"
+    private fun cacheKey(key: AppKey, sizePx: Int, version: Int) = ArtKey.App(key, sizePx, version)
 
     private const val SAMPLE = 16
 
@@ -246,4 +312,13 @@ object ConsoleColors {
         (0xFF shl 24) or (channel(r) shl 16) or (channel(g) shl 8) or channel(b)
 
     private fun channel(v: Double): Int = (v + 0.5).toInt().coerceIn(0, 255)
+}
+
+/** Decode only the pixels the card can display, preserving aspect ratio without upscaling small covers. */
+internal object CoverDecodeSize {
+    fun fit(width: Int, height: Int, side: Int): Pair<Int, Int> {
+        require(width > 0 && height > 0 && side > 0)
+        val scale = minOf(1.0, side.toDouble() / maxOf(width, height))
+        return (width * scale).toInt().coerceAtLeast(1) to (height * scale).toInt().coerceAtLeast(1)
+    }
 }

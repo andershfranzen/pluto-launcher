@@ -160,6 +160,7 @@ private fun FavouritesGrid(
             EmptyFavourites(vm, Modifier.align(Alignment.Center))
         } else {
             val (entries, dragProbe) = rememberDragAwareTiles(tiles, gridState)
+            PrewarmGridIcons(gridState, entries, iconSize, keys = HomeGridEntry::prewarmKeys)
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = iconSize + 44.dp),
                 state = gridState,

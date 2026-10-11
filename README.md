@@ -83,9 +83,18 @@ Pluto never forces rotation on the app you are using.
   Press and hold empty space for Search, Add widget, Edit home and Settings.
 - A drawer that follows your finger: swipe up anywhere on home. Search and the category
   chips sit at the bottom, under your thumb. It has accent- and case-insensitive search
-  and an A–Z fast-scroll rail for longer lists.
+  and an A–Z fast-scroll rail for longer lists. Type to search apps, games from your ROM
+  tabs and Android app shortcuts in labelled sections. Games match titles, filenames and
+  tab names; shortcuts match their action or app name. Everything searches across these
+  sources; a category searches its apps and shortcuts. Android exposes shortcuts when
+  Pluto is your default Home app. No contacts access is required.
 - Gestures: choose what a swipe down on Home does (notifications, search or nothing), and
   optionally double-tap empty space to lock the screen.
+- Optional iPhone-inspired notification dots: small red dots on app icons and folders,
+  including Console app cards. Enable Settings → Apps → Notification dots and allow
+  Android notification access. Dots follow active notifications and each channel's badge
+  setting; ongoing notifications and group summaries are excluded. Notification contents
+  are not stored.
 - Categories (All apps, Games and as many of your own as you like); an app can be in several.
 - Drag and drop on Home: press, hold and move to rearrange, drop on an app to make a folder,
   onto the dock, or out of the drawer. The explicit Edit mode (Move up / down / before /
@@ -98,7 +107,12 @@ Pluto never forces rotation on the app you are using.
 - Coverflow: the selected app faces you, with its neighbours tilted away in 3D. It glides
   continuously when you hold the D-pad or stick, and touch can scrub it or fling it.
 - Shelves switched with L1/R1: *Recent launches*, *Favourites*, then your categories.
-  Each shelf remembers its selection.
+  Each shelf remembers its selection. Shelves crossfade in place with a subtle 108% entrance;
+  Reduce motion keeps their size fixed.
+- **Browse shelf** opens an overview grid for apps or ROMs. Touch or controller navigation
+  selects an item and returns to its carousel card; Back preserves the previous selection.
+- Charcoal glass tabs and controls, gentle card tilt, faint reflections and an ambient
+  artwork glow keep the selected game prominent. ROM titles show the tab and default emulator.
 - A big title, the position in the shelf, and a button legend that follows focus (Open and
   Actions on a card, Select on tabs and buttons). Without a controller it says how touch works.
 - The shelf tabs wrap with the D-pad as with L1/R1, and the whole console mirrors for
@@ -254,3 +268,5 @@ Pluto 0.1 is a working prototype, but it isn't finished:
 Game artwork visible in demonstration screenshots belongs to its respective owners;
 the MIT licence does not apply to it. Please don't contribute proprietary game artwork
 as app assets or other unlicensed assets.
+
+Performance changes and diagnostic measurements are documented in [docs/PERFORMANCE_REVIEW.md](docs/PERFORMANCE_REVIEW.md).

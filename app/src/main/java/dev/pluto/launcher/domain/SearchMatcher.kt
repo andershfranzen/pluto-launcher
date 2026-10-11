@@ -71,19 +71,49 @@ object SearchMatcher {
     fun filter(apps: List<AppEntry>, query: String): List<AppEntry> {
         val q = normalize(query)
         if (q.isEmpty()) return apps
-        return apps.mapNotNull { entry -> rank(entry, q)?.let { entry to it } }
-            .sortedBy { it.second } // stable sort: equal ranks keep input order
-            .map { it.first }
+        // Four fixed ranks need no comparison sort or per-match Pair allocations.
+        val buckets = Array(4) { ArrayList<AppEntry>() }
+        for (entry in apps) rank(entry, q)?.let { buckets[it].add(entry) }
+        return buildList { for (bucket in buckets) addAll(bucket) }
+    }
+
+    /** Retained app-only projection for synchronous drawer/controller fallback results. */
+    class Index(private val apps: List<AppEntry>) {
+        private data class Entry(val app: AppEntry, val label: String, val packageName: String)
+
+        private val entries = apps.map { Entry(it, normalize(it.label), normalize(it.packageName)) }
+
+        fun filter(query: String): List<AppEntry> {
+            val q = normalize(query)
+            if (q.isEmpty()) return apps
+            val buckets = Array(4) { ArrayList<AppEntry>() }
+            for (entry in entries) {
+                normalizedAppRank(entry.label, entry.packageName, q)?.let { buckets[it].add(entry.app) }
+            }
+            return buildList { for (bucket in buckets) addAll(bucket) }
+        }
     }
 
     /** Rank of [entry] for an already-normalized, non-empty query, or null when it doesn't match. */
     private fun rank(entry: AppEntry, q: String): Int? {
-        val label = normalize(entry.label)
+        return labelRank(entry.label, q)
+            ?: if (q.length >= MIN_PACKAGE_QUERY && hasSegmentPrefix(normalize(entry.packageName), q)) RANK_PACKAGE else null
+    }
+
+    /** Label match rank for an already normalized query, shared by apps, games and shortcuts. */
+    fun labelRank(text: String, q: String): Int? {
+        return normalizedLabelRank(normalize(text), q)
+    }
+
+    internal fun normalizedAppRank(label: String, packageName: String, q: String): Int? =
+        normalizedLabelRank(label, q)
+            ?: if (q.length >= MIN_PACKAGE_QUERY && hasSegmentPrefix(packageName, q)) RANK_PACKAGE else null
+
+    internal fun normalizedLabelRank(label: String, q: String): Int? {
         return when {
             label.startsWith(q) -> RANK_PREFIX
             hasWordPrefix(label, q) -> RANK_WORD_PREFIX
             label.contains(q) -> RANK_SUBSTRING
-            q.length >= MIN_PACKAGE_QUERY && hasSegmentPrefix(normalize(entry.packageName), q) -> RANK_PACKAGE
             else -> null
         }
     }

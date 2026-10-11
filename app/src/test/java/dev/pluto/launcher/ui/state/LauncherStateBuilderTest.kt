@@ -139,4 +139,36 @@ class LauncherStateBuilderTest {
         assertSame(first, second)
         assertEquals(apps[3].key, second.session.selectedApp)
     }
+
+    @Test
+    fun searchIndexIsLazyAndReusedAcrossQueriesAndUnrelatedEmissions() {
+        val builder = LauncherStateBuilder()
+        val lib = library()
+        builder.build(lib, env, SessionState())
+        assertEquals(0, builder.appSearchIndexCount)
+        builder.build(lib, env, SessionState(searchText = "c"))
+        builder.build(lib, env, SessionState(searchText = "ca"))
+        val changedRecents = library(organization().copy(recents = emptyList()))
+        val state = builder.build(changedRecents, env, SessionState(searchText = "cam"))
+        assertEquals(listOf("Camera"), state.drawerApps.map { it.label })
+        assertEquals(1, builder.appSearchIndexCount)
+    }
+
+    @Test
+    fun searchIndexRebuildsAtomicallyForCategoryHiddenScopeAndRenamedApps() {
+        val builder = LauncherStateBuilder()
+        val query = SessionState(searchText = "ga")
+        builder.build(library(), env, query)
+        val category = builder.build(library(), env, query.copy(activeCategoryId = games.id))
+        assertEquals(listOf("Gallery", "Games"), category.drawerApps.map { it.label })
+        assertEquals(2, builder.appSearchIndexCount)
+        val hiddenOrg = organization().copy(hidden = setOf(apps[3].key))
+        val hidden = builder.build(library(hiddenOrg), env, query.copy(activeCategoryId = games.id))
+        assertEquals(listOf("Gallery"), hidden.drawerApps.map { it.label })
+        assertEquals(3, builder.appSearchIndexCount)
+        val renamedApps = apps.map { if (it.key == apps[4].key) it.copy(label = "Photos") else it }
+        val renamed = builder.build(library(hiddenOrg, renamedApps), env, query.copy(activeCategoryId = games.id))
+        assertTrue(renamed.drawerApps.isEmpty())
+        assertEquals(4, builder.appSearchIndexCount)
+    }
 }

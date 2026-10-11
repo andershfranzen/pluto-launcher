@@ -144,4 +144,19 @@ class SearchMatcherTest {
         assertFalse(SearchMatcher.matches(pluto, "unc"))
         assertTrue(SearchMatcher.matches(pluto, "launch"))
     }
+
+    @Test
+    fun retainedIndexPreservesRankingFoldingPackageRulesAndBlankIdentity() {
+        val apps = listOf(
+            app("Arcade", "com.play.games"), app("Display"), app("Google Play"),
+            app("Playground"), app("Øresundståg"), app("Straße"),
+            app("Voice Search", "com.google.android.googlequicksearchbox"),
+        )
+        val index = SearchMatcher.Index(apps)
+        for (query in listOf("play", "pla", "lay", "ch", "google", "ore", "ØRE", "STRASSE", "  play  ", "zzz")) {
+            assertEquals("query=$query", SearchMatcher.filter(apps, query), index.filter(query))
+        }
+        assertSame(apps, index.filter(""))
+        assertSame(apps, index.filter(" \t "))
+    }
 }

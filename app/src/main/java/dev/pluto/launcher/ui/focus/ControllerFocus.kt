@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.focus
 
+import android.annotation.SuppressLint
+
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -699,6 +701,9 @@ private class ControllerFocusableNode(
     private var tracker: PositionTracker? = null
     private var actions: List<CustomAccessibilityAction>? = null
 
+    // Provider identities belong to this window/layer for the node lifetime. Their mutable
+    // focus/inert values are read in event/draw callbacks, rather than captured here.
+    @SuppressLint("SuspiciousCompositionLocalModifierRead")
     override fun onAttach() {
         val c = currentValueOf(LocalControllerFocus)
         controller = c
@@ -968,6 +973,9 @@ private class ControllerFocusTargetNode(private var link: ControlLink) :
     private var token: Any? = null
     private var focused = false
 
+    // These window/layer provider objects remain stable until detach; inert.value is
+    // consulted on each focus event so changing layer coverage takes effect immediately.
+    @SuppressLint("SuspiciousCompositionLocalModifierRead")
     override fun onAttach() {
         controller = currentValueOf(LocalControllerFocus)
         inert = currentValueOf(LocalFocusInert)

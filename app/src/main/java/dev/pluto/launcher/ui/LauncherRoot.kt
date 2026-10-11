@@ -94,6 +94,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.pluto.launcher.LauncherApplication
 import dev.pluto.launcher.R
@@ -193,9 +194,12 @@ internal fun Modifier.hiddenFromAccessibility(hidden: Boolean): Modifier =
 @Composable
 fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     // Snapshot state written together with the live session (see LauncherViewModel.uiState).
+    val notificationApps by dev.pluto.launcher.system.NotificationDots.apps.collectAsStateWithLifecycle()
+    val notificationAccess by dev.pluto.launcher.system.NotificationDots.access.collectAsStateWithLifecycle()
     val state by vm.uiState
     val focus = remember { ControllerFocusController() }
     val context = LocalContext.current
+    LaunchedEffect(context) { dev.pluto.launcher.system.NotificationDots.refreshAccess(context) }
     val iconCache = remember(context) { (context.applicationContext as LauncherApplication).container.icons }
 
     // Controller attach / detach switches the presentation immediately (before the new mode's
@@ -241,7 +245,10 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     DisposableEffect(lifecycle, veil) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) launchScope.launch { veil.clear() }
-            if (event == Lifecycle.Event.ON_RESUME) vm.refreshRomLibrariesIfNeeded()
+            if (event == Lifecycle.Event.ON_RESUME) {
+                vm.refreshRomLibrariesIfNeeded()
+                dev.pluto.launcher.system.NotificationDots.refreshAccess(context)
+            }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
@@ -265,6 +272,8 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     }
 
     CompositionLocalProvider(
+        dev.pluto.launcher.ui.components.LocalNotificationApps provides
+            (if (state.settings.notificationDots && notificationAccess) notificationApps else emptySet()),
         LocalIconCache provides iconCache,
         LocalDrawerReveal provides reveal,
         LocalOriginRegistry provides origins,
@@ -331,7 +340,7 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                             PlutoBackground(state.settings.backgroundFrameRate, animate = !state.settings.reducedMotion && !backdropCovered, modifier = backdropModifier)
                         }
                         BackgroundChoice.XMB -> Box(Modifier.fillMaxSize().background(state.settings.xmbBaseColor())) {
-                            XmbBackground(state.settings.xmbBaseColor(), animate = !state.settings.reducedMotion && !backdropCovered, modifier = backdropModifier)
+                            XmbBackground(state.settings.xmbBaseColor(), rate = state.settings.backgroundFrameRate, animate = !state.settings.reducedMotion && !backdropCovered, modifier = backdropModifier)
                         }
                         BackgroundChoice.WALLPAPER -> WallpaperScrim(state.settings)
                     }
@@ -373,51 +382,21 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     if (!state.loading) PrewarmIcons(state, iconCache)
 }
 
-/**
- * Decodes app icons ahead of need, in the background, at every size the current
- * presentation can show (home and the drawer, Handheld rows and tiles, onboarding and edit
- * lists), so no surface entering with motion (a folder growing open, a category page
- * sliding in, the drawer) ever shows placeholders that pop in. What is on home (grid and
- * dock) goes first, right away; the rest of the catalog follows once the launcher is idle.
- */
+/** Warm only the active Home dock. Grid surfaces warm their own viewport at their actual size. */
 @Composable
 private fun PrewarmIcons(state: LauncherUiState, cache: dev.pluto.launcher.apps.IconCache) {
     val density = LocalDensity.current
-    val handheldPossible = state.mode == LauncherMode.HANDHELD || state.controllerConnected
-    val baseSize = state.iconSize()
-    val sizes = remember(baseSize, handheldPossible, density) {
-        buildList {
-            add(baseSize)
-            if (handheldPossible) {
-                val handheld = state.iconSize(base = 68.dp)
-                add(handheld)
-                add(handheld * 0.85f)
-            }
-            // Onboarding and Edit lists.
-            add(36.dp)
-        }.map { with(density) { it.roundToPx() } }.distinct()
-    }
-    val all = state.allApps
-    val home = state.homeTiles
+    val size = with(density) { state.iconSize().roundToPx() }
     val dock = state.dock
-    LaunchedEffect(all, home, dock, sizes) {
-        val first = buildList {
-            dock.forEach { if (it != null) add(it.key) }
-            home.forEach { tile ->
-                when (tile) {
-                    is HomeTile.App -> add(tile.entry.key)
-                    is HomeTile.FolderTile -> tile.folder.apps.forEach { add(it.key) }
-                    is HomeTile.Widget -> Unit
-                }
-            }
+    val active = state.mode != dev.pluto.launcher.model.LauncherMode.HANDHELD && state.session.layers.isEmpty()
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(dock, size, active, state.settings.iconPack, lifecycle) {
+        if (!active) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            cache.prefetch(dock.mapNotNull { it?.key }.distinct().take(cache.prewarmLimit(size)), listOf(size))
         }
-        cache.prefetch(first, sizes.take(1))
-        delay(ICON_PREWARM_DELAY_MS)
-        cache.prefetch(all.map { it.key }, sizes)
     }
 }
-
-private const val ICON_PREWARM_DELAY_MS = 300L
 
 /**
  * Routes controller actions: the focus layer first, then launcher-level shortcuts.
@@ -490,7 +469,7 @@ private val Layer.kind: LayerKind
         is Layer.FolderLayer -> LayerKind.FOLDER
         // Bottom-sheet/dialog style; they draw their own ModalPanel scrim.
         is Layer.AppActions, is Layer.CategoryMembership, is Layer.MoveToFolder, is Layer.WidgetActions -> LayerKind.SHEET
-        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker, Layer.WidgetPicker, Layer.RomLibraries -> LayerKind.PAGE
+        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker, Layer.WidgetPicker, Layer.RomLibraries, Layer.ConsoleOverview -> LayerKind.PAGE
         Layer.Onboarding -> LayerKind.ONBOARDING
     }
 
@@ -1279,6 +1258,7 @@ private fun LayerPredictiveBack(
 @Composable
 private fun LayerContent(layer: Layer, state: LauncherUiState, vm: LauncherViewModel) {
     when (layer) {
+        Layer.ConsoleOverview -> dev.pluto.launcher.ui.overlay.ConsoleOverviewScreen(state, vm)
         Layer.RomLibraries -> dev.pluto.launcher.ui.overlay.RomLibrariesScreen(state, vm)
         Layer.Drawer -> DrawerScreen(state, vm)
         is Layer.FolderLayer -> FolderOverlay(state, vm, layer.folderId)

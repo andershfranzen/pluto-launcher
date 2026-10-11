@@ -10,6 +10,7 @@ class LayerTest {
 
     private val allLayers = listOf(
         Layer.Drawer,
+        Layer.ConsoleOverview,
         Layer.FolderLayer(7),
         Layer.AppActions(key),
         Layer.CategoryMembership(key),

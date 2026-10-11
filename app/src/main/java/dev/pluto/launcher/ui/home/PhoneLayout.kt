@@ -129,6 +129,7 @@ private fun PhoneFavourites(
             EmptyFavourites(vm, Modifier.align(Alignment.Center))
         } else {
             val (entries, dragProbe) = rememberDragAwareTiles(tiles, gridState)
+            PrewarmGridIcons(gridState, entries, iconSize, keys = HomeGridEntry::prewarmKeys)
             LazyVerticalGrid(
                 columns = AdaptiveCountCells(minCell = iconSize + 36.dp, minCount = 3, maxCount = 6, extra = 24.dp),
                 state = gridState,

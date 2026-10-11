@@ -8,6 +8,9 @@ import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +28,16 @@ import org.junit.runner.RunWith
 class StartupBenchmarks {
     @get:Rule
     val rule = MacrobenchmarkRule()
+
+    @Before
+    fun prepareFixtures() {
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        androidx.test.uiautomator.Configurator.getInstance().waitForIdleTimeout = 1_000L
+        val result = device.executeShellCommand("content call --uri content://$PACKAGE.profile-fixtures --method seed")
+        check(result.contains("status=ready")) { "Benchmark fixture setup failed: $result" }
+        val home = device.executeShellCommand("cmd package set-home-activity $PACKAGE/.MainActivity")
+        check(!home.contains("Error", ignoreCase = true)) { "Could not set benchmark HOME: $home" }
+    }
 
     @Test
     fun startupNoCompilation() = startup(CompilationMode.None())
@@ -44,7 +57,11 @@ class StartupBenchmarks {
         compilationMode = mode,
         startupMode = StartupMode.COLD,
         iterations = 10,
-        setupBlock = { pressHome() },
+        setupBlock = {
+            // Pluto is default HOME for shortcuts. Keep a different activity foreground
+            // before Macrobenchmark's cold-process kill so HOME cannot prelaunch Pluto.
+            device.executeShellCommand("am start -W -a android.settings.SETTINGS")
+        },
     ) {
         startPluto()
     }

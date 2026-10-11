@@ -91,6 +91,8 @@ class AppCatalog(context: Context) {
     private val _otherProfilesPresent = MutableStateFlow(false)
     private val _packageEvents = MutableSharedFlow<PackageEvent>(extraBufferCapacity = 16)
     private val _loads = MutableStateFlow<CatalogLoad?>(null)
+    private val _shortcutGeneration = MutableStateFlow(0L)
+    val shortcutGeneration: StateFlow<Long> = _shortcutGeneration.asStateFlow()
 
     /** All launchable activities in the personal profile, unsorted. Null until first load. */
     val apps: StateFlow<List<AppEntry>?> = _apps.asStateFlow()
@@ -122,7 +124,12 @@ class AppCatalog(context: Context) {
         override fun onPackagesSuspended(packageNames: Array<out String>, user: UserHandle) = onChanged(user)
         override fun onPackagesUnsuspended(packageNames: Array<out String>, user: UserHandle) = onChanged(user)
 
+        override fun onShortcutsChanged(packageName: String, shortcuts: MutableList<ShortcutInfo>, user: UserHandle) {
+            if (user == myUser) _shortcutGeneration.value++
+        }
+
         private fun onChanged(user: UserHandle) {
+            if (user == myUser) _shortcutGeneration.value++
             // Other profiles are not listed in 0.1; their changes only matter for the disclosure flag.
             if (user == myUser) scheduleReload() else scope.launch { updateOtherProfiles() }
         }
@@ -422,6 +429,39 @@ class AppCatalog(context: Context) {
             .sortedWith(compareBy<ShortcutInfo>({ if (it.isDeclaredInManifest) 0 else 1 }, { it.rank }))
             .take(limit)
             .map { AppShortcut(it.id, (it.shortLabel ?: it.longLabel ?: it.id).toString(), it) }
+    }
+
+    /** One bulk query for search, off the main thread; only shortcuts belonging to visible apps. */
+    fun searchShortcuts(apps: List<AppEntry>): List<Pair<AppEntry, AppShortcut>> {
+        if (!runCatching { launcherApps.hasShortcutHostPermission() }.getOrDefault(false)) return emptyList()
+        val eligible = apps.filter { it.key.userSerial == mySerial && it.isEnabled }
+        val byComponent = eligible.associateBy { it.key.component }
+        val byPackage = eligible.groupBy { it.packageName }
+        val query = LauncherApps.ShortcutQuery().setQueryFlags(
+            LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or
+                LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
+        val infos = runCatching { launcherApps.getShortcuts(query, myUser).orEmpty() }.getOrDefault(emptyList())
+        return infos.filter { it.isEnabled }.mapNotNull { info ->
+            // An explicit activity must match a visible launcher entry. Never expose a hidden sibling.
+            val app = if (info.activity != null) byComponent[info.activity!!.flattenToString()]
+                else byPackage[info.`package`]?.firstOrNull()
+            app?.let { it to AppShortcut(info.id, (info.shortLabel ?: info.longLabel ?: info.id).toString(), info) }
+        }.distinctBy { (app, shortcut) -> Triple(app.key.userSerial, app.packageName, shortcut.id) }
+    }
+
+    /** Revalidates one search action without querying every package's shortcuts. Blocking. */
+    fun searchShortcut(app: AppEntry, id: String): AppShortcut? {
+        if (app.key.userSerial != mySerial || !app.isEnabled) return null
+        if (!runCatching { launcherApps.hasShortcutHostPermission() }.getOrDefault(false)) return null
+        val query = LauncherApps.ShortcutQuery()
+            .setPackage(app.packageName)
+            .setShortcutIds(listOf(id))
+            .setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or
+                LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
+        val info = runCatching { launcherApps.getShortcuts(query, myUser).orEmpty() }.getOrNull()
+            ?.firstOrNull { it.id == id && it.isEnabled &&
+                (it.activity?.flattenToString()?.let { component -> component == app.key.component } ?: true) } ?: return null
+        return AppShortcut(info.id, (info.shortLabel ?: info.longLabel ?: info.id).toString(), info)
     }
 
     /** The shortcut's icon at [density] (DisplayMetrics density dpi), or null. Blocking. */

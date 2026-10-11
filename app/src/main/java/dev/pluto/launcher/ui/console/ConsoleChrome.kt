@@ -31,6 +31,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -113,8 +115,8 @@ val ConsoleLegend = listOf(
     LegendItem(ControllerAction.CONFIRM, "Open"),
     LegendItem(ControllerAction.ACTIONS, "Actions"),
     LegendItem(ControllerAction.SEARCH, "Search"),
-    LegendItem(ControllerAction.PREV_CATEGORY, "Shelf"),
-    LegendItem(ControllerAction.NEXT_CATEGORY, "Shelf"),
+    LegendItem(ControllerAction.PREV_CATEGORY, "Shelves"),
+    LegendItem(ControllerAction.NEXT_CATEGORY, "Shelves"),
     LegendItem(ControllerAction.SETTINGS, "Settings"),
 )
 
@@ -337,20 +339,19 @@ private fun ShelfTab(
     val isSelectedNow = { selectedNow }
     var hasFocus by remember { mutableStateOf(false) }
     val showFocus = hasFocus && focus.inputMode == InputMode.CONTROLLER
-    // Switch/PS5 style: the selected shelf is a solid light pill with dark text and an
-    // underline; a focused other tab gets a translucent fill under its ring; the rest are
-    // just their light text.
+    // Charcoal glass keeps every shelf quiet; a bright rim and underline mark selection.
+    // A focused other tab gets a translucent fill beneath its controller ring.
     val container by animateColorAsState(
         when {
-            isSelected -> Color.White
+            isSelected -> Color(0xFF24262B).copy(alpha = 0.78f)
             showFocus -> FocusedTabFill
-            else -> Color.Transparent
+            else -> Color(0xFF15171B).copy(alpha = 0.32f)
         },
         PlutoMotion.fadeIn(),
         label = "shelfTab",
     )
     val content by animateColorAsState(
-        if (isSelected) Color(0xFF14161C) else Color.White.copy(alpha = 0.72f),
+        if (isSelected) Color.White else Color.White.copy(alpha = 0.68f),
         PlutoMotion.fadeIn(),
         label = "shelfTabText",
     )
@@ -393,6 +394,9 @@ private fun ShelfTab(
             .clip(TabShape)
             .drawBehind {
                 drawRect(container)
+                drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.08f), Color.Transparent)))
+                drawRoundRect(Color.White.copy(alpha = if (isSelected) 0.18f else 0.06f),
+                    cornerRadius = CornerRadius(20.dp.toPx()), style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
                 if (isSelected) {
                     // Not colour alone: the selected tab is also underlined.
                     val w = TabUnderlineWidth.toPx()
@@ -562,7 +566,7 @@ private fun readBattery(deviceId: Int): BatteryReading? = try {
  * same from the focused card.
  */
 @Composable
-internal fun ConsoleTitle(stage: CoverflowState, modifier: Modifier = Modifier) {
+internal fun ConsoleTitle(stage: CoverflowState, subtitle: String, modifier: Modifier = Modifier) {
     val entry = stage.selectedEntry
     val title = entry?.label.orEmpty()
     val lastChange = remember { longArrayOf(0L) }
@@ -592,8 +596,11 @@ internal fun ConsoleTitle(stage: CoverflowState, modifier: Modifier = Modifier) 
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            modifier = Modifier.graphicsLayer { this.alpha = alpha.value },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 32.dp).graphicsLayer { this.alpha = alpha.value },
         )
+        Text(subtitle, style = MaterialTheme.typography.labelMedium.overWallpaper(),
+            color = Color.White.copy(alpha = 0.56f), maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 3.dp).heightIn(min = 18.dp))
     }
 }
 
@@ -606,6 +613,7 @@ internal fun ConsoleCounter(stage: CoverflowState, modifier: Modifier = Modifier
         // Direction from the words, not the layout: "1 of 2" must not reorder in right-to-left.
         style = MaterialTheme.typography.bodyMedium.overWallpaper().copy(textDirection = TextDirection.Content),
         maxLines = 1,
+        color = Color.White.copy(alpha = 0.48f),
         modifier = modifier.clearAndSetSemantics { },
     )
 }
@@ -625,36 +633,35 @@ private const val TopScrimExtra = 0.67f
  * in draw), in its own layer so the redraw stays local.
  */
 @Composable
-internal fun ConsoleBackdrop(stage: () -> CoverflowState?, artPx: Int, versions: () -> Map<String, Int>, modifier: Modifier = Modifier) {
+internal fun ConsoleBackdrop(stage: () -> CoverflowState?, artPx: Int, versions: () -> Map<String, Int>, modifier: Modifier = Modifier, dimWallpaper: Boolean = true) {
     val dark = LocalDarkTheme.current
-    val neutral = MaterialTheme.colorScheme.primary
     val glow = remember { Animatable(Color.Transparent) }
     LaunchedEffect(glow, artPx) {
         snapshotFlow {
             val s = stage()
-            s?.artTick
             val entry = s?.selectedEntry
+            entry?.let { s?.artRevision(it.key)?.intValue }
             if (entry == null) {
                 null
             } else {
                 ConsoleArtCache.peek(entry, artPx, versions()[entry.packageName] ?: 0)?.color
             }
         }.collectLatest { color ->
-            val target = color?.let { Color(it) } ?: neutral.copy(alpha = 0.5f)
+            val target = color?.let { Color(it) } ?: Color.Transparent
             glow.animateTo(target, tween(PlutoMotion.LONG_MS, easing = PlutoMotion.Standard))
         }
     }
-    val strength = if (dark) 0.55f else 0.38f
+    val strength = if (dark) 0.30f else 0.24f
     Spacer(
         modifier
             .graphicsLayer { }
             .drawBehind {
                 // An immersive stage: the wallpaper recedes behind a dark scrim, the spotlight
                 // in the selected app's colour sits on top of it.
-                drawRect(Color.Black.copy(alpha = ConsoleScrimAlpha))
+                if (dimWallpaper) drawRect(Color.Black.copy(alpha = ConsoleScrimAlpha))
                 // Deeper behind the tabs (about 90% at the top), so a light wallpaper never
                 // shows through the header.
-                drawRect(
+                if (dimWallpaper) drawRect(
                     Brush.verticalGradient(
                         listOf(Color.Black.copy(alpha = TopScrimExtra), Color.Transparent),
                         startY = 0f,

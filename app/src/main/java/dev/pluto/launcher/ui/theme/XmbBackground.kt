@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import dev.pluto.launcher.data.prefs.BackgroundFrameRate
 import dev.pluto.launcher.data.prefs.BackgroundChoice
 import dev.pluto.launcher.data.prefs.LauncherSettings
 import dev.pluto.launcher.data.prefs.XmbColor
@@ -57,19 +58,19 @@ fun LauncherSettings.backgroundFor(console: Boolean): BackgroundChoice = if (con
  * background is a still frame.
  */
 @Composable
-fun XmbBackground(base: Color, animate: Boolean, modifier: Modifier = Modifier) {
+fun XmbBackground(base: Color, animate: Boolean, modifier: Modifier = Modifier, rate: BackgroundFrameRate = BackgroundFrameRate.SMOOTH) {
     val time = remember { mutableFloatStateOf(XMB_STILL_TIME) }
     val lifecycle = LocalLifecycleOwner.current
     val view = LocalView.current
     if (animate) {
-        LaunchedEffect(lifecycle, view) {
+        LaunchedEffect(lifecycle, view, rate) {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // The waves move slowly: redrawing every other refresh (72 fps on a 144 Hz
                 // screen) looks the same and halves the GPU work. The loop sleeps between
                 // updates instead of asking for the frames it would skip, so Choreographer
                 // isn't kept busy every vsync for nothing.
                 val refresh = view.display?.refreshRate?.takeIf { it > 1f } ?: 60f
-                val interval = (XMB_FRAME_DIVISOR * 1_000_000_000L / refresh).toLong()
+                val interval = (1_000_000_000L / xmbEffectsFps(refresh, rate)).toLong()
                 val start = withFrameNanos { it } - (time.floatValue * 1e9f).toLong()
                 var next = System.nanoTime()
                 while (true) {
@@ -146,18 +147,11 @@ fun XmbBackground(base: Color, animate: Boolean, modifier: Modifier = Modifier) 
                     val ys2 = FloatArray(steps + 1)
                     val sparkles = Sparkles.create(XMB_SPARKLES)
 
-                    // One ribbon line: three slow sine terms, partly travelling in opposite
-                    // directions, so the bundle breathes and twists rather than just sliding.
+                    // Fixed spatial phases are cached; only six temporal trig values per
+                    // curve are needed, instead of three sine calls at every sample point.
+                    val waveSampler = XmbWaveSampler(steps)
                     fun wave(out: FloatArray, t: Float, phase: Float, amp: Float, centre: Float) {
-                        val tau = 2f * PI.toFloat()
-                        for (i in 0..steps) {
-                            val x = i / steps.toFloat()
-                            out[i] = h * centre + amp * h * (
-                                0.10f * sin(tau * (x * 0.85f + t * 0.022f) + phase) +
-                                    0.045f * sin(tau * (x * 1.9f - t * 0.035f) + phase * 1.7f) +
-                                    0.02f * sin(tau * (x * 3.1f + t * 0.05f) + phase * 2.3f)
-                                )
-                        }
+                        waveSampler.fill(out, t, phase, amp, centre, h)
                     }
                     fun line(out: FloatArray): Path {
                         path.reset()
@@ -271,8 +265,9 @@ private class Sparkles(
     }
 }
 
-/** Redraw the moving layer on every n-th display frame. */
-private const val XMB_FRAME_DIVISOR = 2
+/** Keep slow waves below half refresh, and honor the user's background battery setting. */
+internal fun xmbEffectsFps(refreshRate: Float, rate: BackgroundFrameRate): Float =
+    minOf((refreshRate.takeIf { it > 1f } ?: 60f) / 2f, rate.effectsFps.toFloat())
 
 /** Time shown when animation is off: a pleasant, settled frame. */
 private const val XMB_STILL_TIME = 37f

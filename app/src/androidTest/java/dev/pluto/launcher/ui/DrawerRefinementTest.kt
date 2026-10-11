@@ -97,7 +97,7 @@ class DrawerRefinementTest {
 
     @Test fun landscapeNoResultsCanBroadenSearchWithoutLosingQuery() {
         landscapeSearch()
-        rule.onNodeWithContentDescription("Search all apps").assertIsDisplayed().performClick()
+        rule.onNodeWithContentDescription("Search everything").assertIsDisplayed().performClick()
         rule.waitUntil(5_000) { vm.uiState.value.activeCategory?.isAll == true && vm.uiState.value.drawerApps.isNotEmpty() }
         assertEquals("settings", vm.uiState.value.session.searchText)
         rule.onNodeWithContentDescription("Search apps").assertIsDisplayed()

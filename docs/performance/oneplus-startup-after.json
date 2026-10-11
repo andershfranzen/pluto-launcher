@@ -1,0 +1,171 @@
+{
+  "device": "OnePlus CPH2709 (Android 16)",
+  "build": "after",
+  "compilation": "speed",
+  "screen": "awake and unlocked at batch boundaries",
+  "method": "am start -W; cold force-stop; warm return from Android Settings; first-display, not fully-drawn",
+  "batches": [
+    {
+      "runs": 5,
+      "method": "am start -W; cold force-stop; warm return from Android Settings; first-display, not fully-drawn",
+      "cold": [
+        {
+          "TotalTime": 199,
+          "WaitTime": 201,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 186,
+          "WaitTime": 189,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 204,
+          "WaitTime": 208,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 161,
+          "WaitTime": 165,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 170,
+          "WaitTime": 172,
+          "launchState": "COLD"
+        }
+      ],
+      "warm": [
+        {
+          "TotalTime": 49,
+          "WaitTime": 51,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 66,
+          "WaitTime": 68,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 95,
+          "WaitTime": 97,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 37,
+          "WaitTime": 39,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 56,
+          "WaitTime": 59,
+          "launchState": "HOT"
+        }
+      ],
+      "cold_summary_ms": {
+        "valid_samples": 5,
+        "excluded_samples": 0,
+        "p50": 186,
+        "p95": 204,
+        "min": 161,
+        "max": 204
+      },
+      "warm_summary_ms": {
+        "valid_samples": 5,
+        "excluded_samples": 0,
+        "p50": 56,
+        "p95": 95,
+        "min": 37,
+        "max": 95
+      }
+    },
+    {
+      "runs": 5,
+      "method": "am start -W; cold force-stop; warm return from Android Settings; first-display, not fully-drawn",
+      "cold": [
+        {
+          "TotalTime": 185,
+          "WaitTime": 187,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 184,
+          "WaitTime": 189,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 178,
+          "WaitTime": 180,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 173,
+          "WaitTime": 176,
+          "launchState": "COLD"
+        },
+        {
+          "TotalTime": 176,
+          "WaitTime": 184,
+          "launchState": "COLD"
+        }
+      ],
+      "warm": [
+        {
+          "TotalTime": 65,
+          "WaitTime": 68,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 61,
+          "WaitTime": 62,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 60,
+          "WaitTime": 62,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 65,
+          "WaitTime": 67,
+          "launchState": "HOT"
+        },
+        {
+          "TotalTime": 57,
+          "WaitTime": 59,
+          "launchState": "HOT"
+        }
+      ],
+      "cold_summary_ms": {
+        "valid_samples": 5,
+        "excluded_samples": 0,
+        "p50": 178,
+        "p95": 185,
+        "min": 173,
+        "max": 185
+      },
+      "warm_summary_ms": {
+        "valid_samples": 5,
+        "excluded_samples": 0,
+        "p50": 61,
+        "p95": 65,
+        "min": 57,
+        "max": 65
+      }
+    }
+  ],
+  "cold_combined_ms": {
+    "samples": 10,
+    "p50": 181.0,
+    "p95": 204,
+    "min": 161,
+    "max": 204
+  },
+  "warm_combined_ms": {
+    "samples": 10,
+    "p50": 60.5,
+    "p95": 95,
+    "min": 37,
+    "max": 95
+  }
+}
