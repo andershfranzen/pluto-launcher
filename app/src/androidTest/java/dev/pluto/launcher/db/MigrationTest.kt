@@ -132,6 +132,34 @@ class MigrationTest {
     }
 
     @Test
+    fun migrate2To3_preservesWidgetsAndPersistsRomShelves() {
+        helper.createDatabase(TEST_DB, 2).use { db ->
+            seedVersion1(db)
+            db.execSQL("INSERT INTO home_widget (appWidgetId, provider, rows) VALUES (5, 'com.example/.Clock', 2)")
+        }
+        helper.runMigrationsAndValidate(TEST_DB, 3, true, LauncherDatabase.MIGRATION_2_3).close()
+        val room = openWithRoom(TEST_DB)
+        runBlocking {
+            assertEquals(1, room.dao().widgets().size)
+            assertEquals(2, room.dao().homeItems().size)
+            val dao = room.romDao()
+            assertTrue(dao.observeLibraries().first().isEmpty())
+            val id = dao.saveLibrary(dev.pluto.launcher.data.db.RomLibraryEntity(name = "PlayStation 1", treeUri = "content://roms/tree/ps1", emulatorPackage = "com.github.stenzek.duckstation", launchMode = "AUTOMATIC"))
+            val game = dev.pluto.launcher.data.db.RomGameEntity(id, "content://roms/spyro.cue", "spyro.cue", "Spyro", 10, null)
+            dao.replaceGames(id, "content://roms/tree/ps1", listOf(game))
+            assertEquals(listOf(game), dao.observeLibraries().first().single().games)
+            // A stale scan cannot overwrite a newly chosen folder.
+            val row = dao.library(id)!!
+            dao.saveLibrary(row.copy(treeUri = "content://roms/tree/ps2"))
+            dao.replaceGames(id, row.treeUri, listOf(game))
+            assertTrue(dao.observeLibraries().first().single().games.isEmpty())
+            dao.replaceGames(id, "content://roms/tree/ps2", listOf(game))
+            dao.deleteLibrary(id)
+            assertTrue(dao.observeLibraries().first().isEmpty())
+        }
+    }
+
+    @Test
     fun migrationChainCoversEveryVersion() {
         for (start in 1 until LauncherDatabase.VERSION) {
             assertNotNull(

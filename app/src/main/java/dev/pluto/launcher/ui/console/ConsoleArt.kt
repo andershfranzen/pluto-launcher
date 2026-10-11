@@ -68,6 +68,56 @@ object ConsoleArtCache {
         override fun sizeOf(key: String, value: ConsoleArt): Int = value.bytes
     }
 
+    fun peek(entry: ConsoleEntry, sizePx: Int, version: Int): ConsoleArt? = when (entry) {
+        is ConsoleEntry.App -> peek(entry.entry.key, sizePx, version)
+        is ConsoleEntry.Rom -> cache.get("${entry.key}|${entry.game.modified}|${entry.game.coverUri}|$sizePx")
+    }
+
+    suspend fun load(context: android.content.Context, icons: IconCache, entry: ConsoleEntry, sizePx: Int, version: Int): ConsoleArt? {
+        if (entry is ConsoleEntry.App) return load(icons, entry.entry.key, sizePx, version)
+        entry as ConsoleEntry.Rom
+        val key = "${entry.key}|${entry.game.modified}|${entry.game.coverUri}|$sizePx"
+        cache.get(key)?.let { return it }
+        return withContext(Dispatchers.IO) {
+            val cover = entry.game.coverUri?.let { uri ->
+                runCatching {
+                    val parsed = android.net.Uri.parse(uri)
+                    val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    context.contentResolver.openInputStream(parsed)?.use { android.graphics.BitmapFactory.decodeStream(it, null, bounds) }
+                    var sample = 1
+                    while (bounds.outWidth / sample > sizePx * 2 || bounds.outHeight / sample > sizePx * 2) sample *= 2
+                    val options = android.graphics.BitmapFactory.Options().apply { inSampleSize = sample }
+                    context.contentResolver.openInputStream(parsed)?.use { android.graphics.BitmapFactory.decodeStream(it, null, options) }
+                }.getOrNull()
+            } ?: discArt(sizePx, entry.label)
+            build(cover.asImageBitmap()).also { cache.put(key, it) }
+        }
+    }
+
+    private fun discArt(size: Int, title: String): Bitmap {
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val centre = size / 2f
+        paint.shader = LinearGradient(0f, 0f, size.toFloat(), size.toFloat(), intArrayOf(0xFFE8ECF4.toInt(), 0xFF65738D.toInt(), 0xFFD4DEE9.toInt()), null, Shader.TileMode.CLAMP)
+        canvas.drawCircle(centre, centre, size * 0.46f, paint)
+        paint.shader = null
+        paint.color = 0xFF222936.toInt()
+        canvas.drawCircle(centre, centre, size * 0.1f, paint)
+        paint.color = 0xFFA2AABA.toInt()
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = size * 0.015f
+        canvas.drawCircle(centre, centre, size * 0.15f, paint)
+        paint.style = Paint.Style.FILL
+        paint.color = 0xFF263143.toInt()
+        paint.textSize = size * 0.12f
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+        val initials = title.split(' ').filter { it.firstOrNull()?.isLetterOrDigit() == true }.take(2).mapNotNull { it.firstOrNull()?.uppercaseChar() }.joinToString("")
+        canvas.drawText(initials, centre, size * 0.76f, paint)
+        return bitmap
+    }
+
     /** Cheap memory lookup; safe on the main thread and inside draw. */
     fun peek(key: AppKey, sizePx: Int, version: Int): ConsoleArt? = cache.get(cacheKey(key, sizePx, version))
 

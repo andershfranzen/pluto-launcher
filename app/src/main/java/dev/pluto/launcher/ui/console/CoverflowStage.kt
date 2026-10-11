@@ -34,13 +34,16 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -78,7 +81,8 @@ import kotlin.math.sign
 /** Every console card's focus id starts with this. */
 internal const val CARD_ID_PREFIX = "hh:card:"
 
-internal fun cardFocusId(shelfKey: String, key: AppKey): String = "$CARD_ID_PREFIX$shelfKey:${key.encode()}"
+internal fun cardFocusId(shelfKey: String, key: String): String = "$CARD_ID_PREFIX$shelfKey:$key"
+internal fun cardFocusId(shelfKey: String, key: AppKey): String = cardFocusId(shelfKey, "app:${key.encode()}")
 
 /** Card shape (also the focus ring's shape). */
 private val CardShape = RoundedCornerShape(26.dp)
@@ -122,7 +126,7 @@ private fun flowSpring(): FiniteAnimationSpec<Float> = PlutoMotion.spatialFast()
  * its velocity): nothing ever queues.
  */
 @Stable
-internal class CoverflowState(initialIndex: Int, initialApps: List<AppEntry>) {
+internal class CoverflowState(initialIndex: Int, initialApps: List<ConsoleEntry>) {
     var position by mutableFloatStateOf(initialIndex.toFloat())
         private set
     var selectedIndex by mutableIntStateOf(initialIndex)
@@ -138,12 +142,12 @@ internal class CoverflowState(initialIndex: Int, initialApps: List<AppEntry>) {
 
     private var velocity = 0f
     private var job: Job? = null
-    internal val requesters = HashMap<AppKey, FocusRequester>()
-    internal val anchors = HashMap<AppKey, OriginAnchor>()
+    internal val requesters = HashMap<String, FocusRequester>()
+    internal val anchors = HashMap<String, OriginAnchor>()
 
     val count: Int get() = apps.size
-    val selectedKey: AppKey? get() = apps.getOrNull(selectedIndex)?.key
-    val selectedEntry: AppEntry? get() = apps.getOrNull(selectedIndex)
+    val selectedKey: String? get() = apps.getOrNull(selectedIndex)?.key
+    val selectedEntry: ConsoleEntry? get() = apps.getOrNull(selectedIndex)
 
     /** Moves the selection to [index] and glides there (instant with reduce motion: MotionDurationScale 0). */
     fun select(index: Int, scope: CoroutineScope) {
@@ -197,7 +201,7 @@ internal class CoverflowState(initialIndex: Int, initialApps: List<AppEntry>) {
      * composition (so layout in the same frame already sees the new list); the caller lets the
      * flow settle afterwards (an effect keyed on the list).
      */
-    fun sync(newApps: List<AppEntry>) {
+    fun sync(newApps: List<ConsoleEntry>) {
         val old = Snapshot.withoutReadObservation { apps }
         if (old === newApps) return
         if (old.map { it.key } == newApps.map { it.key }) {
@@ -276,14 +280,15 @@ internal fun CoverflowStage(
     versions: Map<String, Int>,
     page: PageMotion,
     hero: HeroEmphasis,
-    onActivate: (index: Int, entry: AppEntry) -> Unit,
-    onActions: (entry: AppEntry) -> Unit,
-    onFocused: (index: Int, entry: AppEntry) -> Unit,
+    onActivate: (index: Int, entry: ConsoleEntry) -> Unit,
+    onActions: (entry: ConsoleEntry) -> Unit,
+    onFocused: (index: Int, entry: ConsoleEntry) -> Unit,
     onTouchSelect: (index: Int) -> Unit,
     upTarget: () -> FocusRequester,
     downTarget: () -> FocusRequester,
     modifier: Modifier = Modifier,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
     val style = LocalCarouselStyle.current
     // Right-to-left: the flow runs the other way (next card on the left), mirrored as a whole.
@@ -305,8 +310,8 @@ internal fun CoverflowStage(
             for (i in order) {
                 val entry = apps.getOrNull(i) ?: continue
                 val version = currentVersions[entry.packageName] ?: 0
-                if (ConsoleArtCache.peek(entry.key, artPx, version) == null) {
-                    if (ConsoleArtCache.load(icons, entry.key, artPx, version) != null) stage.artTick++
+                if (ConsoleArtCache.peek(entry, artPx, version) == null) {
+                    if (ConsoleArtCache.load(context, icons, entry, artPx, version) != null) stage.artTick++
                 }
             }
         }
@@ -438,7 +443,7 @@ private fun cardSizePx(width: Int, height: Int, density: Float): Int {
 @Composable
 private fun CoverCard(
     stage: CoverflowState,
-    entry: AppEntry,
+    entry: ConsoleEntry,
     index: Int,
     count: Int,
     mirror: Float,
@@ -448,9 +453,9 @@ private fun CoverCard(
     placeholder: Color,
     page: PageMotion,
     hero: HeroEmphasis,
-    onActivate: (Int, AppEntry) -> Unit,
-    onActions: (AppEntry) -> Unit,
-    onFocused: (Int, AppEntry) -> Unit,
+    onActivate: (Int, ConsoleEntry) -> Unit,
+    onActions: (ConsoleEntry) -> Unit,
+    onFocused: (Int, ConsoleEntry) -> Unit,
     upTarget: () -> FocusRequester,
     downTarget: () -> FocusRequester,
 ) {
@@ -482,8 +487,10 @@ private fun CoverCard(
             }
             .drawWithCache {
                 stage.artTick
-                val art = ConsoleArtCache.peek(key, artPx, version)
-                val look = CardPaint(size.width, size.height, this)
+                val art = ConsoleArtCache.peek(entry, artPx, version)
+                val coverSize = if (entry is ConsoleEntry.Rom && entry.game.coverUri != null && art != null)
+                    IntSize(art.icon.width, art.icon.height) else null
+                val look = CardPaint(size.width, size.height, this, coverSize)
                 val iconAlpha = if (enabled) 1f else 0.5f
                 onDrawBehind {
                     // Side cards dim with distance, and the hero dims while focus is up in the
@@ -494,7 +501,7 @@ private fun CoverCard(
                     look.drawReflection(this, art, (1f - dim) * iconAlpha)
                     look.drawFace(this)
                     if (art != null) {
-                        drawImage(art.icon, dstOffset = look.iconOffset, dstSize = look.iconSize, alpha = iconAlpha)
+                        look.drawArt(this, art, iconAlpha)
                     } else {
                         drawCircle(placeholder, radius = look.iconSize.width * 0.42f)
                     }
@@ -546,7 +553,7 @@ private fun GraphicsLayerScope.applyCardLayer(t: CoverflowMath.CardTransform, ex
  * face with a subtle top highlight and rim, the centred icon's place, the mirrored face with
  * its eased fade, and the white focus glow.
  */
-private class CardPaint(w: Float, h: Float, density: Density) {
+private class CardPaint(w: Float, h: Float, density: Density, coverSize: IntSize? = null) {
     val corner = CornerRadius(w * CARD_CORNER_FRACTION)
     private val size = Size(w, h)
     private val face = Brush.verticalGradient(listOf(CardFaceTop, CardFaceBottom), startY = 0f, endY = h)
@@ -561,9 +568,15 @@ private class CardPaint(w: Float, h: Float, density: Density) {
         endY = h * 0.4f,
     )
     private val rimStroke = Stroke(width = with(density) { 1.dp.toPx() })
-    private val inset = (w * CardLook.ICON_INSET).roundToInt()
-    val iconOffset = IntOffset(inset, inset)
-    val iconSize = IntSize((w - inset * 2).roundToInt().coerceAtLeast(1), (h - inset * 2).roundToInt().coerceAtLeast(1))
+    private val inset = (w * if (coverSize != null) 0.03f else CardLook.ICON_INSET).roundToInt()
+    private val availableWidth = (w - inset * 2).coerceAtLeast(1f)
+    private val availableHeight = (h - inset * 2).coerceAtLeast(1f)
+    private val coverScale = coverSize?.let { minOf(availableWidth / it.width, availableHeight / it.height) }
+    val iconSize = if (coverSize != null && coverScale != null) {
+        IntSize((coverSize.width * coverScale).roundToInt().coerceAtLeast(1), (coverSize.height * coverScale).roundToInt().coerceAtLeast(1))
+    } else IntSize(availableWidth.roundToInt(), availableHeight.roundToInt())
+    val iconOffset = IntOffset(((w - iconSize.width) / 2).roundToInt(), ((h - iconSize.height) / 2).roundToInt())
+    private val outline = Path().apply { addRoundRect(RoundRect(0f, 0f, w, h, corner)) }
     private val reflectionTop = h * (1f + CardLook.REFLECTION_GAP)
     private val reflectionDepth = h * CardLook.REFLECTION_DEPTH
 
@@ -582,8 +595,8 @@ private class CardPaint(w: Float, h: Float, density: Density) {
         startY = reflectionTop,
         endY = reflectionTop + reflectionDepth * 0.5f,
     )
-    private val reflectedIconOffset = IntOffset(inset, (reflectionTop + inset).roundToInt())
-    private val reflectedIconHeight = ((h - inset * 2) * CardLook.ICON_REFLECTED).roundToInt().coerceAtLeast(1)
+    private val reflectedIconOffset = IntOffset(iconOffset.x, (reflectionTop + h - iconOffset.y - iconSize.height).roundToInt())
+    private val reflectedIconHeight = (iconSize.height * CardLook.ICON_REFLECTED).roundToInt().coerceAtLeast(1)
     private val glowReach = FloatArray(FocusGlowSteps.size / 2) { with(density) { FocusGlowSteps[it * 2].dp.toPx() } }
 
     fun drawFace(scope: DrawScope) = with(scope) {
@@ -593,6 +606,12 @@ private class CardPaint(w: Float, h: Float, density: Density) {
 
     fun drawRim(scope: DrawScope) = with(scope) {
         drawRoundRect(rim, cornerRadius = corner, style = rimStroke)
+    }
+
+    fun drawArt(scope: DrawScope, art: ConsoleArt, alpha: Float) = with(scope) {
+        clipPath(outline) {
+            drawImage(art.icon, dstOffset = iconOffset, dstSize = iconSize, alpha = alpha)
+        }
     }
 
     /** The whole face mirrored below the card: the face (with its edge), then the icon's pre-faded strip. */

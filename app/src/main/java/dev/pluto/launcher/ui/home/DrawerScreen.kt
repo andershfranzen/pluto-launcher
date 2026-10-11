@@ -130,6 +130,7 @@ import dev.pluto.launcher.ui.components.FastScrollRailWidth
 import dev.pluto.launcher.ui.components.Legends
 import dev.pluto.launcher.ui.components.PlutoIconButton
 import dev.pluto.launcher.ui.components.PlutoTextButton
+import dev.pluto.launcher.ui.components.glassSurface
 import dev.pluto.launcher.ui.components.ScrollSections
 import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.components.rememberEqual
@@ -461,6 +462,8 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                     onClear = { vm.clearSearch() },
                     onShowAll = { vm.selectCategory(null) },
                     onHiddenApps = { vm.openLayer(Layer.HiddenApps) },
+                    shortWindow = shortWindow,
+                    keyboardCompact = compact,
                     modifier = Modifier.align(Alignment.Center).fadeInOnAppear(),
                 )
             } else {
@@ -619,14 +622,14 @@ private fun ActionsModeBanner(onDone: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(16.dp))
+            .glassSurface(RoundedCornerShape(16.dp))
             .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             DrawerText.ACTIONS_HINT,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
@@ -994,12 +997,32 @@ private fun DrawerEmptyState(
     onClear: () -> Unit,
     onShowAll: () -> Unit,
     onHiddenApps: () -> Unit,
+    shortWindow: Boolean,
+    keyboardCompact: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    if (keyboardCompact) {
+        // The landscape keyboard leaves room for a single line. Clear remains available
+        // in the search field; do not let the decorative empty state push out the message.
+        Text(
+            text = when {
+                query.isNotBlank() -> "No apps match “$query”"
+                category != null && !category.isAll -> "No apps in ${category.name} yet"
+                else -> "No apps to show"
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = modifier.padding(horizontal = 24.dp, vertical = 4.dp),
+        )
+        return
+    }
     Column(modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
         when {
             query.isNotBlank() -> EmptyState(
                 title = "No apps match “$query”",
+                compact = shortWindow,
                 icon = Icons.Outlined.SearchOff,
                 detail = if (category != null && !category.isAll) {
                     "Searching in ${category.name}. Try All apps or a shorter name."
@@ -1014,15 +1037,17 @@ private fun DrawerEmptyState(
             }
             category != null && !category.isAll -> EmptyState(
                 title = "No apps in ${category.name} yet",
+                compact = shortWindow,
                 icon = Icons.Outlined.Category,
-                detail = "Press and hold an app (or use ⋮ beside search), then Categories… to add it here.",
+                detail = "Press and hold an app, choose More… and then Categories… to add it here.",
             ) {
                 PlutoTextButton("drawer:empty:all", "Show all apps", onShowAll, emphasized = true)
             }
             else -> EmptyState(
                 title = "No apps to show",
+                compact = shortWindow,
                 icon = Icons.Outlined.Apps,
-                detail = "Hidden apps can be restored from Settings → Hidden apps.",
+                detail = "Hidden apps can be restored from Settings → Apps → Hidden apps.",
             ) {
                 PlutoTextButton("drawer:empty:hidden", "Hidden apps", onHiddenApps)
             }

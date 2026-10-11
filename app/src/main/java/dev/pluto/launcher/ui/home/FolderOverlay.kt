@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -50,6 +53,8 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -57,9 +62,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.ui.Layer
+import dev.pluto.launcher.ui.DragSource
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.components.AppTile
+import dev.pluto.launcher.ui.components.symmetricHorizontalSafeDrawing
 import dev.pluto.launcher.ui.components.ButtonLegend
 import dev.pluto.launcher.ui.components.Legends
 import dev.pluto.launcher.ui.components.PlutoIconButton
@@ -112,6 +119,8 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
     val stagger = rememberStagger(animate = true, startDelayMs = 70, stepMs = 22, maxSlots = 8)
     var renaming by rememberSaveable(folderId) { mutableStateOf(false) }
     var draft by rememberSaveable(folderId) { mutableStateOf(folderUi.folder.name) }
+    val window = LocalWindowInfo.current.containerSize
+    val compactRename = renaming && window.width > window.height && WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     val defaultId = apps.firstOrNull()?.let { folderAppId(folderId, it.key) } ?: FV_CLOSE
     SideEffect { focus.setDefaultFocus(if (renaming) FV_NAME_FIELD else defaultId) }
@@ -152,8 +161,9 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(16.dp),
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))
+            .symmetricHorizontalSafeDrawing()
+            .padding(horizontal = 16.dp, vertical = if (compactRename) 4.dp else 16.dp),
         contentAlignment = Alignment.Center,
     ) {
         PlutoPanel(
@@ -162,7 +172,7 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                 .fillMaxWidth()
                 .heightIn(max = maxHeight),
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = if (compactRename) 8.dp else 16.dp)) {
                 AnimatedContent(
                     targetState = renaming,
                     transitionSpec = {
@@ -224,9 +234,12 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                     }
                 }
 
-                if (apps.isEmpty()) {
+                if (compactRename) {
+                    // The keyboard leaves room for the name row; app browsing resumes
+                    // as soon as the rename is saved or cancelled.
+                } else if (apps.isEmpty()) {
                     Text(
-                        "This folder is empty. In the app drawer, press and hold an app (or use ⋮ beside search), then pick Move to folder….",
+                        "This folder is empty. Drag an app onto it, or press and hold an app, choose More… and then Move to folder….",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp),
@@ -247,7 +260,8 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                                 entry = entry,
                                 iconSize = iconSize,
                                 onLaunch = { launcher.launch(entry.key, id) },
-                                modifier = plutoItem().staggered(stagger, index),
+                                modifier = plutoItem().staggered(stagger, index)
+                                    .homeDragSource(source = { DragSource.Folder(entry.key) }, look = { DragLook.App(entry) }),
                                 onActions = { vm.openLayer(Layer.AppActions(entry.key)) },
                                 focusId = id,
                                 onFocused = {
@@ -259,7 +273,7 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                     }
                 }
 
-                if (showControllerHints(state, focus)) {
+                if (!compactRename && showControllerHints(state, focus)) {
                     ButtonLegend(
                         state.activeMapping(),
                         Legends.Folder,

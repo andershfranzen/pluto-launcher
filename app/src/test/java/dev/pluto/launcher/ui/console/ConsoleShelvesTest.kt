@@ -21,6 +21,19 @@ class ConsoleShelvesTest {
     private fun app(name: String) = AppEntry(AppKey("pkg.$name/.Main", 0), name)
 
     @Test
+    fun romShelvesKeepTheirIdentityWhenRenamedAndParticipateInTabWrapping() {
+        val library = dev.pluto.launcher.model.RomLibrary(12, "PlayStation 1", "content://roms/tree/ps1", null)
+        val order = ConsoleShelves.order(categories, false, listOf(library))
+        val id = ShelfId.OfRomLibrary(12)
+        assertEquals(id, order.last())
+        assertEquals(id, ShelfId.decode(id.key))
+        assertEquals("PS1", ConsoleShelves.title(id, categories, listOf(library.copy(name = "PS1"))))
+        assertEquals(ShelfId.Favourites, ConsoleShelves.step(order, id, 1))
+        assertEquals(id, ConsoleShelves.resolve(id, order, ShelfId.Favourites))
+        assertEquals(ShelfId.Favourites, ConsoleShelves.resolve(id, order.dropLast(1), ShelfId.Favourites))
+    }
+
+    @Test
     fun orderIsRecentFavouritesThenCategories() {
         assertEquals(
             listOf(

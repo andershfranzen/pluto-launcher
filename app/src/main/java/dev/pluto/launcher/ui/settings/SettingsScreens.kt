@@ -45,6 +45,7 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.SettingsApplications
 import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VideogameAsset
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.Work
 import androidx.compose.material3.MaterialTheme
@@ -359,6 +360,11 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     onClick = { vm.openLayer(Layer.Categories) },
                 )
                 ActionRow(
+                    id = "settings:roms", label = "ROM tabs", icon = Icons.Rounded.VideogameAsset,
+                    supporting = "Add games and choose their default emulators",
+                    onClick = { vm.openLayer(Layer.RomLibraries) },
+                )
+                ActionRow(
                     id = "settings:hidden",
                     label = SettingsText.HIDDEN_APPS,
                     icon = Icons.Rounded.VisibilityOff,
@@ -496,7 +502,13 @@ fun HiddenAppsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 Spacer(Modifier.width(16.dp))
                 Column(Modifier.weight(1f)) {
                     Text(app.label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-                    Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        app.packageName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
                 }
                 Spacer(Modifier.width(8.dp))
                 PlutoButton(

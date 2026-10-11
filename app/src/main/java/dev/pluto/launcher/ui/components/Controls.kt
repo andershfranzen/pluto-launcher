@@ -86,8 +86,6 @@ import dev.pluto.launcher.ui.focus.controllerFocusable
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.PlutoDimens
 import dev.pluto.launcher.ui.theme.overWallpaper
-import dev.pluto.launcher.ui.theme.panelColor
-import dev.pluto.launcher.ui.theme.sheetRimBrush
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -96,8 +94,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
- * Standard panel used by sheets, folders, the dock and menus: the brand-tinted surface
- * ([panelColor]) with a faint light rim along its top edge, so every surface reads as one family.
+ * Shared frosted surface for folders and panels: neutral glass and the dock's light rim.
  */
 @Composable
 fun PlutoPanel(
@@ -106,11 +103,10 @@ fun PlutoPanel(
 ) {
     val shape = RoundedCornerShape(PlutoDimens.PanelCorner)
     Surface(
-        modifier = modifier,
+        modifier = modifier.glassSurface(shape),
         shape = shape,
-        color = panelColor(),
+        color = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        border = BorderStroke(1.dp, sheetRimBrush()),
         content = content,
     )
 }
@@ -191,8 +187,8 @@ fun PlutoTextButton(
     val shape = RoundedCornerShape(24.dp)
     // Emphasis is a solid light pill with dark text (inverse colours): with a monochrome
     // wallpaper the dynamic onPrimary is a mid-grey that reads as disabled on primary.
-    val container = if (emphasized) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.secondaryContainer
-    val content = if (emphasized) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSecondaryContainer
+    val container = if (emphasized) MaterialTheme.colorScheme.inverseSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+    val content = if (emphasized) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface
     val press = remember { MutableInteractionSource() }
     Row(
         modifier
@@ -201,7 +197,8 @@ fun PlutoTextButton(
             .controllerFocusable(id = id, onActivate = onClick, contentDescription = text, shape = shape, interactionSource = press)
             .clip(shape)
             .background(container)
-            .then(if (outline != null) Modifier.border(1.dp, outline, shape) else Modifier)
+            .then(if (outline != null) Modifier.border(1.dp, outline, shape)
+                else if (!emphasized) Modifier.border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f), shape) else Modifier)
             .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -557,14 +554,15 @@ fun EmptyState(
     detail: String? = null,
     onWallpaper: Boolean = false,
     icon: ImageVector? = null,
+    compact: Boolean = false,
     actions: @Composable () -> Unit = {},
 ) {
     Column(
-        modifier.padding(24.dp),
+        modifier.padding(horizontal = 24.dp, vertical = if (compact) 4.dp else 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 12.dp),
     ) {
-        if (icon != null) {
+        if (icon != null && !compact) {
             val disc = MaterialTheme.colorScheme.primaryContainer
             val orbit = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
             Box(

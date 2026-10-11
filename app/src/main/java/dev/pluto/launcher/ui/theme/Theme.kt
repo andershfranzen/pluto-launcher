@@ -49,6 +49,9 @@ val LocalReducedMotion = staticCompositionLocalOf { false }
 /** True when the launcher is currently rendered in its dark theme. */
 val LocalDarkTheme = staticCompositionLocalOf { true }
 
+/** Built-in backgrounds use a dark sky even when panels use the light theme. */
+val LocalDarkWallpaper = staticCompositionLocalOf { false }
+
 /** Shared shape/size tokens so every surface feels like one product. */
 object PlutoDimens {
     val PanelCorner = 24.dp
@@ -245,13 +248,14 @@ fun WallpaperScrim(settings: LauncherSettings, modifier: Modifier = Modifier) {
 
 /**
  * Text style for labels drawn directly on the wallpaper (clock, home tile labels):
- * the theme's on-surface colour plus a soft shadow so it stays legible on any image.
+ * light text on the built-in dark backgrounds, otherwise the theme's on-surface colour.
  */
 @Composable
 fun TextStyle.overWallpaper(): TextStyle {
-    val dark = LocalDarkTheme.current
+    val darkWallpaper = LocalDarkWallpaper.current
+    val dark = LocalDarkTheme.current || darkWallpaper
     return copy(
-        color = MaterialTheme.colorScheme.onSurface,
+        color = if (darkWallpaper) Color.White else MaterialTheme.colorScheme.onSurface,
         shadow = Shadow(
             // Strong enough that light text stays legible over light parts of a wallpaper.
             color = if (dark) Color.Black.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.9f),

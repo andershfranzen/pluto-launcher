@@ -4,6 +4,7 @@ import dev.pluto.launcher.ui.home.HideStatusBarWhile
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -13,8 +14,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,7 +36,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,6 +68,8 @@ import dev.pluto.launcher.ui.home.HomeDragController
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -88,7 +90,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -152,6 +153,7 @@ import dev.pluto.launcher.ui.theme.PlutoTheme
 import dev.pluto.launcher.ui.theme.WallpaperScrim
 import dev.pluto.launcher.ui.theme.XmbBackground
 import dev.pluto.launcher.ui.theme.PlutoBackground
+import dev.pluto.launcher.ui.theme.LocalDarkWallpaper
 import dev.pluto.launcher.data.prefs.BackgroundChoice
 import dev.pluto.launcher.ui.theme.xmbBaseColor
 import dev.pluto.launcher.ui.theme.backgroundFor
@@ -238,6 +240,7 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
     DisposableEffect(lifecycle, veil) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) launchScope.launch { veil.clear() }
+            if (event == Lifecycle.Event.ON_RESUME) vm.refreshRomLibrariesIfNeeded()
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
@@ -249,7 +252,7 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
         HomeDragController(
             onStart = { source ->
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                vm.beginHomeDrag(fromDrawer = source is DragSource.Drawer)
+                vm.beginHomeDrag(fromDrawer = source is DragSource.Drawer, fromFolder = source is DragSource.Folder)
             },
             onDrop = { source, target ->
                 haptics.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -320,18 +323,29 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                     // Console mode is immersive for as long as it lasts, including pages opened over
                     // it (Settings, the shelf picker), so the bar never flips while they animate.
                     HideStatusBarWhile(mode == LauncherMode.HANDHELD)
+                    val backdropCovered = state.session.topLayer != null
+                    val backdropModifier = if (backdropCovered) Modifier.blur(24.dp, BlurredEdgeTreatment.Unbounded) else Modifier
                     when (state.settings.backgroundFor(console = mode == LauncherMode.HANDHELD)) {
-                        BackgroundChoice.PLUTO -> PlutoBackground(state.settings.backgroundFrameRate, animate = !state.settings.reducedMotion)
-                        BackgroundChoice.XMB -> XmbBackground(state.settings.xmbBaseColor(), animate = !state.settings.reducedMotion)
+                        BackgroundChoice.PLUTO -> Box(Modifier.fillMaxSize().background(Color.Black)) {
+                            PlutoBackground(state.settings.backgroundFrameRate, animate = !state.settings.reducedMotion && !backdropCovered, modifier = backdropModifier)
+                        }
+                        BackgroundChoice.XMB -> Box(Modifier.fillMaxSize().background(state.settings.xmbBaseColor())) {
+                            XmbBackground(state.settings.xmbBaseColor(), animate = !state.settings.reducedMotion && !backdropCovered, modifier = backdropModifier)
+                        }
                         BackgroundChoice.WALLPAPER -> WallpaperScrim(state.settings)
                     }
                     val storageError = state.storageError
                     if (storageError != null) {
                         StorageErrorScreen(storageError, onRetry = vm::retryStorage)
-                    } else if (state.loading) {
-                        LoadingPlaceholder()
-                    } else {
+                    } else if (!state.loading) {
                         LauncherContent(state, mode, landscapeWindow = widthDp > heightDp, vm, focus)
+                    }
+                    AnimatedVisibility(
+                        visible = state.loading && storageError == null,
+                        enter = EnterTransition.None,
+                        exit = fadeOut(PlutoMotion.fadeOut()),
+                    ) {
+                        StartupScreen(reducedMotion = state.settings.reducedMotion)
                     }
 
                     MessageBar(
@@ -472,7 +486,7 @@ private val Layer.kind: LayerKind
         is Layer.FolderLayer -> LayerKind.FOLDER
         // Bottom-sheet/dialog style; they draw their own ModalPanel scrim.
         is Layer.AppActions, is Layer.CategoryMembership, is Layer.MoveToFolder, is Layer.WidgetActions -> LayerKind.SHEET
-        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker, Layer.WidgetPicker -> LayerKind.PAGE
+        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker, Layer.WidgetPicker, Layer.RomLibraries -> LayerKind.PAGE
         Layer.Onboarding -> LayerKind.ONBOARDING
     }
 
@@ -701,6 +715,7 @@ private fun LauncherContent(
                 Box(
                     Modifier
                         .fillMaxSize()
+                        .then(if (covered) Modifier.blur(20.dp, BlurredEdgeTreatment.Unbounded) else Modifier)
                         .hiddenFromAccessibility(covered)
                         // Home has no text input: the keyboard (drawer search, rename dialogs)
                         // must not reflow the layout beneath the layer that raised it.
@@ -992,6 +1007,7 @@ private fun LayerFrame(
             Modifier
                 .fillMaxSize()
                 .hiddenFromAccessibility(!active)
+                .then(if (present && !isTop) Modifier.blur(10.dp) else Modifier)
                 .beneathMotion(beneath, reveal, rtl),
         ) {
             // Hit targets are at rest while draw-only entry motion is still moving.
@@ -1182,7 +1198,10 @@ private fun ModeCrossfade(mode: LauncherMode, landscapeWindow: Boolean, state: L
         // its whole tree is not added to the rotation frame itself.
         val stale = leaving && shown.landscape != target.landscape
         // The outgoing layout is visual only: no focus, not read by screen readers.
-        CompositionLocalProvider(LocalFocusInert provides focusInert(leaving)) {
+        CompositionLocalProvider(
+            LocalFocusInert provides focusInert(leaving),
+            LocalDarkWallpaper provides (state.settings.backgroundFor(console = shown.mode == LauncherMode.HANDHELD) != BackgroundChoice.WALLPAPER),
+        ) {
             Box(
                 Modifier
                     .then(if (stale) SkipLayout else Modifier)
@@ -1261,6 +1280,7 @@ private fun LayerPredictiveBack(
 @Composable
 private fun LayerContent(layer: Layer, state: LauncherUiState, vm: LauncherViewModel) {
     when (layer) {
+        Layer.RomLibraries -> dev.pluto.launcher.ui.overlay.RomLibrariesScreen(state, vm)
         Layer.Drawer -> DrawerScreen(state, vm)
         is Layer.FolderLayer -> FolderOverlay(state, vm, layer.folderId)
         is Layer.AppActions -> AppActionsSheet(layer.key, state, vm)
@@ -1292,33 +1312,6 @@ private fun DismissScrim(progress: () -> Float, onDismiss: () -> Unit) {
             .clearAndSetSemantics { }
             .pointerInput(Unit) { detectTapGestures { currentOnDismiss() } },
     )
-}
-
-/** Minimal, non-blank first-load placeholder: the Pluto mark and a progress indicator. */
-@Composable
-private fun LoadingPlaceholder() {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-    ) {
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_foreground),
-            contentDescription = null,
-            modifier = Modifier.size(120.dp),
-        )
-        Text("Pluto", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
-        CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 3.dp)
-        Text(
-            "Loading apps…",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
-    }
 }
 
 private val KeyboardNavigationKeys = setOf(

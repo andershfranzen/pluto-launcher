@@ -24,6 +24,7 @@ import dev.pluto.launcher.model.HomeItem
 import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.model.Organization
 import dev.pluto.launcher.model.ReorderOp
+import dev.pluto.launcher.model.RomLibrary
 import dev.pluto.launcher.ui.console.ConsoleShelves
 import dev.pluto.launcher.ui.console.ShelfId
 import dev.pluto.launcher.ui.state.EnvironmentInputs
@@ -66,6 +67,67 @@ class LauncherViewModel(
     private val savedState: SavedStateHandle,
 ) : ViewModel() {
     private val repository get() = container.organization
+    val romLibraries = container.roms.libraries
+        .catch { showMessage("Could not load ROM shelves. Restart Pluto to try again.") }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    private val _romScanning = MutableStateFlow<Set<Long>>(emptySet())
+    val romScanning = _romScanning.asStateFlow()
+    private val _romErrors = MutableStateFlow<Map<Long, String>>(emptyMap())
+    val romErrors = _romErrors.asStateFlow()
+    private val romScanJobs = HashMap<Long, kotlinx.coroutines.Job>()
+    private val romSelections = HashMap<Long, String>()
+    private val romLastScans = HashMap<Long, Long>()
+
+    fun refreshRomLibrariesIfNeeded() {
+        val now = android.os.SystemClock.elapsedRealtime()
+        romLibraries.value.forEach { library ->
+            if (now - (romLastScans[library.id] ?: -30_000L) >= 30_000L) refreshRomLibrary(library.id)
+        }
+    }
+
+    fun saveRomLibrary(library: RomLibrary, onFailure: () -> Unit = {}, onSaved: (Long) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val id = container.roms.save(library)
+                onSaved(id)
+                refreshRomLibrary(id)
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) { onFailure(); showMessage(e.message ?: "Could not save this ROM shelf.") }
+        }
+    }
+
+    fun deleteRomLibrary(id: Long) {
+        romScanJobs.remove(id)?.cancel()
+        romLastScans.remove(id)
+        romSelections.remove(id)
+        _romErrors.update { it - id }
+        viewModelScope.launch {
+            try { container.roms.delete(id)
+            } catch (e: CancellationException) { throw e
+            } catch (_: Exception) { showMessage("Could not remove this ROM shelf.") }
+        }
+    }
+
+    fun refreshRomLibrary(id: Long) {
+        if (romScanJobs[id]?.isActive == true) return
+        romLastScans[id] = android.os.SystemClock.elapsedRealtime()
+        romScanJobs[id] = viewModelScope.launch {
+            _romScanning.update { it + id }
+            _romErrors.update { it - id }
+            try { container.roms.scan(id)
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) {
+                val error = if (e is SecurityException) "Folder access was lost. Choose the ROM folder again." else e.message ?: "Could not read this ROM folder. Choose it again."
+                _romErrors.update { it + (id to error) }
+            } finally { _romScanning.update { it - id } }
+        }
+    }
+
+    fun romSelection(id: Long): String? = romSelections[id] ?: savedState.get<String>("rom.selected.$id")
+    fun rememberRomSelection(id: Long, uri: String) {
+        romSelections[id] = uri
+        savedState["rom.selected.$id"] = uri
+    }
 
     private val session = MutableStateFlow(SessionSaver.restore(savedState))
     private val windowSize = MutableStateFlow<WindowSizeDp?>(null)
@@ -132,6 +194,17 @@ class LauncherViewModel(
      * composition rather than collecting [state].
      */
     val uiState: State<LauncherUiState> get() = _uiState
+
+    init {
+        // First observation refreshes each saved shelf once; later cache emissions do not
+        // restart scanning. Resuming the launcher refreshes with a 30-second throttle.
+        viewModelScope.launch {
+            val seen = HashSet<Long>()
+            romLibraries.collect { libraries ->
+                libraries.forEach { if (seen.add(it.id)) refreshRomLibrary(it.id) }
+            }
+        }
+    }
 
     init {
         SessionSaver.install(savedState) { session.value }
@@ -257,9 +330,11 @@ class LauncherViewModel(
      * A press-and-hold turned into a drag: the app actions menu it opened goes away, and a
      * drag out of the drawer closes the drawer so Home is there to drop onto.
      */
-    fun beginHomeDrag(fromDrawer: Boolean) = updateSession { s ->
+    fun beginHomeDrag(fromDrawer: Boolean, fromFolder: Boolean = false) = updateSession { s ->
         s.copy(
-            layers = s.layers.filterNot { it is Layer.AppActions || (fromDrawer && it == Layer.Drawer) },
+            layers = s.layers.filterNot {
+                it is Layer.AppActions || (fromDrawer && it == Layer.Drawer) || (fromFolder && it is Layer.FolderLayer)
+            },
             searchActive = if (fromDrawer) false else s.searchActive,
             searchText = if (fromDrawer) "" else s.searchText,
         )
@@ -371,7 +446,7 @@ class LauncherViewModel(
 
     /** The shelf Handheld shows for [ui]: the saved one while it exists, else the default landing shelf. */
     fun activeShelf(ui: LauncherUiState): ShelfId {
-        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled)
+        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled, romLibraries.value)
         val default = ConsoleShelves.defaultShelf(
             order = order,
             recentsNonEmpty = ui.recents.isNotEmpty(),
@@ -385,7 +460,7 @@ class LauncherViewModel(
     private fun stepShelfIfHandheld(delta: Int): Boolean {
         val ui = state.value
         if (ui.mode != LauncherMode.HANDHELD || ui.session.layers.isNotEmpty()) return false
-        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled)
+        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled, romLibraries.value)
         val next = ConsoleShelves.step(order, activeShelf(ui), delta) ?: return false
         selectShelf(next)
         return true

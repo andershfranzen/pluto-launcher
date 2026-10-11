@@ -74,7 +74,7 @@ class CoverflowFocusTest {
     @Test
     fun heldRightWalksCardToCard() {
         val focus = ControllerFocusController()
-        val stage = CoverflowState(0, apps)
+        val stage = CoverflowState(0, apps.map(ConsoleEntry::App))
         setUp(stage, focus)
         rule.runOnIdle {
             focus.onControllerConnected()
@@ -98,7 +98,7 @@ class CoverflowFocusTest {
     @Test
     fun singleStepsBothWaysKeepFocusInTheFlow() {
         val focus = ControllerFocusController()
-        val stage = CoverflowState(8, apps)
+        val stage = CoverflowState(8, apps.map(ConsoleEntry::App))
         setUp(stage, focus)
         rule.runOnIdle {
             focus.onControllerConnected()

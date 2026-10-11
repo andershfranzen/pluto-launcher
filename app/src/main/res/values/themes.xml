@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Pluto" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Pluto.Base" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowShowWallpaper">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:colorBackgroundCacheHint">@null</item>
@@ -10,5 +10,11 @@
         <item name="android:windowLayoutInDisplayCutoutMode">always</item>
         <item name="android:enforceNavigationBarContrast">false</item>
         <item name="android:windowLightStatusBar">false</item>
+    </style>
+    <style name="Theme.Pluto" parent="Theme.Pluto.Base" />
+    <!-- Keep the native starting window black; wallpaper is enabled by the activity. -->
+    <style name="Theme.Pluto.Starting" parent="Theme.Pluto">
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:windowBackground">@android:color/black</item>
     </style>
 </resources>

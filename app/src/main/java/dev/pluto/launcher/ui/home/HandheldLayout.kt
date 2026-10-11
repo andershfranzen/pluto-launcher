@@ -66,7 +66,9 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import dev.pluto.launcher.model.AppEntry
+import dev.pluto.launcher.ui.console.ConsoleEntry
+import dev.pluto.launcher.system.RomLauncher
+import androidx.compose.ui.platform.LocalContext
 import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherUiState
@@ -193,6 +195,8 @@ internal fun HideStatusBarWhile(hidden: Boolean) {
 
 @Composable
 private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
+    val context = LocalContext.current
+    val libraries by vm.romLibraries.collectAsState()
     val focus = LocalControllerFocus.current
     val icons = LocalIconCache.current
     val launcher = LocalAppLauncher.current
@@ -209,16 +213,25 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
 
     // Shelves and the active shelf's apps (list instances reused while their content is equal,
     // so an unrelated session change does not recompose the flow).
-    val order = remember(state.categories, state.settings.historyEnabled) {
-        ConsoleShelves.order(state.categories, state.settings.historyEnabled)
+    val order = remember(state.categories, state.settings.historyEnabled, libraries) {
+        ConsoleShelves.order(state.categories, state.settings.historyEnabled, libraries)
     }
-    val tabs = remember(order, state.categories) { order.map { it to ConsoleShelves.title(it, state.categories) } }
+    val tabs = remember(order, state.categories, libraries) { order.map { it to ConsoleShelves.title(it, state.categories, libraries) } }
     val favourites = rememberEqualList(remember(state.homeTiles) { ConsoleShelves.favouriteApps(state.homeTiles) })
     val active = vm.activeShelf(state)
     val shelf = remember(active, state.categories, state.categoryMembers, state.apps, favourites, state.recents) {
         ConsoleShelves.shelf(active, state.categories, state.categoryMembers, state.apps, favourites, state.recents)
     }
-    val apps = rememberEqualList(shelf.apps)
+    val library = (active as? ShelfId.OfRomLibrary)?.let { id -> libraries.firstOrNull { it.id == id.libraryId } }
+    val shelfTitle = library?.name ?: shelf.title
+    val apps = rememberEqualList(remember(shelf.apps, library) {
+        library?.games?.map { ConsoleEntry.Rom(library.id, it) } ?: shelf.apps.map(ConsoleEntry::App)
+    })
+    fun initialIndex(firstAppearance: Boolean): Int {
+        if (library != null) return apps.indexOfFirst { (it as? ConsoleEntry.Rom)?.game?.uri == vm.romSelection(library.id) }.coerceAtLeast(0)
+        return if (firstAppearance) ConsoleShelves.initialIndex(shelf.apps, state.session.selectedApp, vm.shelfSelection(active))
+        else ConsoleShelves.initialIndex(shelf.apps, vm.shelfSelection(active), state.session.selectedApp)
+    }
 
     // Land on the default shelf once and keep it, so it doesn't change under the user when
     // their first recent launch or favourite appears.
@@ -230,14 +243,14 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     // Appearing (a controller connected, rotation): continue on the app selected in the other
     // layout when this shelf has it, so the console picks up where the user was (C02).
     val switch = remember {
-        ShelfSwitch(active, CoverflowState(ConsoleShelves.initialIndex(apps, state.session.selectedApp, vm.shelfSelection(active)), apps))
+        ShelfSwitch(active, CoverflowState(initialIndex(true), apps))
     }
     if (switch.shelf != active) {
         // Remember what held focus before the outgoing flow turns focus-inert (read without subscribing).
         switch.focusedAtSwitch = Snapshot.withoutReadObservation { focus.focusedId ?: focus.lastFocusedId }
         switch.begin(
             next = active,
-            nextStage = CoverflowState(ConsoleShelves.initialIndex(apps, vm.shelfSelection(active), state.session.selectedApp), apps),
+            nextStage = CoverflowState(initialIndex(false), apps),
             order = order,
             mirror = if (rtl) -1 else 1,
         )
@@ -265,31 +278,46 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
 
     fun noteSelection(s: CoverflowState, shelfId: ShelfId, index: Int) {
         val entry = s.apps.getOrNull(index) ?: return
-        vm.rememberShelfSelection(shelfId, entry.key)
+        when (entry) {
+            is ConsoleEntry.App -> vm.rememberShelfSelection(shelfId, entry.entry.key)
+            is ConsoleEntry.Rom -> vm.rememberRomSelection(entry.libraryId, entry.game.uri)
+        }
         val id = cardFocusId(shelfId.key, entry.key)
         focus.setDefaultFocus(id)
         // Touch moved the selection: the next controller input continues from here.
         if (focus.inputMode != InputMode.CONTROLLER) focus.rememberFocusTarget(id)
     }
 
-    fun launch(s: CoverflowState, shelfId: ShelfId, entry: AppEntry) {
-        val id = cardFocusId(shelfId.key, entry.key)
-        s.selectedBounds()?.let { origins.report(id, it) }
-        vm.onAppSelected(entry.key)
-        launcher.launch(entry.key, id)
-    }
-
-    fun openActions(entry: AppEntry) {
-        vm.onAppSelected(entry.key)
-        vm.openLayer(Layer.AppActions(entry.key))
-    }
-
-    // Mirror the resting selection into the shared session (other layouts, selection by identity).
-    LaunchedEffect(stage) {
-        snapshotFlow { stage.selectedKey }.filterNotNull().distinctUntilChanged().collectLatest { key ->
-            delay(SELECTION_COMMIT_DELAY_MS)
-            if (currentState.session.selectedApp != key) vm.onAppSelected(key)
+    fun launch(s: CoverflowState, shelfId: ShelfId, entry: ConsoleEntry) {
+        when (entry) {
+            is ConsoleEntry.App -> {
+                val id = cardFocusId(shelfId.key, entry.key)
+                s.selectedBounds()?.let { origins.report(id, it) }
+                vm.onAppSelected(entry.entry.key)
+                launcher.launch(entry.entry.key, id)
+            }
+            is ConsoleEntry.Rom -> libraries.firstOrNull { it.id == entry.libraryId }?.let { lib ->
+                RomLauncher.launch(context, lib, entry.game)?.let(vm::showMessage)
+            }
         }
+    }
+
+    fun openActions(entry: ConsoleEntry) {
+        when (entry) {
+            is ConsoleEntry.App -> {
+                vm.onAppSelected(entry.entry.key)
+                vm.openLayer(Layer.AppActions(entry.entry.key))
+            }
+            is ConsoleEntry.Rom -> vm.openLayer(Layer.RomLibraries)
+        }
+    }
+
+    LaunchedEffect(stage) {
+        snapshotFlow { (stage.selectedEntry as? ConsoleEntry.App)?.entry?.key }
+            .filterNotNull().distinctUntilChanged().collectLatest { key ->
+                delay(SELECTION_COMMIT_DELAY_MS)
+                if (currentState.session.selectedApp != key) vm.onAppSelected(key)
+            }
     }
 
     val flowIds = remember(apps, active) { apps.map { cardFocusId(active.key, it.key) } }
@@ -297,7 +325,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
 
     val emptyDefault = when {
         apps.isNotEmpty() -> null
-        pickableCategoryId(active, state) != null -> ID_EMPTY_ADD
+        active is ShelfId.OfRomLibrary || pickableCategoryId(active, state) != null -> ID_EMPTY_ADD
         else -> ID_EMPTY_ALL_APPS
     }
     SideEffect { focus.setDefaultFocus(selectedCardId(stage, active) ?: emptyDefault ?: shelfTabId(active)) }
@@ -314,7 +342,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
     }
 
     val editable = pickableCategoryId(active, state)
-    ConsoleFocusEffects(state, focus, switch, active, emptyDefault, hasEditButton = editable != null && apps.isNotEmpty()) {
+    val canEdit = editable != null || active is ShelfId.OfRomLibrary
+    ConsoleFocusEffects(state, focus, switch, active, emptyDefault, hasEditButton = canEdit && apps.isNotEmpty()) {
         selectedCardId(stage, active)
     }
 
@@ -393,7 +422,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                                 leaving = true,
                                 page = switch.outgoingMotion,
                                 hero = HeroEmphasis.Static,
-                                emptyTitle = emptyTitle(outgoingShelf, ConsoleShelves.title(outgoingShelf, state.categories), actionsKey),
+                                emptyTitle = emptyTitle(outgoingShelf, ConsoleShelves.title(outgoingShelf, state.categories, libraries), actionsKey),
                                 pickable = pickableCategoryId(outgoingShelf, state),
                                 vm = vm,
                                 onActivate = { _, _ -> },
@@ -412,7 +441,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                             leaving = false,
                             page = switch.incomingMotion,
                             hero = hero,
-                            emptyTitle = emptyTitle(active, shelf.title, actionsKey),
+                            emptyTitle = emptyTitle(active, shelfTitle, actionsKey),
                             pickable = pickableCategoryId(active, state),
                             vm = vm,
                             onActivate = { index, entry ->
@@ -479,8 +508,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                     // Up from these returns to the selected card.
                     val up = Modifier.focusProperties { up = selectedCardFocus() }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (editable != null && apps.isNotEmpty()) {
-                            PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit ${shelf.title}", { vm.openLayer(Layer.ShelfPicker(editable)) }, up)
+                        if (canEdit && apps.isNotEmpty()) {
+                            PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit $shelfTitle", { vm.openLayer(editable?.let(Layer::ShelfPicker) ?: Layer.RomLibraries) }, up)
                         }
                         PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, up)
                         PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, up)
@@ -504,9 +533,9 @@ private fun ShelfPage(
     /** Category whose apps the empty state's "Add apps" picks, or null (no picker). */
     pickable: Long?,
     vm: LauncherViewModel,
-    onActivate: (Int, AppEntry) -> Unit,
-    onActions: (AppEntry) -> Unit,
-    onFocused: (Int, AppEntry) -> Unit,
+    onActivate: (Int, ConsoleEntry) -> Unit,
+    onActions: (ConsoleEntry) -> Unit,
+    onFocused: (Int, ConsoleEntry) -> Unit,
     onTouchSelect: (Int) -> Unit,
     upTarget: () -> FocusRequester,
     downTarget: () -> FocusRequester,
@@ -536,7 +565,9 @@ private fun ShelfPage(
                     // when the stage is short (large text, small landscape windows).
                     modifier = Modifier.widthIn(max = 560.dp).verticalScroll(rememberScrollState()),
                 ) {
-                    if (pickable != null) {
+                    if (shelfId is ShelfId.OfRomLibrary) {
+                        PlutoTextButton(ID_EMPTY_ADD, "Manage ROM tab", { vm.openLayer(Layer.RomLibraries) }, emphasized = true)
+                    } else if (pickable != null) {
                         PlutoTextButton(ID_EMPTY_ADD, "Add apps", { vm.openLayer(Layer.ShelfPicker(pickable)) }, emphasized = true)
                         PlutoTextButton(
                             ID_EMPTY_ALL_APPS, "All apps", { vm.openDrawer() },
@@ -624,6 +655,7 @@ internal fun emptyTitle(id: ShelfId, name: String, actionsKey: String?): Pair<St
     return when (id) {
         ShelfId.Recent -> "No recent launches yet" to "Apps you open from Pluto show up here, most recent first."
         ShelfId.Favourites -> "No favourites yet" to "$openActions and choose Pin to home to add it here."
+        is ShelfId.OfRomLibrary -> "No games in $name yet" to "Add games to this tab’s folder, or choose another folder in ROM tabs."
         is ShelfId.OfCategory -> "No apps in $name yet" to "Choose Add apps to pick what goes here."
     }
 }

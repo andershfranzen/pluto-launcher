@@ -54,10 +54,18 @@ emu_start() {
   if running; then echo "$ANDROID_SERIAL already running"; wait_boot; return; fi
   [[ -r /dev/kvm && -w /dev/kvm ]] || die "/dev/kvm not accessible (sudo setfacl -m u:$USER:rw /dev/kvm)"
   local extra=()
+  local gpu="${PLUTO_GPU:-host}"
+  local gpu_env=()
+  # Prefer the discrete GPU on NVIDIA hybrid hosts. Software rendering is
+  # available explicitly with PLUTO_GPU=swangle when host drivers are unreliable.
+  if [[ "$gpu" == host && -r /proc/driver/nvidia/version ]]; then
+    gpu_env+=("__NV_PRIME_RENDER_OFFLOAD=${__NV_PRIME_RENDER_OFFLOAD:-1}"
+      "__GLX_VENDOR_LIBRARY_NAME=${__GLX_VENDOR_LIBRARY_NAME:-nvidia}")
+  fi
   [[ "${1:-}" == "--wipe" ]] && extra+=(-wipe-data)
   echo "starting $AVD on port $PORT (log: $EMU_LOG)"
-  setsid nohup emulator -avd "$AVD" -port "$PORT" -no-window -no-audio -no-boot-anim \
-    -gpu "${PLUTO_GPU:-swangle}" -feature -Vulkan -no-snapshot-save "${extra[@]}" >"$EMU_LOG" 2>&1 < /dev/null &
+  setsid nohup env "${gpu_env[@]}" emulator -avd "$AVD" -port "$PORT" -no-window -no-audio -no-boot-anim \
+    -gpu "$gpu" -feature -Vulkan -no-snapshot-save "${extra[@]}" >"$EMU_LOG" 2>&1 < /dev/null &
   wait_boot
   echo "booted: $("${ADB[@]}" shell getprop ro.build.version.release | tr -d '\r') (API $("${ADB[@]}" shell getprop ro.build.version.sdk | tr -d '\r'))"
 }

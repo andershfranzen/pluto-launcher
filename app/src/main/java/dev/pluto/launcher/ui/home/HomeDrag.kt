@@ -122,6 +122,7 @@ class HomeDragController(
         get() = when (val s = source) {
             is DragSource.Home -> s.app != null
             is DragSource.Dock -> true
+            is DragSource.Folder -> true
             else -> false
         }
 
@@ -441,9 +442,9 @@ private fun RemoveBar(drag: HomeDragController, modifier: Modifier) {
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(top = 12.dp)
             .onGloballyPositioned {
-                // A generous target: the whole top band, not just the pill.
-                val b = it.boundsInWindow()
-                drag.removeZone = Rect(0f, 0f, Float.MAX_VALUE, b.bottom + 24f)
+                // Only the visible pill removes an app. The surrounding top row still
+                // contains Home tiles and must remain available for folder/reorder drops.
+                drag.removeZone = it.boundsInWindow()
             }
             .drawBehind { drawRect(danger.copy(alpha = 0.45f * hot)) },
         shape = RoundedCornerShape(24.dp),

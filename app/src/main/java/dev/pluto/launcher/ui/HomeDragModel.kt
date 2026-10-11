@@ -26,6 +26,11 @@ sealed interface DragSource {
         override val homeId: String get() = HomeItem.App(key).id
         override val app: AppKey get() = key
     }
+
+    data class Folder(val key: AppKey) : DragSource {
+        override val homeId: String get() = HomeItem.App(key).id
+        override val app: AppKey get() = key
+    }
 }
 
 /** Where a drag would land if released now. */
@@ -82,7 +87,7 @@ data class DropPlan(
                 is DropTarget.DockSlot -> {
                     if (app == null || target.slot !in dock.indices) return NONE
                     val occupant = dock[target.slot]
-                    if (occupant == app) return NONE
+                    if (occupant == app) return if (source is DragSource.Folder) DropPlan(unpin = app) else NONE
                     val nextDock = dock.toMutableList()
                     val from = nextDock.indexOf(app)
                     if (from >= 0) nextDock[from] = null
@@ -97,6 +102,8 @@ data class DropPlan(
                             if (from >= 0) nextDock[from] = occupant
                             DropPlan(dock = nextDock)
                         }
+                        // Leaving a folder for the dock removes the folder membership too.
+                        is DragSource.Folder -> DropPlan(unpin = app, dock = nextDock)
                         // Home to dock: the app leaves the grid and the dock's app takes its place there.
                         is DragSource.Home -> {
                             val index = home.indexOfFirst { it.id == dragged.id }
@@ -123,6 +130,7 @@ data class DropPlan(
                     is DragSource.Home -> if (app != null) DropPlan(unpin = app) else NONE
                     is DragSource.Dock -> DropPlan(dock = dockWithoutSource)
                     is DragSource.Drawer -> NONE
+                    is DragSource.Folder -> DropPlan(unpin = app)
                 }
             }
         }

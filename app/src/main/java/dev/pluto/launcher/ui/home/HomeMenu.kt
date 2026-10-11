@@ -68,6 +68,7 @@ import androidx.compose.ui.window.PopupProperties
 import dev.pluto.launcher.ui.Layer
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.motion.PlutoMotion
+import dev.pluto.launcher.ui.components.glassSurface
 import kotlin.math.roundToInt
 
 /** Where the home menu is open (window coordinates of the press), or closed. */
@@ -173,9 +174,7 @@ internal fun HomeMenu(menu: HomeMenuState, vm: LauncherViewModel) {
                 Modifier
                     .width(232.dp)
                     .shadow(16.dp, shape)
-                    .background(scheme.surfaceContainerHigh, shape)
-                    .border(1.dp, scheme.outlineVariant.copy(alpha = 0.3f), shape)
-                    .clip(shape),
+                    .glassSurface(shape),
             ) {
                 Column {
                     HomeMenuEntries.forEachIndexed { index, entry ->

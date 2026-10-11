@@ -18,6 +18,7 @@ import dev.pluto.launcher.model.LauncherMode
 /** A layer stacked above the home surface. Back pops the top layer. */
 @Immutable
 sealed interface Layer {
+    data object RomLibraries : Layer
     data object Drawer : Layer
     data class FolderLayer(val folderId: Long) : Layer
     data class AppActions(val key: AppKey) : Layer
@@ -38,6 +39,7 @@ sealed interface Layer {
 
     companion object {
         fun encode(layer: Layer): String = when (layer) {
+            RomLibraries -> "romlibraries"
             Drawer -> "drawer"
             is FolderLayer -> "folder:${layer.folderId}"
             is AppActions -> "actions:${layer.key.encode()}"
@@ -57,6 +59,7 @@ sealed interface Layer {
         fun decode(value: String): Layer? {
             val arg = value.substringAfter(':', "")
             return when (value.substringBefore(':')) {
+                "romlibraries" -> RomLibraries
                 "drawer" -> Drawer
                 "folder" -> arg.toLongOrNull()?.let(::FolderLayer)
                 "actions" -> AppKey.decode(arg)?.let(::AppActions)

@@ -637,7 +637,7 @@ internal fun ConsoleBackdrop(stage: () -> CoverflowState?, artPx: Int, versions:
             if (entry == null) {
                 null
             } else {
-                ConsoleArtCache.peek(entry.key, artPx, versions()[entry.packageName] ?: 0)?.color
+                ConsoleArtCache.peek(entry, artPx, versions()[entry.packageName] ?: 0)?.color
             }
         }.collectLatest { color ->
             val target = color?.let { Color(it) } ?: neutral.copy(alpha = 0.5f)

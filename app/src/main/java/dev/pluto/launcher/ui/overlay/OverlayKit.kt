@@ -21,8 +21,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.contentDescription
-import dev.pluto.launcher.ui.theme.PlutoDimens
+import dev.pluto.launcher.ui.components.glassSurface
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -45,6 +46,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -90,6 +92,7 @@ import dev.pluto.launcher.ui.components.symmetricHorizontalSafeDrawing
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.foundation.focusGroup
@@ -129,9 +132,6 @@ import kotlin.math.roundToInt
 internal val PanelShape = RoundedCornerShape(24.dp)
 internal val ControlShape = RoundedCornerShape(16.dp)
 private const val MODAL_SCRIM_ALPHA = 0.4f
-
-/** Opacity of full-screen pages (settings): enough to read comfortably, the background still shows. */
-private const val PAGE_ALPHA = 0.74f
 
 // --- Focus helpers ----------------------------------------------------------------
 
@@ -215,9 +215,6 @@ internal fun rememberScreenFocus(defaultId: String, refocusKey: Any? = Unit): Sc
 
 // --- Surfaces -------------------------------------------------------------------
 
-@Composable
-private fun panelColor(): Color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = PlutoDimens.PanelAlpha)
-
 /**
  * Dims what is below and swallows touches so nothing underneath can be activated. Inside an
  * [AnimatedDialog] it fades with the dialog and lets touches through while the dialog leaves.
@@ -291,7 +288,9 @@ internal fun LayerScaffold(
     scrollable: Boolean = true,
     contentKey: Any? = Unit,
     fullScreen: Boolean = false,
+    compactHeader: Boolean = false,
     headerContent: @Composable () -> Unit = {},
+    footerContent: @Composable () -> Unit = {},
     overlay: @Composable BoxScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -305,17 +304,22 @@ internal fun LayerScaffold(
         } else {
             Modifier
                 .align(Alignment.Center)
-                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))
+                .symmetricHorizontalSafeDrawing()
                 .padding(12.dp)
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
                 .fillMaxHeight()
         }
         Surface(
-            modifier = frame.then(if (covered) Modifier.clearAndSetSemantics { } else Modifier.semantics { paneTitle = title }),
+            modifier = frame
+                .then(if (dialogOpen) Modifier.blur(10.dp) else Modifier)
+                .glassSurface(if (fullScreen) RectangleShape else PanelShape, rim = !fullScreen)
+                .then(if (covered) Modifier.clearAndSetSemantics { } else Modifier.semantics { paneTitle = title }),
             shape = if (fullScreen) RectangleShape else PanelShape,
             // Full-screen pages let the background (Pluto, waves or wallpaper) glow through.
-            color = if (fullScreen) MaterialTheme.colorScheme.surfaceContainer.copy(alpha = PAGE_ALPHA) else panelColor(),
+            color = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             CompositionLocalProvider(LocalFocusInert provides focusInert(covered)) {
                 // Full screen: edge to edge behind the system bars, content inside them and
@@ -332,7 +336,7 @@ internal fun LayerScaffold(
                     Modifier
                 }
                 Column(columnModifier) {
-                    PanelHeader(title, "$idPrefix:close", onClose, leading = null)
+                    if (!compactHeader) PanelHeader(title, "$idPrefix:close", onClose, leading = null)
                     headerContent()
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
                     val body = Modifier.weight(1f).fillMaxWidth()
@@ -354,6 +358,7 @@ internal fun LayerScaffold(
                     } else {
                         Column(body, content = content)
                     }
+                    footerContent()
                 }
             }
         }
@@ -379,6 +384,7 @@ internal fun ModalPanel(
     maxWidth: Dp = 560.dp,
     scrollable: Boolean = true,
     leading: (@Composable () -> Unit)? = null,
+    compact: Boolean = false,
     actions: (@Composable FlowRowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -392,11 +398,14 @@ internal fun ModalPanel(
         Surface(
             modifier = Modifier
                 .align(Alignment.Center)
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(16.dp)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))
+                .symmetricHorizontalSafeDrawing()
+                .padding(horizontal = 16.dp, vertical = if (compact) 4.dp else 16.dp)
                 .dialogPanelMotion(presence)
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
+                .then(if (dialogOpen) Modifier.blur(10.dp) else Modifier)
+                .glassSurface(PanelShape)
                 // Announced as a pane; screen-reader traversal stays inside the dialog.
                 .then(
                     if (covered) {
@@ -409,13 +418,13 @@ internal fun ModalPanel(
                     },
                 ),
             shape = PanelShape,
-            color = panelColor(),
-            tonalElevation = 2.dp,
+            color = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             // Dialogs nested in this one get their own presence.
             CompositionLocalProvider(LocalFocusInert provides focusInert(covered), LocalDialogPresence provides null) {
                 Column {
-                    PanelHeader(title, "$idPrefix:close", onDismiss, leading)
+                    if (!compact) PanelHeader(title, "$idPrefix:close", onDismiss, leading)
                     val body = Modifier.weight(1f, fill = false).fillMaxWidth()
                     if (scrollable) {
                         Column(
@@ -429,7 +438,7 @@ internal fun ModalPanel(
                     if (actions != null) {
                         ButtonBar(Modifier.padding(16.dp), content = actions)
                     } else {
-                        Spacer(Modifier.size(12.dp))
+                        Spacer(Modifier.size(if (compact) 4.dp else 12.dp))
                     }
                 }
             }
@@ -472,7 +481,7 @@ internal fun PlutoButton(
     val (container, content) = when (style) {
         ButtonStyle.FILLED -> if (destructive) colors.error to colors.onError else colors.inverseSurface to colors.inverseOnSurface
         ButtonStyle.TONAL -> if (destructive) colors.errorContainer to colors.onErrorContainer
-        else colors.secondaryContainer to colors.onSecondaryContainer
+        else colors.onSurface.copy(alpha = 0.08f) to colors.onSurface
         ButtonStyle.OUTLINED, ButtonStyle.TEXT -> Color.Transparent to (if (destructive) colors.error else colors.primary)
     }
     Row(
@@ -487,7 +496,8 @@ internal fun PlutoButton(
             .clip(ControlShape)
             .background(container)
             .then(
-                if (style == ButtonStyle.OUTLINED) Modifier.border(BorderStroke(1.dp, colors.outline), ControlShape)
+                if (style == ButtonStyle.TONAL && !destructive) Modifier.border(1.dp, colors.onSurface.copy(alpha = 0.10f), ControlShape)
+                else if (style == ButtonStyle.OUTLINED) Modifier.border(BorderStroke(1.dp, colors.outline), ControlShape)
                 else Modifier,
             )
             .alpha(if (enabled) 1f else 0.45f)
@@ -566,14 +576,13 @@ internal fun ActionRow(
             // Selection is announced ("selected") and drawn with a border, not by colour alone.
             .then(if (selected) Modifier.semantics { stateDescription = KitText.SELECTED } else Modifier)
             .clip(ControlShape)
-            .selectionBackground(selection, colors.secondaryContainer, colors.secondary, SelectedBorderWidth)
+            .selectionBackground(selection, colors.onSurface.copy(alpha = 0.12f), colors.onSurface.copy(alpha = 0.5f), SelectedBorderWidth)
             .alpha(if (enabled) 1f else 0.45f)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val tint = when {
             destructive -> colors.error
-            selected -> colors.onSecondaryContainer
             else -> colors.onSurface
         }
         when {
@@ -1055,6 +1064,8 @@ internal fun TextInputDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val window = LocalWindowInfo.current.containerSize
+    val compact = window.width > window.height && WindowInsets.ime.getBottom(LocalDensity.current) > 0
     var text by rememberSaveable { mutableStateOf(initial) }
     val valid = text.isNotBlank()
     val leaving = isDialogExiting()
@@ -1073,23 +1084,31 @@ internal fun TextInputDialog(
         idPrefix = idPrefix,
         onDismiss = onDismiss,
         interceptBack = true,
-        actions = {
-            PlutoButton("$idPrefix:cancel", KitText.CANCEL, onDismiss, style = ButtonStyle.TEXT)
-            PlutoButton("$idPrefix:confirm", confirmLabel, submit, style = ButtonStyle.FILLED, enabled = valid)
+        compact = compact,
+        // The keyboard's Done action saves the name; Close cancels. Leave room for the
+        // field on short landscape windows instead of reserving a second button row.
+        actions = if (compact) null else {
+            {
+                PlutoButton("$idPrefix:cancel", KitText.CANCEL, onDismiss, style = ButtonStyle.TEXT)
+                PlutoButton("$idPrefix:confirm", confirmLabel, submit, style = ButtonStyle.FILLED, enabled = valid)
+            }
         },
     ) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { text = it.take(MAX_NAME_LENGTH) },
-            label = { Text(fieldLabel) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { submit() }),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 8.dp)
-                .focusRequester(fieldFocus),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it.take(MAX_NAME_LENGTH) },
+                label = { Text(fieldLabel) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { submit() }),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp, vertical = if (compact) 0.dp else 8.dp)
+                    .focusRequester(fieldFocus),
+            )
+            if (compact) IconAction("$idPrefix:close", Icons.Rounded.Close, KitText.CLOSE, onDismiss)
+        }
     }
 }
 

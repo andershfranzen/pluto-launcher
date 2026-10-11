@@ -3,6 +3,7 @@ package dev.pluto.launcher.ui.console
 import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.model.Category
+import dev.pluto.launcher.model.RomLibrary
 import dev.pluto.launcher.ui.HomeTile
 
 /**
@@ -24,6 +25,9 @@ sealed interface ShelfId {
     data class OfCategory(val categoryId: Long) : ShelfId {
         override val key: String get() = "cat:$categoryId"
     }
+    data class OfRomLibrary(val libraryId: Long) : ShelfId {
+        override val key: String get() = "rom:$libraryId"
+    }
 
     companion object {
         fun decode(value: String?): ShelfId? = when {
@@ -31,6 +35,7 @@ sealed interface ShelfId {
             value == Recent.key -> Recent
             value == Favourites.key -> Favourites
             value.startsWith("cat:") -> value.removePrefix("cat:").toLongOrNull()?.let(::OfCategory)
+            value.startsWith("rom:") -> value.removePrefix("rom:").toLongOrNull()?.let(::OfRomLibrary)
             else -> null
         }
     }
@@ -52,10 +57,11 @@ object ConsoleShelves {
      * no records, so the shelf would only ever be empty); Favourites always exists (it has a
      * helpful empty state); then the categories in their persisted order.
      */
-    fun order(categories: List<Category>, historyEnabled: Boolean): List<ShelfId> = buildList {
+    fun order(categories: List<Category>, historyEnabled: Boolean, romLibraries: List<RomLibrary> = emptyList()): List<ShelfId> = buildList {
         if (historyEnabled) add(ShelfId.Recent)
         add(ShelfId.Favourites)
         categories.forEach { add(ShelfId.OfCategory(it.id)) }
+        romLibraries.forEach { add(ShelfId.OfRomLibrary(it.id)) }
     }
 
     /**
@@ -120,6 +126,7 @@ object ConsoleShelves {
         favourites: List<AppEntry>,
         recents: List<AppEntry>,
     ): Shelf = when (id) {
+        is ShelfId.OfRomLibrary -> Shelf(id, "ROMs", "ROMs", emptyList())
         ShelfId.Recent -> Shelf(id, RECENT_TITLE, RECENT_TITLE, recents)
         ShelfId.Favourites -> Shelf(id, FAVOURITES_TITLE, FAVOURITES_TITLE, favourites)
         is ShelfId.OfCategory -> {
@@ -136,7 +143,8 @@ object ConsoleShelves {
     }
 
     /** Tab title of [id] (without building its app list). */
-    fun title(id: ShelfId, categories: List<Category>): String = when (id) {
+    fun title(id: ShelfId, categories: List<Category>, romLibraries: List<RomLibrary> = emptyList()): String = when (id) {
+        is ShelfId.OfRomLibrary -> romLibraries.firstOrNull { it.id == id.libraryId }?.name ?: "ROMs"
         ShelfId.Recent -> RECENT_TITLE
         ShelfId.Favourites -> FAVOURITES_TITLE
         is ShelfId.OfCategory -> categories.firstOrNull { it.id == id.categoryId }?.name ?: "All apps"

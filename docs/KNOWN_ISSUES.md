@@ -98,6 +98,14 @@ something.
 
 ## Unsupported in 0.1
 
+- **Emulator ROM interfaces vary.** ROM shelves send read-only Android document URIs
+  to the chosen emulator. DuckStation has a tested direct-launch adapter; other apps
+  must accept Android Open file requests, or be chosen through the system app chooser.
+  Selecting an installed app does not guarantee it supports that interface or ROM format.
+  BIOS files and game-specific metadata must be configured in the emulator itself.
+  Folder indexing is bounded to 512 subfolders and 20,000 documents; a failed refresh
+  retains the last successfully scanned list. Collections refresh on returning to
+  Pluto, throttled to once every 30 seconds; Refresh games checks immediately.
 - **Work profile and Private Space are not supported.** Their apps are not shown anywhere
   (home, drawer, search, categories, history) rather than being mixed into personal lists.
   Pluto discloses this when such profiles exist. Use the system or another launcher to reach
@@ -105,15 +113,17 @@ something.
   yet.
 - **Widgets take a full row** of the home grid; their height is set in rows from the widget's
   options (press and hold it). Widgets cannot go in folders or the dock.
-- **Drag and drop covers Home, the dock and the drawer**, not folder contents; inside a folder,
-  use the explicit Edit controls.
+- **Drag and drop covers Home, the dock, the drawer and apps inside folders.** Hold an app
+  in a folder, then move it to return to Home and drop it on the grid, dock or another folder.
+  Reordering within an open folder uses the explicit Edit controls.
 - **No backup or import/export.** Android backup is disabled; uninstalling Pluto or clearing
   its data loses your organisation.
-- **No custom cover artwork**, configurable grid sizes, app shortcuts or notification dots.
+- **No custom app cover artwork**, configurable grid sizes, app shortcuts or notification dots.
   Icon packs must use the common appfilter format (ADW / Nova); others fall back to system icons.
-- **Games are not detected automatically**; add apps to the Games category yourself.
-- **Playtime tracking, ROM indexing, emulator configuration and cloud libraries** are out of
-  scope.
+- **Game apps are not detected automatically**; add apps to the Games category yourself.
+  ROM tabs index the folder you choose and support matching adjacent cover images.
+  Online artwork lookup is not implemented.
+- **Playtime tracking, emulator configuration and cloud libraries** are out of scope.
 
 ## Limitations by design or by platform
 

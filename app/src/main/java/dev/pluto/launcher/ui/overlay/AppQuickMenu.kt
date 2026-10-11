@@ -2,6 +2,7 @@ package dev.pluto.launcher.ui.overlay
 
 import androidx.compose.ui.geometry.Size
 import dev.pluto.launcher.ui.motion.PlutoMotion
+import dev.pluto.launcher.ui.components.glassSurface
 import dev.pluto.launcher.ui.home.iconSize
 import dev.pluto.launcher.ui.components.pressScale
 import dev.pluto.launcher.ui.components.AppIcon
@@ -176,8 +177,7 @@ private fun QuickMenuCard(
     Column(
         Modifier
             .shadow(16.dp, QuickMenuShape)
-            .background(scheme.surfaceContainerHigh, QuickMenuShape)
-            .border(1.dp, scheme.outlineVariant.copy(alpha = 0.3f), QuickMenuShape)
+            .glassSurface(QuickMenuShape)
             .semantics { paneTitle = entry.label }
             .animateContentSize(PlutoMotion.spatialFast())
             .padding(vertical = 6.dp),

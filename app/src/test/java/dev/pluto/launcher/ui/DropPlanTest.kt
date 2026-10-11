@@ -63,6 +63,42 @@ class DropPlanTest {
     }
 
     @Test
+    fun folderAppComesOutAtTheChosenHomePosition() {
+        val plan = DropPlan.of(home, dock, setOf(d), DragSource.Folder(d), DropTarget.HomeIndex(1))
+        assertEquals(d, plan.unpin)
+        assertEquals(listOf(HomeItem.App(a), HomeItem.App(d), HomeItem.App(b), HomeItem.FolderRef(7), HomeItem.App(c)), plan.home)
+        assertNull(plan.dock)
+    }
+
+    @Test
+    fun folderAppToDockRemovesMembershipAndKeepsTheHomeOrder() {
+        val plan = DropPlan.of(home, dock, setOf(b), DragSource.Folder(b), DropTarget.DockSlot(0))
+        assertEquals(b, plan.unpin)
+        assertEquals(listOf(b, null, null, null, null), plan.dock)
+        assertNull(plan.home)
+    }
+
+    @Test
+    fun folderAppAlreadyInTheTargetDockSlotStillLeavesItsFolder() {
+        val plan = DropPlan.of(home, dock, setOf(d), DragSource.Folder(d), DropTarget.DockSlot(0))
+        assertEquals(d, plan.unpin)
+        assertNull(plan.dock)
+    }
+
+    @Test
+    fun folderAppCanMoveIntoAnotherFolder() {
+        val plan = DropPlan.of(home, dock, setOf(d), DragSource.Folder(d), DropTarget.Merge(HomeItem.FolderRef(7).id))
+        assertEquals(d to 7L, plan.intoFolder)
+        assertNull(plan.unpin)
+    }
+
+    @Test
+    fun removingAFolderAppOnlyUnpinsIt() {
+        val plan = DropPlan.of(home, dock, setOf(d), DragSource.Folder(d), DropTarget.Remove)
+        assertEquals(DropPlan(unpin = d), plan)
+    }
+
+    @Test
     fun removeUnpinsOrEmptiesTheSlotButNeverTouchesFolders() {
         assertEquals(a, DropPlan.of(home, dock, emptySet(), DragSource.Home(HomeItem.App(a)), DropTarget.Remove).unpin)
         assertEquals(listOf(null, null, null, null, null), DropPlan.of(home, dock, emptySet(), DragSource.Dock(0, d), DropTarget.Remove).dock)

@@ -14,7 +14,7 @@ internal object OverlayText {
     const val CATEGORIES = "Categories…"
     const val MOVE_TO_FOLDER = "Move to folder…"
     const val HIDE = "Hide from launcher"
-    const val HIDE_HINT = "Restore it any time from Settings ▸ Hidden apps"
+    const val HIDE_HINT = "Restore it any time from Settings ▸ Apps ▸ Hidden apps"
     const val UNHIDE = "Show in launcher again"
     const val APP_INFO = "App info"
     const val MORE_ACTIONS = "More actions"
