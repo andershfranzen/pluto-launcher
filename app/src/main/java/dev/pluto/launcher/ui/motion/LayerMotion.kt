@@ -18,7 +18,7 @@ import androidx.lifecycle.LifecycleOwner
  */
 object LayerMotion {
     /** Drawer: fades in from a slightly enlarged view, settling toward the centre. */
-    const val DRAWER_START_SCALE = 1.12f
+    const val DRAWER_START_SCALE = 1.08f
 
     /** Folder: grows from its tile. */
     const val FOLDER_START_SCALE = 0.6f

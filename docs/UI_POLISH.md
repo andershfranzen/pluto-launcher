@@ -3,7 +3,7 @@
 ## Follow-up — 2026-10-11
 
 - Opening the drawer crossfades Home and the app grid, with the incoming grid and
-  glass controls settling from 112% to their normal size around the screen's centre.
+  glass controls settling from 108% to their normal size around the screen's centre.
   Closing reverses the effect. Reduce motion keeps the scale fixed. There is no
   sliding panel edge, Home shrink or staggered icon rise. Swipes and predictive Back
   still drive the reveal,
