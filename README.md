@@ -32,11 +32,11 @@ categories stay exactly the same.
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/phone.png" alt="Phone mode: a row of favourites over Pluto on a black sky, and a glass dock with four apps" width="230"> | <img src="docs/screenshots/drawer.png" alt="App drawer: an alphabetical grid of apps, with the category chips and the search field at the bottom" width="230"> | <img src="docs/screenshots/menu.png" alt="Long-press menu on Chrome in the dock: the app's New tab shortcut, then Pin, Undock, Info, Hide and Uninstall" width="230"> |
 
-| Landscape | Console mode (controller attached) |
+| Landscape | Console mode |
 | :---: | :---: |
-| <img src="docs/screenshots/landscape.png" alt="Landscape: favourites across the top, Pluto on the right and a glass dock down the side" width="420"> | <img src="docs/screenshots/console.png" alt="Console mode: shelf tabs across the top, a Coverflow of app cards with Drive in front, its title, the position and the touch hint" width="420"> |
+| <img src="docs/screenshots/landscape.png" alt="Landscape: favourites across the top, Pluto on the right and a glass dock down the side" width="420"> | <img src="docs/screenshots/console.png" alt="Console mode: shelf tabs across the top, a Coverflow of app cards with Settings in front, its title, the position and the touch toolbar over orange XMB waves" width="420"> |
 
-<sub>Screenshots from the Android 16 emulator with the Pluto background. Pluto can also show your wallpaper or an XMB-style background.</sub>
+<sub>Screenshots of Pluto 0.1.5, captured on the Android 16 emulator on October 11, 2026. Home uses the Pluto background; Console mode uses orange XMB waves and the Always in landscape setting. Pluto can also show your wallpaper.</sub>
 
 ## Your ROMs, your emulator
 
