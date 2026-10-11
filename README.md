@@ -1,9 +1,4 @@
 <p align="center">
-  <a href="https://ko-fi.com/anderslc"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" alt="Support my work on Ko-fi" height="36"></a><br>
-  If you like what I do, you can support my work on Ko-fi.
-</p>
-
-<p align="center">
   <img src="docs/images/pluto-logo.svg" alt="Pluto logo: a small tan dwarf planet with a heart-shaped plain, on a starry navy background" width="160">
 </p>
 
@@ -27,6 +22,11 @@
 Pluto is meant to be the one launcher you keep full-time. Rotate the phone or plug in a
 gamepad and the presentation adapts, but your apps, favourites, dock, folders and
 categories stay exactly the same.
+
+<p align="center">
+  <a href="https://ko-fi.com/anderslc"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" alt="Support my work on Ko-fi" height="36"></a><br>
+  If you like what I do, you can support my work on Ko-fi.
+</p>
 
 | Phone | App drawer | Press and hold an app |
 | :---: | :---: | :---: |
