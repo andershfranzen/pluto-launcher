@@ -1049,8 +1049,11 @@ private fun LayerFrame(
                                 }
                             }
                             .drawMotion {
-                                // Icons and controls stay at their resting positions throughout the reveal.
-                                alpha = reveal.progress.coerceIn(0f, 1f)
+                                val p = reveal.progress.coerceIn(0f, 1f)
+                                val scale = if (state.settings.reducedMotion) 1f else LayerMotion.drawerScale(p)
+                                scaleX = scale
+                                scaleY = scale
+                                alpha = p
                             }
                             .then(leavingBlock),
                     ) {

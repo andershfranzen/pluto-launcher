@@ -17,6 +17,9 @@ import androidx.lifecycle.LifecycleOwner
  * Pure math so the draw-phase lambdas stay allocation-free and the curves are testable.
  */
 object LayerMotion {
+    /** Drawer: fades in from a slightly enlarged view, settling toward the centre. */
+    const val DRAWER_START_SCALE = 1.12f
+
     /** Folder: grows from its tile. */
     const val FOLDER_START_SCALE = 0.6f
 
@@ -60,6 +63,8 @@ object LayerMotion {
         lerp(if (entering) SHEET_ENTER_SCALE else SHEET_EXIT_SCALE, 1f, unit(p))
 
     fun onboardingScale(p: Float): Float = lerp(ONBOARDING_START_SCALE, 1f, p)
+
+    fun drawerScale(p: Float): Float = lerp(DRAWER_START_SCALE, 1f, unit(p))
 
     fun recedeAlpha(drawerProgress: Float): Float = lerp(1f, RECEDE_ALPHA, unit(drawerProgress))
 
