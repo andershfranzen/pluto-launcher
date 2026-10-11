@@ -259,6 +259,7 @@ fun KeyChip(name: String, modifier: Modifier = Modifier) {
  * (one shared indicator drawn behind the row) with a bolder label, so the state is carried
  * by shape and weight, not colour alone.
  * [prevKey] / [nextKey] optionally show the bound shoulder buttons at either end.
+ * [softGlass] uses translucent pills and light selection emphasis for the drawer's wallpaper stage.
  */
 @Composable
 fun CategoryTabs(
@@ -270,6 +271,7 @@ fun CategoryTabs(
     prevKey: String? = null,
     nextKey: String? = null,
     onFocused: ((Category) -> Unit)? = null,
+    softGlass: Boolean = false,
 ) {
     val scrollState = rememberScrollState()
     // Each tab's layout bounds inside the scrolling row's content (inside its padding).
@@ -314,8 +316,9 @@ fun CategoryTabs(
         }
     }
 
-    val outlineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
-    val pillColor = MaterialTheme.colorScheme.inverseSurface
+    val outlineColor = if (softGlass) Color.Transparent else MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+    val pillColor = if (softGlass) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f) else MaterialTheme.colorScheme.inverseSurface
+    val restingColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.055f)
 
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (prevKey != null) {
@@ -334,6 +337,7 @@ fun CategoryTabs(
                     // Resting (outlined) chips, then the sliding selection pill, then the labels.
                     tabBounds.values.forEach { r ->
                         val radius = minOf(corner, r.height / 2f)
+                        if (softGlass) drawRoundRect(restingColor, r.topLeft, r.size, CornerRadius(radius, radius))
                         // Outline only at rest: next to the filled selection pill the state
                         // reads at a glance (two fills, light blue vs grey, were too alike).
                         drawRoundRect(
@@ -360,6 +364,7 @@ fun CategoryTabs(
                     CategoryTab(
                         category = category,
                         isSelected = category.id == selectedId,
+                        softGlass = softGlass,
                         id = "$idPrefix:${category.id}",
                         onClick = { onSelect(category) },
                         onFocused = onFocused?.let { { it(category) } },
@@ -389,6 +394,7 @@ private const val TabPressedScale = 0.95f
 private fun CategoryTab(
     category: Category,
     isSelected: Boolean,
+    softGlass: Boolean,
     id: String,
     onClick: () -> Unit,
     onFocused: (() -> Unit)?,
@@ -397,7 +403,7 @@ private fun CategoryTab(
 ) {
     val shape = RoundedCornerShape(TabCorner)
     val contentColor by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface,
+        if (isSelected && !softGlass) MaterialTheme.colorScheme.inverseOnSurface else MaterialTheme.colorScheme.onSurface,
         PlutoMotion.fadeIn(),
         label = "tabLabel",
     )

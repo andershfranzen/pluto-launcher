@@ -92,6 +92,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -131,7 +132,6 @@ import dev.pluto.launcher.ui.components.FastScrollRailWidth
 import dev.pluto.launcher.ui.components.Legends
 import dev.pluto.launcher.ui.components.PlutoIconButton
 import dev.pluto.launcher.ui.components.PlutoTextButton
-import dev.pluto.launcher.ui.components.glassSurface
 import dev.pluto.launcher.ui.components.ScrollSections
 import dev.pluto.launcher.ui.components.activeMapping
 import dev.pluto.launcher.ui.components.rememberEqual
@@ -144,7 +144,7 @@ import dev.pluto.launcher.ui.motion.DrawerRevealState
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.LocalDrawerReveal
 import dev.pluto.launcher.ui.motion.PlutoMotion
-import dev.pluto.launcher.ui.theme.sheetColor
+import dev.pluto.launcher.ui.theme.ConsoleTheme
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -199,9 +199,26 @@ private fun drawerAppId(key: AppKey) = "drawer:${key.encode()}"
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DrawerScreen(state: LauncherUiState, vm: LauncherViewModel) {
-    // The wallpaper is visible through the drawer: keep the label contrast shadow.
-    CompositionLocalProvider(LocalLabelsOnWallpaper provides true) { DrawerScreenContent(state, vm) }
+    // Like Home, the drawer is a stage over the background; menus above retain the user's theme.
+    ConsoleTheme {
+        val colors = MaterialTheme.colorScheme.copy(
+            primary = Color.White,
+            onSurface = Color.White,
+            onSurfaceVariant = Color.White.copy(alpha = 0.78f),
+            outlineVariant = Color.White.copy(alpha = 0.22f),
+        )
+        MaterialTheme(colorScheme = colors) {
+            CompositionLocalProvider(LocalLabelsOnWallpaper provides true) { DrawerScreenContent(state, vm) }
+        }
+    }
 }
+
+/** Thin charcoal frosting: the blurred background supplies colour and depth. */
+@Composable
+private fun Modifier.drawerGlass(shape: Shape): Modifier =
+    this.background(Color(0xFF16191F).copy(alpha = 0.46f), shape)
+        .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.055f))), shape)
+        .border(1.dp, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.055f))), shape)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -387,7 +404,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
 
     // A genuinely translucent page, not the near-opaque body used by menus and folders. It
     // runs edge to edge behind the status bar, so the drawer reads as a screen, not a sheet.
-    val sheet = sheetColor().copy(alpha = 0.58f)
+    val sheet = Color(0xFF101217).copy(alpha = 0.30f)
     Column(
         Modifier
             .fillMaxSize()
@@ -417,19 +434,22 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                             selected = activeCategory,
                             onSelect = { vm.selectCategory(if (it.isAll) null else it.id) },
                             idPrefix = CHIP_PREFIX,
+                            softGlass = true,
                             modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
                         )
                     } else {
                         Spacer(Modifier.weight(1f))
                     }
                     // Categories are unlimited: add, rename and reorder them from here.
-                    PlutoIconButton(DR_CATEGORIES, Icons.Outlined.Add, DrawerText.MANAGE_CATEGORIES, { vm.openLayer(Layer.Categories) })
-                    PlutoIconButton(
-                        id = DR_ACTIONS,
-                        icon = if (actionsMode) Icons.Outlined.Check else Icons.Outlined.MoreVert,
-                        label = if (actionsMode) DrawerText.ACTIONS_DONE else DrawerText.ACTIONS,
-                        onClick = { actionsMode = !actionsMode },
-                    )
+                    Row(Modifier.drawerGlass(RoundedCornerShape(24.dp))) {
+                        PlutoIconButton(DR_CATEGORIES, Icons.Outlined.Add, DrawerText.MANAGE_CATEGORIES, { vm.openLayer(Layer.Categories) })
+                        PlutoIconButton(
+                            id = DR_ACTIONS,
+                            icon = if (actionsMode) Icons.Outlined.Check else Icons.Outlined.MoreVert,
+                            label = if (actionsMode) DrawerText.ACTIONS_DONE else DrawerText.ACTIONS,
+                            onClick = { actionsMode = !actionsMode },
+                        )
+                    }
                 }
             }
             Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (compact) 4.dp else 6.dp)) {
@@ -552,9 +572,9 @@ private fun DrawerSearchField(
 ) {
     var focused by remember { mutableStateOf(false) }
     val scheme = MaterialTheme.colorScheme
-    val pillShape = RoundedCornerShape(18.dp)
+    val pillShape = RoundedCornerShape(28.dp)
     val borderColor by animateColorAsState(
-        if (focused) scheme.primary.copy(alpha = 0.75f) else scheme.outlineVariant.copy(alpha = 0.35f),
+        if (focused) Color.White.copy(alpha = 0.45f) else Color.Transparent,
         PlutoMotion.fadeIn(), label = "searchFocus",
     )
     val text = field.state.text
@@ -586,7 +606,7 @@ private fun DrawerSearchField(
             Row(
                 Modifier
                     .heightIn(min = if (compact) 48.dp else 52.dp)
-                    .glassSurface(pillShape)
+                    .drawerGlass(pillShape)
                     .border(
                         width = 1.dp,
                         color = borderColor,
@@ -637,7 +657,7 @@ private fun ActionsModeBanner(onDone: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .glassSurface(RoundedCornerShape(16.dp))
+            .drawerGlass(RoundedCornerShape(24.dp))
             .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -684,7 +704,7 @@ private fun DrawerGrid(
             top = if (compact) 4.dp else 8.dp,
             bottom = if (compact) 4.dp else 16.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 10.dp),
+        verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 14.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
             .fillMaxSize()

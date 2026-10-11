@@ -271,7 +271,7 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
         LocalAppLauncher provides appLauncher,
         LocalHomeDrag provides drag,
     ) {
-        PlutoTheme(state.settings) {
+        PlutoTheme(state.settings, darkSystemBars = state.session.topLayer == Layer.Drawer) {
             ProvideControllerFocus(focus) {
                 // One focus ring that glides between controls (instead of a ring per control
                 // cross-fading), drawn above every layer of the launcher window.

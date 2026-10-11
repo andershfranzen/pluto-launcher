@@ -141,7 +141,7 @@ private val PlutoLight = lightColorScheme(
  * recreated for it.
  */
 @Composable
-fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
+fun PlutoTheme(settings: LauncherSettings, darkSystemBars: Boolean = false, content: @Composable () -> Unit) {
     val dark = when (settings.theme) {
         ThemePreference.SYSTEM -> isSystemInDarkTheme()
         ThemePreference.DARK -> true
@@ -153,8 +153,8 @@ fun PlutoTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
         SideEffect {
             val window = context.findActivity()?.window ?: return@SideEffect
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !dark
-                isAppearanceLightNavigationBars = !dark
+                isAppearanceLightStatusBars = !dark && !darkSystemBars
+                isAppearanceLightNavigationBars = !dark && !darkSystemBars
             }
         }
     }

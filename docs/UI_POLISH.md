@@ -2,6 +2,11 @@
 
 ## Follow-up — 2026-10-11
 
+- The alphabetical drawer now follows Home's dark, translucent presentation: thin
+  charcoal frosting over the blurred background, light labels, softer category pills,
+  a glass capsule for category/actions controls and a rounded floating search bar.
+  Grid rows have slightly more breathing room. The drawer uses light system-bar icons;
+  opening another page restores the normal theme's system-bar treatment.
 - Drawer search now uses the shared glass surface and names the active category in
   its placeholder and accessibility state. Empty categories open their app picker
   directly through Add apps. A category search with no matches can switch to All
