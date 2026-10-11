@@ -52,6 +52,4 @@ object PlutoMotion {
     /** Pressed tiles shrink to this scale (visual only; layout geometry never changes). */
     const val PRESSED_SCALE = 0.93f
 
-    /** How far the home surface recedes while the drawer covers it. */
-    const val RECEDE_SCALE = 0.94f
 }

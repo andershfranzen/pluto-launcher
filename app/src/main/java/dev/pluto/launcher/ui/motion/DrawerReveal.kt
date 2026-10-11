@@ -8,8 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
- * Shared, continuous position of the app drawer: 0 = closed (home fully visible),
- * 1 = open. The drawer's on-screen offset, the home surface's recede and the scrim are
+ * Shared, continuous reveal of the app drawer: 0 = closed (home fully visible),
+ * 1 = open. The drawer's fade, the home surface's fade and the scrim are
  * all driven from [progress], whatever started the motion (swipe, button, controller Y,
  * Back, Home).
  *

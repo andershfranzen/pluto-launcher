@@ -517,7 +517,7 @@ private class LayerEntry(val key: String, val layer: Layer, shown: Boolean, val 
 /** What the motion of the layers above does to one layer (or to the home base). */
 @Immutable
 private class Beneath(
-    /** A drawer is above: recede with the reveal progress. */
+    /** A drawer is above: fade with the reveal progress. */
     val drawer: Boolean,
     /** Pages / onboarding above: shift toward the start and fade out as they come in. */
     val covers: List<LayerEntry>,
@@ -1049,9 +1049,8 @@ private fun LayerFrame(
                                 }
                             }
                             .drawMotion {
-                                val d = reveal.progress
-                                translationY = LayerMotion.drawerOffset(d, height)
-                                alpha = LayerMotion.fadeEarly(d, 0.2f)
+                                // Icons and controls stay at their resting positions throughout the reveal.
+                                alpha = reveal.progress.coerceIn(0f, 1f)
                             }
                             .then(leavingBlock),
                     ) {
@@ -1132,7 +1131,7 @@ private fun LayerFrame(
 }
 
 /**
- * The effect of the layers above on this one, in the draw phase: home recedes under the
+ * The effect of the layers above on this one, in the draw phase: home fades under the
  * drawer; anything under an arriving page shifts toward the start and fades out (shared
  * axis), so dropping it once the page has settled is invisible.
  */
@@ -1144,15 +1143,8 @@ private fun Modifier.beneathMotion(beneath: Beneath, reveal: DrawerRevealState, 
             var a = 1f
             if (beneath.drawer) {
                 val d = reveal.progress
-                val s = LayerMotion.recedeScale(d)
-                scaleX = s
-                scaleY = s
                 a *= LayerMotion.recedeAlpha(d)
-                // The full-screen drawer hides everything below its top edge; only the strip
-                // above it is drawn.
-                if (d > 0f) clipBottom = LayerMotion.drawerOffset(d, height)
-                // Receded home stays translucent for as long as the drawer is open: no
-                // full-window offscreen buffer for it (only the strip above the panel shows).
+                // Home fades away in place while the drawer fades in, with no moving edge.
                 modulateAlpha = beneath.covers.isEmpty()
             }
             val covers = beneath.covers
@@ -1229,7 +1221,7 @@ private const val MODE_ENTER_SCALE = 0.97f
 
 /**
  * Predictive Back (Android 14+): the system Back swipe scrubs the top layer's exit (the
- * drawer slides down part way, a page slides toward the end edge, ...); releasing commits
+ * drawer fades out part way, a page slides toward the end edge, ...); releasing commits
  * Back through the ViewModel, cancelling springs the layer back. Registered before the
  * layers' own BackHandlers, so those (rename, search, nested dialogs) keep priority.
  * Disabled where Back doesn't close the layer: onboarding, and the drawer while a query is

@@ -90,20 +90,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.drawscope.ContentDrawScope
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.MeasureResult
-import androidx.compose.ui.layout.MeasureScope
-import androidx.compose.ui.node.DrawModifierNode
-import androidx.compose.ui.node.LayoutModifierNode
-import androidx.compose.ui.node.ModifierNodeElement
-import androidx.compose.ui.node.invalidateDraw
-import androidx.compose.ui.node.invalidatePlacement
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -112,7 +101,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -142,7 +130,6 @@ import dev.pluto.launcher.ui.focus.LocalFocusInert
 import dev.pluto.launcher.ui.focus.controllerFocusTarget
 import dev.pluto.launcher.ui.motion.DrawerRevealState
 import dev.pluto.launcher.ui.motion.LocalAppLauncher
-import dev.pluto.launcher.ui.motion.LocalDrawerReveal
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.ConsoleTheme
 import kotlinx.coroutines.launch
@@ -226,7 +213,6 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     val focus = LocalControllerFocus.current
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val reveal = LocalDrawerReveal.current
     val launcher = LocalAppLauncher.current
     val outerInert = LocalFocusInert.current
     val iconSize = state.iconSize()
@@ -259,24 +245,6 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     var actionsMode by rememberSaveable { mutableStateOf(false) }
     // The drawer stays composed while closed; per-visit modes still end when it closes.
     LaunchedEffect(parked) { if (parked) actionsMode = false }
-
-    // Opened by a button or the controller: the first rows stagger in. Pulled up by a finger
-    // the content is already on screen, so it stays put.
-    val stagger = rememberStagger(animate = isTop && !reveal.isDragging, stepMs = 24, maxSlots = 5)
-    val staggerFrame = remember { StaggerFrame() }
-    val wasTop = remember { booleanArrayOf(isTop) }
-    if (isTop != wasTop[0]) {
-        wasTop[0] = isTop
-        val hidden = Snapshot.withoutReadObservation { !reveal.isDragging && reveal.progress < 0.05f }
-        if (isTop && hidden) {
-            Snapshot.withoutReadObservation {
-                staggerFrame.base = gridState.firstVisibleItemIndex
-                staggerFrame.columns = gridState.layoutInfo.maxSpan.coerceAtLeast(1)
-            }
-            stagger.arm()
-        }
-    }
-    LaunchedEffect(isTop) { if (isTop) stagger.replay() else stagger.finish() }
 
     // The field keeps its own value (cursor, selection); the VM holds the text itself.
     val field = remember { SearchField(session.searchText) }
@@ -420,9 +388,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
         // In normal mode the whole bar sits at the bottom, under the thumb (search last,
         // nearest the keyboard); in console mode it heads the page.
         val header = @Composable {
-        Column(
-            Modifier.graphicsLayer { alpha = revealFade(reveal.progress, start = CONTENT_FADE_START) },
-        ) {
+        Column {
             if (!compact) {
                 Row(
                     Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
@@ -504,8 +470,6 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                     heavyChange = feed.heavy,
                     itemKey = feed::itemKey,
                     actionsMode = actionsMode,
-                    stagger = stagger,
-                    staggerFrame = staggerFrame,
                     pageShift = pageShift,
                     onLaunchApp = onLaunchApp,
                     onAppActions = onAppActions,
@@ -545,12 +509,6 @@ private fun rememberShortWindow(): State<Boolean> {
         }
     }
 }
-
-/** The sheet never shows without its header: content starts fading in almost at once. */
-private const val CONTENT_FADE_START = 0.05f
-
-/** 0 until the drawer is [start] of the way open, then rising to 1 by the time it is fully open. */
-private fun revealFade(progress: Float, start: Float): Float = ((progress - start) / (1f - start)).coerceIn(0f, 1f)
 
 /**
  * A pinned glass search field with its category scope and one trailing control
@@ -686,8 +644,6 @@ private fun DrawerGrid(
     heavyChange: Boolean,
     itemKey: (AppKey) -> Any,
     actionsMode: Boolean,
-    stagger: Stagger,
-    staggerFrame: StaggerFrame,
     pageShift: Animatable<Float, *>,
     onLaunchApp: (AppKey, String) -> Unit,
     onAppActions: (AppKey) -> Unit,
@@ -719,7 +675,7 @@ private fun DrawerGrid(
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .edgeFades(gridState),
     ) {
-        itemsIndexed(apps, key = { _, entry -> itemKey(entry.key) }, contentType = { _, _ -> "app" }) { index, entry ->
+        itemsIndexed(apps, key = { _, entry -> itemKey(entry.key) }, contentType = { _, _ -> "app" }) { _, entry ->
             val id = drawerAppId(entry.key)
             AppTile(
                 entry = entry,
@@ -732,7 +688,6 @@ private fun DrawerGrid(
                 onActions = { onAppActions(entry.key) },
                 actionsOnTap = actionsMode,
                 modifier = resultItem(heavyChange)
-                    .then(DrawerStaggerElement(stagger, staggerFrame, index))
                     // Hold and move: the drawer closes and the app can be dropped on Home or the dock.
                     .homeDragSource(source = { DragSource.Drawer(entry.key) }, look = { DragLook.App(entry) }),
                 // Keyboard-compact rows show icons only so no tile is cut off; names stay in semantics.
@@ -907,57 +862,6 @@ private fun Modifier.edgeFades(gridState: LazyGridState): Modifier = drawWithCon
             size = Size(size.width, bottom),
             blendMode = BlendMode.DstIn,
         )
-    }
-}
-
-// ---------------------------------------------------------------------------------------
-// Opening stagger
-// ---------------------------------------------------------------------------------------
-
-/** Where the opening stagger counts rows from; plain fields, read only in layout and draw. */
-private class StaggerFrame {
-    var base = 0
-    var columns = 1
-}
-
-/**
- * Staggered entrance per row for drawer tiles. The row is worked out at draw time from the
- * tile's index and [StaggerFrame], so opening the drawer never recomposes a tile.
- */
-private data class DrawerStaggerElement(val stagger: Stagger, val frame: StaggerFrame, val index: Int) :
-    ModifierNodeElement<DrawerStaggerNode>() {
-    override fun create() = DrawerStaggerNode(stagger, frame, index)
-    override fun update(node: DrawerStaggerNode) {
-        node.stagger = stagger
-        node.frame = frame
-        node.index = index
-        node.invalidatePlacement()
-        node.invalidateDraw()
-    }
-}
-
-private class DrawerStaggerNode(var stagger: Stagger, var frame: StaggerFrame, var index: Int) :
-    Modifier.Node(), LayoutModifierNode, DrawModifierNode {
-    private fun progress(): Float = stagger.progress(((index - frame.base) / frame.columns).coerceAtLeast(0))
-
-    private val layer: GraphicsLayerScope.() -> Unit = { alpha = progress() }
-
-    override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
-        val placeable = measurable.measure(constraints)
-        return layout(placeable.width, placeable.height) { placeable.placeWithLayer(0, 0, layerBlock = layer) }
-    }
-
-    override fun ContentDrawScope.draw() {
-        val p = progress()
-        if (p >= 1f) {
-            drawContent()
-        } else {
-            translate(top = (1f - p) * RISE_DP * density) { this@draw.drawContent() }
-        }
-    }
-
-    private companion object {
-        const val RISE_DP = 12f
     }
 }
 

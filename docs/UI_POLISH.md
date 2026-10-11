@@ -2,6 +2,10 @@
 
 ## Follow-up — 2026-10-11
 
+- Opening and closing the drawer crossfades Home and the app grid in place. Icons and
+  glass controls stay at their final positions; there is no sliding panel edge, Home
+  shrink or staggered icon rise. Swipes and predictive Back still drive the reveal,
+  and the closed drawer remains parked outside the window to avoid intercepting taps.
 - The alphabetical drawer now follows Home's dark, translucent presentation: thin
   charcoal frosting over the blurred background, light labels, softer category pills,
   a glass capsule for category/actions controls and a rounded floating search bar.

@@ -36,7 +36,7 @@ object LayerMotion {
     const val BENEATH_SHIFT_MAX_DP = 40f
 
     /** Home alpha with the drawer fully open. */
-    const val RECEDE_ALPHA = 0.4f
+    const val RECEDE_ALPHA = 0f
 
     /** Extra dim over home with the drawer fully open. */
     const val DRAWER_DIM = 0.32f
@@ -61,10 +61,6 @@ object LayerMotion {
 
     fun onboardingScale(p: Float): Float = lerp(ONBOARDING_START_SCALE, 1f, p)
 
-    /** Drawer panel offset: fully below the window when closed. */
-    fun drawerOffset(p: Float, height: Float): Float = (1f - p) * height
-
-    fun recedeScale(drawerProgress: Float): Float = lerp(1f, PlutoMotion.RECEDE_SCALE, unit(drawerProgress))
     fun recedeAlpha(drawerProgress: Float): Float = lerp(1f, RECEDE_ALPHA, unit(drawerProgress))
 
     /** Alpha of what lies beneath a page that is [coverProgress] of the way in. */

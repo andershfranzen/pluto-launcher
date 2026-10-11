@@ -17,8 +17,6 @@ class LayerMotionTest {
         assertEquals(1f, LayerMotion.sheetScale(1f, entering = true), eps)
         assertEquals(1f, LayerMotion.sheetScale(1f, entering = false), eps)
         assertEquals(1f, LayerMotion.onboardingScale(1f), eps)
-        assertEquals(0f, LayerMotion.drawerOffset(1f, 2000f), eps)
-        assertEquals(1f, LayerMotion.recedeScale(0f), eps)
         assertEquals(1f, LayerMotion.recedeAlpha(0f), eps)
         assertEquals(1f, LayerMotion.beneathPageAlpha(0f), eps)
         assertEquals(1f, LayerMotion.fadeEarly(1f, 0.2f), eps)
@@ -28,8 +26,6 @@ class LayerMotionTest {
     @Test
     fun absentEndpoints() {
         assertEquals(LayerMotion.FOLDER_START_SCALE, LayerMotion.folderScale(0f), eps)
-        assertEquals(2000f, LayerMotion.drawerOffset(0f, 2000f), eps)
-        assertEquals(PlutoMotion.RECEDE_SCALE, LayerMotion.recedeScale(1f), eps)
         assertEquals(LayerMotion.RECEDE_ALPHA, LayerMotion.recedeAlpha(1f), eps)
         assertEquals(0f, LayerMotion.beneathPageAlpha(1f), eps)
         assertEquals(0f, LayerMotion.fadeLate(0.1f, 0.15f), eps)
