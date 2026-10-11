@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import dev.pluto.launcher.ui.components.LocalLabelsOnWallpaper
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.animation.AnimatedVisibility
@@ -144,7 +145,6 @@ import dev.pluto.launcher.ui.motion.LocalAppLauncher
 import dev.pluto.launcher.ui.motion.LocalDrawerReveal
 import dev.pluto.launcher.ui.motion.PlutoMotion
 import dev.pluto.launcher.ui.theme.sheetColor
-import dev.pluto.launcher.ui.theme.sheetRaisedColor
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -179,7 +179,7 @@ private fun drawerAppId(key: AppKey) = "drawer:${key.encode()}"
 
 /**
  * The app drawer (layer Drawer): a full-screen, translucent, brand-tinted page whose top row
- * holds Close, the category chips (with a sliding indicator) and ⋮, then a pinned search
+ * holds the category chips (with a sliding indicator) and ⋮, then a pinned search
  * field and one alphabetical grid of state.drawerApps
  * (filtering and accent-insensitive matching are done by the view model), with an alphabet
  * fast-scroll rail, soft edge fades and a useful empty state.
@@ -433,18 +433,26 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                 }
             }
             Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (compact) 4.dp else 6.dp)) {
-                DrawerSearchField(
-                    field = field,
-                    compact = compact,
-                    onClear = { vm.clearSearch() },
-                    onCollapse = { vm.setSearchActive(false) },
-                    onSearchAction = {
-                        keyboard?.hide()
-                        if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
-                    },
-                    onFieldActivated = { vm.setSearchActive(true); keyboard?.show() },
-                    onFieldFocused = { if (isTop && !currentState.session.searchActive) vm.setSearchActive(true) },
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DrawerSearchField(
+                        field = field,
+                        compact = compact,
+                        category = activeCategory?.takeUnless { it.isAll },
+                        actionsMode = actionsMode,
+                        modifier = Modifier.weight(1f),
+                        onClear = { vm.clearSearch() },
+                        onCollapse = { vm.setSearchActive(false) },
+                        onSearchAction = {
+                            keyboard?.hide()
+                            if (focus.inputMode == InputMode.CONTROLLER) currentFirstApp?.let(focus::requestFocus)
+                        },
+                        onFieldActivated = { vm.setSearchActive(true); keyboard?.show() },
+                        onFieldFocused = { if (isTop && !currentState.session.searchActive) vm.setSearchActive(true) },
+                    )
+                    if (compact && actionsMode) {
+                        PlutoIconButton("drawer:actions:done", Icons.Outlined.Check, DrawerText.ACTIONS_DONE, { actionsMode = false })
+                    }
+                }
             }
         }
         }
@@ -462,6 +470,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                     onClear = { vm.clearSearch() },
                     onShowAll = { vm.selectCategory(null) },
                     onHiddenApps = { vm.openLayer(Layer.HiddenApps) },
+                    onAddApps = { activeCategory?.takeUnless { it.isAll }?.let { vm.openLayer(Layer.ShelfPicker(it.id)) } },
                     shortWindow = shortWindow,
                     keyboardCompact = compact,
                     modifier = Modifier.align(Alignment.Center).fadeInOnAppear(),
@@ -524,15 +533,17 @@ private const val CONTENT_FADE_START = 0.05f
 private fun revealFade(progress: Float, start: Float): Float = ((progress - start) / (1f - start)).coerceIn(0f, 1f)
 
 /**
- * The search field, shown in the header row while searching: a pill with the search icon,
- * the text and one trailing control (Clear while there is text, else Close, which folds the
- * field back into the search button and brings the category chips back). It reads only its
+ * A pinned glass search field with its category scope and one trailing control
+ * (Clear while there is text, else Close while focused). It reads only its
  * own [field], so typing recomposes this row, not the grid.
  */
 @Composable
 private fun DrawerSearchField(
     field: SearchField,
     compact: Boolean,
+    category: Category?,
+    actionsMode: Boolean,
+    modifier: Modifier = Modifier,
     onClear: () -> Unit,
     onCollapse: () -> Unit,
     onSearchAction: () -> Unit,
@@ -558,9 +569,13 @@ private fun DrawerSearchField(
             imeAction = ImeAction.Search,
         ),
         onKeyboardAction = { onSearchAction() },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .semantics { contentDescription = "Search apps" }
+            .semantics {
+                contentDescription = "Search apps"
+                val scope = category?.let { "Searching ${it.name}" } ?: "Searching all apps"
+                stateDescription = if (actionsMode) "$scope. Tap an app for actions." else scope
+            }
             .onFocusChanged { focused = it.isFocused }
             .controllerFocusTarget(
                 id = DRAWER_SEARCH_ID,
@@ -571,7 +586,7 @@ private fun DrawerSearchField(
             Row(
                 Modifier
                     .heightIn(min = if (compact) 48.dp else 52.dp)
-                    .background(sheetRaisedColor().copy(alpha = 0.86f), pillShape)
+                    .glassSurface(pillShape)
                     .border(
                         width = 1.dp,
                         color = borderColor,
@@ -581,8 +596,8 @@ private fun DrawerSearchField(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    Icons.Outlined.Search,
-                    contentDescription = null,
+                    if (compact && actionsMode) Icons.Outlined.MoreVert else Icons.Outlined.Search,
+                    contentDescription = if (compact && actionsMode) "App actions mode" else null,
                     tint = if (focused) scheme.primary else scheme.onSurfaceVariant,
                     modifier = Modifier.size(22.dp),
                 )
@@ -590,7 +605,7 @@ private fun DrawerSearchField(
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                     if (text.isEmpty()) {
                         Text(
-                            "Search apps",
+                            category?.let { "Search ${it.name}" } ?: "Search apps",
                             style = MaterialTheme.typography.bodyLarge,
                             color = scheme.onSurfaceVariant,
                             maxLines = 1,
@@ -630,7 +645,7 @@ private fun ActionsModeBanner(onDone: () -> Unit) {
             DrawerText.ACTIONS_HINT,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
@@ -987,7 +1002,7 @@ internal object DrawerText {
     const val ACTIONS = "Choose an app to see its actions"
     const val ACTIONS_DONE = "Done choosing apps"
     const val MANAGE_CATEGORIES = "Add or edit categories"
-    const val ACTIONS_HINT = "Tap an app to see its actions: pin, dock, folder, categories, hide, app info."
+    const val ACTIONS_HINT = "Tap an app for actions"
 }
 
 @Composable
@@ -997,6 +1012,7 @@ private fun DrawerEmptyState(
     onClear: () -> Unit,
     onShowAll: () -> Unit,
     onHiddenApps: () -> Unit,
+    onAddApps: () -> Unit,
     shortWindow: Boolean,
     keyboardCompact: Boolean,
     modifier: Modifier = Modifier,
@@ -1004,18 +1020,23 @@ private fun DrawerEmptyState(
     if (keyboardCompact) {
         // The landscape keyboard leaves room for a single line. Clear remains available
         // in the search field; do not let the decorative empty state push out the message.
-        Text(
-            text = when {
-                query.isNotBlank() -> "No apps match “$query”"
-                category != null && !category.isAll -> "No apps in ${category.name} yet"
-                else -> "No apps to show"
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            modifier = modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-        )
+        Row(modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = when {
+                    query.isNotBlank() -> "No apps match “$query”"
+                    category != null && !category.isAll -> "No apps in ${category.name} yet"
+                    else -> "No apps to show"
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+            if (query.isNotBlank() && category != null && !category.isAll) {
+                PlutoTextButton("drawer:empty:all", "Search all apps", onShowAll)
+            }
+        }
         return
     }
     Column(modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1039,9 +1060,10 @@ private fun DrawerEmptyState(
                 title = "No apps in ${category.name} yet",
                 compact = shortWindow,
                 icon = Icons.Outlined.Category,
-                detail = "Press and hold an app, choose More… and then Categories… to add it here.",
+                detail = "Choose which apps belong here.",
             ) {
-                PlutoTextButton("drawer:empty:all", "Show all apps", onShowAll, emphasized = true)
+                PlutoTextButton("drawer:empty:add", "Add apps", onAddApps, emphasized = true)
+                PlutoTextButton("drawer:empty:all", "Show all apps", onShowAll)
             }
             else -> EmptyState(
                 title = "No apps to show",

@@ -2,6 +2,15 @@
 
 ## Follow-up — 2026-10-11
 
+- Drawer search now uses the shared glass surface and names the active category in
+  its placeholder and accessibility state. Empty categories open their app picker
+  directly through Add apps. A category search with no matches can switch to All
+  apps without losing its query, including above the landscape keyboard.
+  Actions mode has shorter guidance; in keyboard-compact layouts its mode indicator
+  and Done control sit beside search so results retain their space. Portrait and
+  landscape keyboard recovery paths were visually checked. Three focused Android
+  regression tests cover the app picker, query-preserving scope switch and exiting
+  actions mode with the landscape keyboard open.
 - Glass over XMB now takes a restrained tint from its selected colour, with lower
   light-theme fill opacity and a softer rim. Settings cards use a lighter overlay
   instead of stacking pale fills, while stronger secondary text preserves contrast.
