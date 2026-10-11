@@ -33,6 +33,33 @@ categories stay exactly the same.
 
 <sub>Screenshots from the Android 16 emulator with the Pluto background. Pluto can also show your wallpaper or an XMB-style background.</sub>
 
+## Your ROMs, your emulator
+
+Create your own console tabs—**PlayStation 1**, **Game Boy**, or any name you like—and
+browse your games in the same Coverflow view as your apps. Select a game to open it in
+the emulator you chose for that tab.
+
+<p align="center">
+  <img src="docs/screenshots/rom-playstation-spyro.png" alt="PlayStation 1 ROM tab showing Spyro - Year of the Dragon, with its box art and reflection over Pluto's orange XMB background" width="900">
+</p>
+
+In **Settings → Apps → ROM tabs**, choose your ROM folder, a default emulator and a
+tab name. Pluto leaves your files in place, includes subfolders and refreshes the
+collection when you return. You can open the emulator's setup and come back to your
+unfinished tab, or choose **Ask each time** instead of a default.
+
+| Set up a ROM tab | Choose your default emulator |
+| :---: | :---: |
+| <img src="docs/screenshots/rom-tab-setup.png" alt="ROM tab setup: folder, DuckStation as the default emulator, PlayStation 1 as the tab name, and a pinned Save changes button" width="250"> | <img src="docs/screenshots/rom-default-emulator.png" alt="Default emulator chooser with search, Ask each time, suggested DuckStation and Show all installed apps" width="250"> |
+
+Game names are cleaned automatically. For box art, place a matching image beside the
+game, such as `Spyro.cue` and `Spyro.png`; artwork is not downloaded automatically.
+DuckStation's direct launch is tested; other emulators need to support Android's Open
+file interface. Configure any required BIOS in the emulator itself.
+
+<sub>The Spyro example uses the maintainer's own disc dump and BIOS. Games, BIOS files,
+emulators and cover art are not bundled with Pluto.</sub>
+
 ## How it adapts
 
 | Window | Controller | Mode |
@@ -83,6 +110,17 @@ Pluto never forces rotation on the app you are using.
   a gradient. Pick a colour, or *Auto*, which changes the colour every month the way the PS3 did. It can
   run in console mode only or everywhere, and becomes a still image with Reduce motion.
 - **Add apps** picker for Games, Tools and your own categories, with likely apps suggested first.
+- **ROM tabs**: Settings → Apps → ROM tabs creates named console tabs such as
+  PlayStation 1. Choose a folder, default emulator and tab name; ROMs use the
+  same carousel as apps. CUE/M3U entries group their tracks and discs, and an adjacent
+  PNG/JPG/WebP with the same basename supplies cover art. Automatic launch supports
+  DuckStation directly; other emulators receive an Android Open file request.
+  Emulator search includes any installed app, with likely emulators suggested first.
+  Open the chosen emulator from setup to configure it, then return without losing
+  your draft. Save stays visible; launch-method overrides live under Advanced options.
+  Collections refresh on returning to Pluto (at most once every 30 seconds per tab),
+  and Refresh games checks immediately. More games can be copied into the same folder.
+  Box art is local; it is not automatically downloaded.
 
 **Controllers**
 - D-pad and left-stick navigation with a dead zone, controlled repeat and suppression of
@@ -101,10 +139,17 @@ Pluto never forces rotation on the app you are using.
   *Reduce motion* or Android's "Remove animations".
 
 **Privacy**
-- Fully offline: no account, ads, analytics, cloud sync or network access.
-- No usage, notification or overlay permissions. The only declared permissions are for the
-  optional Uninstall action, which always goes through Android's own confirmation, and for
-  pulling down the notification shade when you swipe down on Home.
+- No account, ads, analytics or cloud sync. Normal launcher and ROM features work offline.
+- On first launch Pluto asks whether to check GitHub for updates, with automatic checks
+  as the default choice. No request is sent until you answer. If allowed, checks run at
+  most once a day when you open Pluto. Settings → General → Updates also offers a manual
+  check, release notes and Download and update. Downloads require your action; Android
+  asks you to approve installation. APK checksums, package/version and signing keys are
+  checked before installation so an incompatible update cannot replace your layout.
+- No usage, notification or overlay permissions. Internet access is used for GitHub update
+  checks and downloads; Android's Install unknown apps permission is requested only when
+  installing an update. Uninstall still uses Android's confirmation, and the notification
+  shade permission supports swiping down on Home.
 - Double-tap to lock is off by default. Android only lets a launcher lock the screen (without
   disabling fingerprint unlock) through an accessibility service, so turning it on asks you
   to enable "Pluto screen lock". That service performs the lock and nothing else: it listens
@@ -118,6 +163,11 @@ Pluto is a 0.1 prototype and isn't on any app store yet. Download the APK from t
 [latest GitHub release](https://github.com/andershfranzen/pluto-launcher/releases/latest),
 open it on your phone, and choose **Update** (or **Install** for a first installation).
 Android may ask you to allow APK installs from your browser.
+
+Version 0.1.4 adds built-in update checks. Install it manually once when coming from
+0.1.3 or earlier; future releases can be downloaded from **Settings → General → Updates**.
+The first-launch question asks whether to enable automatic checks, and Android still
+asks you to approve each installation.
 
 Published builds use the maintainer's local development signing key. A build made on
 another machine can have a different key; if Android reports a signing conflict, do
@@ -201,4 +251,6 @@ Pluto 0.1 is a working prototype, but it isn't finished:
 ## Licence
 
 [MIT](LICENSE) © 2026 Pluto contributors. The logo is original artwork made for this project.
-Please don't contribute proprietary game artwork or other unlicensed assets.
+Game artwork visible in demonstration screenshots belongs to its respective owners;
+the MIT licence does not apply to it. Please don't contribute proprietary game artwork
+as app assets or other unlicensed assets.
