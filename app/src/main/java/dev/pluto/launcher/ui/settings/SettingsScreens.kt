@@ -438,6 +438,8 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
 
             }
 
+            UpdateSettings(settings, vm)
+
             SettingsSection(SettingsText.ABOUT) {
                 BodyText(SettingsText.version(versionName))
                 BodyText(SettingsText.LICENSE)

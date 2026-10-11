@@ -103,6 +103,10 @@ private fun stepsFor(state: LauncherUiState): List<OnboardingStep> {
 /** First-run: default layout preview, optional category setup, controller preview, then default-launcher chooser. */
 @Composable
 fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
+    if (!state.settings.updateCheckChoiceMade && !state.settings.readFailed) {
+        UpdateCheckConsent(vm)
+        return
+    }
     val steps = stepsFor(state)
     var stepName by rememberSaveable { mutableStateOf(OnboardingProgress.stepName) }
     val step = OnboardingStep.valueOf(stepName).takeIf { it in steps } ?: steps.first()

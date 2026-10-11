@@ -96,7 +96,7 @@ internal object SettingsText {
     const val KOFI_URL = "ko-fi.com/anderslc"
     fun version(name: String) = if (name.isBlank()) "Pluto" else "Pluto $name"
     const val LICENSE = "Open source under the MIT licence."
-    const val PRIVACY = "No account, ads, analytics or network access."
+    const val PRIVACY = "No account, ads or analytics. GitHub is contacted only for optional update checks and downloads."
     const val LIMITATIONS = "Known limitations: work profile and Private Space apps are not supported yet; " +
         "widgets always take a full row of the home grid."
 

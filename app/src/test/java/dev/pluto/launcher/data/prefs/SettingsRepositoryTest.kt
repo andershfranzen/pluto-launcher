@@ -13,6 +13,8 @@ class SettingsRepositoryTest {
     fun corruptFileIsReplacedWithFailClosedValuesAndANotice() {
         val recovered = SettingsRepository.fromPreferences(SettingsRepository.recoveryPreferences())
         assertFalse("history must stay off after a reset", recovered.historyEnabled)
+        assertFalse(recovered.automaticUpdateChecks)
+        assertTrue(recovered.updateCheckChoiceMade)
         assertTrue(recovered.onboardingComplete)
         assertTrue(recovered.layoutSeeded)
         assertTrue(recovered.recoveredFromCorruption)
@@ -23,6 +25,7 @@ class SettingsRepositoryTest {
     fun unreadableSettingsFailClosed() {
         val unreadable = SettingsRepository.UNREADABLE
         assertFalse(unreadable.historyEnabled)
+        assertFalse(unreadable.automaticUpdateChecks)
         assertTrue(unreadable.readFailed)
         assertTrue(unreadable.onboardingComplete)
         assertTrue(unreadable.layoutSeeded)
@@ -31,6 +34,8 @@ class SettingsRepositoryTest {
     @Test
     fun freshInstallIsNotSeededAndHasNoNotice() {
         val fresh = SettingsRepository.fromPreferences(emptyPreferences())
+        assertTrue(fresh.automaticUpdateChecks)
+        assertFalse(fresh.updateCheckChoiceMade)
         assertFalse(fresh.layoutSeeded)
         assertFalse(fresh.recoveredFromCorruption)
         assertFalse(fresh.readFailed)
@@ -42,6 +47,8 @@ class SettingsRepositoryTest {
         val settings = LauncherSettings(
             theme = ThemePreference.DARK,
             historyEnabled = false,
+            automaticUpdateChecks = false,
+            updateCheckChoiceMade = true,
             layoutSeeded = true,
             recoveredFromCorruption = true,
             readFailed = true,

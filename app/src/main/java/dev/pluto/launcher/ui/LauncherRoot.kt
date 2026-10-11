@@ -146,6 +146,7 @@ import dev.pluto.launcher.ui.overlay.MoveToFolderDialog
 import dev.pluto.launcher.ui.settings.CategoriesScreen
 import dev.pluto.launcher.ui.settings.ControllerSettingsScreen
 import dev.pluto.launcher.ui.settings.HiddenAppsScreen
+import dev.pluto.launcher.ui.components.GlassBackdropTheme
 import dev.pluto.launcher.ui.settings.OnboardingScreen
 import dev.pluto.launcher.ui.settings.SettingsScreen
 import dev.pluto.launcher.ui.theme.LocalReducedMotion
@@ -338,7 +339,10 @@ fun LauncherRoot(vm: LauncherViewModel, actions: Flow<LauncherAction>) {
                     if (storageError != null) {
                         StorageErrorScreen(storageError, onRetry = vm::retryStorage)
                     } else if (!state.loading) {
-                        LauncherContent(state, mode, landscapeWindow = widthDp > heightDp, vm, focus)
+                        val glassBackdrop = if (state.settings.backgroundFor(console = mode == LauncherMode.HANDHELD) == BackgroundChoice.XMB) state.settings.xmbBaseColor() else null
+                        GlassBackdropTheme(glassBackdrop) {
+                            LauncherContent(state, mode, landscapeWindow = widthDp > heightDp, vm, focus)
+                        }
                     }
                     AnimatedVisibility(
                         visible = state.loading && storageError == null,

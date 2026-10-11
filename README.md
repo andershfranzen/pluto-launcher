@@ -139,10 +139,17 @@ Pluto never forces rotation on the app you are using.
   *Reduce motion* or Android's "Remove animations".
 
 **Privacy**
-- Fully offline: no account, ads, analytics, cloud sync or network access.
-- No usage, notification or overlay permissions. The only declared permissions are for the
-  optional Uninstall action, which always goes through Android's own confirmation, and for
-  pulling down the notification shade when you swipe down on Home.
+- No account, ads, analytics or cloud sync. Normal launcher and ROM features work offline.
+- On first launch Pluto asks whether to check GitHub for updates, with automatic checks
+  as the default choice. No request is sent until you answer. If allowed, checks run at
+  most once a day when you open Pluto. Settings → General → Updates also offers a manual
+  check, release notes and Download and update. Downloads require your action; Android
+  asks you to approve installation. APK checksums, package/version and signing keys are
+  checked before installation so an incompatible update cannot replace your layout.
+- No usage, notification or overlay permissions. Internet access is used for GitHub update
+  checks and downloads; Android's Install unknown apps permission is requested only when
+  installing an update. Uninstall still uses Android's confirmation, and the notification
+  shade permission supports swiping down on Home.
 - Double-tap to lock is off by default. Android only lets a launcher lock the screen (without
   disabling fingerprint unlock) through an accessibility service, so turning it on asks you
   to enable "Pluto screen lock". That service performs the lock and nothing else: it listens
@@ -156,6 +163,11 @@ Pluto is a 0.1 prototype and isn't on any app store yet. Download the APK from t
 [latest GitHub release](https://github.com/andershfranzen/pluto-launcher/releases/latest),
 open it on your phone, and choose **Update** (or **Install** for a first installation).
 Android may ask you to allow APK installs from your browser.
+
+Version 0.1.4 adds built-in update checks. Install it manually once when coming from
+0.1.3 or earlier; future releases can be downloaded from **Settings → General → Updates**.
+The first-launch question asks whether to enable automatic checks, and Android still
+asks you to approve each installation.
 
 Published builds use the maintainer's local development signing key. A build made on
 another machine can have a different key; if Android reports a signing conflict, do

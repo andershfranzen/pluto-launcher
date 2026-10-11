@@ -190,6 +190,10 @@ data class LauncherSettings(
     val rotation: RotationPreference = RotationPreference.FOLLOW_SYSTEM,
     val handheldAppearance: HandheldAppearance = HandheldAppearance.AUTOMATIC,
     val historyEnabled: Boolean = true,
+    /** Optional GitHub checks on launcher resume; no downloads without a user action. */
+    val automaticUpdateChecks: Boolean = true,
+    /** Network checks are gated until the first-launch question has been answered. */
+    val updateCheckChoiceMade: Boolean = false,
     val swipeDownAction: SwipeDownAction = SwipeDownAction.NOTIFICATIONS,
     /** Double-tap empty space on Home to lock the screen (needs Pluto's accessibility service). */
     val doubleTapToLock: Boolean = false,

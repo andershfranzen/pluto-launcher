@@ -2,6 +2,22 @@
 
 ## Follow-up — 2026-10-11
 
+- Glass over XMB now takes a restrained tint from its selected colour, with lower
+  light-theme fill opacity and a softer rim. Settings cards use a lighter overlay
+  instead of stacking pale fills, while stronger secondary text preserves contrast.
+  Orange and blue XMB settings were visually checked; the user's Auto colour was
+  restored afterward. Wallpaper and Pluto surfaces retain their neutral treatment.
+- GitHub update checks ask for a first-launch choice before any request. Automatic
+  checking is the default choice; opting out leaves manual checks available under
+  General → Updates. Allowed checks run on resume with a daily throttle, including
+  failed requests. Explicit downloads show progress and can be cancelled. APK size,
+  checksum, package, version and the installed signing identity are checked before
+  Android's installer receives a private read-only content URI. Completed downloads
+  and the pending unknown-source permission handoff survive process death.
+  The first-launch question is a content-sized glass dialog with the existing Pluto
+  planet logo, a compact landscape header and brief explanations. Portrait and
+  landscape were visually reviewed; a live GitHub check correctly detected 0.1.3
+  as current. 251 JVM tests and 5 focused updater/consent Android tests passed.
 - ROM setup now presents folder, default emulator and tab name in that order. The
   folder supplies an editable initial name, and Create/Save stays pinned below the
   scrollable form. Launch-method overrides are collapsed under Advanced options.

@@ -38,7 +38,9 @@ when reporting them.
 ## 2. First launch
 
 Open Pluto from your current launcher's app list (it appears as "Pluto" with a small
-planet icon). The first launch:
+planet icon). The first launch asks **Keep Pluto up to date?** Choose **Allow automatic checks** (the
+default choice) or **No thanks**. Pluto makes no GitHub request before your answer.
+The rest of setup:
 
 1. Loads your apps and shows a **usable default layout** straight away: your device's default
    phone, messaging, browser and camera apps in the dock; Settings, Calendar, Clock, Gallery
@@ -170,3 +172,19 @@ their own orientation behaviour.
 
 Portrait always uses Phone mode. The lock screen orientation is controlled by Android /
 OxygenOS, not by Pluto.
+
+## Updates
+
+Open **Settings → General → Updates** to change automatic checking, check now or read
+release notes. Allowed automatic checks run once a day when you open Pluto; there is
+no always-running background updater. The launcher tells you when a release is available.
+
+Choose **Download and update** to download and verify the APK. Android may ask you to
+allow Pluto under **Install unknown apps**; return to Pluto afterward to continue to
+Android's installation confirmation. If you cancel, **Install update** retries the
+verified download. Download progress can be cancelled. Completed downloads survive
+restarting the launcher; checks use a cached release when offline.
+
+Checks contact GitHub without sending app usage, ROM lists or other launcher data.
+Only stable releases with the expected APK and checksum qualify. A signing-key mismatch
+blocks installation; do not uninstall your launcher to work around it.

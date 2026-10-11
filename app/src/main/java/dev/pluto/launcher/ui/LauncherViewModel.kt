@@ -66,6 +66,47 @@ class LauncherViewModel(
     private val container: AppContainer,
     private val savedState: SavedStateHandle,
 ) : ViewModel() {
+    val updateState = container.updates.state
+    private val restoreUpdatesJob = viewModelScope.launch { container.updates.restore() }
+    private var updateDownloadJob: kotlinx.coroutines.Job? = null
+    private var automaticUpdateJob: kotlinx.coroutines.Job? = null
+    private var announcedUpdate: String? = null
+
+    fun chooseAutomaticUpdates(enabled: Boolean) = updateSettings {
+        it.copy(automaticUpdateChecks = enabled, updateCheckChoiceMade = true)
+    }
+
+    fun checkForUpdates() = viewModelScope.launch {
+        restoreUpdatesJob.join()
+        container.updates.check(force = true)
+    }
+
+    private fun checkForUpdatesAutomatically() {
+        if (automaticUpdateJob?.isActive == true) return
+        automaticUpdateJob = viewModelScope.launch {
+            restoreUpdatesJob.join()
+            val settings = settingsState.filterNotNull().first()
+            if (!settings.automaticUpdateChecks || !settings.updateCheckChoiceMade || settings.readFailed) return@launch
+            container.updates.check()
+            updateState.value.release?.let { release ->
+                if (announcedUpdate != release.tag) {
+                    announcedUpdate = release.tag
+                    showMessage("Pluto ${release.versionName} is available. Open Settings → General to update.")
+                }
+            }
+        }
+    }
+
+    fun downloadUpdate() {
+        if (updateDownloadJob?.isActive == true) return
+        updateDownloadJob = viewModelScope.launch {
+            container.updates.download()
+            if (updateState.value.readyToInstall) container.updates.install()
+        }
+    }
+    fun cancelUpdateDownload() { updateDownloadJob?.cancel() }
+    fun installUpdate() = viewModelScope.launch { container.updates.install() }
+
     private val repository get() = container.organization
     val romLibraries = container.roms.libraries
         .catch { showMessage("Could not load ROM shelves. Restart Pluto to try again.") }
@@ -207,6 +248,11 @@ class LauncherViewModel(
     }
 
     init {
+        viewModelScope.launch {
+            settingsState.filterNotNull().map { it.automaticUpdateChecks && it.updateCheckChoiceMade && !it.readFailed }.distinctUntilChanged().collect { enabled ->
+                if (enabled) checkForUpdatesAutomatically() else automaticUpdateJob?.cancel()
+            }
+        }
         SessionSaver.install(savedState) { session.value }
         val builder = LauncherStateBuilder()
         // Null until organisation and settings have both loaded (or forever after a storage error).
@@ -287,6 +333,8 @@ class LauncherViewModel(
         this.isDefaultHome.value = isDefaultHome
         boundary("refresh app catalog") { container.catalog.refreshIfStale() }
         boundary("refresh controllers") { container.controllers.refresh() }
+        viewModelScope.launch { restoreUpdatesJob.join(); container.updates.resumeInstallationIfAllowed() }
+        checkForUpdatesAutomatically()
     }
 
     /** Home button pressed while launcher is already in front: close all layers and clear search. */
@@ -802,10 +850,12 @@ class LauncherViewModel(
     /** Shows Onboarding once settings have loaded and say it hasn't been completed; keeps it on top. */
     private suspend fun showOnboardingWhenNeeded() {
         settingsState.filterNotNull()
-            .map { it.onboardingComplete }
+            .map { Triple(it.onboardingComplete, it.updateCheckChoiceMade, it.readFailed) }
             .distinctUntilChanged()
-            .collect { complete ->
-                if (complete) {
+            .collect { (complete, updateChoice, readFailed) ->
+                if (!updateChoice && !readFailed) {
+                    updateSession { s -> s.copy(layers = s.layers.filterNot { it == Layer.Onboarding } + Layer.Onboarding) }
+                } else if (complete) {
                     updateSession { s -> s.copy(layers = s.layers.filterNot { it == Layer.Onboarding }) }
                 } else if (!onboardingDismissed) {
                     updateSession { s -> s.copy(layers = s.layers.filterNot { it == Layer.Onboarding } + Layer.Onboarding) }

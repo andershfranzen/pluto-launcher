@@ -78,6 +78,8 @@ class SettingsRepository(context: Context) {
         val ROTATION = stringPreferencesKey("rotation")
         val HANDHELD = stringPreferencesKey("handheld_appearance")
         val HISTORY = booleanPreferencesKey("history_enabled")
+        val AUTOMATIC_UPDATES = booleanPreferencesKey("automatic_update_checks")
+        val UPDATE_CHOICE = booleanPreferencesKey("update_check_choice_made")
         val SWIPE_DOWN = stringPreferencesKey("swipe_down_action")
         val DOUBLE_TAP_LOCK = booleanPreferencesKey("double_tap_to_lock")
         val ONBOARDED = booleanPreferencesKey("onboarding_complete")
@@ -103,6 +105,8 @@ class SettingsRepository(context: Context) {
          */
         val UNREADABLE = LauncherSettings(
             historyEnabled = false,
+            automaticUpdateChecks = false,
+            updateCheckChoiceMade = true,
             onboardingComplete = true,
             layoutSeeded = true,
             readFailed = true,
@@ -112,6 +116,8 @@ class SettingsRepository(context: Context) {
         internal fun recoveryPreferences(): Preferences = mutablePreferencesOf(
             Keys.SCHEMA to SCHEMA_VERSION,
             Keys.HISTORY to false,
+            Keys.AUTOMATIC_UPDATES to false,
+            Keys.UPDATE_CHOICE to true,
             Keys.ONBOARDED to true,
             Keys.LAYOUT_SEEDED to true,
             Keys.RECOVERED to true,
@@ -145,6 +151,8 @@ class SettingsRepository(context: Context) {
                 rotation = enumOr<RotationPreference>(p[Keys.ROTATION], d.rotation),
                 handheldAppearance = enumOr<HandheldAppearance>(p[Keys.HANDHELD], d.handheldAppearance),
                 historyEnabled = p[Keys.HISTORY] ?: d.historyEnabled,
+                automaticUpdateChecks = p[Keys.AUTOMATIC_UPDATES] ?: d.automaticUpdateChecks,
+                updateCheckChoiceMade = p[Keys.UPDATE_CHOICE] ?: d.updateCheckChoiceMade,
                 swipeDownAction = enumOr<SwipeDownAction>(p[Keys.SWIPE_DOWN], d.swipeDownAction),
                 doubleTapToLock = p[Keys.DOUBLE_TAP_LOCK] ?: d.doubleTapToLock,
                 onboardingComplete = p[Keys.ONBOARDED] ?: d.onboardingComplete,
@@ -177,6 +185,8 @@ class SettingsRepository(context: Context) {
             p[Keys.ROTATION] = s.rotation.name
             p[Keys.HANDHELD] = s.handheldAppearance.name
             p[Keys.HISTORY] = s.historyEnabled
+            p[Keys.AUTOMATIC_UPDATES] = s.automaticUpdateChecks
+            p[Keys.UPDATE_CHOICE] = s.updateCheckChoiceMade
             p[Keys.SWIPE_DOWN] = s.swipeDownAction.name
             p[Keys.DOUBLE_TAP_LOCK] = s.doubleTapToLock
             p[Keys.ONBOARDED] = s.onboardingComplete

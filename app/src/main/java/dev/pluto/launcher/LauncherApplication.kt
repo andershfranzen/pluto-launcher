@@ -15,6 +15,7 @@ class AppContainer(app: Application) {
     val database: LauncherDatabase by lazy { LauncherDatabase.build(app) }
     val organization: OrganizationRepository by lazy { OrganizationRepository(database.dao()) }
     val roms: dev.pluto.launcher.data.RomRepository by lazy { dev.pluto.launcher.data.RomRepository(app, database.romDao()) }
+    val updates by lazy { dev.pluto.launcher.updates.UpdateRepository(app) }
     val settings: SettingsRepository by lazy { SettingsRepository(app) }
     val catalog: AppCatalog by lazy { AppCatalog(app) }
     val icons: IconCache by lazy { IconCache(app) }

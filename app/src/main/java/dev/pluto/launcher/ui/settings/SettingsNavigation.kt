@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
+import dev.pluto.launcher.ui.components.LocalGlassBackdrop
 import dev.pluto.launcher.ui.focus.controllerFocusable
 
 /** Stable sections keep settings navigable on phones and with a D-pad. */
@@ -97,7 +98,7 @@ internal fun SettingsSection(title: String, content: @Composable ColumnScope.() 
         val shape = RoundedCornerShape(22.dp)
         Column(
             Modifier.fillMaxWidth().clip(shape)
-                .background(colors.surfaceContainerHigh.copy(alpha = 0.55f))
+                .background(colors.surfaceContainerHigh.copy(alpha = if (LocalGlassBackdrop.current != null) 0.35f else 0.55f))
                 .border(1.dp, colors.outlineVariant.copy(alpha = 0.3f), shape)
                 .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
