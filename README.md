@@ -1,4 +1,9 @@
 <p align="center">
+  <a href="https://ko-fi.com/anderslc"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" alt="Support my work on Ko-fi" height="36"></a><br>
+  If you like what I do, you can support my work on Ko-fi.
+</p>
+
+<p align="center">
   <img src="docs/images/pluto-logo.svg" alt="Pluto logo: a small tan dwarf planet with a heart-shaped plain, on a starry navy background" width="160">
 </p>
 
