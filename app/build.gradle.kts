@@ -1,9 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.baselineprofile)
+}
+
+// Keep the existing dev/profile task names. Select one distribution for the entire build.
+val distribution = providers.gradleProperty("plutoDistribution").orElse("github").get()
+require(distribution in setOf("github", "play")) { "plutoDistribution must be github or play" }
+val playDistribution = distribution == "play"
+val playSigningFile = file(providers.environmentVariable("PLUTO_PLAY_SIGNING_PROPERTIES")
+    .orElse("${System.getProperty("user.home")}/.config/pluto-launcher/play-signing.properties").get())
+val playSigning = Properties().apply {
+    if (playDistribution && playSigningFile.isFile) playSigningFile.inputStream().use { load(it) }
 }
 
 android {
@@ -14,9 +26,27 @@ android {
         applicationId = "dev.pluto.launcher"
         minSdk = 30
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.1.5"
+        versionCode = 8
+        versionName = "0.1.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("boolean", "GITHUB_UPDATES", (!playDistribution).toString())
+    }
+
+    signingConfigs {
+        providers.gradleProperty("plutoDebugKey").orNull?.let { path ->
+            getByName("debug").storeFile = file(path)
+        }
+        if (playDistribution && playSigning.isNotEmpty()) {
+            create("playUpload") {
+                fun required(name: String) = requireNotNull(playSigning.getProperty(name)) {
+                    "Missing $name in Play signing properties"
+                }
+                storeFile = file(required("storeFile"))
+                storePassword = required("storePassword")
+                keyAlias = required("keyAlias")
+                keyPassword = required("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -26,9 +56,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Signed with the local debug key so it installs over (and keeps the data of)
-            // debug builds on a development phone. Replace with a real key before publishing.
-            signingConfig = signingConfigs.getByName("debug")
+            // GitHub keeps its existing certificate. Play uses a separate non-debug upload key.
+            signingConfig = if (playDistribution) signingConfigs.findByName("playUpload")
+                else signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -37,13 +67,29 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     sourceSets {
+        getByName("main").java.srcDir("src/$distribution/java")
+        getByName("androidTest").java.srcDir("src/${distribution}AndroidTest/java")
+        if (playDistribution) {
+            getByName("debug").manifest.srcFile("src/play/AndroidManifest.xml")
+            getByName("release").manifest.srcFile("src/play/AndroidManifest.xml")
+        }
         // Exported Room schemas double as migration-test fixtures.
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
+    }
+}
+
+// A Play bundle must fail closed when the private upload key has not been configured.
+tasks.matching { it.name == "bundleRelease" || it.name == "assembleRelease" }.configureEach {
+    doFirst {
+        check(!playDistribution || playSigning.isNotEmpty()) {
+            "Configure PLUTO_PLAY_SIGNING_PROPERTIES before building a Play release."
+        }
     }
 }
 
@@ -60,6 +106,8 @@ androidComponents.finalizeDsl { extension ->
 
 kotlin {
     jvmToolchain(17)
+    sourceSets.getByName("main").kotlin.srcDir("src/$distribution/java")
+    sourceSets.getByName("androidTest").kotlin.srcDir("src/${distribution}AndroidTest/java")
 }
 
 /*

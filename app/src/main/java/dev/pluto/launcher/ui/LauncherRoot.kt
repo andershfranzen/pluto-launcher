@@ -468,8 +468,8 @@ private val Layer.kind: LayerKind
         Layer.Drawer -> LayerKind.DRAWER
         is Layer.FolderLayer -> LayerKind.FOLDER
         // Bottom-sheet/dialog style; they draw their own ModalPanel scrim.
-        is Layer.AppActions, is Layer.CategoryMembership, is Layer.MoveToFolder, is Layer.WidgetActions -> LayerKind.SHEET
-        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker, Layer.WidgetPicker, Layer.RomLibraries, Layer.ConsoleOverview -> LayerKind.PAGE
+        is Layer.AppActions, is Layer.CategoryMembership, is Layer.MoveToFolder, is Layer.WidgetActions, Layer.ScreenLockPermission, Layer.NotificationPermission -> LayerKind.SHEET
+        Layer.Edit, Layer.Settings, Layer.HiddenApps, Layer.Categories, Layer.ControllerSettings, is Layer.ShelfPicker, Layer.WidgetPicker, Layer.RomLibraries, Layer.ConsoleOverview, Layer.PrivacyPolicy -> LayerKind.PAGE
         Layer.Onboarding -> LayerKind.ONBOARDING
     }
 
@@ -1258,6 +1258,8 @@ private fun LayerPredictiveBack(
 @Composable
 private fun LayerContent(layer: Layer, state: LauncherUiState, vm: LauncherViewModel) {
     when (layer) {
+        Layer.ScreenLockPermission, Layer.NotificationPermission -> dev.pluto.launcher.ui.settings.OptionalPermissionDisclosure(layer, vm)
+        Layer.PrivacyPolicy -> dev.pluto.launcher.ui.settings.PrivacyPolicyScreen(vm)
         Layer.ConsoleOverview -> dev.pluto.launcher.ui.overlay.ConsoleOverviewScreen(state, vm)
         Layer.RomLibraries -> dev.pluto.launcher.ui.overlay.RomLibrariesScreen(state, vm)
         Layer.Drawer -> DrawerScreen(state, vm)

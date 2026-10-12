@@ -479,17 +479,15 @@ internal fun Modifier.swipeDownForAction(action: SwipeDownAction, vm: LauncherVi
 /**
  * Double-tap empty space on the home surface to lock the screen, when the user turned that
  * on. Tiles and dock slots take their own taps. Without Pluto's screen-lock service enabled
- * the tap explains why and opens Accessibility settings instead.
+ * the tap shows Pluto's disclosure before opening Accessibility settings.
  */
 @Composable
 internal fun Modifier.doubleTapToLock(enabled: Boolean, vm: LauncherViewModel): Modifier {
     if (!enabled) return this
-    val context = LocalContext.current
     return pointerInput(vm) {
         detectTapGestures(onDoubleTap = {
             if (!ScreenLockService.lock()) {
-                vm.showMessage(HomeText.LOCK_NEEDS_SERVICE)
-                ScreenLockService.openSettings(context)
+                vm.openLayer(Layer.ScreenLockPermission)
             }
         })
     }

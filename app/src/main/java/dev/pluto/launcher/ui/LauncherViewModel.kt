@@ -84,6 +84,7 @@ class LauncherViewModel(
     }
 
     private fun checkForUpdatesAutomatically() {
+        if (!dev.pluto.launcher.BuildConfig.GITHUB_UPDATES) return
         if (automaticUpdateJob?.isActive == true) return
         automaticUpdateJob = viewModelScope.launch {
             restoreUpdatesJob.join()
@@ -896,7 +897,7 @@ class LauncherViewModel(
     /** Shows Onboarding once settings have loaded and say it hasn't been completed; keeps it on top. */
     private suspend fun showOnboardingWhenNeeded() {
         settingsState.filterNotNull()
-            .map { Triple(it.onboardingComplete, it.updateCheckChoiceMade, it.readFailed) }
+            .map { Triple(it.onboardingComplete, !dev.pluto.launcher.BuildConfig.GITHUB_UPDATES || it.updateCheckChoiceMade, it.readFailed) }
             .distinctUntilChanged()
             .collect { (complete, updateChoice, readFailed) ->
                 if (!updateChoice && !readFailed) {

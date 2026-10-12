@@ -33,6 +33,9 @@ sealed interface Layer {
     data class ShelfPicker(val categoryId: Long) : Layer
     data object ControllerSettings : Layer
     data object Onboarding : Layer
+    data object ScreenLockPermission : Layer
+    data object NotificationPermission : Layer
+    data object PrivacyPolicy : Layer
     /** Choose a widget to add to Home. */
     data object WidgetPicker : Layer
     /** Resize or remove one widget on Home. */
@@ -54,6 +57,9 @@ sealed interface Layer {
             is ShelfPicker -> "shelfpicker:${layer.categoryId}"
             ControllerSettings -> "controller"
             Onboarding -> "onboarding"
+            ScreenLockPermission -> "screenlockpermission"
+            NotificationPermission -> "notificationpermission"
+            PrivacyPolicy -> "privacy"
             WidgetPicker -> "widgetpicker"
             is WidgetActions -> "widgetactions:${layer.appWidgetId}"
         }
@@ -75,6 +81,9 @@ sealed interface Layer {
                 "shelfpicker" -> arg.toLongOrNull()?.let(::ShelfPicker)
                 "controller" -> ControllerSettings
                 "onboarding" -> Onboarding
+                "screenlockpermission" -> ScreenLockPermission
+                "notificationpermission" -> NotificationPermission
+                "privacy" -> PrivacyPolicy
                 "widgetpicker" -> WidgetPicker
                 "widgetactions" -> arg.toIntOrNull()?.let(::WidgetActions)
                 else -> null

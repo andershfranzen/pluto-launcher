@@ -103,7 +103,7 @@ private fun stepsFor(state: LauncherUiState): List<OnboardingStep> {
 /** First-run: default layout preview, optional category setup, controller preview, then default-launcher chooser. */
 @Composable
 fun OnboardingScreen(state: LauncherUiState, vm: LauncherViewModel) {
-    if (!state.settings.updateCheckChoiceMade && !state.settings.readFailed) {
+    if (dev.pluto.launcher.BuildConfig.GITHUB_UPDATES && !state.settings.updateCheckChoiceMade && !state.settings.readFailed) {
         UpdateCheckConsent(vm)
         return
     }

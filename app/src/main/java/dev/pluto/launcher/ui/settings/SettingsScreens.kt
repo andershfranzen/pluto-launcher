@@ -351,8 +351,8 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     },
                     checked = settings.doubleTapToLock,
                     onCheckedChange = { on ->
-                        update { it.copy(doubleTapToLock = on) }
-                        if (on && !ScreenLockService.isReady) ScreenLockService.openSettings(context)
+                        if (on) vm.openLayer(Layer.ScreenLockPermission)
+                        else update { it.copy(doubleTapToLock = false) }
                     },
                 )
             }
@@ -366,13 +366,13 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     supporting = if (dotAccess) "Small red dots for active notifications" else "Requires Android notification access",
                     checked = settings.notificationDots,
                     onCheckedChange = { on ->
-                        update { it.copy(notificationDots = on) }
-                        if (on && !dotAccess) dev.pluto.launcher.system.NotificationDots.openSettings(context)
+                        if (on) vm.openLayer(Layer.NotificationPermission)
+                        else update { it.copy(notificationDots = false) }
                     })
                 if (settings.notificationDots) ActionRow(id = "settings:notificationaccess",
                     label = "Notification access", icon = Icons.Rounded.SettingsApplications,
                     supporting = if (dotAccess) "Allowed · ongoing notifications do not show dots" else "Allow Pluto to show notification dots",
-                    onClick = { dev.pluto.launcher.system.NotificationDots.openSettings(context) })
+                    onClick = { vm.openLayer(Layer.NotificationPermission) })
             }
 
             SettingsSection(SettingsText.ORGANISATION) {
@@ -467,7 +467,10 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
             SettingsSection(SettingsText.ABOUT) {
                 BodyText(SettingsText.version(versionName))
                 BodyText(SettingsText.LICENSE)
-                BodyText(SettingsText.PRIVACY)
+                BodyText(if (dev.pluto.launcher.BuildConfig.GITHUB_UPDATES) SettingsText.PRIVACY
+                    else "No account, ads or analytics. Your layout and launcher history stay on this device.")
+                ActionRow(id = "settings:privacy", label = "Privacy policy", icon = Icons.Rounded.Visibility,
+                    onClick = { vm.openLayer(Layer.PrivacyPolicy) })
                 BodyText(SettingsText.LIMITATIONS)
             }
 

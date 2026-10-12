@@ -23,6 +23,8 @@ Pluto is meant to be the one launcher you keep full-time. Rotate the phone or pl
 gamepad and the presentation adapts, but your apps, favourites, dock, folders and
 categories stay exactly the same.
 
+[Privacy policy](https://andershfranzen.github.io/pluto-launcher/privacy/)
+
 <p align="center">
   <a href="https://ko-fi.com/anderslc"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" alt="Support my work on Ko-fi" height="36"></a><br>
   If you like what I do, you can support my work on Ko-fi.
