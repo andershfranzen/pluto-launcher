@@ -210,6 +210,18 @@ debug builds run largely interpreted and feel noticeably slower. The release bui
 signed with your local debug key, so it installs over a debug build and keeps your data.
 To apply the baseline profile at install time, see [docs/SETUP.md](docs/SETUP.md).
 
+## Download stats
+
+See the [daily APK download report](https://github.com/andershfranzen/pluto-launcher/tree/download-stats)
+for counts per release and saved daily snapshots. These are GitHub downloads, not unique
+users or active installations. Updates and repeat downloads count again. Tracking began
+on October 12, 2026; Pluto does not send usage telemetry.
+
+Collection is scheduled through T3 Code daily at 08:00 Europe/Copenhagen while T3 is
+running. To capture and publish a snapshot manually, run
+`scripts/publish-download-stats.sh` with Python 3 and GitHub push access. History lives
+on the separate `download-stats` branch.
+
 ## Development
 
 [scripts/dev.sh](scripts/dev.sh) wraps the local loop on a headless emulator (AVD `pluto36`:
