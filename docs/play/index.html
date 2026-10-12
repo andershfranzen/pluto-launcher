@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pluto Launcher — Accessibility review</title>
+  <style>
+    body { margin: 0; background: #0b0f24; color: #e8e9f1; font: 17px/1.65 system-ui,sans-serif; }
+    main { max-width: 850px; margin: auto; padding: 40px 24px; }
+    h1 { font-size: 32px; line-height: 1.2; }
+    a { color: #efd2b0; }
+    video { display: block; width: 100%; max-height: 80vh; background: #000; margin: 24px 0; }
+    li { margin: 8px 0; }
+    code { font-size: .9em; }
+  </style>
+</head>
+<body><main>
+  <h1>Pluto Launcher accessibility review</h1>
+  <p>Version 0.1.7 (8) · <code>dev.pluto.launcher</code> · Android 11 or newer</p>
+  <p>The optional Accessibility Service API performs Android’s lock-screen action when the user double-taps empty space on Home. Pluto cannot retrieve window content and subscribes to no accessibility events. It collects, stores and shares no personal data through this service.</p>
+  <video controls playsinline preload="metadata" aria-label="Pluto screen-lock consent and permission demonstration">
+    <source src="accessibility-review.mp4" type="video/mp4">
+    <a href="accessibility-review.mp4">Download the review video</a>.
+  </video>
+  <p><a href="accessibility-review.mp4">Open or download the MP4</a>. This is an actual emulator recording from 12 October 2026. Idle time is trimmed and captions are outside the full device frame. The final black display is the recorded screen-lock action; Android reported <code>mWakefulness=Asleep</code> and <code>mLastSleepReason=accessibility</code>.</p>
+  <ol>
+    <li>Start Pluto and open the Home menu → Launcher settings → Layout.</li>
+    <li>Choose Double-tap to lock and read the separate disclosure. Cancel leaves the feature off.</li>
+    <li>Retry, choose Agree and continue, and enable Pluto screen lock in Android Accessibility settings.</li>
+    <li>Accept Android’s permission dialog, return to Home, and double-tap empty space to lock the screen.</li>
+  </ol>
+  <p>The feature is optional. Disable Pluto screen lock in Android Accessibility settings to revoke access. No login, controller or ROM files are needed to review it. Sideloaded builds may require Android’s Allow restricted settings option; that extra step does not apply to installs through Google Play.</p>
+  <p><a href="../privacy/">Privacy policy</a> · <a href="mailto:anders@afive.dev">anders@afive.dev</a> · <a href="https://github.com/andershfranzen/pluto-launcher">Source code</a></p>
+</main></body>
+</html>

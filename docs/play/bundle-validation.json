@@ -1,0 +1,53 @@
+{
+  "bundle": "app/build/outputs/bundle/release/app-release.aab",
+  "sha256": "db5ad6c25785ab7e0a2f16975b608db1e76d4699d233884601efceceae82d409",
+  "package": "dev.pluto.launcher",
+  "versionName": "0.1.7",
+  "versionCode": "8",
+  "permissions": [
+    "android.permission.EXPAND_STATUS_BAR",
+    "android.permission.REQUEST_DELETE_PACKAGES",
+    "dev.pluto.launcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "baselineProfile": true,
+  "updaterAbsent": true,
+  "nativeLoadAlignment": {
+    "base/lib/arm64-v8a/libandroidx.graphics.path.so": [
+      16384,
+      16384,
+      16384
+    ],
+    "base/lib/arm64-v8a/libdatastore_shared_counter.so": [
+      16384,
+      16384,
+      16384
+    ],
+    "base/lib/armeabi-v7a/libandroidx.graphics.path.so": [
+      16384,
+      16384,
+      16384
+    ],
+    "base/lib/armeabi-v7a/libdatastore_shared_counter.so": [
+      16384,
+      16384
+    ],
+    "base/lib/x86/libandroidx.graphics.path.so": [
+      16384,
+      16384,
+      16384
+    ],
+    "base/lib/x86/libdatastore_shared_counter.so": [
+      16384,
+      16384
+    ],
+    "base/lib/x86_64/libandroidx.graphics.path.so": [
+      16384,
+      16384,
+      16384
+    ],
+    "base/lib/x86_64/libdatastore_shared_counter.so": [
+      16384,
+      16384
+    ]
+  }
+}

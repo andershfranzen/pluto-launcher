@@ -5,8 +5,8 @@ Android 11+, target API 36. It is not published until Play Console accepts the r
 
 ## Distribution and build
 
-The default build remains the GitHub distribution, with its existing self-updater and
-signing configuration. Public GitHub APKs must still be signed with the preserved
+The default build remains the GitHub distribution, with its existing self-updater.
+Public GitHub APKs must still be signed with the preserved
 `~/.config/.android/pluto-release.keystore` certificate; this differs from the machine's
 default debug key. `-PplutoDistribution=play` selects the Play source set while keeping
 the existing Gradle task names and profile generation workflow. The Play source set
@@ -99,10 +99,27 @@ Accessibility reviewer instructions:
 4. Android 13+ may require allowing restricted settings when this build is sideloaded;
    that is not the Play installation path.
 
-Play requires a short video showing startup, the complete disclosure, decline and
-retry, consent/Android permission grant and the actual lock action. Upload the
-review recording to an account-controlled, reviewer-accessible URL and enter that
-URL in the Accessibility declaration. The promotional video is not a replacement.
+The review video shows startup, the complete disclosure, decline and retry,
+consent/Android permission grant and the actual lock action. It uses actual emulator
+captures with idle time trimmed and captions outside the full device frame.
+Android confirmed `mWakefulness=Asleep` and `mLastSleepReason=accessibility` after
+double-tapping empty Home space. Enter this URL in the Accessibility declaration:
+<https://andershfranzen.github.io/pluto-launcher/play/>.
+The direct MP4 is `accessibility-review.mp4` beside this file. The promotional video
+is not a replacement for the permission demonstration.
+
+## Candidate validation
+
+The signed 0.1.7 bundle passes release lint, all 293 JVM tests and the binary audit
+in `bundle-validation.json`. Six permission-consent and Play-onboarding regression
+tests also passed on the emulator. The audit confirms no network, APK-installer,
+all-files or broad package-visibility permissions; no benchmark fixture activity;
+no updater code; an included baseline profile; and 16 KB native-library alignment.
+The AAB upload signature matches `upload-certificate.pem`.
+
+The emulator's original screen-lock preference, accessibility access and lock-screen
+configuration were restored after recording. The emulator has been shut down.
+The physical OnePlus was not used for Play testing or changed.
 
 ## Account and release progress
 

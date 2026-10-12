@@ -1,0 +1,67 @@
+{
+  "build": "0.1.7 (8)",
+  "recorded": "2026-10-12",
+  "clips": [
+    [
+      "accessibility-review-raw.mp4",
+      0,
+      6,
+      "Pluto Launcher 0.1.7 - startup"
+    ],
+    [
+      "accessibility-review-raw.mp4",
+      24,
+      7,
+      "Home menu > Launcher settings"
+    ],
+    [
+      "accessibility-review-raw.mp4",
+      47,
+      8,
+      "Layout > Double-tap to lock"
+    ],
+    [
+      "accessibility-review-raw.mp4",
+      65,
+      15,
+      "Read the separate accessibility disclosure"
+    ],
+    [
+      "accessibility-review-raw.part-002.mp4",
+      8,
+      8,
+      "Cancel leaves the feature off; retry"
+    ],
+    [
+      "accessibility-review-raw.part-002.mp4",
+      20,
+      11,
+      "Choose Agree and continue"
+    ],
+    [
+      "accessibility-review-raw.part-002.mp4",
+      52,
+      15,
+      "Enable Pluto screen lock in Android settings"
+    ],
+    [
+      "accessibility-review-raw.part-002.mp4",
+      75,
+      13,
+      "Read and accept Android permission consent"
+    ],
+    [
+      "accessibility-review-raw.part-002.mp4",
+      118,
+      6,
+      "Android confirms Pluto screen lock is on"
+    ],
+    [
+      "accessibility-lock-action.mp4",
+      0,
+      4.85,
+      "Double-tap empty Home space to lock"
+    ]
+  ],
+  "note": "Actual emulator recording; idle time trimmed; captions outside unchanged full device frame. Lock display is the actual captured black screen."
+}
