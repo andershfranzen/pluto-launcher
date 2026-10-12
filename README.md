@@ -1,6 +1,6 @@
 # Pluto APK downloads
 
-Last captured: **2026-10-12T07:03:56.801735+00:00** (UTC).
+Last captured: **2026-10-12T07:07:55.107166+00:00** (UTC).
 
 **52 total downloads** across currently published APK assets.
 
@@ -20,4 +20,4 @@ Daily raw snapshots are in [snapshots/](snapshots/). Each includes release and a
 
 Only APK assets are counted; checksum files and other attachments are excluded. A dash means there is no comparable earlier counter. Deleted releases or assets disappear from the current total but remain in historical snapshots. GitHub does not provide historical daily counts before tracking began.
 
-The workflow runs daily around 06:00 UTC (GitHub can delay scheduled runs), and can also be run manually. A repeat run replaces that UTC day's snapshot. No app telemetry is collected.
+Collection is scheduled daily at 08:00 Europe/Copenhagen through T3 Code while T3 is running, and can also be run manually. A repeat run replaces that UTC day's snapshot. No app telemetry is collected.
