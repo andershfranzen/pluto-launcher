@@ -144,5 +144,6 @@ class LauncherSettingsTest {
         assertEquals(350, defaults.repeatDelayMs)
         assertEquals(100, defaults.repeatIntervalMs)
         assertEquals(true, defaults.historyEnabled)
+        assertEquals(true, defaults.consoleFavourites)
     }
 }

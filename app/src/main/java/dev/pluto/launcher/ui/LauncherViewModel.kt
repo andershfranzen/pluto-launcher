@@ -497,7 +497,7 @@ class LauncherViewModel(
 
     /** The shelf Handheld shows for [ui]: the saved one while it exists, else the default landing shelf. */
     fun activeShelf(ui: LauncherUiState): ShelfId {
-        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled, romLibraries.value)
+        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled, romLibraries.value, ui.settings.consoleFavourites)
         val default = ConsoleShelves.defaultShelf(
             order = order,
             recentsNonEmpty = ui.recents.isNotEmpty(),
@@ -511,7 +511,7 @@ class LauncherViewModel(
     private fun stepShelfIfHandheld(delta: Int): Boolean {
         val ui = state.value
         if (ui.mode != LauncherMode.HANDHELD || ui.session.layers.isNotEmpty()) return false
-        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled, romLibraries.value)
+        val order = ConsoleShelves.order(ui.categories, ui.settings.historyEnabled, romLibraries.value, ui.settings.consoleFavourites)
         val next = ConsoleShelves.step(order, activeShelf(ui), delta) ?: return false
         selectShelf(next)
         return true

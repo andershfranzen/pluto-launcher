@@ -75,7 +75,7 @@ class RomRepository(context: Context, private val dao: RomDao) {
             }
         }
         val referenced = HashSet<String>()
-        for (file in files.filter { it.name.substringAfterLast('.').lowercase() in setOf("cue", "m3u") }) {
+        for (file in files.filter { it.name.substringAfterLast('.').lowercase() in RomFiles.sheets }) {
             coroutineContext.ensureActive()
             val text = resolver.openInputStream(file.uri)?.use { stream ->
                 val bytes = stream.buffered().takeBytes(1_048_577)

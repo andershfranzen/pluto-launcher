@@ -54,6 +54,16 @@ class ConsoleShelvesTest {
     }
 
     @Test
+    fun favouritesShelfCanBeTurnedOff() {
+        val order = ConsoleShelves.order(categories, historyEnabled = true, favouritesShelf = false)
+        assertEquals(listOf(ShelfId.Recent, ShelfId.OfCategory(1), ShelfId.OfCategory(2), ShelfId.OfCategory(3), ShelfId.OfCategory(7)), order)
+        // A saved Favourites selection falls back to the landing shelf, which skips the missing shelf.
+        val default = ConsoleShelves.defaultShelf(order, recentsNonEmpty = false, favouritesNonEmpty = true, allCategoryId = 1)
+        assertEquals(ShelfId.OfCategory(1), default)
+        assertEquals(ShelfId.OfCategory(1), ConsoleShelves.resolve(ShelfId.Favourites, order, default))
+    }
+
+    @Test
     fun defaultPrefersRecentsThenFavouritesThenAllApps() {
         val order = ConsoleShelves.order(categories, historyEnabled = true)
         assertEquals(ShelfId.Recent, ConsoleShelves.defaultShelf(order, recentsNonEmpty = true, favouritesNonEmpty = true, allCategoryId = 1))

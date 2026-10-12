@@ -49,6 +49,7 @@ class SettingsRepositoryTest {
             theme = ThemePreference.DARK,
             notificationDots = true,
             historyEnabled = false,
+            consoleFavourites = false,
             automaticUpdateChecks = false,
             updateCheckChoiceMade = true,
             layoutSeeded = true,

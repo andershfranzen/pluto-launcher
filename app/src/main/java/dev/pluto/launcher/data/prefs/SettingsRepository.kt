@@ -79,6 +79,7 @@ class SettingsRepository(context: Context) {
         val ROTATION = stringPreferencesKey("rotation")
         val HANDHELD = stringPreferencesKey("handheld_appearance")
         val HISTORY = booleanPreferencesKey("history_enabled")
+        val CONSOLE_FAVOURITES = booleanPreferencesKey("console_favourites")
         val AUTOMATIC_UPDATES = booleanPreferencesKey("automatic_update_checks")
         val UPDATE_CHOICE = booleanPreferencesKey("update_check_choice_made")
         val SWIPE_DOWN = stringPreferencesKey("swipe_down_action")
@@ -153,6 +154,7 @@ class SettingsRepository(context: Context) {
                 rotation = enumOr<RotationPreference>(p[Keys.ROTATION], d.rotation),
                 handheldAppearance = enumOr<HandheldAppearance>(p[Keys.HANDHELD], d.handheldAppearance),
                 historyEnabled = p[Keys.HISTORY] ?: d.historyEnabled,
+                consoleFavourites = p[Keys.CONSOLE_FAVOURITES] ?: d.consoleFavourites,
                 automaticUpdateChecks = p[Keys.AUTOMATIC_UPDATES] ?: d.automaticUpdateChecks,
                 updateCheckChoiceMade = p[Keys.UPDATE_CHOICE] ?: d.updateCheckChoiceMade,
                 swipeDownAction = enumOr<SwipeDownAction>(p[Keys.SWIPE_DOWN], d.swipeDownAction),
@@ -188,6 +190,7 @@ class SettingsRepository(context: Context) {
             p[Keys.ROTATION] = s.rotation.name
             p[Keys.HANDHELD] = s.handheldAppearance.name
             p[Keys.HISTORY] = s.historyEnabled
+            p[Keys.CONSOLE_FAVOURITES] = s.consoleFavourites
             p[Keys.AUTOMATIC_UPDATES] = s.automaticUpdateChecks
             p[Keys.UPDATE_CHOICE] = s.updateCheckChoiceMade
             p[Keys.SWIPE_DOWN] = s.swipeDownAction.name

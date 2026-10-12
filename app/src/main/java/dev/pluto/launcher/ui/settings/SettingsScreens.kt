@@ -318,6 +318,13 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     selected = settings.carouselStyle,
                     onSelect = { style -> update { it.copy(carouselStyle = style) } },
                 )
+                SwitchRow(
+                    id = "settings:consolefavourites",
+                    label = SettingsText.CONSOLE_FAVOURITES,
+                    supporting = SettingsText.CONSOLE_FAVOURITES_HELP,
+                    checked = settings.consoleFavourites,
+                    onCheckedChange = { on -> update { it.copy(consoleFavourites = on) } },
+                )
 
             }
             SettingsSection(SettingsText.GESTURES) {

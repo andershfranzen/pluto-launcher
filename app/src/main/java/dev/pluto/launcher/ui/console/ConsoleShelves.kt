@@ -54,12 +54,17 @@ object ConsoleShelves {
 
     /**
      * Tab order. Recent launches only exists while history is enabled (disabled history keeps
-     * no records, so the shelf would only ever be empty); Favourites always exists (it has a
-     * helpful empty state); then the categories in their persisted order.
+     * no records, so the shelf would only ever be empty); Favourites exists unless turned off in
+     * settings (it has a helpful empty state); then the categories in their persisted order.
      */
-    fun order(categories: List<Category>, historyEnabled: Boolean, romLibraries: List<RomLibrary> = emptyList()): List<ShelfId> = buildList {
+    fun order(
+        categories: List<Category>,
+        historyEnabled: Boolean,
+        romLibraries: List<RomLibrary> = emptyList(),
+        favouritesShelf: Boolean = true,
+    ): List<ShelfId> = buildList {
         if (historyEnabled) add(ShelfId.Recent)
-        add(ShelfId.Favourites)
+        if (favouritesShelf) add(ShelfId.Favourites)
         categories.forEach { add(ShelfId.OfCategory(it.id)) }
         romLibraries.forEach { add(ShelfId.OfRomLibrary(it.id)) }
     }

@@ -210,8 +210,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
 
     // Shelves and the active shelf's apps (list instances reused while their content is equal,
     // so an unrelated session change does not recompose the flow).
-    val order = remember(state.categories, state.settings.historyEnabled, libraries) {
-        ConsoleShelves.order(state.categories, state.settings.historyEnabled, libraries)
+    val order = remember(state.categories, state.settings.historyEnabled, libraries, state.settings.consoleFavourites) {
+        ConsoleShelves.order(state.categories, state.settings.historyEnabled, libraries, state.settings.consoleFavourites)
     }
     val tabs = remember(order, state.categories, libraries) { order.map { it to ConsoleShelves.title(it, state.categories, libraries) } }
     val favourites = rememberEqualList(remember(state.homeTiles) { ConsoleShelves.favouriteApps(state.homeTiles) })

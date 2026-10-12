@@ -86,6 +86,8 @@ internal object SettingsText {
     const val ICONS = "Icons"
     const val CAROUSEL = "Console carousel"
     const val CAROUSEL_HELP = "How games and apps are laid out in console mode."
+    const val CONSOLE_FAVOURITES = "Favourites shelf"
+    const val CONSOLE_FAVOURITES_HELP = "Show your home favourites as a shelf in console mode."
     const val ICON_PACK = "Icon pack"
     const val SYSTEM_ICONS = "System icons"
     const val SYSTEM_ICONS_HELP = "Each app's own icon"
