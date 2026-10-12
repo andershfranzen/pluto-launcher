@@ -112,7 +112,8 @@ Pluto never forces rotation on the app you are using.
 - Coverflow: the selected app faces you, with its neighbours tilted away in 3D. It glides
   continuously when you hold the D-pad or stick, and touch can scrub it or fling it.
 - Shelves switched with L1/R1: *Recent launches*, *Favourites*, then your categories.
-  Each shelf remembers its selection. Shelves crossfade in place with a subtle 108% entrance;
+  Each shelf remembers its selection. Settings → Layout → Favourites shelf hides the
+  Favourites shelf if you don't want it. Shelves crossfade in place with a subtle 108% entrance;
   Reduce motion keeps their size fixed.
 - **Browse shelf** opens an overview grid for apps or ROMs. Touch or controller navigation
   selects an item and returns to its carousel card; Back preserves the previous selection.
@@ -131,7 +132,10 @@ Pluto never forces rotation on the app you are using.
 - **Add apps** picker for Games, Tools and your own categories, with likely apps suggested first.
 - **ROM tabs**: Settings → Apps → ROM tabs creates named console tabs such as
   PlayStation 1. Choose a folder, default emulator and tab name; ROMs use the
-  same carousel as apps. CUE/M3U entries group their tracks and discs, and an adjacent
+  same carousel as apps. Cartridge, disc and computer formats are recognised across
+  Nintendo (NES to Switch, including NSP/XCI), Sega, PlayStation, PC Engine, Neo Geo
+  Pocket, WonderSwan, Atari, MSX, Commodore, ZX Spectrum and Amstrad systems, plus
+  ZIP/7z archives. CUE/M3U/GDI entries group their tracks and discs, and an adjacent
   PNG/JPG/WebP with the same basename supplies cover art. Automatic launch supports
   DuckStation directly; other emulators receive an Android Open file request.
   Emulator search includes any installed app, with likely emulators suggested first.
