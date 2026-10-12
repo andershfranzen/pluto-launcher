@@ -40,3 +40,31 @@ this document. Collector sources are in `scripts/export-download-metrics.py` and
 
 The existing T3 schedule still maintains the separate public GitHub report; it is
 not needed for this Grafana dashboard.
+
+## ntfy download notifications
+
+`pluto-download-notify.timer` checks all public release APK assets once a minute
+on the homelab. It publishes one notification per new download to the existing
+`homelab-alerts` topic, which the iPhone account already has permission to read.
+Notifications include the release tag and per-asset download number, and link to
+Grafana. In-app updates and repeat downloads also generate notifications. GitHub
+provides aggregate counters, not user identities or download webhooks; delivery
+follows GitHub's counter updates and the next poll.
+
+The first run saves existing counts without sending historical notifications.
+New release assets are counted from zero. Download cursors are saved atomically
+in `/srv/docker/monitoring/pluto/notify-state/counts.json` after ntfy acknowledges
+each message. Failed deliveries retain the unsent cursor for retry. Up to 30
+notifications are sent per run, with any remaining backlog delivered on later
+polls. Removed assets remain in the cursor map to avoid resending their history.
+
+The service loads existing GitHub and ntfy credentials from the private,
+mode-0600 `/srv/docker/monitoring/pluto/notify.env`; that file and notification
+state are excluded from Git. No credentials appear in the unit files or command
+arguments. The systemd timer is independent of T3 and the daily Grafana collector.
+
+```sh
+ssh homelab 'systemctl list-timers pluto-download-notify.timer --no-pager'
+ssh homelab 'journalctl -u pluto-download-notify.service -n 20 --no-pager'
+ssh homelab 'sudo systemctl start pluto-download-notify.service'
+```

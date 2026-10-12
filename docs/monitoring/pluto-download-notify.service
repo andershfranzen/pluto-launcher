@@ -1,0 +1,16 @@
+[Unit]
+Description=Notify ntfy of new Pluto APK downloads
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=a5
+EnvironmentFile=/srv/docker/monitoring/pluto/notify.env
+ExecStart=/usr/bin/python3 /srv/docker/monitoring/pluto/collect/notify-downloads.py --state /srv/docker/monitoring/pluto/notify-state/counts.json
+TimeoutStartSec=90
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/docker/monitoring/pluto/notify-state
