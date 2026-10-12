@@ -214,6 +214,7 @@ To switch back, open **Settings ▸ Apps ▸ Default apps ▸ Home app**.
 Use the **release** build for daily use. It is R8-optimised and ships a baseline profile;
 debug builds run largely interpreted and feel noticeably slower. The release build is
 signed with your local debug key, so it installs over a debug build and keeps your data.
+(On the maintainer's machine it uses the published key instead; see `scripts/dev.sh github-release`.)
 To apply the baseline profile at install time, see [docs/SETUP.md](docs/SETUP.md).
 
 ## Download stats
@@ -246,7 +247,10 @@ scripts/dev.sh pad DPAD_RIGHT BUTTON_A    # gamepad-source key events (key … f
 scripts/dev.sh rotate landscape   # portrait | landscape | auto
 scripts/dev.sh logcat             # Pluto's process only
 scripts/dev.sh doctor             # check SDK, JDK, KVM, AVD, device
+scripts/dev.sh github-release     # tests, lint, release APK checked for the published key + .sha256
 ```
+
+The script runs Gradle on JDK 17 when the default `java` is newer than Gradle supports.
 
 The script always targets `emulator-5554` (override with `PLUTO_SERIAL`). Injected gamepad
 keys come from a virtual device, so they exercise key handling but not controller detection

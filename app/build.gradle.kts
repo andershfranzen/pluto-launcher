@@ -18,6 +18,11 @@ val playSigning = Properties().apply {
     if (playDistribution && playSigningFile.isFile) playSigningFile.inputStream().use { load(it) }
 }
 
+// Published GitHub builds (0.1.2 onwards) carry one certificate; Android refuses updates
+// signed with any other key. Where that keystore exists, every release build uses it.
+val githubKeystore = file(providers.environmentVariable("PLUTO_GITHUB_KEYSTORE")
+    .orElse("${System.getProperty("user.home")}/.config/.android/pluto-release.keystore").get())
+
 android {
     namespace = "dev.pluto.launcher"
     compileSdk = 36
@@ -47,6 +52,14 @@ android {
                 keyPassword = required("keyPassword")
             }
         }
+        if (githubKeystore.isFile) {
+            create("github") {
+                storeFile = githubKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
     }
 
     buildTypes {
@@ -58,7 +71,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // GitHub keeps its existing certificate. Play uses a separate non-debug upload key.
             signingConfig = if (playDistribution) signingConfigs.findByName("playUpload")
-                else signingConfigs.getByName("debug")
+                else (signingConfigs.findByName("github") ?: signingConfigs.getByName("debug"))
         }
     }
     compileOptions {
