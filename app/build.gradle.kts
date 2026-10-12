@@ -6,6 +6,11 @@ plugins {
     alias(libs.plugins.baselineprofile)
 }
 
+// Published GitHub builds (0.1.2 onwards) carry one certificate; Android refuses updates
+// signed with any other key. Where that keystore exists, every release build uses it.
+val githubKeystore = file(providers.environmentVariable("PLUTO_GITHUB_KEYSTORE")
+    .orElse("${System.getProperty("user.home")}/.config/.android/pluto-release.keystore").get())
+
 android {
     namespace = "dev.pluto.launcher"
     compileSdk = 36
@@ -19,6 +24,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (githubKeystore.isFile) {
+            create("github") {
+                storeFile = githubKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     buildTypes {
         release {
             // R8 + resource shrinking: Compose in a debug build runs unoptimised and is
@@ -26,9 +42,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Signed with the local debug key so it installs over (and keeps the data of)
-            // debug builds on a development phone. Replace with a real key before publishing.
-            signingConfig = signingConfigs.getByName("debug")
+            // The published key when available; elsewhere the local debug key, so a self-built
+            // release installs over (and keeps the data of) debug builds on that machine.
+            signingConfig = signingConfigs.findByName("github") ?: signingConfigs.getByName("debug")
         }
     }
     compileOptions {

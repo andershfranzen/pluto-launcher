@@ -16,9 +16,11 @@
 #   scripts/dev.sh logcat              Pluto's process only
 #   scripts/dev.sh setup               (re)install SDK packages, JDK 17, KVM access, AVD
 #   scripts/dev.sh test | atest        JVM unit tests | instrumented tests on the emulator
+#   scripts/dev.sh github-release      tested, lint-clean release APK with the published key
 #
 # Everything targets the emulator serial ($PLUTO_SERIAL, default emulator-5554),
 # never a plugged-in phone: connected tests uninstall the app and delete its data.
+# Gradle runs on JDK 17 when the default java is too new for it ($PLUTO_JDK overrides).
 set -euo pipefail
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
@@ -32,6 +34,11 @@ export ANDROID_SERIAL="${PLUTO_SERIAL:-emulator-$PORT}"
 PKG="dev.pluto.launcher"
 EMU_LOG="${TMPDIR:-/tmp}/pluto-emulator-$PORT.log"
 ADB=(adb -s "$ANDROID_SERIAL")
+
+# Certificate of every published GitHub APK since 0.1.2; the in-app updater and Android
+# both refuse an update signed with anything else.
+PUBLISHED_CERT_SHA256="5565397d43dc5e5bcaf88102fd3fd3c4752d6d00d133297593bcf5790e778b13"
+GITHUB_KEYSTORE="${PLUTO_GITHUB_KEYSTORE:-$HOME/.config/.android/pluto-release.keystore}"
 
 die() { echo "error: $*" >&2; exit 1; }
 running() { "${ADB[@]}" get-state >/dev/null 2>&1; }
@@ -80,7 +87,36 @@ emu_stop() {
 variant() { case "${1:-debug}" in debug) echo Debug;; release) echo Release;; *) die "variant: debug|release";; esac; }
 apk() { echo "$ROOT/app/build/outputs/apk/${1:-debug}/app-${1:-debug}.apk"; }
 
-build() { (cd "$ROOT" && ./gradlew --console=plain ":app:assemble$(variant "${1:-debug}")"); }
+# Gradle 8.13 cannot start on very new JDKs (JDK 27 fails parsing its own version).
+use_jdk() {
+  local java="${JAVA_HOME:+$JAVA_HOME/bin/}java" version candidate
+  version="$("$java" -XshowSettings:properties -version 2>&1 | awk -F'= ' '/java.specification.version/ {print $2}')"
+  [[ -z "${PLUTO_JDK:-}" && -n "$version" && "${version%%.*}" -ge 17 && "${version%%.*}" -le 21 ]] && return
+  for candidate in "${PLUTO_JDK:-}" "$(mise where java@17 2>/dev/null || true)" /usr/lib/jvm/java-17-openjdk*; do
+    [[ -n "$candidate" && -x "$candidate/bin/java" ]] && { export JAVA_HOME="$candidate"; return; }
+  done
+  die "Gradle needs JDK 17-21 but found ${version:-no java}; install JDK 17 or set PLUTO_JDK"
+}
+gradle() { use_jdk; (cd "$ROOT" && ./gradlew --console=plain "$@"); }
+
+build() { gradle ":app:assemble$(variant "${1:-debug}")"; }
+
+# Tests, lint and the R8 release, then refuses to hand over an APK without the published
+# certificate. Leaves app-release.apk and its .sha256 (the release assets) in build/github-release.
+github_release() {
+  [[ -f "$GITHUB_KEYSTORE" ]] || die "published keystore not found at $GITHUB_KEYSTORE (set PLUTO_GITHUB_KEYSTORE)"
+  PLUTO_GITHUB_KEYSTORE="$GITHUB_KEYSTORE" gradle testDebugUnitTest :app:lintRelease :app:assembleRelease
+  local apksigner out="$ROOT/build/github-release" digest
+  apksigner="$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)"
+  digest="$("$apksigner" verify --print-certs "$(apk release)" 2>/dev/null \
+    | awk '/Signer #1 certificate SHA-256 digest/ {print $NF}')"
+  [[ "$digest" == "$PUBLISHED_CERT_SHA256" ]] || die "release APK is signed with ${digest:-no certificate}, not the published key"
+  mkdir -p "$out"
+  cp "$(apk release)" "$out/app-release.apk"
+  (cd "$out" && sha256sum app-release.apk > app-release.apk.sha256)
+  echo "signed with the published key; assets in $out:"
+  cat "$out/app-release.apk.sha256"
+}
 
 install() {
   build "${1:-debug}"
@@ -97,7 +133,8 @@ cmd="${1:-help}"; shift || true
 case "$cmd" in
   doctor)
     echo "ANDROID_HOME=$ANDROID_HOME"
-    java -version 2>&1 | head -1
+    use_jdk; echo "gradle jdk: $("${JAVA_HOME:+$JAVA_HOME/bin/}java" -version 2>&1 | head -1)"
+    [[ -f "$GITHUB_KEYSTORE" ]] && echo "published keystore: $GITHUB_KEYSTORE" || echo "published keystore: missing (release builds use the debug key)"
     echo "adb: $(adb version | head -1)"
     echo "emulator: $(emulator -version 2>/dev/null | head -1)"
     [[ -r /dev/kvm && -w /dev/kvm ]] && echo "kvm: ok" || echo "kvm: NOT accessible"
@@ -184,8 +221,9 @@ disk.dataPartition.size=6G
 EOF
     fi
     echo "setup done; run: scripts/dev.sh emu start";;
-  test) (cd "$ROOT" && ./gradlew --console=plain testDebugUnitTest);;
-  atest) running || emu_start; (cd "$ROOT" && ./gradlew --console=plain connectedDebugAndroidTest);;
-  help|-h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//';;
+  test) gradle testDebugUnitTest;;
+  atest) running || emu_start; gradle connectedDebugAndroidTest;;
+  github-release) github_release;;
+  help|-h|--help) sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//';;
   *) die "unknown command '$cmd' (try: scripts/dev.sh help)";;
 esac
