@@ -46,7 +46,7 @@ def make_snapshot(repository, releases, now):
     return {"repository": repository, "captured_at": now.isoformat(), "releases": rows}
 
 
-def render_summary(snapshot, previous):
+def render_summary(snapshot, previous, collection_note=None):
     old = {a["id"]: a["downloads"] for r in (previous or {}).get("releases", [])
            for a in r["assets"]}
     total = sum(a["downloads"] for r in snapshot["releases"] for a in r["assets"])
@@ -75,12 +75,12 @@ def render_summary(snapshot, previous):
               "A dash means there is no comparable earlier counter. Deleted releases or assets disappear "
               "from the current total but remain in historical snapshots. GitHub does not provide historical "
               "daily counts before tracking began.", "",
-              "Collection is scheduled daily at 08:00 Europe/Copenhagen through T3 Code while T3 is running, and can also be "
+              collection_note or "Collection is scheduled daily at 08:00 Europe/Copenhagen through T3 Code while T3 is running, and can also be "
               "run manually. A repeat run replaces that UTC day's snapshot. No app telemetry is collected.", ""]
     return "\n".join(lines)
 
 
-def save_snapshot(output, snapshot):
+def save_snapshot(output, snapshot, collection_note=None):
     directory = output / "snapshots"
     directory.mkdir(parents=True, exist_ok=True)
     day = snapshot["captured_at"][:10]
@@ -88,7 +88,7 @@ def save_snapshot(output, snapshot):
     earlier = sorted(p for p in directory.glob("????-??-??.json") if p.stem < day)
     previous = json.loads(earlier[-1].read_text()) if earlier else None
     (directory / f"{day}.json").write_text(json.dumps(snapshot, indent=2) + "\n")
-    (output / "README.md").write_text(render_summary(snapshot, previous))
+    (output / "README.md").write_text(render_summary(snapshot, previous, collection_note))
 
 
 if __name__ == "__main__":
