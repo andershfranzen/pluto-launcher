@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home menu -->
+    <string name="home_surface_label">Hemskärm. Åtgärder: sök, lägg till widget, redigera hemskärmen, inställningar</string>
+    <string name="home_menu_search_apps">Sök efter appar</string>
+    <string name="home_menu_add_widget">Lägg till widget</string>
+    <string name="home_menu_edit_home">Redigera hemskärmen</string>
+    <string name="home_menu_launcher_settings">Inställningar för launcher</string>
+
+    <!-- Built-in category names -->
+    <string name="home_category_all">Alla appar</string>
+    <string name="home_category_games">Spel</string>
+    <string name="home_category_tools">Verktyg</string>
+
+    <!-- App drawer -->
+    <string name="home_drawer_category_everything">Allt</string>
+    <string name="home_drawer_game_unavailable">Spelet är inte längre tillgängligt. Uppdatera dess ROM-flik.</string>
+    <string name="home_drawer_searching">Söker…</string>
+    <string name="home_drawer_search_label">Sök efter appar</string>
+    <string name="home_drawer_search_scope_category">Söker bland appar och genvägar i %1$s</string>
+    <string name="home_drawer_search_scope_all">Söker bland alla appar, spel och genvägar</string>
+    <string name="home_drawer_search_scope_actions">%1$s. Tryck på en app för åtgärder.</string>
+    <string name="home_drawer_actions_mode">Läge för appåtgärder</string>
+    <string name="home_drawer_search_hint_category">Sök i %1$s</string>
+    <string name="home_drawer_search_hint_all">Sök efter appar, spel och genvägar</string>
+    <string name="home_drawer_clear_search">Rensa sökning</string>
+    <string name="home_drawer_close_search">Stäng sökning</string>
+    <string name="home_drawer_done">Klar</string>
+    <string name="home_drawer_actions">Välj en app för att se dess åtgärder</string>
+    <string name="home_drawer_actions_done">Klar med att välja appar</string>
+    <string name="home_drawer_manage_categories">Lägg till eller redigera kategorier</string>
+    <string name="home_drawer_actions_hint">Tryck på en app för åtgärder</string>
+    <string name="home_drawer_no_results">Inga resultat för ”%1$s”</string>
+    <string name="home_drawer_no_match">Inga appar matchar ”%1$s”</string>
+    <string name="home_drawer_empty_category">Inga appar i %1$s ännu</string>
+    <string name="home_drawer_empty_all">Inga appar att visa</string>
+    <string name="home_drawer_search_everything">Sök i allt</string>
+    <string name="home_drawer_search_all_apps">Sök bland alla appar</string>
+    <string name="home_drawer_no_match_category_detail">Söker i %1$s. Testa Allt eller ett kortare namn.</string>
+    <string name="home_drawer_no_match_detail_rich">Sökningen omfattar appar, ROM-titlar och appgenvägar.</string>
+    <string name="home_drawer_no_match_detail">Sökningen omfattar appnamn och paketnamn.</string>
+    <string name="home_drawer_empty_category_detail">Välj vilka appar som hör hemma här.</string>
+    <string name="home_drawer_add_apps">Lägg till appar</string>
+    <string name="home_drawer_show_all_apps">Visa alla appar</string>
+    <string name="home_drawer_empty_all_detail">Dolda appar kan återställas under Inställningar → Appar → Dolda appar.</string>
+    <string name="home_drawer_hidden_apps">Dolda appar</string>
+
+    <!-- Home -->
+    <string name="home_lock_needs_service">Om du vill låsa med ett dubbeltryck aktiverar du ”Plutos skärmlås” i inställningarna för Tillgänglighet.</string>
+    <string name="home_empty_favourites">Inga favoriter ännu</string>
+    <string name="home_empty_favourites_detail">Svep uppåt för att hitta appar och fäst sedan favoriter. Om du håller ned en app öppnas dess åtgärder. Lägg till favorit fungerar utan rörelser.</string>
+    <string name="home_add_favourite">Lägg till favorit</string>
+    <string name="home_drop_remove">Ta bort</string>
+    <string name="home_dock_empty_slot">Tom plats %1$d i dockan. Öppnar Redigera så att du kan välja en app</string>
+
+    <!-- Open folder -->
+    <string name="home_folder_name">Mappnamn</string>
+    <string name="home_folder_save_name">Spara namn</string>
+    <string name="home_folder_cancel_rename">Avbryt namnbyte</string>
+    <string name="home_folder_close">Stäng mapp</string>
+    <string name="home_folder_rename">Byt namn</string>
+    <string name="home_folder_edit">Redigera</string>
+    <string name="home_folder_empty">Mappen är tom. Dra en app till den, eller håll ned en app, välj Mer… och sedan Flytta till mapp….</string>
+
+    <!-- Search results -->
+    <string name="home_search_section_apps">Appar</string>
+    <string name="home_search_section_games">Spel</string>
+    <string name="home_search_section_shortcuts">Genvägar</string>
+    <string name="home_search_result_options">Alternativ för %1$s</string>
+    <string name="home_search_result_app_detail">App</string>
+    <string name="home_search_result_shortcut_detail">%1$s · Genväg</string>
+    <string name="home_search_result_app">%1$s, app</string>
+    <string name="home_search_result_game">%1$s, spel i %2$s</string>
+    <string name="home_search_result_shortcut">%1$s, genväg i %2$s</string>
+
+    <!-- Startup and storage error screens -->
+    <string name="home_startup_starting">Pluto startar</string>
+    <string name="home_startup_loading_apps">Läser in appar</string>
+    <string name="home_storage_error_title">Pluto kan inte öppna sin sparade layout</string>
+    <string name="home_storage_error_detail">Dina favoriter, din docka, dina mappar och inställningar har inte ändrats eller raderats. Försök igen, eller välj en annan hemskärmsapp i Androids inställningar medan problemet åtgärdas. Det brukar hjälpa att installera den nyare Pluto-version som du använde tidigare.</string>
+    <string name="home_storage_error_technical">Information: %1$s</string>
+    <string name="home_storage_error_retry">Försök igen</string>
+    <string name="home_storage_error_choose_home">Välj hemskärmsapp</string>
+
+    <!-- Shared components -->
+    <string name="common_category_tab">Kategorin %1$s</string>
+    <string name="common_message_dismiss_label">Stäng meddelandet</string>
+    <string name="common_message_dismiss">Stäng</string>
+    <string name="common_clock_description">%1$s, %2$s</string>
+    <string name="common_app_unavailable">%1$s (inte tillgänglig)</string>
+    <string name="common_app_actions">Appåtgärder</string>
+    <string name="common_app_opens_actions">%1$s, öppnar appåtgärder</string>
+    <string name="common_folder_empty">Mappen %1$s, tom</string>
+    <plurals name="common_folder_apps">
+        <item quantity="one">Mappen %1$s, %2$d app</item>
+        <item quantity="other">Mappen %1$s, %2$d appar</item>
+    </plurals>
+    <string name="common_folder_edit">Redigera mapp</string>
+
+    <!-- Controller button legend -->
+    <string name="common_legend_open">Öppna</string>
+    <string name="common_legend_actions">Åtgärder</string>
+    <string name="common_legend_search">Sök</string>
+    <string name="common_legend_settings">Inställningar</string>
+    <string name="common_legend_category">Kategori</string>
+    <string name="common_legend_back">Tillbaka</string>
+    <string name="common_legend_close">Stäng</string>
+    <string name="common_legend_spoken">Handkontrollens knappar: %1$s</string>
+    <string name="common_legend_spoken_entry">%1$s %2$s</string>
+    <string name="common_legend_spoken_or">%1$s eller %2$s</string>
+    <string name="common_has_notifications">Har aviseringar</string>
+    <string name="common_more_actions">Fler åtgärder</string>
+
+    <!-- App launch and system action messages -->
+    <string name="common_app_not_installed">%1$s är inte längre installerad.</string>
+    <string name="common_app_paused">%1$s är pausad just nu.</string>
+    <string name="common_app_open_failed">Det gick inte att öppna %1$s.</string>
+    <string name="common_app_info_unavailable">Appinfo är inte tillgänglig för %1$s.</string>
+    <string name="common_app_info_failed">Det gick inte att öppna appinfo för %1$s.</string>
+    <string name="common_uninstall_not_here">%1$s kan inte avinstalleras härifrån.</string>
+    <string name="common_uninstall_unavailable">Avinstallation är inte tillgänglig på den här enheten.</string>
+    <string name="common_uninstall_failed">Det gick inte att avinstallera %1$s.</string>
+    <string name="common_shortcut_open_failed">Det gick inte att öppna ”%1$s”.</string>
+
+    <!-- Launcher messages (snackbar) -->
+    <string name="home_update_available">Pluto %1$s är tillgänglig. Öppna Inställningar → Allmänt för att uppdatera.</string>
+    <string name="home_rom_shelves_load_failed">Det gick inte att läsa in ROM-hyllorna. Starta om Pluto för att försöka igen.</string>
+    <string name="home_rom_shelf_save_failed">Det gick inte att spara ROM-hyllan.</string>
+    <string name="home_rom_shelf_remove_failed">Det gick inte att ta bort ROM-hyllan.</string>
+    <string name="home_rom_shelf_missing">ROM-hyllan finns inte längre</string>
+    <string name="home_rom_folder_access_lost">Åtkomsten till mappen förlorades. Välj ROM-mappen igen.</string>
+    <string name="home_rom_folder_read_failed">Det gick inte att läsa ROM-mappen. Välj den igen.</string>
+    <string name="home_app_open_failed">Det gick inte att öppna appen.</string>
+    <string name="home_shortcut_unavailable">Genvägen är inte längre tillgänglig.</string>
+    <string name="home_shortcut_open_failed">Det gick inte att öppna genvägen.</string>
+    <string name="home_system_app_info_failed">Android kunde inte öppna appinfo just nu.</string>
+    <string name="home_system_uninstall_failed">Android kunde inte begära avinstallation just nu.</string>
+    <string name="home_layout_saved">Layouten har sparats i filen du valde.</string>
+    <string name="home_layout_write_failed">Det gick inte att skriva filen. Välj en annan plats.</string>
+    <string name="home_layout_restored">Layouten har återställts.</string>
+    <string name="home_layout_restore_failed">Det gick inte att återställa layouten. Din nuvarande layout är oförändrad.</string>
+    <string name="home_layout_too_new">Säkerhetskopian skapades av en nyare version av Pluto. Uppdatera Pluto och återställ den sedan.</string>
+    <string name="home_layout_not_backup">Filen är inte en säkerhetskopia av en Pluto-layout.</string>
+    <string name="home_layout_read_failed">Det gick inte att läsa filen.</string>
+    <string name="home_save_failed">Det gick inte att spara ändringen. Försök igen.</string>
+    <string name="home_default_folder_name">Mapp</string>
+    <string name="home_default_category_name">Ny kategori</string>
+    <string name="home_dock_full">Dockan är full. Ta först bort en app från dockan.</string>
+    <string name="home_settings_reset">Plutos inställningsfil var skadad och har återställts. Senast öppnade är avstängt tills du aktiverar det igen.</string>
+    <string name="home_settings_unreadable">Pluto kan inte läsa sina inställningar just nu, så standardinställningarna används och Senast öppnade är pausat.</string>
+</resources>

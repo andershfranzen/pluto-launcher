@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ==================== Settings pages ==================== -->
+    <string name="settings_title">设置</string>
+    <string name="settings_page_appearance">外观</string>
+    <string name="settings_page_layout">布局</string>
+    <string name="settings_page_apps">应用</string>
+    <string name="settings_page_general">常规</string>
+    <string name="settings_page_appearance_description">外观设置</string>
+    <string name="settings_page_layout_description">布局设置</string>
+    <string name="settings_page_apps_description">应用设置</string>
+    <string name="settings_page_general_description">常规设置</string>
+
+    <!-- Appearance -->
+    <string name="settings_appearance">外观</string>
+    <string name="settings_theme_and_background">主题和背景</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色</string>
+    <string name="settings_theme_dark">深色</string>
+    <string name="settings_background">背景</string>
+    <string name="settings_background_help">普通模式下的主屏幕、文件夹和应用抽屉。</string>
+    <string name="settings_console_background">主机模式背景</string>
+    <string name="settings_console_background_help">显示在主机模式后方。</string>
+    <string name="settings_background_wallpaper">壁纸</string>
+    <string name="settings_background_xmb">XMB 波浪</string>
+    <string name="settings_background_animation">背景动画</string>
+    <string name="settings_background_animation_help">“流畅”效果更顺滑；“省电”的刷新频率减半。</string>
+    <string name="settings_background_smooth">流畅</string>
+    <string name="settings_background_battery_saver">省电</string>
+    <string name="settings_scrim">壁纸对比度</string>
+    <string name="settings_scrim_help">调暗（或调亮）壁纸，让文字标签保持清晰可读。</string>
+    <string name="settings_icons">图标</string>
+    <string name="settings_icon_pack">图标包</string>
+    <string name="settings_system_icons">系统图标</string>
+    <string name="settings_system_icons_help">各应用自带的图标</string>
+    <string name="settings_icon_packs_loading">正在查找图标包…</string>
+    <string name="settings_no_icon_packs">未安装任何图标包。请从应用商店安装一个（大多数支持 Nova 或 ADW 启动器），然后在这里选择。</string>
+    <string name="settings_icon_pack_missing">未安装图标包：正在使用系统图标</string>
+    <string name="settings_size_and_motion">大小和动画</string>
+    <string name="settings_icon_size">图标大小</string>
+    <string name="settings_text_size">文字大小</string>
+    <string name="settings_text_size_help">在 Android 字体大小的基础上应用。</string>
+    <string name="settings_reduce_motion">减少动画</string>
+    <string name="settings_reduce_motion_help">跳过非必要的动画。</string>
+
+    <!-- XMB colour picker -->
+    <string name="settings_xmb_colour">XMB 颜色</string>
+    <string name="settings_xmb_colour_auto">自动（每月更换）</string>
+    <string name="settings_xmb_colour_blue">蓝色</string>
+    <string name="settings_xmb_colour_purple">紫色</string>
+    <string name="settings_xmb_colour_pink">粉色</string>
+    <string name="settings_xmb_colour_red">红色</string>
+    <string name="settings_xmb_colour_orange">橙色</string>
+    <string name="settings_xmb_colour_gold">金色</string>
+    <string name="settings_xmb_colour_green">绿色</string>
+    <string name="settings_xmb_colour_teal">青色</string>
+    <string name="settings_xmb_colour_silver">银色</string>
+    <string name="settings_xmb_colour_black">黑色</string>
+    <string name="settings_xmb_swatch_auto">自动颜色</string>
+    <string name="settings_xmb_swatch_blue">蓝色</string>
+    <string name="settings_xmb_swatch_purple">紫色</string>
+    <string name="settings_xmb_swatch_pink">粉色</string>
+    <string name="settings_xmb_swatch_red">红色</string>
+    <string name="settings_xmb_swatch_orange">橙色</string>
+    <string name="settings_xmb_swatch_gold">金色</string>
+    <string name="settings_xmb_swatch_green">绿色</string>
+    <string name="settings_xmb_swatch_teal">青色</string>
+    <string name="settings_xmb_swatch_silver">银色</string>
+    <string name="settings_xmb_swatch_black">黑色</string>
+    <string name="settings_xmb_swatch_selected">%1$s，已选择</string>
+
+    <!-- Layout & rotation -->
+    <string name="settings_layout">布局和旋转</string>
+    <string name="settings_rotation">旋转</string>
+    <string name="settings_rotation_help">仅适用于启动器。你打开的应用会保留各自的屏幕方向。</string>
+    <string name="settings_rotation_held_by_console">主机模式已设为“始终”，因此启动器会保持横屏。</string>
+    <string name="settings_rotation_follow">跟随系统</string>
+    <string name="settings_rotation_portrait">竖屏</string>
+    <string name="settings_rotation_landscape">横屏</string>
+    <string name="settings_rotation_controller">连接控制器时横屏</string>
+    <string name="settings_handheld">主机模式</string>
+    <string name="settings_handheld_help">主机模式是一种适合控制器操作的轮播界面，带有栏目和按键提示。“自动”会在横屏且连接了控制器时使用该模式。“始终”会让 Pluto 一直处于主机模式并保持横屏，适用于 Android 游戏主机或掌机。</string>
+    <string name="settings_handheld_auto">自动</string>
+    <string name="settings_handheld_always">横屏时始终开启</string>
+    <string name="settings_handheld_never">永不</string>
+    <string name="settings_handheld_everywhere">始终（启动器保持横屏）</string>
+    <string name="settings_carousel">主机模式轮播</string>
+    <string name="settings_carousel_help">主机模式中游戏和应用的排列方式。</string>
+    <string name="settings_carousel_coverflow">封面流</string>
+    <string name="settings_carousel_showcase">橱窗：平铺一行</string>
+    <string name="settings_carousel_arc">弧形</string>
+    <string name="settings_carousel_ring">环形：旋转的滚筒</string>
+    <string name="settings_carousel_deck">叠放：后续游戏堆叠</string>
+    <string name="settings_console_favourites">收藏栏目</string>
+    <string name="settings_console_favourites_help">在主机模式中将主屏幕收藏显示为一个栏目。</string>
+    <string name="settings_alphabet_rail">字母索引条</string>
+    <string name="settings_alphabet_rail_help">在应用抽屉边缘显示 A–Z 索引条；拖动它可在字母之间快速跳转。</string>
+
+    <!-- Gestures -->
+    <string name="settings_gestures">手势</string>
+    <string name="settings_swipe_down">在主屏幕上向下滑动</string>
+    <string name="settings_swipe_down_help">在主屏幕上向下滑动时打开的内容。</string>
+    <string name="settings_swipe_down_notifications">通知</string>
+    <string name="settings_swipe_down_search">搜索应用</string>
+    <string name="settings_swipe_down_nothing">无操作</string>
+    <string name="settings_double_tap_lock">点按两次锁屏</string>
+    <string name="settings_double_tap_lock_help">在主屏幕的空白处点按两次即可关闭屏幕。需要使用 Pluto 的锁屏服务。</string>
+    <string name="settings_double_tap_lock_ready">已开启。在主屏幕的空白处点按两次即可锁屏。</string>
+    <string name="settings_double_tap_lock_needs_service">请在无障碍设置中开启“Pluto 锁屏”。它只执行锁屏操作，无法查看屏幕内容。</string>
+
+    <!-- Notifications -->
+    <string name="settings_notifications">通知</string>
+    <string name="settings_notification_dots">通知圆点</string>
+    <string name="settings_notification_dots_on">有活动通知时显示红色小圆点</string>
+    <string name="settings_notification_dots_needs_access">需要 Android 通知使用权</string>
+    <string name="settings_notification_access">通知使用权</string>
+    <string name="settings_notification_access_allowed">已允许 · 持续性通知不显示圆点</string>
+    <string name="settings_notification_access_needed">允许 Pluto 显示通知圆点</string>
+
+    <!-- Organisation -->
+    <string name="settings_organisation">整理</string>
+    <string name="settings_categories">分类…</string>
+    <string name="settings_hidden_apps">隐藏的应用…</string>
+    <string name="settings_edit_home">编辑主屏幕…</string>
+    <string name="settings_edit_home_help">重新排列收藏、程序坞和文件夹</string>
+    <string name="settings_rom_tabs">ROM 标签页</string>
+    <string name="settings_rom_tabs_help">添加游戏并选择默认模拟器</string>
+    <string name="settings_none_hidden">没有隐藏的应用</string>
+    <plurals name="settings_hidden_count">
+        <item quantity="other">已隐藏 %1$d 个应用</item>
+    </plurals>
+    <plurals name="settings_category_count">
+        <item quantity="other">%1$d 个分类</item>
+    </plurals>
+
+    <!-- History -->
+    <string name="settings_history">最近启动</string>
+    <string name="settings_keep_history">保留历史记录</string>
+    <string name="settings_keep_history_on">记住最近从 Pluto 打开的 12 个应用。仅存储在此设备上。</string>
+    <string name="settings_keep_history_off">已关闭。不会记录任何内容。</string>
+    <string name="settings_disable_history_title">要关闭历史记录吗？</string>
+    <string name="settings_disable_history_text">已存储的历史记录将被删除，之后的启动也不会再被记录。</string>
+    <string name="settings_turn_off">关闭</string>
+    <string name="settings_clear_history">清除历史记录</string>
+    <string name="settings_clear_history_title">要清除最近启动记录吗？</string>
+    <string name="settings_clear_history_text">“最近启动”行将被清空。应用本身不受影响。</string>
+    <string name="settings_clear">清除</string>
+    <string name="settings_history_empty">空</string>
+    <plurals name="settings_history_count">
+        <item quantity="other">%1$d 个应用</item>
+    </plurals>
+
+    <!-- Controller row -->
+    <string name="settings_controller">控制器…</string>
+    <string name="settings_controller_help_none">未连接控制器 · 按键映射、摇杆调校、诊断</string>
+    <plurals name="settings_controllers_connected">
+        <item quantity="other">已连接 %1$d 个控制器</item>
+    </plurals>
+
+    <!-- Default launcher -->
+    <string name="settings_default_launcher">默认启动器</string>
+    <string name="settings_is_default">Pluto 是你的主屏幕应用。</string>
+    <string name="settings_not_default">Pluto 还不是你的主屏幕应用。</string>
+    <string name="settings_set_default">将 Pluto 设为主屏幕应用</string>
+    <string name="settings_how_to_switch_back">如何切换回去：打开 Android 设置 ▸ 应用 ▸ 默认应用 ▸ 主屏幕应用，然后选择你之前的启动器。</string>
+    <string name="settings_open_default_apps">打开默认应用设置</string>
+    <string name="settings_home_role_declined">Pluto 还不是你的主屏幕应用。你可以随时在 Android 设置 ▸ 应用 ▸ 默认应用 ▸ 主屏幕应用中选择它。</string>
+    <string name="settings_profiles_notice">此版本不显示工作资料和私密空间中的应用。</string>
+
+    <!-- Troubleshooting -->
+    <string name="settings_troubleshooting">问题排查</string>
+    <string name="settings_crash_reports">崩溃报告</string>
+    <string name="settings_crashes_none">未记录任何崩溃。崩溃记录仅保存在此设备上。</string>
+    <plurals name="settings_crashes_recorded">
+        <item quantity="other">已记录 %1$d 次崩溃。在你报告之前，记录会一直保留在此设备上。</item>
+    </plurals>
+    <string name="settings_no_file_picker">此设备没有文件选择器，因此 Pluto 无法在这里选择文件。</string>
+    <string name="settings_backup_layout">备份布局</string>
+    <string name="settings_backup_layout_help">将收藏、程序坞、文件夹、分类和隐藏的应用保存到你选择的文件中。</string>
+    <string name="settings_restore_layout">恢复布局</string>
+    <string name="settings_restore_layout_help">将 Pluto 布局文件读取回此设备。</string>
+    <string name="settings_restore_layout_title">要替换此设备的布局吗？</string>
+    <string name="settings_restore_layout_text">主屏幕网格、程序坞、文件夹、分类和隐藏的应用都将来自该文件。微件会保留在原位；你已不再拥有的应用会保持隐藏，直到你重新安装它。</string>
+
+    <!-- About -->
+    <string name="settings_about">关于</string>
+    <string name="settings_license">基于 MIT 许可开源。</string>
+    <string name="settings_privacy">无需账号，无广告，无分析。仅在可选的更新检查和下载时连接 GitHub。</string>
+    <string name="settings_privacy_play">无需账号，无广告，无分析。你的布局和启动器历史记录仅保存在此设备上。</string>
+    <string name="settings_privacy_policy">隐私权政策</string>
+    <string name="settings_limitations">已知限制：暂不支持工作资料和私密空间中的应用；微件始终占据主屏幕网格的一整行。</string>
+    <string name="settings_support">支持 Pluto</string>
+    <string name="settings_kofi">在 Ko-fi 上请我喝杯咖啡</string>
+
+    <!-- Hidden apps -->
+    <string name="settings_hidden_title">隐藏的应用</string>
+    <string name="settings_hidden_explanation">隐藏只是将应用从 Pluto 的列表中移除。这不是安全或隐私功能；隐藏的应用仍可从“设置”或其他应用中打开。</string>
+    <string name="settings_hidden_empty">没有隐藏的应用。如需隐藏某个应用，请在主屏幕或“所有应用”中按住该应用，然后选择“隐藏”（或使用控制器在该应用上按 X 键）。</string>
+    <string name="settings_restore">恢复</string>
+    <string name="settings_restore_all">全部恢复</string>
+
+    <!-- Categories -->
+    <string name="settings_categories_title">分类</string>
+    <string name="settings_categories_help">分类用于整理应用，方便浏览。分类绝不会限制访问：每个应用都始终位于“所有应用”中。</string>
+    <string name="settings_add_category">添加分类</string>
+    <string name="settings_new_category">新分类</string>
+    <string name="settings_category_name">分类名称</string>
+    <string name="settings_rename">重命名</string>
+    <string name="settings_rename_category">重命名分类</string>
+    <string name="settings_move_up">上移</string>
+    <string name="settings_move_down">下移</string>
+    <string name="settings_delete">删除</string>
+    <string name="settings_save">保存</string>
+    <string name="settings_add">添加</string>
+    <string name="settings_all_category_note">内置 · 始终包含所有应用</string>
+    <string name="settings_delete_category_title">要删除分类“%1$s”吗？</string>
+    <string name="settings_delete_category_text">此分类中的应用不会受到影响，也不会被卸载。</string>
+    <plurals name="settings_member_count">
+        <item quantity="other">%1$d 个应用</item>
+    </plurals>
+
+    <!-- Controller settings -->
+    <string name="settings_controller_title">控制器</string>
+    <string name="settings_connected">已连接的控制器</string>
+    <string name="settings_no_controller">未连接控制器。你可以随时通过 USB 或蓝牙连接控制器。</string>
+    <string name="settings_controller_ids">供应商 %1$04X · 产品 %2$04X</string>
+    <string name="settings_controller_descriptor">ID %1$s</string>
+    <string name="settings_controller_details">供应商 %1$04X · 产品 %2$04X · ID %3$s</string>
+    <string name="settings_diagnostics">实时输入</string>
+    <string name="settings_diagnostics_help">按下控制器上的按键或移动摇杆，查看 Android 报告的内容。</string>
+    <string name="settings_diagnostics_unavailable">实时输入目前不可用。</string>
+    <string name="settings_last_key">上次按键</string>
+    <string name="settings_no_key_yet">尚无</string>
+    <string name="settings_axes">摇杆和方向键</string>
+    <string name="settings_no_motion_yet">尚无移动</string>
+    <string name="settings_last_key_value">%1$s（%2$s）</string>
+    <string name="settings_last_key_value_device">%1$s（%2$s）· %3$s</string>
+    <string name="settings_key_number">按键 %1$s</string>
+    <string name="settings_stick_summary">左摇杆%1$s，右摇杆%2$s</string>
+    <string name="settings_axes_values">左摇杆 %1$+.2f, %2$+.2f\n右摇杆 %3$+.2f, %4$+.2f\n方向键（帽键）%5$+.0f, %6$+.0f</string>
+    <string name="settings_axes_values_dead_zone">左摇杆 %1$+.2f, %2$+.2f（死区）\n右摇杆 %3$+.2f, %4$+.2f\n方向键（帽键）%5$+.0f, %6$+.0f</string>
+    <string name="settings_stick_centred">居中</string>
+    <string name="settings_stick_up">向上</string>
+    <string name="settings_stick_down">向下</string>
+    <string name="settings_stick_left">向左</string>
+    <string name="settings_stick_right">向右</string>
+    <string name="settings_stick_up_left">左上</string>
+    <string name="settings_stick_up_right">右上</string>
+    <string name="settings_stick_down_left">左下</string>
+    <string name="settings_stick_down_right">右下</string>
+    <string name="settings_mapping">按键映射</string>
+    <string name="settings_mapping_help">由于不同控制器的按键字母各不相同，提示会使用 Android 报告的名称。移动（方向键和左摇杆）、主屏幕键和最近使用键无法重新映射。</string>
+    <string name="settings_apply_to">将更改应用于</string>
+    <string name="settings_this_controller">此控制器</string>
+    <string name="settings_all_controllers">所有控制器</string>
+    <string name="settings_using_override">此控制器使用自己的映射。</string>
+    <string name="settings_using_default">此控制器使用适用于所有控制器的映射。</string>
+    <string name="settings_remap">重新映射</string>
+    <string name="settings_not_assigned">未分配</string>
+    <string name="settings_press_a_button">请按下控制器上的某个按键…</string>
+    <plurals name="settings_capture_for">
+        <item quantity="other">正在重新映射“%1$s”。请按下按键…（%2$d 秒后取消）</item>
+    </plurals>
+    <string name="settings_capture_refused">该按键已预留给移动或系统功能。请按其他按键。</string>
+    <string name="settings_capture_timeout">未按下任何按键。已取消重新映射。</string>
+    <string name="settings_capture_cancelled">已取消重新映射。</string>
+    <string name="settings_captured">“%1$s”现在执行“%2$s”。</string>
+    <string name="settings_captured_replacing">“%1$s”现在执行“%2$s”，不再执行“%3$s”。</string>
+    <string name="settings_reset">恢复默认设置</string>
+    <string name="settings_reset_done">映射已恢复为默认设置。</string>
+    <string name="settings_stick">摇杆调校</string>
+    <string name="settings_dead_zone">死区</string>
+    <string name="settings_dead_zone_help">小于此值的摇杆移动会被忽略。</string>
+    <string name="settings_repeat_delay">重复延迟</string>
+    <string name="settings_repeat_delay_help">按住多久后开始重复移动。</string>
+    <string name="settings_repeat_interval">重复间隔</string>
+    <string name="settings_repeat_interval_help">按住时每次重复移动之间的间隔。</string>
+    <string name="settings_move">移动</string>
+    <string name="settings_move_keys">方向键或左摇杆</string>
+    <string name="settings_move_line">%1$s：%2$s</string>
+    <string name="settings_ms">%1$d 毫秒</string>
+    <string name="settings_action_confirm">打开/确认</string>
+    <string name="settings_action_back">返回/关闭</string>
+    <string name="settings_action_actions">应用操作</string>
+    <string name="settings_action_search">搜索</string>
+    <string name="settings_action_settings">设置</string>
+    <string name="settings_action_prev_category">上一个分类</string>
+    <string name="settings_action_next_category">下一个分类</string>
+
+    <!-- Onboarding -->
+    <string name="settings_onboarding_title">设置 Pluto</string>
+    <string name="settings_welcome_title">欢迎使用 Pluto</string>
+    <string name="settings_welcome_text">Pluto 是一款既适合日常手机使用、也适合用控制器玩游戏的主屏幕应用。当你旋转手机或连接控制器时，它会自动适应，并在各处保持相同的收藏、文件夹和分类。</string>
+    <string name="settings_welcome_ready">Pluto 已可使用默认布局。这里的所有内容都是可选的，之后可以在“设置”中更改。</string>
+    <plurals name="settings_apps_found">
+        <item quantity="other">找到 %1$d 个应用。</item>
+    </plurals>
+    <string name="settings_loading_apps">正在查找应用…</string>
+    <string name="settings_no_apps_problem">Pluto 找不到任何可显示的应用。请检查应用是否已安装且未受限制，然后重新打开 Pluto。在应用出现之前，请继续使用当前的主屏幕应用。</string>
+    <string name="settings_step_games_title">挑选你的游戏（可选）</string>
+    <string name="settings_step_games_text">你勾选的应用会归入“游戏”分类，主机模式会将其显示为单独的栏目。你可以随时更改：按住某个应用，选择“更多…”，然后选择“分类”。</string>
+    <string name="settings_no_games_category">“游戏”分类不可用。你可以稍后在“设置”中创建分类。</string>
+    <plurals name="settings_games_selected">
+        <item quantity="other">“游戏”中有 %1$d 个应用</item>
+    </plurals>
+    <string name="settings_step_controller_title">控制器操作</string>
+    <string name="settings_step_controller_text">Pluto 中的所有功能都支持触摸或游戏控制器操作。你可以随时连接控制器；在横屏时，Pluto 会随即切换到主机模式。</string>
+    <string name="settings_controller_now">已连接控制器。试着用它在此屏幕上移动。</string>
+    <string name="settings_step_home_title">将 Pluto 设为主屏幕应用</string>
+    <string name="settings_step_home_text">让 Pluto 在你按主屏幕键时打开。Android 会请你确认。</string>
+    <string name="settings_step_home_done">Pluto 现在是你的主屏幕应用。</string>
+    <string name="settings_not_now">以后再说</string>
+    <string name="settings_next">下一步</string>
+    <string name="settings_back">上一步</string>
+    <string name="settings_skip">跳过</string>
+    <string name="settings_finish">完成</string>
+    <string name="settings_start">开始使用 Pluto</string>
+    <string name="settings_step_of">第 %1$d 步，共 %2$d 步</string>
+
+    <!-- Crash reports -->
+    <string name="settings_crashes_empty">未记录任何崩溃。如果 Pluto 发生崩溃，崩溃跟踪信息会保存在这里（仅保存在此设备上），由你决定是否报告。</string>
+    <string name="settings_crashes_kept_locally">仅保存在此设备上。只有当你在 GitHub 上打开报告并亲自提交后，才会发送任何内容。</string>
+    <string name="settings_crash_report_on_github">在 GitHub 上报告</string>
+    <string name="settings_crash_clear_all">全部清除</string>
+    <string name="settings_crash_trace_truncated">… 完整跟踪信息位于报告中。</string>
+    <string name="settings_crash_label_date_pattern">MMMd日 HH:mm</string>
+
+    <!-- Optional permission disclosures -->
+    <string name="settings_access_lock_title">要允许点按两次锁屏吗？</string>
+    <string name="settings_access_notifications_title">要允许显示通知圆点吗？</string>
+    <string name="settings_access_lock_text">Pluto 仅在你于主屏幕空白处点按两次时，使用 Android 的无障碍服务 API 来锁定屏幕。此服务无法读取屏幕内容，也不会监控无障碍事件。它不会收集、存储或分享个人数据。锁屏功能是可选的。你可以随时在 Android 的无障碍设置中关闭“Pluto 锁屏”。</string>
+    <string name="settings_access_notifications_text">Android 通知使用权可让 Pluto 接收通知信息，包括 Pluto 在后台运行时。Pluto 仅使用应用和资料标识符、通知标志以及标记资格来显示圆点，不会读取或存储消息文本。这些元数据仅保留在你设备的内存中，绝不会发送到服务器。通知圆点是可选的。你可以随时在 Android 设置中撤消通知使用权。</string>
+    <string name="settings_access_agree">同意并继续</string>
+
+    <!-- Privacy policy -->
+    <string name="settings_privacy_byline">Pluto Launcher · Anders (andershfranzen) · 更新于 2026 年 10 月 12 日</string>
+    <string name="settings_privacy_device_title">你的信息保留在你的设备上</string>
+    <string name="settings_privacy_device_text">Pluto 没有账号、广告、分析、跟踪 SDK 或远程崩溃报告。开发者不会收到你的已安装应用列表、布局、搜索内容、ROM、通知或启动历史记录。</string>
+    <string name="settings_privacy_apps_title">应用、布局和最近启动</string>
+    <string name="settings_privacy_apps_text">Pluto 会读取可启动应用的名称、图标和快捷方式，以便显示和搜索它们。收藏、文件夹、隐藏的应用、分类、微件 ID 和设置都保存在应用的私有存储空间中。可选的最近启动记录存储在本地；你可以在“设置”中清除这些记录或关闭历史记录。搜索查询仅在本地使用，不会保存为搜索历史记录。</string>
+    <string name="settings_privacy_roms_title">ROM 文件夹和封面图</string>
+    <string name="settings_privacy_roms_text">Pluto 只会访问你通过 Android 文件选择器选择的文件夹和图片。它会在本地保存文件引用、游戏名称和封面图，用于构建你的游戏库。打开游戏时，你选择的模拟器将获得对所选文件的访问权限。移除 ROM 标签页只会删除 Pluto 的游戏库记录，不会删除你的游戏文件。模拟器和微件提供方会按照各自的政策处理其自身的数据。</string>
+    <string name="settings_privacy_dots_title">通知圆点</string>
+    <string name="settings_privacy_dots_text">可选的 Android 通知使用权用于获取应用/资料标识符、通知标志和标记资格。这些元数据仅保留在内存中，包括在启用访问权限期间于后台运行时。Pluto 不会读取或存储通知消息文本，也不会将通知数据发送到设备之外。在 Android 设置中撤消访问权限即可停止监听。</string>
+    <string name="settings_privacy_lock_title">点按两次锁屏</string>
+    <string name="settings_privacy_lock_text">可选的无障碍服务 API 仅用于在你点按两次后执行 Android 的锁屏操作。它无法获取屏幕内容，也不会订阅无障碍事件。此服务不会收集、存储或分享任何个人数据。在 Android 的无障碍设置中停用“Pluto 锁屏”即可撤消访问权限。</string>
+    <string name="settings_privacy_updates_title">更新和外部链接</string>
+    <string name="settings_privacy_updates_text">Google Play 版本没有互联网权限，也没有 GitHub 更新程序。Google Play 会按照 Google 自己的隐私权政策处理更新。GitHub 版本仅在你允许的更新检查和你请求的下载时连接 GitHub。GitHub 会收到常规的连接元数据，例如你的 IP 地址和 Pluto 版本；不会发送任何启动器活动信息。更新检查是可选的，下载需要你批准。外部支持链接会在你的浏览器中打开，并受目标网站隐私权政策的约束。</string>
+    <string name="settings_privacy_retention_title">保留和删除</string>
+    <string name="settings_privacy_retention_text">Pluto 保存的数据会保留在其设备上的私有存储空间中，直到你将其移除、清除应用存储空间或卸载应用。Android 备份已停用。撤消文件权限后将无法再进行访问。清除 Pluto 的存储空间不会删除你选择的 ROM 文件或封面图。Pluto 没有服务器账号，也没有保存在服务器上、需要删除的用户记录。</string>
+    <string name="settings_privacy_contact_title">联系方式</string>
+    <string name="settings_privacy_contact_text">如有隐私方面的问题，请发送电子邮件至 anders@afive.dev。你也可以通过 Pluto Launcher 的 GitHub 问题跟踪器报告问题。请勿在公开问题中包含私人信息。</string>
+    <string name="settings_privacy_email">给开发者发送电子邮件</string>
+    <string name="settings_privacy_website">查看公开的隐私权政策</string>
+
+    <!-- Updates (both distributions) -->
+    <string name="settings_updates">更新</string>
+    <string name="settings_updates_play">Google Play 会让 Pluto 保持最新状态。</string>
+    <string name="settings_updates_open_play">在 Play 商店中打开</string>
+    <string name="settings_updates_auto">自动检查</string>
+    <string name="settings_updates_auto_help">打开 Pluto 时每天检查一次 GitHub。下载始终需要你批准。</string>
+    <string name="settings_updates_checking">正在检查 GitHub…</string>
+    <string name="settings_updates_downloading">正在下载 Pluto %1$s…</string>
+    <string name="settings_updates_verifying">正在验证更新…</string>
+    <string name="settings_updates_ready">更新已准备就绪。Android 会请你批准安装。</string>
+    <string name="settings_updates_available">Pluto %1$s 现已推出。</string>
+    <string name="settings_updates_up_to_date">已是最新版本。</string>
+    <string name="settings_updates_idle">检查最新的 Pluto 稳定版本。</string>
+    <string name="settings_updates_last_checked">上次检查时间：%1$s</string>
+    <string name="settings_updates_check">检查更新</string>
+    <string name="settings_updates_cancel">取消下载</string>
+    <string name="settings_updates_install">安装更新</string>
+    <string name="settings_updates_download">下载并更新</string>
+    <string name="settings_updates_notes">查看版本说明</string>
+    <string name="settings_updates_disclosure">更新检查会连接 GitHub。不会发送任何启动器活动或个人数据。你的布局会保持不变。</string>
+    <string name="settings_updates_consent_title">要让 Pluto 保持最新吗？</string>
+    <string name="settings_updates_consent_decline">不用了</string>
+    <string name="settings_updates_consent_allow">允许自动检查</string>
+    <string name="settings_updates_consent_question">要自动检查 GitHub 上的新版本吗？</string>
+    <string name="settings_updates_consent_daily">每天一次，在你打开 Pluto 时</string>
+    <string name="settings_updates_consent_approval">下载和安装由你批准</string>
+    <string name="settings_updates_consent_footer">不会分享任何使用数据。你可以随时在“设置”中更改此选项。</string>
+    <string name="settings_updates_logo">Pluto 徽标</string>
+
+    <!-- Update errors (GitHub build) -->
+    <string name="settings_update_error_check">无法检查 GitHub。请检查网络连接，然后重试。</string>
+    <string name="settings_update_error_download">无法下载更新。请检查网络连接和可用存储空间，然后重试。</string>
+    <string name="settings_update_error_installer">Android 无法打开安装程序。请重试。</string>
+    <string name="settings_update_error_permission">如需安装此更新，请在 Android 询问时允许 Pluto 安装应用。下载的文件已准备好，可以重试。</string>
+    <string name="settings_update_error_response_too_large">版本响应数据过大。</string>
+    <string name="settings_update_error_no_stable">没有可用的稳定版本。</string>
+    <string name="settings_update_error_unsupported_version">该版本的版本号不受支持。</string>
+    <string name="settings_update_error_cannot_compare">此版本无法比较发布版本号。</string>
+    <string name="settings_update_error_no_apk_yet">此版本尚无 APK。请稍后重试。</string>
+    <string name="settings_update_error_apk_mismatch">下载的 APK 与该版本不匹配。</string>
+    <string name="settings_update_error_incomplete">下载不完整。请重试。</string>
+    <string name="settings_update_error_save">无法保存更新。请检查可用存储空间，然后重试。</string>
+    <string name="settings_update_error_checksum">APK 校验和不匹配。请重新下载。</string>
+    <string name="settings_update_error_invalid_apk">下载的文件不是有效的 Android APK。</string>
+    <string name="settings_update_error_redirect_outside">下载被重定向到 GitHub 之外。</string>
+    <string name="settings_update_error_missing_location">缺少下载地址。</string>
+    <string name="settings_update_error_rate_limited">GitHub 正在限制请求。请稍后重试。</string>
+    <string name="settings_update_error_too_many_redirects">下载的重定向次数过多。</string>
+    <string name="settings_update_error_not_pluto_repo">该版本并非来自 Pluto 的 GitHub 代码库。</string>
+    <string name="settings_update_error_no_supported_apk">该版本没有受支持的 Pluto APK。</string>
+    <string name="settings_update_error_unexpected_size">该版本的 APK 大小异常。</string>
+    <string name="settings_update_error_no_checksum">该版本尚无经过验证的 APK 校验和。请稍后重试。</string>
+    <string name="settings_update_error_not_pluto">此 APK 不是 Pluto。</string>
+    <string name="settings_update_error_not_newer">此 APK 不是更新的 Pluto 版本。</string>
+    <string name="settings_update_error_signing_key">此更新使用了不同的签名密钥，无法保留你的布局。请保留当前安装的版本，不要卸载。</string>
+</resources>

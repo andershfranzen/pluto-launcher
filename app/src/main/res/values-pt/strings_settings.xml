@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ==================== Settings pages ==================== -->
+    <string name="settings_title">Configurações</string>
+    <string name="settings_page_appearance">Aparência</string>
+    <string name="settings_page_layout">Layout</string>
+    <string name="settings_page_apps">Apps</string>
+    <string name="settings_page_general">Geral</string>
+    <string name="settings_page_appearance_description">Configurações de aparência</string>
+    <string name="settings_page_layout_description">Configurações de layout</string>
+    <string name="settings_page_apps_description">Configurações de apps</string>
+    <string name="settings_page_general_description">Configurações gerais</string>
+
+    <!-- Appearance -->
+    <string name="settings_appearance">Aparência</string>
+    <string name="settings_theme_and_background">Tema e plano de fundo</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Escuro</string>
+    <string name="settings_background">Plano de fundo</string>
+    <string name="settings_background_help">Tela inicial, pastas e a gaveta de apps no modo normal.</string>
+    <string name="settings_console_background">Plano de fundo do console</string>
+    <string name="settings_console_background_help">Atrás do modo console.</string>
+    <string name="settings_background_wallpaper">Papel de parede</string>
+    <string name="settings_background_xmb">Ondas XMB</string>
+    <string name="settings_background_animation">Animação do plano de fundo</string>
+    <string name="settings_background_animation_help">Suave fica mais fluida; Economia de bateria redesenha com metade da frequência.</string>
+    <string name="settings_background_smooth">Suave</string>
+    <string name="settings_background_battery_saver">Economia de bateria</string>
+    <string name="settings_scrim">Contraste do papel de parede</string>
+    <string name="settings_scrim_help">Escurece (ou clareia) o papel de parede para que os nomes fiquem legíveis.</string>
+    <string name="settings_icons">Ícones</string>
+    <string name="settings_icon_pack">Pacote de ícones</string>
+    <string name="settings_system_icons">Ícones do sistema</string>
+    <string name="settings_system_icons_help">O ícone próprio de cada app</string>
+    <string name="settings_icon_packs_loading">Procurando pacotes de ícones…</string>
+    <string name="settings_no_icon_packs">Nenhum pacote de ícones instalado. Instale um na sua loja de apps (a maioria é compatível com os launchers Nova ou ADW) e escolha-o aqui.</string>
+    <string name="settings_icon_pack_missing">Pacote de ícones não instalado: usando os ícones do sistema</string>
+    <string name="settings_size_and_motion">Tamanho e movimento</string>
+    <string name="settings_icon_size">Tamanho dos ícones</string>
+    <string name="settings_text_size">Tamanho do texto</string>
+    <string name="settings_text_size_help">Aplicado sobre o tamanho da fonte do Android.</string>
+    <string name="settings_reduce_motion">Reduzir movimento</string>
+    <string name="settings_reduce_motion_help">Pula animações não essenciais.</string>
+
+    <!-- XMB colour picker -->
+    <string name="settings_xmb_colour">Cor XMB</string>
+    <string name="settings_xmb_colour_auto">Automática (muda todo mês)</string>
+    <string name="settings_xmb_colour_blue">Azul</string>
+    <string name="settings_xmb_colour_purple">Roxo</string>
+    <string name="settings_xmb_colour_pink">Rosa</string>
+    <string name="settings_xmb_colour_red">Vermelho</string>
+    <string name="settings_xmb_colour_orange">Laranja</string>
+    <string name="settings_xmb_colour_gold">Dourado</string>
+    <string name="settings_xmb_colour_green">Verde</string>
+    <string name="settings_xmb_colour_teal">Verde-azulado</string>
+    <string name="settings_xmb_colour_silver">Prateado</string>
+    <string name="settings_xmb_colour_black">Preto</string>
+    <string name="settings_xmb_swatch_auto">Cor automática</string>
+    <string name="settings_xmb_swatch_blue">cor azul</string>
+    <string name="settings_xmb_swatch_purple">cor roxa</string>
+    <string name="settings_xmb_swatch_pink">cor rosa</string>
+    <string name="settings_xmb_swatch_red">cor vermelha</string>
+    <string name="settings_xmb_swatch_orange">cor laranja</string>
+    <string name="settings_xmb_swatch_gold">cor dourada</string>
+    <string name="settings_xmb_swatch_green">cor verde</string>
+    <string name="settings_xmb_swatch_teal">cor verde-azulada</string>
+    <string name="settings_xmb_swatch_silver">cor prateada</string>
+    <string name="settings_xmb_swatch_black">cor preta</string>
+    <string name="settings_xmb_swatch_selected">%1$s, selecionada</string>
+
+    <!-- Layout & rotation -->
+    <string name="settings_layout">Layout e rotação</string>
+    <string name="settings_rotation">Rotação</string>
+    <string name="settings_rotation_help">Vale só para o launcher. Os apps que você abre mantêm a própria orientação.</string>
+    <string name="settings_rotation_held_by_console">O modo console está em Sempre, então o launcher fica na horizontal.</string>
+    <string name="settings_rotation_follow">Seguir o sistema</string>
+    <string name="settings_rotation_portrait">Vertical</string>
+    <string name="settings_rotation_landscape">Horizontal</string>
+    <string name="settings_rotation_controller">Horizontal com controle conectado</string>
+    <string name="settings_handheld">Modo console</string>
+    <string name="settings_handheld_help">O modo console é um carrossel pensado para controles, com prateleiras e dicas de botões. Automático usa esse modo na horizontal enquanto houver um controle conectado. Sempre mantém o Pluto no modo console e na horizontal, para um console Android ou um portátil.</string>
+    <string name="settings_handheld_auto">Automático</string>
+    <string name="settings_handheld_always">Sempre na horizontal</string>
+    <string name="settings_handheld_never">Nunca</string>
+    <string name="settings_handheld_everywhere">Sempre (o launcher fica na horizontal)</string>
+    <string name="settings_carousel">Carrossel do console</string>
+    <string name="settings_carousel_help">Como os jogos e apps são organizados no modo console.</string>
+    <string name="settings_carousel_coverflow">Coverflow</string>
+    <string name="settings_carousel_showcase">Vitrine: uma fileira plana</string>
+    <string name="settings_carousel_arc">Arco</string>
+    <string name="settings_carousel_ring">Anel: um tambor giratório</string>
+    <string name="settings_carousel_deck">Pilha: próximos jogos empilhados</string>
+    <string name="settings_console_favourites">Prateleira de favoritos</string>
+    <string name="settings_console_favourites_help">Mostra seus favoritos da tela inicial como uma prateleira no modo console.</string>
+    <string name="settings_alphabet_rail">Barra alfabética</string>
+    <string name="settings_alphabet_rail_help">Mostra a faixa A–Z na borda da gaveta de apps; arraste-a para pular entre as letras.</string>
+
+    <!-- Gestures -->
+    <string name="settings_gestures">Gestos</string>
+    <string name="settings_swipe_down">Deslizar para baixo na tela inicial</string>
+    <string name="settings_swipe_down_help">O que é aberto ao deslizar para baixo na tela inicial.</string>
+    <string name="settings_swipe_down_notifications">Notificações</string>
+    <string name="settings_swipe_down_search">Pesquisar apps</string>
+    <string name="settings_swipe_down_nothing">Nada</string>
+    <string name="settings_double_tap_lock">Tocar duas vezes para bloquear</string>
+    <string name="settings_double_tap_lock_help">Toque duas vezes em um espaço vazio da tela inicial para desligar a tela. Requer o serviço de bloqueio de tela do Pluto.</string>
+    <string name="settings_double_tap_lock_ready">Ativado. Toque duas vezes em um espaço vazio da tela inicial para bloquear.</string>
+    <string name="settings_double_tap_lock_needs_service">Ative “Bloqueio de tela do Pluto” nas configurações de Acessibilidade. Ele só executa o bloqueio; não consegue ver a tela.</string>
+
+    <!-- Notifications -->
+    <string name="settings_notifications">Notificações</string>
+    <string name="settings_notification_dots">Pontos de notificação</string>
+    <string name="settings_notification_dots_on">Pequenos pontos vermelhos para notificações ativas</string>
+    <string name="settings_notification_dots_needs_access">Requer acesso às notificações do Android</string>
+    <string name="settings_notification_access">Acesso às notificações</string>
+    <string name="settings_notification_access_allowed">Permitido · notificações contínuas não mostram pontos</string>
+    <string name="settings_notification_access_needed">Permita que o Pluto mostre pontos de notificação</string>
+
+    <!-- Organisation -->
+    <string name="settings_organisation">Organização</string>
+    <string name="settings_categories">Categorias…</string>
+    <string name="settings_hidden_apps">Apps ocultos…</string>
+    <string name="settings_edit_home">Editar tela inicial…</string>
+    <string name="settings_edit_home_help">Reorganize favoritos, dock e pastas</string>
+    <string name="settings_rom_tabs">Abas de ROM</string>
+    <string name="settings_rom_tabs_help">Adicione jogos e escolha os emuladores padrão</string>
+    <string name="settings_none_hidden">Nenhum oculto</string>
+    <plurals name="settings_hidden_count">
+        <item quantity="one">%1$d app oculto</item>
+        <item quantity="many">%1$d apps ocultos</item>
+        <item quantity="other">%1$d apps ocultos</item>
+    </plurals>
+    <plurals name="settings_category_count">
+        <item quantity="one">%1$d categoria</item>
+        <item quantity="many">%1$d categorias</item>
+        <item quantity="other">%1$d categorias</item>
+    </plurals>
+
+    <!-- History -->
+    <string name="settings_history">Abertos recentemente</string>
+    <string name="settings_keep_history">Manter histórico</string>
+    <string name="settings_keep_history_on">Lembra os últimos 12 apps abertos pelo Pluto. Armazenado apenas neste dispositivo.</string>
+    <string name="settings_keep_history_off">Desativado. Nada é registrado.</string>
+    <string name="settings_disable_history_title">Desativar o histórico?</string>
+    <string name="settings_disable_history_text">O histórico armazenado será excluído e novas aberturas não serão registradas.</string>
+    <string name="settings_turn_off">Desativar</string>
+    <string name="settings_clear_history">Limpar histórico</string>
+    <string name="settings_clear_history_title">Limpar os abertos recentemente?</string>
+    <string name="settings_clear_history_text">A fileira Abertos recentemente será esvaziada. Os apps não são afetados.</string>
+    <string name="settings_clear">Limpar</string>
+    <string name="settings_history_empty">Vazio</string>
+    <plurals name="settings_history_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="many">%1$d apps</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+
+    <!-- Controller row -->
+    <string name="settings_controller">Controle…</string>
+    <string name="settings_controller_help_none">Nenhum controle conectado · mapeamento, ajuste dos analógicos, diagnóstico</string>
+    <plurals name="settings_controllers_connected">
+        <item quantity="one">%1$d controle conectado</item>
+        <item quantity="many">%1$d controles conectados</item>
+        <item quantity="other">%1$d controles conectados</item>
+    </plurals>
+
+    <!-- Default launcher -->
+    <string name="settings_default_launcher">Launcher padrão</string>
+    <string name="settings_is_default">O Pluto é seu app de tela inicial.</string>
+    <string name="settings_not_default">O Pluto ainda não é seu app de tela inicial.</string>
+    <string name="settings_set_default">Definir o Pluto como app de tela inicial</string>
+    <string name="settings_how_to_switch_back">Como voltar: abra Configurações do Android ▸ Apps ▸ Apps padrão ▸ App de tela inicial e escolha seu launcher anterior.</string>
+    <string name="settings_open_default_apps">Abrir configurações de Apps padrão</string>
+    <string name="settings_home_role_declined">O Pluto ainda não é seu app de tela inicial. Você pode escolhê-lo a qualquer momento em Configurações do Android ▸ Apps ▸ Apps padrão ▸ App de tela inicial.</string>
+    <string name="settings_profiles_notice">Apps do perfil de trabalho e do Espaço privado não são mostrados nesta versão.</string>
+
+    <!-- Troubleshooting -->
+    <string name="settings_troubleshooting">Solução de problemas</string>
+    <string name="settings_crash_reports">Relatórios de falhas</string>
+    <string name="settings_crashes_none">Nenhuma registrada. Uma falha fica guardada aqui, apenas neste dispositivo.</string>
+    <plurals name="settings_crashes_recorded">
+        <item quantity="one">%1$d falha registrada. Ela fica neste dispositivo até você informá-la.</item>
+        <item quantity="many">%1$d falhas registradas. Elas ficam neste dispositivo até você informá-las.</item>
+        <item quantity="other">%1$d falhas registradas. Elas ficam neste dispositivo até você informá-las.</item>
+    </plurals>
+    <string name="settings_no_file_picker">Este dispositivo não tem seletor de arquivos, então o Pluto não pode escolher um arquivo aqui.</string>
+    <string name="settings_backup_layout">Fazer backup do layout</string>
+    <string name="settings_backup_layout_help">Salva favoritos, dock, pastas, categorias e apps ocultos em um arquivo que você escolher.</string>
+    <string name="settings_restore_layout">Restaurar layout</string>
+    <string name="settings_restore_layout_help">Carrega um arquivo de layout do Pluto neste dispositivo.</string>
+    <string name="settings_restore_layout_title">Substituir o layout deste dispositivo?</string>
+    <string name="settings_restore_layout_text">A grade da tela inicial, o dock, as pastas, as categorias e os apps ocultos vêm todos do arquivo. Os widgets continuam onde estão, e um app que você não tem mais continua oculto até ser instalado novamente.</string>
+
+    <!-- About -->
+    <string name="settings_about">Sobre</string>
+    <string name="settings_license">Código aberto sob a licença MIT.</string>
+    <string name="settings_privacy">Sem conta, anúncios ou análises. O GitHub só é contatado para verificações e downloads de atualizações opcionais.</string>
+    <string name="settings_privacy_play">Sem conta, anúncios ou análises. Seu layout e o histórico do launcher ficam neste dispositivo.</string>
+    <string name="settings_privacy_policy">Política de privacidade</string>
+    <string name="settings_limitations">Limitações conhecidas: apps do perfil de trabalho e do Espaço privado ainda não são compatíveis; os widgets sempre ocupam uma fileira inteira da grade da tela inicial.</string>
+    <string name="settings_support">Apoie o Pluto</string>
+    <string name="settings_kofi">Me pague um café no Ko-fi</string>
+
+    <!-- Hidden apps -->
+    <string name="settings_hidden_title">Apps ocultos</string>
+    <string name="settings_hidden_explanation">Ocultar só remove os apps das listas do Pluto. Não é um recurso de segurança nem de privacidade; os apps ocultos ainda podem ser abertos pelas Configurações ou por outros apps.</string>
+    <string name="settings_hidden_empty">Nenhum app oculto. Para ocultar um, toque nele e mantenha pressionado na tela inicial ou em Todos os apps e escolha Ocultar (ou pressione X nele com um controle).</string>
+    <string name="settings_restore">Restaurar</string>
+    <string name="settings_restore_all">Restaurar tudo</string>
+
+    <!-- Categories -->
+    <string name="settings_categories_title">Categorias</string>
+    <string name="settings_categories_help">As categorias organizam os apps para navegação. Elas nunca limitam o acesso: todos os apps estão sempre em Todos os apps.</string>
+    <string name="settings_add_category">Adicionar categoria</string>
+    <string name="settings_new_category">Nova categoria</string>
+    <string name="settings_category_name">Nome da categoria</string>
+    <string name="settings_rename">Renomear</string>
+    <string name="settings_rename_category">Renomear categoria</string>
+    <string name="settings_move_up">Mover para cima</string>
+    <string name="settings_move_down">Mover para baixo</string>
+    <string name="settings_delete">Excluir</string>
+    <string name="settings_save">Salvar</string>
+    <string name="settings_add">Adicionar</string>
+    <string name="settings_all_category_note">Integrada · sempre contém todos os apps</string>
+    <string name="settings_delete_category_title">Excluir a categoria “%1$s”?</string>
+    <string name="settings_delete_category_text">Os apps desta categoria não são afetados nem desinstalados.</string>
+    <plurals name="settings_member_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="many">%1$d apps</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+
+    <!-- Controller settings -->
+    <string name="settings_controller_title">Controle</string>
+    <string name="settings_connected">Controles conectados</string>
+    <string name="settings_no_controller">Nenhum controle conectado. Você pode conectar um por USB ou Bluetooth a qualquer momento.</string>
+    <string name="settings_controller_ids">Fabricante %1$04X · Produto %2$04X</string>
+    <string name="settings_controller_descriptor">ID %1$s</string>
+    <string name="settings_controller_details">Fabricante %1$04X · Produto %2$04X · ID %3$s</string>
+    <string name="settings_diagnostics">Entrada ao vivo</string>
+    <string name="settings_diagnostics_help">Pressione botões ou mova os analógicos do controle para conferir o que o Android detecta.</string>
+    <string name="settings_diagnostics_unavailable">A entrada ao vivo não está disponível no momento.</string>
+    <string name="settings_last_key">Último botão</string>
+    <string name="settings_no_key_yet">Nenhum ainda</string>
+    <string name="settings_axes">Analógicos e direcional</string>
+    <string name="settings_no_motion_yet">Nenhum movimento ainda</string>
+    <string name="settings_last_key_value">%1$s (%2$s)</string>
+    <string name="settings_last_key_value_device">%1$s (%2$s) · %3$s</string>
+    <string name="settings_key_number">Tecla %1$s</string>
+    <string name="settings_stick_summary">Analógico esquerdo %1$s, analógico direito %2$s</string>
+    <string name="settings_axes_values">Analógico esquerdo %1$+.2f, %2$+.2f\nAnalógico direito %3$+.2f, %4$+.2f\nDirecional (hat) %5$+.0f, %6$+.0f</string>
+    <string name="settings_axes_values_dead_zone">Analógico esquerdo %1$+.2f, %2$+.2f (zona morta)\nAnalógico direito %3$+.2f, %4$+.2f\nDirecional (hat) %5$+.0f, %6$+.0f</string>
+    <string name="settings_stick_centred">centralizado</string>
+    <string name="settings_stick_up">para cima</string>
+    <string name="settings_stick_down">para baixo</string>
+    <string name="settings_stick_left">para a esquerda</string>
+    <string name="settings_stick_right">para a direita</string>
+    <string name="settings_stick_up_left">para cima e à esquerda</string>
+    <string name="settings_stick_up_right">para cima e à direita</string>
+    <string name="settings_stick_down_left">para baixo e à esquerda</string>
+    <string name="settings_stick_down_right">para baixo e à direita</string>
+    <string name="settings_mapping">Mapeamento de botões</string>
+    <string name="settings_mapping_help">As instruções usam os nomes que o Android informa, porque as letras dos botões variam entre controles. Movimento (direcional e analógico esquerdo), Início e Recentes não podem ser remapeados.</string>
+    <string name="settings_apply_to">Aplicar alterações a</string>
+    <string name="settings_this_controller">Este controle</string>
+    <string name="settings_all_controllers">Todos os controles</string>
+    <string name="settings_using_override">Este controle usa o próprio mapeamento.</string>
+    <string name="settings_using_default">Este controle usa o mapeamento de todos os controles.</string>
+    <string name="settings_remap">Remapear</string>
+    <string name="settings_not_assigned">Não atribuído</string>
+    <string name="settings_press_a_button">Pressione um botão no controle…</string>
+    <plurals name="settings_capture_for">
+        <item quantity="one">Remapeando “%1$s”. Pressione um botão… (cancela em %2$d s)</item>
+        <item quantity="many">Remapeando “%1$s”. Pressione um botão… (cancela em %2$d s)</item>
+        <item quantity="other">Remapeando “%1$s”. Pressione um botão… (cancela em %2$d s)</item>
+    </plurals>
+    <string name="settings_capture_refused">Esse botão é reservado para movimento ou para o sistema. Pressione outro botão.</string>
+    <string name="settings_capture_timeout">Nenhum botão pressionado. Remapeamento cancelado.</string>
+    <string name="settings_capture_cancelled">Remapeamento cancelado.</string>
+    <string name="settings_captured">“%1$s” agora faz “%2$s”.</string>
+    <string name="settings_captured_replacing">“%1$s” agora faz “%2$s”. Não faz mais “%3$s”.</string>
+    <string name="settings_reset">Restaurar padrões</string>
+    <string name="settings_reset_done">Mapeamento restaurado para os padrões.</string>
+    <string name="settings_stick">Ajuste dos analógicos</string>
+    <string name="settings_dead_zone">Zona morta</string>
+    <string name="settings_dead_zone_help">Movimentos do analógico menores que isso são ignorados.</string>
+    <string name="settings_repeat_delay">Atraso de repetição</string>
+    <string name="settings_repeat_delay_help">Quanto tempo segurar antes de o movimento se repetir.</string>
+    <string name="settings_repeat_interval">Intervalo de repetição</string>
+    <string name="settings_repeat_interval_help">Tempo entre movimentos repetidos enquanto segura.</string>
+    <string name="settings_move">Mover</string>
+    <string name="settings_move_keys">Direcional ou analógico esquerdo</string>
+    <string name="settings_move_line">%1$s: %2$s</string>
+    <string name="settings_ms">%1$d ms</string>
+    <string name="settings_action_confirm">Abrir / confirmar</string>
+    <string name="settings_action_back">Voltar / fechar</string>
+    <string name="settings_action_actions">Ações do app</string>
+    <string name="settings_action_search">Pesquisar</string>
+    <string name="settings_action_settings">Configurações</string>
+    <string name="settings_action_prev_category">Categoria anterior</string>
+    <string name="settings_action_next_category">Próxima categoria</string>
+
+    <!-- Onboarding -->
+    <string name="settings_onboarding_title">Configurar o Pluto</string>
+    <string name="settings_welcome_title">Boas-vindas ao Pluto</string>
+    <string name="settings_welcome_text">O Pluto é uma tela inicial para o uso diário do smartphone e para jogar com controle. Ele se adapta quando você gira o smartphone ou conecta um controle, e mantém seus favoritos, pastas e categorias iguais em todos os lugares.</string>
+    <string name="settings_welcome_ready">O Pluto está pronto para uso com um layout padrão. Tudo aqui é opcional e pode ser alterado depois nas Configurações.</string>
+    <plurals name="settings_apps_found">
+        <item quantity="one">%1$d app encontrado.</item>
+        <item quantity="many">%1$d apps encontrados.</item>
+        <item quantity="other">%1$d apps encontrados.</item>
+    </plurals>
+    <string name="settings_loading_apps">Procurando apps…</string>
+    <string name="settings_no_apps_problem">O Pluto não encontrou nenhum app para mostrar. Verifique se há apps instalados e sem restrições e abra o Pluto de novo. Até os apps aparecerem, mantenha seu app de tela inicial atual.</string>
+    <string name="settings_step_games_title">Escolha seus jogos (opcional)</string>
+    <string name="settings_step_games_text">Os apps que você marcar vão para a categoria Jogos, que o modo console mostra como uma prateleira própria. Você pode mudar isso a qualquer momento: toque em um app e mantenha pressionado, escolha Mais… e depois Categorias.</string>
+    <string name="settings_no_games_category">A categoria Jogos não está disponível. Você pode criar categorias depois nas Configurações.</string>
+    <plurals name="settings_games_selected">
+        <item quantity="one">%1$d app em Jogos</item>
+        <item quantity="many">%1$d apps em Jogos</item>
+        <item quantity="other">%1$d apps em Jogos</item>
+    </plurals>
+    <string name="settings_step_controller_title">Uso com controle</string>
+    <string name="settings_step_controller_text">Tudo no Pluto funciona com toque ou com um controle de jogo. Conecte um controle a qualquer momento; na horizontal, o Pluto muda para o modo console.</string>
+    <string name="settings_controller_now">Há um controle conectado. Tente navegar nesta tela com ele.</string>
+    <string name="settings_step_home_title">Defina o Pluto como app de tela inicial</string>
+    <string name="settings_step_home_text">Faça o Pluto abrir quando você pressionar Início. O Android vai pedir sua confirmação.</string>
+    <string name="settings_step_home_done">O Pluto agora é seu app de tela inicial.</string>
+    <string name="settings_not_now">Agora não</string>
+    <string name="settings_next">Próximo</string>
+    <string name="settings_back">Voltar</string>
+    <string name="settings_skip">Pular</string>
+    <string name="settings_finish">Concluir</string>
+    <string name="settings_start">Começar a usar o Pluto</string>
+    <string name="settings_step_of">Etapa %1$d de %2$d</string>
+
+    <!-- Crash reports -->
+    <string name="settings_crashes_empty">Nenhuma falha registrada. Se o Pluto falhar, o registro fica guardado aqui (apenas neste dispositivo) para você decidir se quer informá-lo.</string>
+    <string name="settings_crashes_kept_locally">Guardado apenas neste dispositivo. Nada é enviado até você abrir o relatório no GitHub e enviá-lo você mesmo.</string>
+    <string name="settings_crash_report_on_github">Informar no GitHub</string>
+    <string name="settings_crash_clear_all">Limpar tudo</string>
+    <string name="settings_crash_trace_truncated">… o registro completo está no relatório.</string>
+    <string name="settings_crash_label_date_pattern">d MMM, HH:mm</string>
+
+    <!-- Optional permission disclosures -->
+    <string name="settings_access_lock_title">Permitir bloquear a tela com dois toques?</string>
+    <string name="settings_access_notifications_title">Permitir pontos de notificação?</string>
+    <string name="settings_access_lock_text">O Pluto usa a API do serviço de acessibilidade do Android apenas para bloquear a tela quando você toca duas vezes em um espaço vazio da tela inicial. Esse serviço não consegue ler o conteúdo da tela e não monitora eventos de acessibilidade. Ele não coleta, armazena nem compartilha dados pessoais. O bloqueio de tela é opcional. Você pode desativar “Bloqueio de tela do Pluto” nas configurações de Acessibilidade do Android a qualquer momento.</string>
+    <string name="settings_access_notifications_text">O acesso às notificações do Android permite que o Pluto receba informações das notificações, inclusive quando o Pluto está em segundo plano. O Pluto usa identificadores de app e de perfil, sinalizações de notificação e a qualificação para selos apenas para mostrar pontos. Ele não lê nem armazena o texto das mensagens. Os metadados ficam na memória do seu dispositivo e nunca são enviados a um servidor. Os pontos de notificação são opcionais. Você pode revogar o acesso às notificações nas Configurações do Android a qualquer momento.</string>
+    <string name="settings_access_agree">Concordar e continuar</string>
+
+    <!-- Privacy policy -->
+    <string name="settings_privacy_byline">Pluto Launcher · Anders (andershfranzen) · Atualizada em 12 de outubro de 2026</string>
+    <string name="settings_privacy_device_title">Suas informações ficam no seu dispositivo</string>
+    <string name="settings_privacy_device_text">O Pluto não tem conta, anúncios, análises, SDKs de rastreamento nem relatórios de falhas remotos. O desenvolvedor não recebe sua lista de apps instalados, layout, pesquisas, ROMs, notificações nem histórico de aberturas.</string>
+    <string name="settings_privacy_apps_title">Apps, layout e abertos recentemente</string>
+    <string name="settings_privacy_apps_text">O Pluto lê os nomes, ícones e atalhos dos apps que podem ser abertos para mostrá-los e pesquisá-los. Favoritos, pastas, apps ocultos, categorias, IDs de widgets e configurações são salvos no armazenamento privado do app. O histórico opcional de apps abertos recentemente é armazenado localmente; você pode limpá-lo ou desativá-lo nas Configurações. As pesquisas são usadas localmente e não são salvas como histórico de pesquisa.</string>
+    <string name="settings_privacy_roms_title">Pastas de ROMs e artes</string>
+    <string name="settings_privacy_roms_text">O Pluto acessa apenas as pastas e imagens que você seleciona com o seletor de arquivos do Android. Ele salva localmente referências de arquivos, nomes de jogos e artes para montar sua biblioteca. Ao abrir um jogo, o emulador escolhido recebe acesso ao arquivo selecionado. Remover uma aba de ROM exclui os registros da biblioteca do Pluto, não seus arquivos de jogos. Emuladores e provedores de widgets tratam os próprios dados de acordo com as próprias políticas.</string>
+    <string name="settings_privacy_dots_title">Pontos de notificação</string>
+    <string name="settings_privacy_dots_text">O acesso opcional às notificações do Android é usado para identificadores de app e de perfil, sinalizações de notificação e a qualificação para selos. Esses metadados ficam apenas na memória, inclusive em segundo plano enquanto o acesso estiver ativado. O Pluto não lê nem armazena o texto das notificações e não envia dados de notificações para fora do dispositivo. Revogue o acesso nas Configurações do Android para interromper o serviço.</string>
+    <string name="settings_privacy_lock_title">Bloqueio de tela com dois toques</string>
+    <string name="settings_privacy_lock_text">A API opcional do serviço de acessibilidade é usada apenas para executar a ação de bloqueio de tela do Android depois do seu toque duplo. Ela não consegue obter o conteúdo da tela e não se inscreve em eventos de acessibilidade. Nenhum dado pessoal é coletado, armazenado ou compartilhado por meio desse serviço. Desative “Bloqueio de tela do Pluto” nas configurações de Acessibilidade do Android para revogar o acesso.</string>
+    <string name="settings_privacy_updates_title">Atualizações e links externos</string>
+    <string name="settings_privacy_updates_text">A versão do Google Play não tem permissão de Internet nem atualizador do GitHub. O Google Play cuida das atualizações dela de acordo com a política de privacidade do Google. A versão do GitHub só contata o GitHub para verificações de atualização que você permitir e downloads que você solicitar. O GitHub recebe metadados normais de conexão, como seu endereço IP e a versão do Pluto; nenhuma atividade do launcher é enviada. As verificações de atualização são opcionais e os downloads exigem sua aprovação. Links de suporte externos abrem no seu navegador e estão sujeitos à política de privacidade do destino.</string>
+    <string name="settings_privacy_retention_title">Retenção e exclusão</string>
+    <string name="settings_privacy_retention_text">Os dados salvos do Pluto permanecem no armazenamento privado do dispositivo até você removê-los, limpar o armazenamento do app ou desinstalá-lo. O backup do Android está desativado. Revogar as permissões de arquivos impede o acesso futuro. Limpar o armazenamento do Pluto não exclui os arquivos de ROM nem as artes que você selecionou. O Pluto não tem conta em servidor nem registros de usuários em servidor para excluir.</string>
+    <string name="settings_privacy_contact_title">Contato</string>
+    <string name="settings_privacy_contact_text">Para dúvidas sobre privacidade, envie um e-mail para anders@afive.dev. Você também pode informar problemas no rastreador de issues do Pluto Launcher no GitHub. Evite incluir informações privadas em uma issue pública.</string>
+    <string name="settings_privacy_email">Enviar e-mail ao desenvolvedor</string>
+    <string name="settings_privacy_website">Ver a política de privacidade pública</string>
+
+    <!-- Updates (both distributions) -->
+    <string name="settings_updates">Atualizações</string>
+    <string name="settings_updates_play">O Google Play mantém o Pluto atualizado.</string>
+    <string name="settings_updates_open_play">Abrir na Play Store</string>
+    <string name="settings_updates_auto">Verificar automaticamente</string>
+    <string name="settings_updates_auto_help">Verifica o GitHub uma vez por dia quando você abre o Pluto. Os downloads sempre precisam da sua aprovação.</string>
+    <string name="settings_updates_checking">Verificando o GitHub…</string>
+    <string name="settings_updates_downloading">Baixando o Pluto %1$s…</string>
+    <string name="settings_updates_verifying">Verificando a atualização…</string>
+    <string name="settings_updates_ready">Sua atualização está pronta. O Android vai pedir que você aprove a instalação.</string>
+    <string name="settings_updates_available">O Pluto %1$s está disponível.</string>
+    <string name="settings_updates_up_to_date">Você está com a versão mais recente.</string>
+    <string name="settings_updates_idle">Verifique a versão estável mais recente do Pluto.</string>
+    <string name="settings_updates_last_checked">Última verificação: %1$s</string>
+    <string name="settings_updates_check">Verificar atualizações</string>
+    <string name="settings_updates_cancel">Cancelar download</string>
+    <string name="settings_updates_install">Instalar atualização</string>
+    <string name="settings_updates_download">Baixar e atualizar</string>
+    <string name="settings_updates_notes">Ver notas da versão</string>
+    <string name="settings_updates_disclosure">As verificações de atualização contatam o GitHub. Nenhuma atividade do launcher nem dado pessoal é enviado. Seu layout permanece igual.</string>
+    <string name="settings_updates_consent_title">Manter o Pluto atualizado?</string>
+    <string name="settings_updates_consent_decline">Não, obrigado</string>
+    <string name="settings_updates_consent_allow">Permitir verificações automáticas</string>
+    <string name="settings_updates_consent_question">Verificar automaticamente se há novas versões no GitHub?</string>
+    <string name="settings_updates_consent_daily">Uma vez por dia, quando você abre o Pluto</string>
+    <string name="settings_updates_consent_approval">Você aprova os downloads e a instalação</string>
+    <string name="settings_updates_consent_footer">Nenhum dado de uso é compartilhado. Altere isso a qualquer momento nas Configurações.</string>
+    <string name="settings_updates_logo">Logotipo do Pluto</string>
+
+    <!-- Update errors (GitHub build) -->
+    <string name="settings_update_error_check">Não foi possível verificar o GitHub. Confira sua conexão e tente de novo.</string>
+    <string name="settings_update_error_download">Não foi possível baixar a atualização. Confira sua conexão e o espaço livre e tente de novo.</string>
+    <string name="settings_update_error_installer">O Android não conseguiu abrir o instalador. Tente de novo.</string>
+    <string name="settings_update_error_permission">Para instalar esta atualização, permita que o Pluto instale apps quando o Android pedir. Seu download está pronto para uma nova tentativa.</string>
+    <string name="settings_update_error_response_too_large">A resposta da versão era grande demais.</string>
+    <string name="settings_update_error_no_stable">Nenhuma versão estável disponível.</string>
+    <string name="settings_update_error_unsupported_version">A versão tem um número de versão incompatível.</string>
+    <string name="settings_update_error_cannot_compare">Esta compilação não consegue comparar versões.</string>
+    <string name="settings_update_error_no_apk_yet">Esta versão ainda não tem APK. Tente de novo mais tarde.</string>
+    <string name="settings_update_error_apk_mismatch">O APK baixado não corresponde à versão.</string>
+    <string name="settings_update_error_incomplete">O download ficou incompleto. Tente de novo.</string>
+    <string name="settings_update_error_save">Não foi possível salvar a atualização. Confira o espaço livre e tente de novo.</string>
+    <string name="settings_update_error_checksum">A soma de verificação do APK não corresponde. Baixe-o de novo.</string>
+    <string name="settings_update_error_invalid_apk">O download não é um APK Android válido.</string>
+    <string name="settings_update_error_redirect_outside">O download foi redirecionado para fora do GitHub.</string>
+    <string name="settings_update_error_missing_location">Local do download ausente.</string>
+    <string name="settings_update_error_rate_limited">O GitHub está limitando as solicitações. Tente de novo mais tarde.</string>
+    <string name="settings_update_error_too_many_redirects">O download foi redirecionado vezes demais.</string>
+    <string name="settings_update_error_not_pluto_repo">A versão não é do repositório do Pluto no GitHub.</string>
+    <string name="settings_update_error_no_supported_apk">A versão não tem nenhum APK do Pluto compatível.</string>
+    <string name="settings_update_error_unexpected_size">O APK da versão tem um tamanho inesperado.</string>
+    <string name="settings_update_error_no_checksum">A versão ainda não tem uma soma de verificação do APK confirmada. Tente de novo mais tarde.</string>
+    <string name="settings_update_error_not_pluto">Este APK não é o Pluto.</string>
+    <string name="settings_update_error_not_newer">Este APK não é uma versão mais recente do Pluto.</string>
+    <string name="settings_update_error_signing_key">Esta atualização usa uma chave de assinatura diferente e não consegue preservar seu layout. Mantenha a instalação atual; não a desinstale.</string>
+</resources>

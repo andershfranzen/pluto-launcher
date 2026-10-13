@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ROM tabs screen: titles -->
+    <string name="rom_title">ROM-flikar</string>
+    <string name="rom_add_tab">Lägg till ROM-flik</string>
+    <string name="rom_title_edit">Redigera ROM-flik</string>
+    <string name="rom_title_choose_game_emulator">Välj emulator för spelet</string>
+    <string name="rom_title_choose_default_emulator">Välj standardemulator</string>
+
+    <!-- ROM tabs screen: editor -->
+    <string name="rom_default_tab_name">Mina spel</string>
+    <string name="rom_folder_access_failed">Pluto kunde inte behålla åtkomsten till mappen. Välj en mapp på den här enheten.</string>
+    <string name="rom_search_installed_apps">Sök bland installerade appar</string>
+    <string name="rom_close_search">Stäng sökning</string>
+    <string name="rom_saving">Sparar…</string>
+    <string name="rom_create_tab">Skapa flik</string>
+    <string name="rom_save_changes">Spara ändringar</string>
+    <string name="rom_cancel">Avbryt</string>
+    <string name="rom_name_dialog_title">Fliknamn</string>
+    <string name="rom_name_dialog_label">Namn</string>
+    <string name="rom_done">Klar</string>
+    <string name="rom_discard_title">Vill du ignorera ändringarna?</string>
+    <string name="rom_discard_message">ROM-fliken har inte sparats.</string>
+    <string name="rom_discard">Ignorera</string>
+    <string name="rom_remove_title">Vill du ta bort %1$s?</string>
+    <string name="rom_remove_message">Bara fliken tas bort. Dina ROM-filer och sparfiler ligger kvar där de är.</string>
+    <string name="rom_remove">Ta bort</string>
+    <string name="rom_editor_intro_new">Gör en mapp med spel till en konsolflik. Dina filer ligger kvar där de är.</string>
+    <string name="rom_editor_intro_edit">Välj var fliken hittar sina spel och vilken app som öppnar dem.</string>
+    <string name="rom_section_folder">1 · ROM-mapp</string>
+    <string name="rom_choose_folder">Välj ROM-mapp</string>
+    <string name="rom_change_folder">Byt ROM-mapp</string>
+    <string name="rom_choose_folder_supporting">Välj mappen som innehåller dina spel</string>
+    <string name="rom_folder_subfolders">Spel i undermappar tas med. Du kan lägga till nya spel i mappen senare.</string>
+    <string name="rom_suggestions_header">Här brukar spel finnas</string>
+    <string name="rom_suggestions_intro">Pluto kan inte titta i en mapp förrän du tillåter det. Det här är mapparna som de installerade emulatorerna använder. Tryck på en för att öppna väljaren där.</string>
+    <string name="rom_suggestion_app">Spel för %1$s</string>
+    <string name="rom_suggestion_folder">Mappen ”%1$s”</string>
+    <string name="rom_suggestion_supporting">Titta i %1$s på den här enheten</string>
+    <string name="rom_section_emulator">2 · Standardemulator</string>
+    <string name="rom_ask_each_time">Fråga varje gång</string>
+    <string name="rom_emulator_ask_supporting">Välj en standard för att öppna spel med ett tryck</string>
+    <string name="rom_emulator_default_supporting">Används för alla spel på den här fliken</string>
+    <string name="rom_open_setup">Öppna konfigurationen av %1$s</string>
+    <string name="rom_setup_duckstation">Importera ditt PlayStation-BIOS i DuckStation och kom sedan tillbaka hit</string>
+    <string name="rom_setup_generic">Slutför emulatorns första konfiguration och kom sedan tillbaka hit</string>
+    <string name="rom_emulator_missing">Emulatorn är inte längre installerad. Välj en annan standard.</string>
+    <string name="rom_section_name">3 · Fliknamn</string>
+    <string name="rom_name_placeholder">Namnge fliken</string>
+    <string name="rom_name_supporting">Till exempel PlayStation 1 eller Game Boy. Visas i konsolläge.</string>
+    <string name="rom_advanced">Avancerade alternativ</string>
+    <string name="rom_hide_advanced">Dölj avancerade alternativ</string>
+    <string name="rom_advanced_supporting">Behövs bara om ett spel inte öppnas korrekt</string>
+    <string name="rom_method_title">Öppna spel med</string>
+    <string name="rom_method_automatic">Automatiskt (rekommenderas)</string>
+    <string name="rom_method_open_with">Fråga vilken app som ska användas</string>
+    <string name="rom_method_view">Androids Öppna fil</string>
+    <string name="rom_method_direct">Direktstart i %1$s</string>
+    <string name="rom_method_supporting">Emulatorer stöder olika format och sätt att öppna spel. Direktstart kräver att mappen ligger på delad lagring. Testa Fråga vilken app som ska användas om standardinställningen inte fungerar.</string>
+    <string name="rom_help_row_editor">Lägga till spel och omslagsbilder</string>
+    <string name="rom_remove_tab">Ta bort flik</string>
+
+    <!-- ROM tabs screen: emulator chooser -->
+    <string name="rom_chooser_game_intro">Välj appen som ska öppna ”%1$s”. Bara det här spelet ändras. Fliken behåller sin egen emulator.</string>
+    <string name="rom_chooser_tab_intro">Välj appen som spel på den här fliken ska öppnas med. Du kan ändra det senare.</string>
+    <string name="rom_use_tab_default">Använd flikens standard</string>
+    <string name="rom_use_tab_default_supporting">Följ flikens emulator, eller fråga, beroende på hur fliken är inställd</string>
+    <string name="rom_ask_each_time_supporting">Välj en app varje gång du öppnar ett spel</string>
+    <string name="rom_search_results">Sökresultat</string>
+    <string name="rom_installed_apps">Installerade appar</string>
+    <string name="rom_suggested_emulators">Föreslagna emulatorer</string>
+    <string name="rom_no_apps_match">Inga installerade appar matchar ”%1$s”.</string>
+    <string name="rom_no_suggestions">Sök efter din emulator eller visa alla installerade appar. Om den inte är installerad än kan du installera den och sedan komma tillbaka hit.</string>
+    <string name="rom_show_suggested">Visa föreslagna emulatorer</string>
+    <string name="rom_show_all_apps">Visa alla installerade appar</string>
+    <string name="rom_show_all_apps_supporting">Använd valfri emulator som kan öppna dina spel</string>
+
+    <!-- ROM tabs screen: list of tabs -->
+    <string name="rom_added">%1$s har lagts till. Fliken visas i konsolläge.</string>
+    <string name="rom_list_intro">Bläddra i dina ROM-samlingar som flikar i konsolläge. Varje flik har sin egen mapp och standardemulator.</string>
+    <string name="rom_finding_games">Letar efter spel…</string>
+    <plurals name="rom_library_summary">
+        <item quantity="one">%1$d spel · %2$s</item>
+        <item quantity="other">%1$d spel · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">Inga spel hittades. Lägg till ROM-filer i mappen och uppdatera sedan. Du kan välja en annan mapp under Redigera flik.</string>
+    <string name="rom_view_tab">Visa flik</string>
+    <string name="rom_edit_tab">Redigera flik</string>
+    <string name="rom_edit_tab_supporting">%1$s · Mapp, standardemulator och namn</string>
+    <string name="rom_refresh">Uppdatera spel</string>
+    <string name="rom_games_and_emulators">Spel och emulatorer</string>
+    <string name="rom_games_and_emulators_supporting">Välj en emulator för ett enskilt spel och se vad som har spelats</string>
+    <string name="rom_diagnostics">Diagnostik</string>
+    <string name="rom_diagnostics_last_check">Senaste kontroll: %1$s, %2$s</string>
+    <string name="rom_diagnostics_supporting">Se vad Pluto hittade i mappen</string>
+    <string name="rom_help_row">Så lägger du till spel och omslagsbilder</string>
+    <plurals name="rom_count_files">
+        <item quantity="one">%d fil</item>
+        <item quantity="other">%d filer</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="one">%d spel</item>
+        <item quantity="other">%d spel</item>
+    </plurals>
+
+    <!-- ROM tabs screen: help -->
+    <string name="rom_help_title">Lägg till spel och omslagsbilder</string>
+    <string name="rom_help_adding_header">Lägga till fler spel</string>
+    <string name="rom_help_adding_body">Kopiera dina spel till mappen du valde, inklusive deras spår eller skivor. Undermappar tas med. Pluto letar efter ändringar när du kommer tillbaka. Uppdatera spel kontrollerar direkt.</string>
+    <string name="rom_help_art_header">Omslagsbilder</string>
+    <string name="rom_help_art_body">Bilder laddas inte ned automatiskt. Lägg en PNG-, JPG- eller WebP-bild bredvid spelet med samma filnamn före filtillägget. Till exempel: Spyro.cue och Spyro.png.</string>
+    <string name="rom_help_art_layouts">Pluto läser även strukturerna som de stora frontendprogrammen skapar: en bild i boxart/, covers/ eller images/, RetroArchs Named_Boxarts/-uppsättning eller en name-thumb.png-variant. Uppdatera sedan fliken.</string>
+    <string name="rom_help_gamelist_body">Om mappen kommer från RetroPie, Batocera eller en annan EmulationStation-installation som sparar gamelist.xml bredvid spelen ska du behålla den. Pluto läser varje posts namn och bilder, så spelen visas med de titlar och omslag som du redan har valt ut.</string>
+    <string name="rom_help_emulator_header">Konfigurera emulatorn</string>
+    <string name="rom_help_emulator_body">Installera den emulator du vill använda, öppna den en gång och slutför konfigurationen. Vissa system kräver en BIOS-fil. Pluto öppnar dina spel i den appen. Emulatorinställningar och sparfiler hanteras där.</string>
+
+    <!-- ROM tabs screen: per-game emulators panel -->
+    <string name="rom_games_panel_title">Spel · %1$s</string>
+    <string name="rom_games_panel_intro">Ett spel öppnas i flikens emulator om du inte väljer en annan app för det här. Resten av fliken påverkas inte.</string>
+    <string name="rom_games_panel_empty">Inga spel i mappen än. Lägg till filer och uppdatera sedan fliken.</string>
+    <string name="rom_find_game">Hitta ett spel</string>
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="one">Visar %1$d av %2$d spel. Skriv en del av ett namn för att hitta det.</item>
+        <item quantity="other">Visar %1$d av %2$d spel. Skriv en del av ett namn för att hitta det.</item>
+    </plurals>
+    <string name="rom_games_panel_no_match">Inga spel matchar ”%1$s”.</string>
+    <string name="rom_game_opens_in">Öppnas i %1$s</string>
+    <string name="rom_game_uses_default">Använder flikens standard</string>
+    <string name="rom_game_played">%1$s · spelades %2$s</string>
+
+    <!-- ROM diagnostics -->
+    <string name="rom_diag_title">Diagnostik · %1$s</string>
+    <string name="rom_diag_folder">Mapp</string>
+    <string name="rom_diag_access_granted">Åtkomst till mappen har beviljats. Pluto kan läsa den.</string>
+    <string name="rom_diag_access_missing">Åtkomst saknas. Öppna Redigera flik och välj mappen igen.</string>
+    <string name="rom_diag_access_lost">Android låter inte längre Pluto läsa mappen.</string>
+    <string name="rom_diag_last_check">Senaste kontroll</string>
+    <string name="rom_diag_no_check">Ingen kontroll har körts under den här sessionen än. Uppdatera spel läser mappen nu.</string>
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="one">%d fil kontrollerad</item>
+        <item quantity="other">%d filer kontrollerade</item>
+    </plurals>
+    <plurals name="rom_diag_with_art">
+        <item quantity="one">%d med omslagsbild</item>
+        <item quantity="other">%d med omslagsbild</item>
+    </plurals>
+    <string name="rom_diag_systems">System i mappen: %1$s. Vart och ett är ett filter i konsolens rutnätsvy.</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="one">%d spel har sparad data bredvid sig (batterisparningar eller sparlägen).</item>
+        <item quantity="other">%d spel har sparad data bredvid sig (batterisparningar eller sparlägen).</item>
+    </plurals>
+    <plurals name="rom_diag_gamelist">
+        <item quantity="one">gamelist.xml: %d post läst. Dess namn och bilder används.</item>
+        <item quantity="other">gamelist.xml: %d poster lästa. Dess namn och bilder används.</item>
+    </plurals>
+    <string name="rom_diag_no_gamelist">Ingen gamelist.xml här. Namnen kommer från filnamnen och bilderna från boxart-strukturen.</string>
+    <string name="rom_diag_skipped_header">Visas inte som spel</string>
+    <string name="rom_diag_skipped_unchecked">Kör en kontroll för att se vad som hoppas över.</string>
+    <string name="rom_diag_skipped_none">Inget hoppades över: alla filer är spel, bilder eller spår.</string>
+    <plurals name="rom_diag_skipped">
+        <item quantity="one">%1$d fil är inte ett spel: %2$s.</item>
+        <item quantity="other">%1$d filer är inte spel: %2$s.</item>
+    </plurals>
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <string name="rom_extension_none_count">inget filtillägg×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="one">%d spellista läst för spår och skivor.</item>
+        <item quantity="other">%d spellistor lästa för spår och skivor.</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="one">%d spår eller skiva som en spellista hänvisar till saknas i mappen. Kopiera den bredvid spellistan. Spelet kan inte öppnas.</item>
+        <item quantity="other">%d spår eller skivor som en spellista hänvisar till saknas i mappen. Kopiera dem bredvid spellistan. Spelen kan inte öppnas.</item>
+    </plurals>
+    <string name="rom_diag_no_games">Inga spel hittades i mappen.</string>
+
+    <!-- How long ago -->
+    <string name="rom_age_today">i dag</string>
+    <string name="rom_age_yesterday">i går</string>
+    <plurals name="rom_age_days">
+        <item quantity="one">för %d dag sedan</item>
+        <item quantity="other">för %d dagar sedan</item>
+    </plurals>
+    <string name="rom_age_a_week">för en vecka sedan</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="one">för %d vecka sedan</item>
+        <item quantity="other">för %d veckor sedan</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="one">för %d månad sedan</item>
+        <item quantity="other">för %d månader sedan</item>
+    </plurals>
+    <string name="rom_age_a_year">för ett år sedan</string>
+
+    <!-- Generic system labels -->
+    <string name="rom_system_other">Övrigt</string>
+    <string name="rom_system_disc">Skivavbild</string>
+
+    <!-- Opening a game -->
+    <string name="rom_open_chooser">Öppna %1$s</string>
+    <string name="rom_launch_failed_no_app">Appen kunde inte öppna spelet. Välj en annan standardemulator under ROM-flikar eller testa Avancerade alternativ.</string>
+    <string name="rom_launch_failed_access">Åtkomsten till mappen förlorades. Redigera fliken under ROM-flikar och välj ROM-mappen igen.</string>
+    <string name="rom_launch_failed_unavailable">ROM-filen är inte tillgänglig. Uppdatera dess hylla eller välj mappen igen.</string>
+
+    <!-- Reading a ROM folder failed -->
+    <string name="rom_scan_too_many_folders">Mappen har för många undermappar. Välj en mindre mapp.</string>
+    <string name="rom_scan_folder_unavailable">ROM-mappen är inte tillgänglig. Välj den igen.</string>
+    <string name="rom_scan_too_many_files">Mappen har för många filer. Välj en mindre mapp.</string>
+    <string name="rom_scan_playlist_too_large">En spellista är för stor för att läsas: %1$s</string>
+    <string name="rom_scan_playlist_unreadable">Det gick inte att läsa %1$s</string>
+
+    <!-- Console mode: shelves -->
+    <string name="console_shelf_recent">Senast öppnade</string>
+    <string name="console_shelf_favourites">Favoriter</string>
+    <string name="console_all_apps_fallback">Alla appar</string>
+    <string name="console_roms_fallback">ROM-filer</string>
+    <string name="console_list_separator">", "</string>
+    <string name="console_position">%1$d av %2$d</string>
+    <string name="console_shelf_tab_description">Hyllan %1$s, %2$s</string>
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <!-- Console mode: button legend -->
+    <string name="console_legend_open">Öppna</string>
+    <string name="console_legend_actions">Åtgärder</string>
+    <string name="console_legend_search">Sök</string>
+    <string name="console_legend_shelves">Hyllor</string>
+    <string name="console_legend_settings">Inställningar</string>
+    <string name="console_legend_select">Välj</string>
+    <string name="console_touch_hint">Tryck för att öppna · Håll ned för alternativ</string>
+
+    <!-- Console mode: top bar -->
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="one">Handkontroll %1$d, batteri %2$d procent</item>
+        <item quantity="other">Handkontroll %1$d, batteri %2$d procent</item>
+    </plurals>
+    <plurals name="console_controller_battery">
+        <item quantity="one">Handkontrollens batteri %1$d procent</item>
+        <item quantity="other">Handkontrollens batteri %1$d procent</item>
+    </plurals>
+    <plurals name="console_phone_battery">
+        <item quantity="one">Telefonens batteri %1$d procent</item>
+        <item quantity="other">Telefonens batteri %1$d procent</item>
+    </plurals>
+    <string name="console_battery_charging">%1$s, laddas</string>
+    <string name="console_battery_percent">%1$d %%</string>
+    <string name="console_browse_title">Bläddra i %1$s</string>
+    <string name="console_edit_shelf">Redigera %1$s</string>
+    <string name="console_search_apps">Sök efter appar</string>
+    <string name="console_all_apps">Alla appar</string>
+    <string name="console_launcher_settings">Inställningar för launcher</string>
+
+    <!-- Console mode: cards -->
+    <string name="console_card_actions">Åtgärder för %1$s</string>
+    <string name="console_card_has_notifications">har aviseringar</string>
+    <string name="console_card_unavailable">inte tillgänglig</string>
+
+    <!-- Console mode: empty shelves -->
+    <string name="console_manage_rom_tab">Hantera ROM-flik</string>
+    <string name="console_add_apps">Lägg till appar</string>
+    <string name="console_empty_recent_title">Inget har öppnats nyligen</string>
+    <string name="console_empty_recent_detail">Appar som du öppnar från Pluto visas här, de senaste först.</string>
+    <string name="console_empty_favourites_title">Inga favoriter ännu</string>
+    <string name="console_empty_favourites_detail_controller">Tryck på %1$s på en app och välj Fäst på hemskärmen för att lägga till den här.</string>
+    <string name="console_empty_favourites_detail_touch">Håll ned en app och välj Fäst på hemskärmen för att lägga till den här.</string>
+    <string name="console_empty_rom_title">Inga spel i %1$s ännu</string>
+    <string name="console_empty_rom_detail">Lägg till spel i flikens mapp eller välj en annan mapp under ROM-flikar.</string>
+    <string name="console_empty_category_title">Inga appar i %1$s ännu</string>
+    <string name="console_empty_category_detail">Välj Lägg till appar för att välja vad som ska finnas här.</string>
+
+    <!-- Console browse grid -->
+    <string name="console_browse_no_match">Inga spel matchar filtret. Ändra det ovan eller uppdatera spelen.</string>
+    <string name="console_browse_empty">Hyllan är tom.</string>
+    <plurals name="console_browse_filtered_games">
+        <item quantity="one">%1$d av %2$d spel · Välj för att gå tillbaka till karusellen</item>
+        <item quantity="other">%1$d av %2$d spel · Välj för att gå tillbaka till karusellen</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="one">%d objekt · Välj för att gå tillbaka till karusellen</item>
+        <item quantity="other">%d objekt · Välj för att gå tillbaka till karusellen</item>
+    </plurals>
+    <string name="console_chip_all_systems">Alla system</string>
+    <string name="console_chip_favourites">Favoriter</string>
+    <string name="console_sort_title">Titel</string>
+    <string name="console_sort_recent">Senaste</string>
+    <string name="console_sort_file_name">Filnamn</string>
+    <string name="console_chip_selected">%1$s, vald</string>
+    <string name="console_add_favourite">Lägg till favorit</string>
+    <string name="console_remove_favourite">Ta bort favorit</string>
+    <string name="console_tile_select">%1$s, välj i karusellen</string>
+    <string name="console_tile_favourite">favorit</string>
+    <string name="console_tile_played">spelades %1$s</string>
+    <string name="console_tile_save_data">har sparad data från %1$s</string>
+    <string name="console_badge_played">Spelat %1$s</string>
+    <string name="console_badge_save">Sparat · %1$s</string>
+</resources>

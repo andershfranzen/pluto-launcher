@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared building blocks (OverlayKit) -->
+    <string name="overlay_kit_close">Stäng</string>
+    <string name="overlay_kit_cancel">Avbryt</string>
+    <string name="overlay_kit_done">Klar</string>
+    <string name="overlay_kit_on">på</string>
+    <string name="overlay_kit_off">av</string>
+    <string name="overlay_kit_checked">markerad</string>
+    <string name="overlay_kit_not_checked">inte markerad</string>
+    <string name="overlay_kit_selected">vald</string>
+    <string name="overlay_kit_unavailable">inte tillgänglig</string>
+    <string name="overlay_kit_decrease">Minska</string>
+    <string name="overlay_kit_increase">Öka</string>
+    <string name="overlay_kit_unavailable_label">%1$s (inte tillgänglig)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, vald</string>
+    <string name="overlay_kit_decrease_label">Minska %1$s, %2$s</string>
+    <string name="overlay_kit_increase_label">Öka %1$s, %2$s</string>
+    <string name="overlay_kit_percent">%1$d %%</string>
+
+    <!-- App actions -->
+    <string name="overlay_app_actions">Appåtgärder</string>
+    <string name="overlay_app_missing">Appen är inte längre tillgänglig. Den kan ha avinstallerats eller inaktiverats.</string>
+    <string name="overlay_launch">Öppna</string>
+    <string name="overlay_pin">Fäst på hemskärmen</string>
+    <string name="overlay_unpin">Lossa från hemskärmen</string>
+    <string name="overlay_add_to_dock">Lägg till i dockan</string>
+    <string name="overlay_remove_from_dock">Ta bort från dockan</string>
+    <string name="overlay_dock_full">Dockan är full. Ta först bort en app från dockan (Redigera hemskärmen).</string>
+    <string name="overlay_categories">Kategorier…</string>
+    <string name="overlay_move_to_folder">Flytta till mapp…</string>
+    <string name="overlay_hide">Dölj i launchern</string>
+    <string name="overlay_hide_hint">Återställ den när som helst under Inställningar ▸ Appar ▸ Dolda appar</string>
+    <string name="overlay_unhide">Visa i launchern igen</string>
+    <string name="overlay_app_info">Appinfo</string>
+    <string name="overlay_more_actions">Fler åtgärder</string>
+    <string name="overlay_quick_pin">Fäst</string>
+    <string name="overlay_quick_unpin">Lossa</string>
+    <string name="overlay_quick_dock">Docka</string>
+    <string name="overlay_quick_undock">Avdocka</string>
+    <string name="overlay_quick_info">Info</string>
+    <string name="overlay_quick_hide">Dölj</string>
+    <string name="overlay_quick_show">Visa</string>
+    <string name="overlay_quick_uninstall">Avinstallera</string>
+    <string name="overlay_uninstall">Avinstallera…</string>
+    <string name="overlay_uninstall_hint">Android ber dig bekräfta</string>
+    <string name="overlay_suspended">Inte tillgänglig just nu (pausad eller avstängd)</string>
+    <string name="overlay_in_folder">I mappen ”%1$s”</string>
+    <string name="overlay_not_in_any_category">Inte i någon kategori</string>
+
+    <!-- Category membership -->
+    <string name="overlay_categories_title">Kategorier</string>
+    <string name="overlay_categories_title_for">Kategorier: %1$s</string>
+    <string name="overlay_no_categories">Det finns inga andra kategorier än Alla appar ännu.</string>
+    <string name="overlay_manage_categories">Hantera kategorier…</string>
+    <string name="overlay_all_apps_note">Alla appar finns alltid i Alla appar.</string>
+
+    <!-- Move to folder -->
+    <string name="overlay_move_title">Flytta till mapp</string>
+    <string name="overlay_move_title_for">Flytta till mapp: %1$s</string>
+    <string name="overlay_no_folders">Inga mappar ännu. Skapa en nedan.</string>
+    <string name="overlay_new_folder">Ny mapp…</string>
+    <string name="overlay_new_folder_title">Ny mapp</string>
+    <string name="overlay_folder_name">Mappnamn</string>
+    <string name="overlay_default_folder_name">Mapp</string>
+    <string name="overlay_widget">Widget</string>
+    <string name="overlay_widget_options">Widgetalternativ</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">%1$d rad hög</item>
+        <item quantity="other">%1$d rader hög</item>
+    </plurals>
+    <string name="overlay_create">Skapa</string>
+    <string name="overlay_remove_from_folder">Ta bort från mappen</string>
+    <string name="overlay_current_folder">Nuvarande mapp</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d appar</item>
+    </plurals>
+
+    <!-- Edit home -->
+    <string name="overlay_edit_title">Redigera hemskärmen</string>
+    <string name="overlay_edit_intro">Markera ett objekt för att flytta, ta bort eller ändra det. Ändringar sparas direkt.</string>
+    <string name="overlay_home_section">Favoriter på hemskärmen</string>
+    <string name="overlay_home_empty">Inga favoriter ännu. Använd Lägg till favorit… ovan.</string>
+    <string name="overlay_add_favourite">Lägg till favorit…</string>
+    <string name="overlay_choose_favourite">Lägg till en favorit</string>
+    <string name="overlay_on_home">Redan på hemskärmen</string>
+    <string name="overlay_app_actions_ellipsis">Appåtgärder…</string>
+    <string name="overlay_dock_section">Docka</string>
+    <string name="overlay_folders_section">Mappinnehåll</string>
+    <string name="overlay_folder_empty">Mappen är tom.</string>
+    <string name="overlay_move_up">Flytta upp</string>
+    <string name="overlay_move_down">Flytta ned</string>
+    <string name="overlay_move_before">Flytta före…</string>
+    <string name="overlay_move_after">Flytta efter…</string>
+    <string name="overlay_rename_folder">Byt namn på mapp</string>
+    <string name="overlay_delete_folder">Radera mapp</string>
+    <string name="overlay_delete_folder_text">Appar i mappen flyttas tillbaka till hemskärmen. Inga appar avinstalleras.</string>
+    <string name="overlay_delete">Radera</string>
+    <string name="overlay_rename">Byt namn</string>
+    <string name="overlay_add_app_to_slot">Lägg till app på den här platsen…</string>
+    <string name="overlay_replace_app">Ersätt app…</string>
+    <string name="overlay_choose_app">Välj en app</string>
+    <string name="overlay_no_apps">Inga appar tillgängliga.</string>
+    <string name="overlay_done">Klar</string>
+    <string name="overlay_unavailable_app">App inte tillgänglig</string>
+    <string name="overlay_dock_slot">Plats %1$d</string>
+    <string name="overlay_dock_slot_with">Plats %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">Docka · Plats %1$d</string>
+    <string name="overlay_empty_slot">Tom</string>
+    <string name="overlay_move_before_title">Flytta ”%1$s” före…</string>
+    <string name="overlay_move_after_title">Flytta ”%1$s” efter…</string>
+    <string name="overlay_delete_folder_title">Vill du radera mappen ”%1$s”?</string>
+    <string name="overlay_folder_header">Mapp: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, vald. Kontrollerna följer.</string>
+
+    <!-- Category app picker -->
+    <string name="overlay_picker_category_fallback">kategori</string>
+    <string name="overlay_picker_add_title">Lägg till appar i %1$s</string>
+    <string name="overlay_picker_title">Appar i %1$s</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">%1$d vald · tryck, eller tryck på A, för att lägga till eller ta bort</item>
+        <item quantity="other">%1$d valda · tryck, eller tryck på A, för att lägga till eller ta bort</item>
+    </plurals>
+    <string name="overlay_picker_suggested">Förslag</string>
+    <string name="overlay_picker_all_apps">Alla appar</string>
+    <string name="overlay_picker_in_category">%1$s, i den här kategorin</string>
+    <string name="overlay_picker_not_in_category">%1$s, inte i den här kategorin</string>
+
+    <!-- Widgets -->
+    <string name="overlay_widgets_widget">Widget</string>
+    <string name="overlay_widgets_add">Lägg till widget</string>
+    <string name="overlay_widgets_loading">Letar efter widgetar…</string>
+    <string name="overlay_widgets_none">Ingen av dina appar erbjuder widgetar.</string>
+    <string name="overlay_widgets_unavailable">Widgeten är inte tillgänglig</string>
+    <string name="overlay_widgets_height">Höjd</string>
+    <string name="overlay_widgets_remove">Ta bort widget</string>
+    <string name="overlay_widgets_move_hint">Om du vill flytta den håller du ned widgeten och drar.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d rad</item>
+        <item quantity="other">%1$d rader</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

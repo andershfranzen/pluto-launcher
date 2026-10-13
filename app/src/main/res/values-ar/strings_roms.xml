@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rom_title">علامات تبويب ROM</string>
+    <string name="rom_add_tab">إضافة علامة تبويب ROM</string>
+    <string name="rom_title_edit">تعديل علامة تبويب ROM</string>
+    <string name="rom_title_choose_game_emulator">اختيار محاكي هذه اللعبة</string>
+    <string name="rom_title_choose_default_emulator">اختيار المحاكي التلقائي</string>
+
+    <string name="rom_default_tab_name">ألعابي</string>
+    <string name="rom_folder_access_failed">تعذّر على Pluto الاحتفاظ بإذن الوصول إلى هذا المجلد. اختر مجلدًا على هذا الجهاز.</string>
+    <string name="rom_search_installed_apps">البحث في التطبيقات المثبّتة</string>
+    <string name="rom_close_search">إغلاق البحث</string>
+    <string name="rom_saving">جارٍ الحفظ…</string>
+    <string name="rom_create_tab">إنشاء علامة تبويب</string>
+    <string name="rom_save_changes">حفظ التغييرات</string>
+    <string name="rom_cancel">إلغاء</string>
+    <string name="rom_name_dialog_title">اسم علامة التبويب</string>
+    <string name="rom_name_dialog_label">الاسم</string>
+    <string name="rom_done">تم</string>
+    <string name="rom_discard_title">هل تريد تجاهل التغييرات؟</string>
+    <string name="rom_discard_message">لم يتم حفظ علامة تبويب ROM.</string>
+    <string name="rom_discard">تجاهل</string>
+    <string name="rom_remove_title">هل تريد إزالة %1$s؟</string>
+    <string name="rom_remove_message">ستتم إزالة علامة التبويب هذه فقط. تبقى ملفات ROM وملفات الحفظ في مكانها.</string>
+    <string name="rom_remove">إزالة</string>
+    <string name="rom_editor_intro_new">حوِّل مجلد ألعاب إلى علامة تبويب في وضع منصة الألعاب. تبقى ملفاتك في مكانها.</string>
+    <string name="rom_editor_intro_edit">اختر المكان الذي تجد فيه علامة التبويب هذه ألعابها والتطبيق الذي يفتحها.</string>
+    <string name="rom_section_folder">1 · مجلد ROM</string>
+    <string name="rom_choose_folder">اختيار مجلد ROM</string>
+    <string name="rom_change_folder">تغيير مجلد ROM</string>
+    <string name="rom_choose_folder_supporting">اختر المجلد الذي يحتوي على ألعابك</string>
+    <string name="rom_folder_subfolders">يتم تضمين الألعاب الموجودة في المجلدات الفرعية. ويمكن إضافة ألعاب جديدة إلى هذا المجلد لاحقًا.</string>
+    <string name="rom_suggestions_header">أماكن الألعاب المعتادة</string>
+    <string name="rom_suggestions_intro">لا يمكن لـ Pluto الاطّلاع على محتوى مجلد إلا بعد أن تسمح له بذلك. هذه هي المجلدات التي تستخدمها المحاكيات المثبّتة؛ انقر على أحدها لفتح أداة الاختيار فيه.</string>
+    <string name="rom_suggestion_app">ألعاب %1$s</string>
+    <string name="rom_suggestion_folder">المجلد “%1$s”</string>
+    <string name="rom_suggestion_supporting">البحث في %1$s على هذا الجهاز</string>
+    <string name="rom_section_emulator">2 · المحاكي التلقائي</string>
+    <string name="rom_ask_each_time">السؤال في كل مرة</string>
+    <string name="rom_emulator_ask_supporting">اختر محاكيًا تلقائيًا لفتح الألعاب بنقرة واحدة</string>
+    <string name="rom_emulator_default_supporting">يُستخدم لكل الألعاب في علامة التبويب هذه</string>
+    <string name="rom_open_setup">فتح إعداد %1$s</string>
+    <string name="rom_setup_duckstation">استورِد BIOS جهاز PlayStation في DuckStation، ثم عُد إلى هنا</string>
+    <string name="rom_setup_generic">أكمِل الإعداد الأوّلي للمحاكي، ثم عُد إلى هنا</string>
+    <string name="rom_emulator_missing">لم يعد هذا المحاكي مثبّتًا. اختر محاكيًا تلقائيًا آخر.</string>
+    <string name="rom_section_name">3 · اسم علامة التبويب</string>
+    <string name="rom_name_placeholder">سمِّ علامة التبويب هذه</string>
+    <string name="rom_name_supporting">مثلاً PlayStation 1 أو Game Boy. يظهر في وضع منصة الألعاب.</string>
+    <string name="rom_advanced">خيارات متقدّمة</string>
+    <string name="rom_hide_advanced">إخفاء الخيارات المتقدّمة</string>
+    <string name="rom_advanced_supporting">لا حاجة إليها إلا إذا لم تُفتح لعبة بشكل صحيح</string>
+    <string name="rom_method_title">فتح الألعاب باستخدام</string>
+    <string name="rom_method_automatic">تلقائي (مقترح)</string>
+    <string name="rom_method_open_with">السؤال عن التطبيق المطلوب استخدامه</string>
+    <string name="rom_method_view">\"فتح ملف\" في Android</string>
+    <string name="rom_method_direct">تشغيل مباشر عبر %1$s</string>
+    <string name="rom_method_supporting">تدعم المحاكيات تنسيقات وطرقًا مختلفة لفتح الألعاب. يتطلّب التشغيل المباشر أن يكون المجلد في مساحة التخزين المشتركة؛ جرِّب \"السؤال عن التطبيق المطلوب استخدامه\" إذا لم يعمل الخيار التلقائي.</string>
+    <string name="rom_help_row_editor">إضافة الألعاب وصور الأغلفة</string>
+    <string name="rom_remove_tab">إزالة علامة التبويب</string>
+
+    <string name="rom_chooser_game_intro">اختر التطبيق الذي يفتح “%1$s”. تتغيّر هذه اللعبة فقط، وتحتفظ علامة التبويب بمحاكيها.</string>
+    <string name="rom_chooser_tab_intro">اختر التطبيق الذي تُفتح به ألعاب علامة التبويب هذه. يمكنك تغييره لاحقًا.</string>
+    <string name="rom_use_tab_default">استخدام الإعداد التلقائي لعلامة التبويب</string>
+    <string name="rom_use_tab_default_supporting">اتّباع محاكي علامة التبويب هذه، أو السؤال، حسب إعدادها</string>
+    <string name="rom_ask_each_time_supporting">اختيار تطبيق في كل مرة تفتح فيها لعبة</string>
+    <string name="rom_search_results">نتائج البحث</string>
+    <string name="rom_installed_apps">التطبيقات المثبّتة</string>
+    <string name="rom_suggested_emulators">المحاكيات المقترحة</string>
+    <string name="rom_no_apps_match">لا توجد تطبيقات مثبّتة تطابق “%1$s”.</string>
+    <string name="rom_no_suggestions">ابحث عن المحاكي أو اعرض كل التطبيقات المثبّتة. إذا لم يكن مثبّتًا بعد، فثبِّته ثم عُد إلى هنا.</string>
+    <string name="rom_show_suggested">عرض المحاكيات المقترحة</string>
+    <string name="rom_show_all_apps">عرض كل التطبيقات المثبّتة</string>
+    <string name="rom_show_all_apps_supporting">استخدام أي محاكٍ يمكنه فتح ألعابك</string>
+
+    <string name="rom_added">تمت إضافة %1$s. تظهر علامة التبويب في وضع منصة الألعاب.</string>
+    <string name="rom_list_intro">تصفّح مجموعات ROM كعلامات تبويب في وضع منصة الألعاب. لكل علامة تبويب مجلدها ومحاكيها التلقائي.</string>
+    <string name="rom_finding_games">جارٍ البحث عن الألعاب…</string>
+    <plurals name="rom_library_summary">
+        <item quantity="zero">%1$d لعبة · %2$s</item>
+        <item quantity="one">%1$d لعبة · %2$s</item>
+        <item quantity="two">%1$d لعبة · %2$s</item>
+        <item quantity="few">%1$d ألعاب · %2$s</item>
+        <item quantity="many">%1$d لعبة · %2$s</item>
+        <item quantity="other">%1$d لعبة · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">لم يتم العثور على ألعاب. أضِف ملفات ROM إلى هذا المجلد ثم حدِّث. يمكنك اختيار مجلد آخر من \"تعديل علامة التبويب\".</string>
+    <string name="rom_view_tab">عرض علامة التبويب</string>
+    <string name="rom_edit_tab">تعديل علامة التبويب</string>
+    <string name="rom_edit_tab_supporting">%1$s · المجلد والمحاكي التلقائي والاسم</string>
+    <string name="rom_refresh">تحديث الألعاب</string>
+    <string name="rom_games_and_emulators">الألعاب والمحاكيات</string>
+    <string name="rom_games_and_emulators_supporting">اختر محاكيًا للعبة واحدة، واطّلع على ما تم لعبه</string>
+    <string name="rom_diagnostics">التشخيص</string>
+    <string name="rom_diagnostics_last_check">آخر فحص: %1$s، %2$s</string>
+    <string name="rom_diagnostics_supporting">اطّلع على ما وجده Pluto في هذا المجلد</string>
+    <string name="rom_help_row">كيفية إضافة الألعاب وصور الأغلفة</string>
+    <plurals name="rom_count_files">
+        <item quantity="zero">%d ملف</item>
+        <item quantity="one">ملف واحد</item>
+        <item quantity="two">ملفان</item>
+        <item quantity="few">%d ملفات</item>
+        <item quantity="many">%d ملفًا</item>
+        <item quantity="other">%d ملف</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="zero">%d لعبة</item>
+        <item quantity="one">لعبة واحدة</item>
+        <item quantity="two">لعبتان</item>
+        <item quantity="few">%d ألعاب</item>
+        <item quantity="many">%d لعبة</item>
+        <item quantity="other">%d لعبة</item>
+    </plurals>
+
+    <string name="rom_help_title">إضافة الألعاب وصور الأغلفة</string>
+    <string name="rom_help_adding_header">إضافة المزيد من الألعاب</string>
+    <string name="rom_help_adding_body">انسخ ألعابك إلى المجلد الذي اخترته، بما في ذلك مساراتها أو أقراصها. يتم تضمين المجلدات الفرعية. يتحقّق Pluto من التغييرات عند عودتك، ويتحقّق \"تحديث الألعاب\" منها فورًا.</string>
+    <string name="rom_help_art_header">صور الأغلفة</string>
+    <string name="rom_help_art_body">لا يتم تنزيل الصور تلقائيًا. ضع صورة PNG أو JPG أو WebP بجانب اللعبة بنفس اسم الملف قبل الامتداد. مثلاً: Spyro.cue وSpyro.png.</string>
+    <string name="rom_help_art_layouts">يقرأ Pluto أيضًا التنظيمات التي تكتبها الواجهات الكبيرة: صورة في boxart/‏ أو covers/‏ أو images/‏، أو مجموعة Named_Boxarts/‏ الخاصة بـ RetroArch، أو صيغة name-thumb.png. ثم حدِّث علامة التبويب.</string>
+    <string name="rom_help_gamelist_body">إذا كان مجلدك من RetroPie أو Batocera أو أي إعداد آخر لـ EmulationStation يحتفظ بملف gamelist.xml بجانب الألعاب، فاحتفظ به. يقرأ Pluto اسم كل إدخال وصورته، فتظهر الألعاب بالعناوين والأغلفة التي اخترتها مسبقًا.</string>
+    <string name="rom_help_emulator_header">إعداد المحاكي</string>
+    <string name="rom_help_emulator_body">ثبِّت المحاكي الذي تريده، وافتحه مرة واحدة وأكمِل إعداده. تحتاج بعض الأنظمة إلى ملف BIOS. يفتح Pluto ألعابك في ذلك التطبيق، وتتم إدارة إعدادات المحاكي وملفات الحفظ هناك.</string>
+
+    <string name="rom_games_panel_title">الألعاب · %1$s</string>
+    <string name="rom_games_panel_intro">تُفتح اللعبة في محاكي علامة التبويب هذه ما لم تختر لها تطبيقًا آخر هنا. لا يتأثر باقي علامة التبويب.</string>
+    <string name="rom_games_panel_empty">لا توجد ألعاب في هذا المجلد بعد. أضِف ملفات ثم حدِّث علامة التبويب.</string>
+    <string name="rom_find_game">البحث عن لعبة</string>
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="zero">يتم عرض %1$d من %2$d لعبة. اكتب جزءًا من الاسم للعثور على لعبة.</item>
+        <item quantity="one">يتم عرض %1$d من %2$d لعبة. اكتب جزءًا من الاسم للعثور على لعبة.</item>
+        <item quantity="two">يتم عرض %1$d من %2$d لعبة. اكتب جزءًا من الاسم للعثور على لعبة.</item>
+        <item quantity="few">يتم عرض %1$d من %2$d ألعاب. اكتب جزءًا من الاسم للعثور على لعبة.</item>
+        <item quantity="many">يتم عرض %1$d من %2$d لعبة. اكتب جزءًا من الاسم للعثور على لعبة.</item>
+        <item quantity="other">يتم عرض %1$d من %2$d لعبة. اكتب جزءًا من الاسم للعثور على لعبة.</item>
+    </plurals>
+    <string name="rom_games_panel_no_match">لا توجد ألعاب تطابق “%1$s”.</string>
+    <string name="rom_game_opens_in">تُفتح في %1$s</string>
+    <string name="rom_game_uses_default">تستخدم الإعداد التلقائي لعلامة التبويب</string>
+    <string name="rom_game_played">%1$s · آخر لعب %2$s</string>
+
+    <string name="rom_diag_title">التشخيص · %1$s</string>
+    <string name="rom_diag_folder">المجلد</string>
+    <string name="rom_diag_access_granted">تم منح إذن الوصول إلى المجلد. يمكن لـ Pluto قراءة هذا المجلد.</string>
+    <string name="rom_diag_access_missing">إذن الوصول غير متوفّر. افتح \"تعديل علامة التبويب\" واختر هذا المجلد مجددًا.</string>
+    <string name="rom_diag_access_lost">لم يعد Android يسمح لـ Pluto بقراءة هذا المجلد.</string>
+    <string name="rom_diag_last_check">آخر فحص</string>
+    <string name="rom_diag_no_check">لم يتم إجراء أي فحص في هذه الجلسة بعد. يقرأ \"تحديث الألعاب\" المجلد الآن.</string>
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="zero">تم فحص %d ملف</item>
+        <item quantity="one">تم فحص ملف واحد</item>
+        <item quantity="two">تم فحص ملفين</item>
+        <item quantity="few">تم فحص %d ملفات</item>
+        <item quantity="many">تم فحص %d ملفًا</item>
+        <item quantity="other">تم فحص %d ملف</item>
+    </plurals>
+    <plurals name="rom_diag_with_art">
+        <item quantity="zero">%d بصورة غلاف</item>
+        <item quantity="one">%d بصورة غلاف</item>
+        <item quantity="two">%d بصورة غلاف</item>
+        <item quantity="few">%d بصورة غلاف</item>
+        <item quantity="many">%d بصورة غلاف</item>
+        <item quantity="other">%d بصورة غلاف</item>
+    </plurals>
+    <string name="rom_diag_systems">الأنظمة في هذا المجلد: %1$s. يمثّل كل منها فلترًا في شبكة التصفّح في وضع منصة الألعاب.</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="zero">%d لعبة لديها بيانات حفظ بجانبها (حفظ البطارية أو حالات الحفظ).</item>
+        <item quantity="one">لعبة واحدة لديها بيانات حفظ بجانبها (حفظ البطارية أو حالات الحفظ).</item>
+        <item quantity="two">لعبتان لديهما بيانات حفظ بجانبهما (حفظ البطارية أو حالات الحفظ).</item>
+        <item quantity="few">%d ألعاب لديها بيانات حفظ بجانبها (حفظ البطارية أو حالات الحفظ).</item>
+        <item quantity="many">%d لعبة لديها بيانات حفظ بجانبها (حفظ البطارية أو حالات الحفظ).</item>
+        <item quantity="other">%d لعبة لديها بيانات حفظ بجانبها (حفظ البطارية أو حالات الحفظ).</item>
+    </plurals>
+    <plurals name="rom_diag_gamelist">
+        <item quantity="zero">gamelist.xml: تمت قراءة %d إدخال. تُستخدم أسماؤه وصوره.</item>
+        <item quantity="one">gamelist.xml: تمت قراءة إدخال واحد. تُستخدم أسماؤه وصوره.</item>
+        <item quantity="two">gamelist.xml: تمت قراءة إدخالين. تُستخدم أسماؤه وصوره.</item>
+        <item quantity="few">gamelist.xml: تمت قراءة %d إدخالات. تُستخدم أسماؤه وصوره.</item>
+        <item quantity="many">gamelist.xml: تمت قراءة %d إدخالاً. تُستخدم أسماؤه وصوره.</item>
+        <item quantity="other">gamelist.xml: تمت قراءة %d إدخال. تُستخدم أسماؤه وصوره.</item>
+    </plurals>
+    <string name="rom_diag_no_gamelist">لا يوجد ملف gamelist.xml هنا. تُؤخذ الأسماء من أسماء الملفات، والصور من تنظيم boxart.</string>
+    <string name="rom_diag_skipped_header">لا تظهر كألعاب</string>
+    <string name="rom_diag_skipped_unchecked">أجرِ فحصًا لعرض ما يتم تخطّيه.</string>
+    <string name="rom_diag_skipped_none">لم يتم تخطّي أي شيء: كل ملف إمّا لعبة أو صورة أو مسار.</string>
+    <plurals name="rom_diag_skipped">
+        <item quantity="zero">%1$d ملف ليس لعبة: %2$s.</item>
+        <item quantity="one">%1$d ملف ليس لعبة: %2$s.</item>
+        <item quantity="two">%1$d ملفات ليست ألعابًا: %2$s.</item>
+        <item quantity="few">%1$d ملفات ليست ألعابًا: %2$s.</item>
+        <item quantity="many">%1$d ملفًا ليست ألعابًا: %2$s.</item>
+        <item quantity="other">%1$d ملف ليست ألعابًا: %2$s.</item>
+    </plurals>
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <string name="rom_extension_none_count">بلا امتداد×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="zero">تمت قراءة %d قائمة تشغيل لمعرفة مساراتها وأقراصها.</item>
+        <item quantity="one">تمت قراءة قائمة تشغيل واحدة لمعرفة مساراتها وأقراصها.</item>
+        <item quantity="two">تمت قراءة قائمتَي تشغيل لمعرفة مساراتهما وأقراصهما.</item>
+        <item quantity="few">تمت قراءة %d قوائم تشغيل لمعرفة مساراتها وأقراصها.</item>
+        <item quantity="many">تمت قراءة %d قائمة تشغيل لمعرفة مساراتها وأقراصها.</item>
+        <item quantity="other">تمت قراءة %d قائمة تشغيل لمعرفة مساراتها وأقراصها.</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="zero">%d من المسارات أو الأقراص المذكورة في قائمة تشغيل غير موجودة في هذا المجلد. انسخها بجانب قائمة التشغيل؛ لا يمكن فتح تلك الألعاب.</item>
+        <item quantity="one">مسار أو قرص واحد مذكور في قائمة تشغيل غير موجود في هذا المجلد. انسخه بجانب قائمة التشغيل؛ لا يمكن فتح تلك اللعبة.</item>
+        <item quantity="two">مساران أو قرصان مذكوران في قائمة تشغيل غير موجودين في هذا المجلد. انسخهما بجانب قائمة التشغيل؛ لا يمكن فتح تلك الألعاب.</item>
+        <item quantity="few">%d مسارات أو أقراص مذكورة في قائمة تشغيل غير موجودة في هذا المجلد. انسخها بجانب قائمة التشغيل؛ لا يمكن فتح تلك الألعاب.</item>
+        <item quantity="many">%d مسارًا أو قرصًا مذكورة في قائمة تشغيل غير موجودة في هذا المجلد. انسخها بجانب قائمة التشغيل؛ لا يمكن فتح تلك الألعاب.</item>
+        <item quantity="other">%d مسار أو قرص مذكورة في قائمة تشغيل غير موجودة في هذا المجلد. انسخها بجانب قائمة التشغيل؛ لا يمكن فتح تلك الألعاب.</item>
+    </plurals>
+    <string name="rom_diag_no_games">لم يتم العثور على ألعاب في هذا المجلد.</string>
+
+    <string name="rom_age_today">اليوم</string>
+    <string name="rom_age_yesterday">أمس</string>
+    <plurals name="rom_age_days">
+        <item quantity="zero">منذ %d يوم</item>
+        <item quantity="one">منذ يوم</item>
+        <item quantity="two">منذ يومين</item>
+        <item quantity="few">منذ %d أيام</item>
+        <item quantity="many">منذ %d يومًا</item>
+        <item quantity="other">منذ %d يوم</item>
+    </plurals>
+    <string name="rom_age_a_week">منذ أسبوع</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="zero">منذ %d أسبوع</item>
+        <item quantity="one">منذ أسبوع</item>
+        <item quantity="two">منذ أسبوعين</item>
+        <item quantity="few">منذ %d أسابيع</item>
+        <item quantity="many">منذ %d أسبوعًا</item>
+        <item quantity="other">منذ %d أسبوع</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="zero">منذ %d شهر</item>
+        <item quantity="one">منذ شهر</item>
+        <item quantity="two">منذ شهرين</item>
+        <item quantity="few">منذ %d أشهر</item>
+        <item quantity="many">منذ %d شهرًا</item>
+        <item quantity="other">منذ %d شهر</item>
+    </plurals>
+    <string name="rom_age_a_year">منذ عام</string>
+
+    <string name="rom_system_other">أخرى</string>
+    <string name="rom_system_disc">صورة قرص</string>
+
+    <string name="rom_open_chooser">فتح %1$s</string>
+    <string name="rom_launch_failed_no_app">تعذّر على هذا التطبيق فتح اللعبة. في \"علامات تبويب ROM\"، اختر محاكيًا تلقائيًا آخر أو جرِّب \"خيارات متقدّمة\".</string>
+    <string name="rom_launch_failed_access">فُقد إذن الوصول إلى المجلد. في \"علامات تبويب ROM\"، عدِّل علامة التبويب واختر مجلد ROM مجددًا.</string>
+    <string name="rom_launch_failed_unavailable">ملف ROM هذا غير متاح. حدِّث الرف أو اختر المجلد مجددًا.</string>
+
+    <string name="rom_scan_too_many_folders">يحتوي هذا المجلد على عدد كبير جدًا من المجلدات الفرعية. اختر مجلدًا أصغر.</string>
+    <string name="rom_scan_folder_unavailable">مجلد ROM غير متاح. اختره مجددًا.</string>
+    <string name="rom_scan_too_many_files">يحتوي هذا المجلد على عدد كبير جدًا من الملفات. اختر مجلدًا أصغر.</string>
+    <string name="rom_scan_playlist_too_large">قائمة التشغيل أكبر من أن تتم قراءتها: %1$s</string>
+    <string name="rom_scan_playlist_unreadable">تعذّرت قراءة %1$s</string>
+
+    <string name="console_shelf_recent">آخر التطبيقات المفتوحة</string>
+    <string name="console_shelf_favourites">المفضّلة</string>
+    <string name="console_all_apps_fallback">كل التطبيقات</string>
+    <string name="console_roms_fallback">ملفات ROM</string>
+    <string name="console_list_separator">"، "</string>
+    <string name="console_position">%1$d من %2$d</string>
+    <string name="console_shelf_tab_description">رف %1$s، %2$s</string>
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <string name="console_legend_open">فتح</string>
+    <string name="console_legend_actions">إجراءات</string>
+    <string name="console_legend_search">بحث</string>
+    <string name="console_legend_shelves">الرفوف</string>
+    <string name="console_legend_settings">الإعدادات</string>
+    <string name="console_legend_select">اختيار</string>
+    <string name="console_touch_hint">انقر للفتح · اضغط مع الاستمرار لعرض الخيارات</string>
+
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="zero">بطارية وحدة التحكم %1$d: %2$d بالمئة</item>
+        <item quantity="one">بطارية وحدة التحكم %1$d: %2$d بالمئة</item>
+        <item quantity="two">بطارية وحدة التحكم %1$d: %2$d بالمئة</item>
+        <item quantity="few">بطارية وحدة التحكم %1$d: %2$d بالمئة</item>
+        <item quantity="many">بطارية وحدة التحكم %1$d: %2$d بالمئة</item>
+        <item quantity="other">بطارية وحدة التحكم %1$d: %2$d بالمئة</item>
+    </plurals>
+    <plurals name="console_controller_battery">
+        <item quantity="zero">بطارية وحدة التحكم %1$d بالمئة</item>
+        <item quantity="one">بطارية وحدة التحكم %1$d بالمئة</item>
+        <item quantity="two">بطارية وحدة التحكم %1$d بالمئة</item>
+        <item quantity="few">بطارية وحدة التحكم %1$d بالمئة</item>
+        <item quantity="many">بطارية وحدة التحكم %1$d بالمئة</item>
+        <item quantity="other">بطارية وحدة التحكم %1$d بالمئة</item>
+    </plurals>
+    <plurals name="console_phone_battery">
+        <item quantity="zero">بطارية الهاتف %1$d بالمئة</item>
+        <item quantity="one">بطارية الهاتف %1$d بالمئة</item>
+        <item quantity="two">بطارية الهاتف %1$d بالمئة</item>
+        <item quantity="few">بطارية الهاتف %1$d بالمئة</item>
+        <item quantity="many">بطارية الهاتف %1$d بالمئة</item>
+        <item quantity="other">بطارية الهاتف %1$d بالمئة</item>
+    </plurals>
+    <string name="console_battery_charging">%1$s، جارٍ الشحن</string>
+    <string name="console_battery_percent">%1$d%%</string>
+    <string name="console_browse_title">تصفّح %1$s</string>
+    <string name="console_edit_shelf">تعديل %1$s</string>
+    <string name="console_search_apps">البحث في التطبيقات</string>
+    <string name="console_all_apps">كل التطبيقات</string>
+    <string name="console_launcher_settings">إعدادات المشغّل</string>
+
+    <string name="console_card_actions">إجراءات %1$s</string>
+    <string name="console_card_has_notifications">به إشعارات</string>
+    <string name="console_card_unavailable">غير متاح</string>
+
+    <string name="console_manage_rom_tab">إدارة علامة تبويب ROM</string>
+    <string name="console_add_apps">إضافة تطبيقات</string>
+    <string name="console_empty_recent_title">لا توجد تطبيقات مفتوحة مؤخرًا</string>
+    <string name="console_empty_recent_detail">تظهر هنا التطبيقات التي تفتحها من Pluto، الأحدث أولاً.</string>
+    <string name="console_empty_favourites_title">لا توجد مفضّلات بعد</string>
+    <string name="console_empty_favourites_detail_controller">اضغط %1$s على تطبيق واختر \"تثبيت في الشاشة الرئيسية\" لإضافته هنا.</string>
+    <string name="console_empty_favourites_detail_touch">اضغط مع الاستمرار على تطبيق واختر \"تثبيت في الشاشة الرئيسية\" لإضافته هنا.</string>
+    <string name="console_empty_rom_title">لا توجد ألعاب في %1$s بعد</string>
+    <string name="console_empty_rom_detail">أضِف ألعابًا إلى مجلد علامة التبويب هذه، أو اختر مجلدًا آخر في \"علامات تبويب ROM\".</string>
+    <string name="console_empty_category_title">لا توجد تطبيقات في %1$s بعد</string>
+    <string name="console_empty_category_detail">اختر \"إضافة تطبيقات\" لتحديد ما يظهر هنا.</string>
+
+    <string name="console_browse_no_match">لا توجد ألعاب تطابق هذا الفلتر. غيِّره أعلاه، أو حدِّث الألعاب.</string>
+    <string name="console_browse_empty">هذا الرف فارغ.</string>
+    <plurals name="console_browse_filtered_games">
+        <item quantity="zero">%1$d من %2$d لعبة · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="one">%1$d من %2$d لعبة · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="two">%1$d من %2$d لعبة · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="few">%1$d من %2$d ألعاب · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="many">%1$d من %2$d لعبة · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="other">%1$d من %2$d لعبة · اختر للعودة إلى العرض الدوّار</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="zero">%d عنصر · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="one">عنصر واحد · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="two">عنصران · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="few">%d عناصر · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="many">%d عنصرًا · اختر للعودة إلى العرض الدوّار</item>
+        <item quantity="other">%d عنصر · اختر للعودة إلى العرض الدوّار</item>
+    </plurals>
+    <string name="console_chip_all_systems">كل الأنظمة</string>
+    <string name="console_chip_favourites">المفضّلة</string>
+    <string name="console_sort_title">العنوان</string>
+    <string name="console_sort_recent">الأحدث</string>
+    <string name="console_sort_file_name">اسم الملف</string>
+    <string name="console_chip_selected">%1$s، مختار</string>
+    <string name="console_add_favourite">إضافة إلى المفضّلة</string>
+    <string name="console_remove_favourite">إزالة من المفضّلة</string>
+    <string name="console_tile_select">%1$s، اختيار في العرض الدوّار</string>
+    <string name="console_tile_favourite">مفضّلة</string>
+    <string name="console_tile_played">آخر لعب %1$s</string>
+    <string name="console_tile_save_data">بها بيانات حفظ (%1$s)</string>
+    <string name="console_badge_played">آخر لعب %1$s</string>
+    <string name="console_badge_save">حفظ · %1$s</string>
+</resources>

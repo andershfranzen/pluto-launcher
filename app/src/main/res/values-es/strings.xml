@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_dots_service_label">Puntos de notificación de Pluto</string>
+    <string name="screen_lock_service_label">Bloqueo de pantalla de Pluto</string>
+    <string name="screen_lock_service_description">Permite que Pluto bloquee la pantalla cuando tocas dos veces un espacio vacío de la pantalla de inicio. Solo realiza la acción de bloqueo: no ve lo que hay en la pantalla ni lo que escribes.</string>
+</resources>

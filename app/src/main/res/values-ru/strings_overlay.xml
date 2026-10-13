@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared building blocks (OverlayKit) -->
+    <string name="overlay_kit_close">Закрыть</string>
+    <string name="overlay_kit_cancel">Отмена</string>
+    <string name="overlay_kit_done">Готово</string>
+    <string name="overlay_kit_on">включено</string>
+    <string name="overlay_kit_off">выключено</string>
+    <string name="overlay_kit_checked">отмечено</string>
+    <string name="overlay_kit_not_checked">не отмечено</string>
+    <string name="overlay_kit_selected">выбрано</string>
+    <string name="overlay_kit_unavailable">недоступно</string>
+    <string name="overlay_kit_decrease">Уменьшить</string>
+    <string name="overlay_kit_increase">Увеличить</string>
+    <string name="overlay_kit_unavailable_label">%1$s (недоступно)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, выбрано</string>
+    <string name="overlay_kit_decrease_label">Уменьшить «%1$s», %2$s</string>
+    <string name="overlay_kit_increase_label">Увеличить «%1$s», %2$s</string>
+    <string name="overlay_kit_percent">%1$d %%</string>
+
+    <!-- App actions -->
+    <string name="overlay_app_actions">Действия с приложением</string>
+    <string name="overlay_app_missing">Это приложение больше недоступно. Возможно, оно было удалено или отключено.</string>
+    <string name="overlay_launch">Запустить</string>
+    <string name="overlay_pin">Закрепить на главном экране</string>
+    <string name="overlay_unpin">Открепить от главного экрана</string>
+    <string name="overlay_add_to_dock">Добавить в док</string>
+    <string name="overlay_remove_from_dock">Убрать из дока</string>
+    <string name="overlay_dock_full">Док заполнен. Сначала уберите из дока какое-нибудь приложение (Изменить главный экран).</string>
+    <string name="overlay_categories">Категории…</string>
+    <string name="overlay_move_to_folder">Переместить в папку…</string>
+    <string name="overlay_hide">Скрыть в лаунчере</string>
+    <string name="overlay_hide_hint">Вернуть его можно в любое время: Настройки ▸ Приложения ▸ Скрытые приложения</string>
+    <string name="overlay_unhide">Снова показывать в лаунчере</string>
+    <string name="overlay_app_info">О приложении</string>
+    <string name="overlay_more_actions">Другие действия</string>
+    <string name="overlay_quick_pin">Закрепить</string>
+    <string name="overlay_quick_unpin">Открепить</string>
+    <string name="overlay_quick_dock">В док</string>
+    <string name="overlay_quick_undock">Из дока</string>
+    <string name="overlay_quick_info">Сведения</string>
+    <string name="overlay_quick_hide">Скрыть</string>
+    <string name="overlay_quick_show">Показать</string>
+    <string name="overlay_quick_uninstall">Удалить</string>
+    <string name="overlay_uninstall">Удалить…</string>
+    <string name="overlay_uninstall_hint">Android попросит подтверждение</string>
+    <string name="overlay_suspended">Сейчас недоступно (приостановлено или заблокировано)</string>
+    <string name="overlay_in_folder">В папке «%1$s»</string>
+    <string name="overlay_not_in_any_category">Нет ни в одной категории</string>
+
+    <!-- Category membership -->
+    <string name="overlay_categories_title">Категории</string>
+    <string name="overlay_categories_title_for">Категории: %1$s</string>
+    <string name="overlay_no_categories">Кроме «Всех приложений», категорий пока нет.</string>
+    <string name="overlay_manage_categories">Управление категориями…</string>
+    <string name="overlay_all_apps_note">Каждое приложение всегда есть во «Всех приложениях».</string>
+
+    <!-- Move to folder -->
+    <string name="overlay_move_title">Переместить в папку</string>
+    <string name="overlay_move_title_for">Переместить в папку: %1$s</string>
+    <string name="overlay_no_folders">Папок пока нет. Создайте папку ниже.</string>
+    <string name="overlay_new_folder">Новая папка…</string>
+    <string name="overlay_new_folder_title">Новая папка</string>
+    <string name="overlay_folder_name">Название папки</string>
+    <string name="overlay_default_folder_name">Папка</string>
+    <string name="overlay_widget">Виджет</string>
+    <string name="overlay_widget_options">Параметры виджета</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">Высота %1$d ряд</item>
+        <item quantity="few">Высота %1$d ряда</item>
+        <item quantity="many">Высота %1$d рядов</item>
+        <item quantity="other">Высота %1$d ряда</item>
+    </plurals>
+    <string name="overlay_create">Создать</string>
+    <string name="overlay_remove_from_folder">Убрать из папки</string>
+    <string name="overlay_current_folder">Текущая папка</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$d приложение</item>
+        <item quantity="few">%1$d приложения</item>
+        <item quantity="many">%1$d приложений</item>
+        <item quantity="other">%1$d приложения</item>
+    </plurals>
+
+    <!-- Edit home -->
+    <string name="overlay_edit_title">Изменить главный экран</string>
+    <string name="overlay_edit_intro">Выберите элемент, чтобы переместить, убрать или изменить его. Изменения сохраняются сразу.</string>
+    <string name="overlay_home_section">Избранное на главном экране</string>
+    <string name="overlay_home_empty">Избранного пока нет. Нажмите «Добавить в избранное…» выше.</string>
+    <string name="overlay_add_favourite">Добавить в избранное…</string>
+    <string name="overlay_choose_favourite">Добавить в избранное</string>
+    <string name="overlay_on_home">Уже на главном экране</string>
+    <string name="overlay_app_actions_ellipsis">Действия с приложением…</string>
+    <string name="overlay_dock_section">Док</string>
+    <string name="overlay_folders_section">Содержимое папок</string>
+    <string name="overlay_folder_empty">Эта папка пуста.</string>
+    <string name="overlay_move_up">Вверх</string>
+    <string name="overlay_move_down">Вниз</string>
+    <string name="overlay_move_before">Поставить перед…</string>
+    <string name="overlay_move_after">Поставить после…</string>
+    <string name="overlay_rename_folder">Переименовать папку</string>
+    <string name="overlay_delete_folder">Удалить папку</string>
+    <string name="overlay_delete_folder_text">Приложения из этой папки вернутся на главный экран. Ни одно приложение не будет удалено.</string>
+    <string name="overlay_delete">Удалить</string>
+    <string name="overlay_rename">Переименовать</string>
+    <string name="overlay_add_app_to_slot">Добавить приложение в эту ячейку…</string>
+    <string name="overlay_replace_app">Заменить приложение…</string>
+    <string name="overlay_choose_app">Выберите приложение</string>
+    <string name="overlay_no_apps">Нет доступных приложений.</string>
+    <string name="overlay_done">Готово</string>
+    <string name="overlay_unavailable_app">Недоступное приложение</string>
+    <string name="overlay_dock_slot">Ячейка %1$d</string>
+    <string name="overlay_dock_slot_with">Ячейка %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">Док · ячейка %1$d</string>
+    <string name="overlay_empty_slot">Пусто</string>
+    <string name="overlay_move_before_title">Поставить «%1$s» перед…</string>
+    <string name="overlay_move_after_title">Поставить «%1$s» после…</string>
+    <string name="overlay_delete_folder_title">Удалить папку «%1$s»?</string>
+    <string name="overlay_folder_header">Папка: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, выбрано. Далее элементы управления.</string>
+
+    <!-- Category app picker (shelf picker) -->
+    <string name="overlay_picker_category_fallback">категория</string>
+    <string name="overlay_picker_add_title">Добавить приложения: %1$s</string>
+    <string name="overlay_picker_title">Приложения: %1$s</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">Выбрано: %1$d · нажмите на экран или кнопку A, чтобы добавить или убрать</item>
+        <item quantity="few">Выбрано: %1$d · нажмите на экран или кнопку A, чтобы добавить или убрать</item>
+        <item quantity="many">Выбрано: %1$d · нажмите на экран или кнопку A, чтобы добавить или убрать</item>
+        <item quantity="other">Выбрано: %1$d · нажмите на экран или кнопку A, чтобы добавить или убрать</item>
+    </plurals>
+    <string name="overlay_picker_suggested">Рекомендуемые</string>
+    <string name="overlay_picker_all_apps">Все приложения</string>
+    <string name="overlay_picker_in_category">%1$s, в этой категории</string>
+    <string name="overlay_picker_not_in_category">%1$s, не в этой категории</string>
+
+    <!-- Widgets -->
+    <string name="overlay_widgets_widget">Виджет</string>
+    <string name="overlay_widgets_add">Добавить виджет</string>
+    <string name="overlay_widgets_loading">Поиск виджетов…</string>
+    <string name="overlay_widgets_none">Ни одно из ваших приложений не предлагает виджетов.</string>
+    <string name="overlay_widgets_unavailable">Этот виджет недоступен</string>
+    <string name="overlay_widgets_height">Высота</string>
+    <string name="overlay_widgets_remove">Убрать виджет</string>
+    <string name="overlay_widgets_move_hint">Чтобы переместить виджет, нажмите и удерживайте его, затем перетащите.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d ряд</item>
+        <item quantity="few">%1$d ряда</item>
+        <item quantity="many">%1$d рядов</item>
+        <item quantity="other">%1$d ряда</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

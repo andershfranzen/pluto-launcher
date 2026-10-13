@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_surface_label">Layar utama. Tindakan: telusuri, tambahkan widget, edit layar utama, setelan</string>
+    <string name="home_menu_search_apps">Telusuri aplikasi</string>
+    <string name="home_menu_add_widget">Tambahkan widget</string>
+    <string name="home_menu_edit_home">Edit layar utama</string>
+    <string name="home_menu_launcher_settings">Setelan peluncur</string>
+
+    <string name="home_category_all">Semua aplikasi</string>
+    <string name="home_category_games">Game</string>
+    <string name="home_category_tools">Alat</string>
+
+    <string name="home_drawer_category_everything">Semua</string>
+    <string name="home_drawer_game_unavailable">Game tersebut sudah tidak tersedia. Muat ulang tab ROM-nya.</string>
+    <string name="home_drawer_searching">Menelusuri…</string>
+    <string name="home_drawer_search_label">Telusuri aplikasi</string>
+    <string name="home_drawer_search_scope_category">Menelusuri aplikasi dan pintasan di %1$s</string>
+    <string name="home_drawer_search_scope_all">Menelusuri semua aplikasi, game, dan pintasan</string>
+    <string name="home_drawer_search_scope_actions">%1$s. Ketuk aplikasi untuk melihat tindakan.</string>
+    <string name="home_drawer_actions_mode">Mode tindakan aplikasi</string>
+    <string name="home_drawer_search_hint_category">Telusuri %1$s</string>
+    <string name="home_drawer_search_hint_all">Telusuri aplikasi, game, dan pintasan</string>
+    <string name="home_drawer_clear_search">Hapus penelusuran</string>
+    <string name="home_drawer_close_search">Tutup penelusuran</string>
+    <string name="home_drawer_done">Selesai</string>
+    <string name="home_drawer_actions">Pilih aplikasi untuk melihat tindakannya</string>
+    <string name="home_drawer_actions_done">Selesai memilih aplikasi</string>
+    <string name="home_drawer_manage_categories">Tambahkan atau edit kategori</string>
+    <string name="home_drawer_actions_hint">Ketuk aplikasi untuk tindakan</string>
+    <string name="home_drawer_no_results">Tidak ada hasil untuk “%1$s”</string>
+    <string name="home_drawer_no_match">Tidak ada aplikasi yang cocok dengan “%1$s”</string>
+    <string name="home_drawer_empty_category">Belum ada aplikasi di %1$s</string>
+    <string name="home_drawer_empty_all">Tidak ada aplikasi untuk ditampilkan</string>
+    <string name="home_drawer_search_everything">Telusuri semua</string>
+    <string name="home_drawer_search_all_apps">Telusuri semua aplikasi</string>
+    <string name="home_drawer_no_match_category_detail">Menelusuri di %1$s. Coba Semua atau nama yang lebih pendek.</string>
+    <string name="home_drawer_no_match_detail_rich">Penelusuran mencakup aplikasi, judul ROM, dan pintasan aplikasi.</string>
+    <string name="home_drawer_no_match_detail">Penelusuran mencakup nama aplikasi dan nama paket.</string>
+    <string name="home_drawer_empty_category_detail">Pilih aplikasi yang termasuk di sini.</string>
+    <string name="home_drawer_add_apps">Tambahkan aplikasi</string>
+    <string name="home_drawer_show_all_apps">Tampilkan semua aplikasi</string>
+    <string name="home_drawer_empty_all_detail">Aplikasi tersembunyi dapat dipulihkan dari Setelan → Aplikasi → Aplikasi tersembunyi.</string>
+    <string name="home_drawer_hidden_apps">Aplikasi tersembunyi</string>
+
+    <string name="home_lock_needs_service">Untuk mengunci dengan ketuk dua kali, aktifkan “Kunci layar Pluto” di setelan Aksesibilitas.</string>
+    <string name="home_empty_favourites">Belum ada favorit</string>
+    <string name="home_empty_favourites_detail">Geser ke atas untuk menemukan aplikasi, lalu sematkan favorit. Menekan lama aplikasi akan membuka tindakannya; Tambahkan favorit bisa digunakan tanpa gestur.</string>
+    <string name="home_add_favourite">Tambahkan favorit</string>
+    <string name="home_drop_remove">Hapus</string>
+    <string name="home_dock_empty_slot">Slot dok kosong %1$d. Membuka Edit untuk memilih aplikasi</string>
+
+    <string name="home_folder_name">Nama folder</string>
+    <string name="home_folder_save_name">Simpan nama</string>
+    <string name="home_folder_cancel_rename">Batalkan ganti nama</string>
+    <string name="home_folder_close">Tutup folder</string>
+    <string name="home_folder_rename">Ganti nama</string>
+    <string name="home_folder_edit">Edit</string>
+    <string name="home_folder_empty">Folder ini kosong. Tarik aplikasi ke sini, atau tekan lama aplikasi, pilih Lainnya… lalu Pindahkan ke folder….</string>
+
+    <string name="home_search_section_apps">Aplikasi</string>
+    <string name="home_search_section_games">Game</string>
+    <string name="home_search_section_shortcuts">Pintasan</string>
+    <string name="home_search_result_options">Opsi untuk %1$s</string>
+    <string name="home_search_result_app_detail">Aplikasi</string>
+    <string name="home_search_result_shortcut_detail">%1$s · Pintasan</string>
+    <string name="home_search_result_app">%1$s, aplikasi</string>
+    <string name="home_search_result_game">%1$s, game di %2$s</string>
+    <string name="home_search_result_shortcut">%1$s, pintasan %2$s</string>
+
+    <string name="home_startup_starting">Pluto sedang dimulai</string>
+    <string name="home_startup_loading_apps">Memuat aplikasi</string>
+    <string name="home_storage_error_title">Pluto tidak dapat membuka tata letak yang tersimpan</string>
+    <string name="home_storage_error_detail">Favorit, dok, folder, dan setelan Anda tidak diubah atau dihapus. Coba lagi, atau pilih aplikasi layar utama lain di Setelan Android selama masalah ini diatasi. Menginstal build Pluto lebih baru yang sebelumnya Anda gunakan biasanya dapat memperbaikinya.</string>
+    <string name="home_storage_error_technical">Detail: %1$s</string>
+    <string name="home_storage_error_retry">Coba lagi</string>
+    <string name="home_storage_error_choose_home">Pilih aplikasi layar utama</string>
+
+    <string name="common_category_tab">Kategori %1$s</string>
+    <string name="common_message_dismiss_label">Tutup pesan</string>
+    <string name="common_message_dismiss">Tutup</string>
+    <string name="common_clock_description">%1$s, %2$s</string>
+    <string name="common_app_unavailable">%1$s (tidak tersedia)</string>
+    <string name="common_app_actions">Tindakan aplikasi</string>
+    <string name="common_app_opens_actions">%1$s, membuka tindakan aplikasi</string>
+    <string name="common_folder_empty">Folder %1$s, kosong</string>
+    <plurals name="common_folder_apps">
+        <item quantity="other">Folder %1$s, %2$d aplikasi</item>
+    </plurals>
+    <string name="common_folder_edit">Edit folder</string>
+
+    <string name="common_legend_open">Buka</string>
+    <string name="common_legend_actions">Tindakan</string>
+    <string name="common_legend_search">Telusuri</string>
+    <string name="common_legend_settings">Setelan</string>
+    <string name="common_legend_category">Kategori</string>
+    <string name="common_legend_back">Kembali</string>
+    <string name="common_legend_close">Tutup</string>
+    <string name="common_legend_spoken">Tombol controller: %1$s</string>
+    <string name="common_legend_spoken_entry">%1$s %2$s</string>
+    <string name="common_legend_spoken_or">%1$s atau %2$s</string>
+    <string name="common_has_notifications">Ada notifikasi</string>
+    <string name="common_more_actions">Tindakan lainnya</string>
+
+    <string name="common_app_not_installed">%1$s sudah tidak terinstal.</string>
+    <string name="common_app_paused">%1$s sedang dijeda.</string>
+    <string name="common_app_open_failed">%1$s tidak dapat dibuka.</string>
+    <string name="common_app_info_unavailable">Info aplikasi tidak tersedia untuk %1$s.</string>
+    <string name="common_app_info_failed">Info aplikasi untuk %1$s tidak dapat dibuka.</string>
+    <string name="common_uninstall_not_here">%1$s tidak dapat di-uninstal dari sini.</string>
+    <string name="common_uninstall_unavailable">Uninstal tidak tersedia di perangkat ini.</string>
+    <string name="common_uninstall_failed">%1$s tidak dapat di-uninstal.</string>
+    <string name="common_shortcut_open_failed">“%1$s” tidak dapat dibuka.</string>
+
+    <string name="home_update_available">Pluto %1$s tersedia. Buka Setelan → Umum untuk mengupdate.</string>
+    <string name="home_rom_shelves_load_failed">Tidak dapat memuat rak ROM. Mulai ulang Pluto untuk mencoba lagi.</string>
+    <string name="home_rom_shelf_save_failed">Tidak dapat menyimpan rak ROM ini.</string>
+    <string name="home_rom_shelf_remove_failed">Tidak dapat menghapus rak ROM ini.</string>
+    <string name="home_rom_shelf_missing">Rak ROM ini sudah tidak ada</string>
+    <string name="home_rom_folder_access_lost">Akses folder hilang. Pilih lagi folder ROM.</string>
+    <string name="home_rom_folder_read_failed">Tidak dapat membaca folder ROM ini. Pilih lagi.</string>
+    <string name="home_app_open_failed">Aplikasi tersebut tidak dapat dibuka.</string>
+    <string name="home_shortcut_unavailable">Pintasan tersebut sudah tidak tersedia.</string>
+    <string name="home_shortcut_open_failed">Pintasan tersebut tidak dapat dibuka.</string>
+    <string name="home_system_app_info_failed">Android tidak dapat membuka info aplikasi saat ini.</string>
+    <string name="home_system_uninstall_failed">Android tidak dapat meminta uninstal saat ini.</string>
+    <string name="home_layout_saved">Tata letak disimpan ke file yang Anda pilih.</string>
+    <string name="home_layout_write_failed">Tidak dapat menulis file tersebut. Coba lokasi lain.</string>
+    <string name="home_layout_restored">Tata letak dipulihkan.</string>
+    <string name="home_layout_restore_failed">Tidak dapat memulihkan tata letak tersebut. Tata letak Anda saat ini tidak berubah.</string>
+    <string name="home_layout_too_new">Cadangan tersebut dibuat oleh Pluto versi lebih baru. Update Pluto, lalu pulihkan.</string>
+    <string name="home_layout_not_backup">File tersebut bukan cadangan tata letak Pluto.</string>
+    <string name="home_layout_read_failed">Tidak dapat membaca file tersebut.</string>
+    <string name="home_save_failed">Tidak dapat menyimpan perubahan itu. Coba lagi.</string>
+    <string name="home_default_folder_name">Folder</string>
+    <string name="home_default_category_name">Kategori baru</string>
+    <string name="home_dock_full">Dok penuh. Hapus dulu aplikasi dari dok.</string>
+    <string name="home_settings_reset">File setelan Pluto rusak dan telah direset. Peluncuran terbaru nonaktif sampai Anda mengaktifkannya lagi.</string>
+    <string name="home_settings_unreadable">Pluto tidak dapat membaca setelannya saat ini, jadi setelan default digunakan dan Peluncuran terbaru dijeda.</string>
+</resources>

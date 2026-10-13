@@ -158,6 +158,7 @@ class MainActivity : ComponentActivity() {
         super.onConfigurationChanged(newConfig)
         // A per-app language change arrives here rather than recreating the activity.
         dev.pluto.launcher.ui.UiText.attach(this)
+        vm.onConfigurationChanged()
     }
 
     /**

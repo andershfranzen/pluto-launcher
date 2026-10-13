@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="overlay_kit_close">বন্ধ করুন</string>
+    <string name="overlay_kit_cancel">বাতিল করুন</string>
+    <string name="overlay_kit_done">হয়ে গেছে</string>
+    <string name="overlay_kit_on">চালু</string>
+    <string name="overlay_kit_off">বন্ধ</string>
+    <string name="overlay_kit_checked">চেক করা হয়েছে</string>
+    <string name="overlay_kit_not_checked">চেক করা হয়নি</string>
+    <string name="overlay_kit_selected">বেছে নেওয়া হয়েছে</string>
+    <string name="overlay_kit_unavailable">উপলভ্য নেই</string>
+    <string name="overlay_kit_decrease">কমান</string>
+    <string name="overlay_kit_increase">বাড়ান</string>
+    <string name="overlay_kit_unavailable_label">%1$s (উপলভ্য নেই)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, বেছে নেওয়া হয়েছে</string>
+    <string name="overlay_kit_decrease_label">%1$s কমান, %2$s</string>
+    <string name="overlay_kit_increase_label">%1$s বাড়ান, %2$s</string>
+    <string name="overlay_kit_percent">%1$d%%</string>
+
+    <string name="overlay_app_actions">অ্যাপ অ্যাকশন</string>
+    <string name="overlay_app_missing">এই অ্যাপটি আর উপলভ্য নেই। হয়তো এটি আনইনস্টল বা বন্ধ করা হয়েছে।</string>
+    <string name="overlay_launch">চালু করুন</string>
+    <string name="overlay_pin">হোমে পিন করুন</string>
+    <string name="overlay_unpin">হোম থেকে আনপিন করুন</string>
+    <string name="overlay_add_to_dock">ডকে যোগ করুন</string>
+    <string name="overlay_remove_from_dock">ডক থেকে সরান</string>
+    <string name="overlay_dock_full">ডক ভর্তি। প্রথমে ডক থেকে একটি অ্যাপ সরান (হোম এডিট করুন)।</string>
+    <string name="overlay_categories">বিভাগ…</string>
+    <string name="overlay_move_to_folder">ফোল্ডারে সরান…</string>
+    <string name="overlay_hide">লঞ্চার থেকে লুকান</string>
+    <string name="overlay_hide_hint">যেকোনো সময় সেটিংস ▸ অ্যাপ ▸ লুকানো অ্যাপ থেকে ফিরিয়ে আনুন</string>
+    <string name="overlay_unhide">লঞ্চারে আবার দেখান</string>
+    <string name="overlay_app_info">অ্যাপ তথ্য</string>
+    <string name="overlay_more_actions">আরও অ্যাকশন</string>
+    <string name="overlay_quick_pin">পিন</string>
+    <string name="overlay_quick_unpin">আনপিন</string>
+    <string name="overlay_quick_dock">ডক</string>
+    <string name="overlay_quick_undock">আনডক</string>
+    <string name="overlay_quick_info">তথ্য</string>
+    <string name="overlay_quick_hide">লুকান</string>
+    <string name="overlay_quick_show">দেখান</string>
+    <string name="overlay_quick_uninstall">আনইনস্টল</string>
+    <string name="overlay_uninstall">আনইনস্টল করুন…</string>
+    <string name="overlay_uninstall_hint">Android কনফার্ম করতে বলবে</string>
+    <string name="overlay_suspended">এখন উপলভ্য নেই (পজ বা সাসপেন্ড করা আছে)</string>
+    <string name="overlay_in_folder">“%1$s” ফোল্ডারে আছে</string>
+    <string name="overlay_not_in_any_category">কোনো বিভাগে নেই</string>
+
+    <string name="overlay_categories_title">বিভাগ</string>
+    <string name="overlay_categories_title_for">বিভাগ: %1$s</string>
+    <string name="overlay_no_categories">\"সব অ্যাপ\" ছাড়া এখনও কোনো বিভাগ নেই।</string>
+    <string name="overlay_manage_categories">বিভাগ ম্যানেজ করুন…</string>
+    <string name="overlay_all_apps_note">প্রতিটি অ্যাপ সবসময় \"সব অ্যাপ\"-এ থাকে।</string>
+
+    <string name="overlay_move_title">ফোল্ডারে সরান</string>
+    <string name="overlay_move_title_for">ফোল্ডারে সরান: %1$s</string>
+    <string name="overlay_no_folders">এখনও কোনো ফোল্ডার নেই। নিচে একটি তৈরি করুন।</string>
+    <string name="overlay_new_folder">নতুন ফোল্ডার…</string>
+    <string name="overlay_new_folder_title">নতুন ফোল্ডার</string>
+    <string name="overlay_folder_name">ফোল্ডারের নাম</string>
+    <string name="overlay_default_folder_name">ফোল্ডার</string>
+    <string name="overlay_widget">উইজেট</string>
+    <string name="overlay_widget_options">উইজেটের বিকল্প</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">%1$d সারি উঁচু</item>
+        <item quantity="other">%1$d সারি উঁচু</item>
+    </plurals>
+    <string name="overlay_create">তৈরি করুন</string>
+    <string name="overlay_remove_from_folder">ফোল্ডার থেকে সরান</string>
+    <string name="overlay_current_folder">বর্তমান ফোল্ডার</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$dটি অ্যাপ</item>
+        <item quantity="other">%1$dটি অ্যাপ</item>
+    </plurals>
+
+    <string name="overlay_edit_title">হোম এডিট করুন</string>
+    <string name="overlay_edit_intro">কোনো আইটেম সরাতে, মুছতে বা পরিবর্তন করতে সেটি বেছে নিন। পরিবর্তন সঙ্গে সঙ্গে সেভ হয়।</string>
+    <string name="overlay_home_section">হোমের পছন্দসই</string>
+    <string name="overlay_home_empty">এখনও কোনো পছন্দসই নেই। উপরের \"পছন্দসইতে যোগ করুন…\" ব্যবহার করুন।</string>
+    <string name="overlay_add_favourite">পছন্দসইতে যোগ করুন…</string>
+    <string name="overlay_choose_favourite">একটি পছন্দসই যোগ করুন</string>
+    <string name="overlay_on_home">ইতিমধ্যে হোমে আছে</string>
+    <string name="overlay_app_actions_ellipsis">অ্যাপ অ্যাকশন…</string>
+    <string name="overlay_dock_section">ডক</string>
+    <string name="overlay_folders_section">ফোল্ডারের কন্টেন্ট</string>
+    <string name="overlay_folder_empty">এই ফোল্ডারটি খালি।</string>
+    <string name="overlay_move_up">উপরে সরান</string>
+    <string name="overlay_move_down">নিচে সরান</string>
+    <string name="overlay_move_before">আগে সরান…</string>
+    <string name="overlay_move_after">পরে সরান…</string>
+    <string name="overlay_rename_folder">ফোল্ডারের নাম পরিবর্তন করুন</string>
+    <string name="overlay_delete_folder">ফোল্ডার মুছুন</string>
+    <string name="overlay_delete_folder_text">এই ফোল্ডারের অ্যাপগুলো হোম স্ক্রিনে ফিরে যাবে। কোনো অ্যাপ আনইনস্টল হবে না।</string>
+    <string name="overlay_delete">মুছুন</string>
+    <string name="overlay_rename">নাম পরিবর্তন করুন</string>
+    <string name="overlay_add_app_to_slot">এই স্লটে অ্যাপ যোগ করুন…</string>
+    <string name="overlay_replace_app">অ্যাপ বদলান…</string>
+    <string name="overlay_choose_app">একটি অ্যাপ বেছে নিন</string>
+    <string name="overlay_no_apps">কোনো অ্যাপ উপলভ্য নেই।</string>
+    <string name="overlay_done">হয়ে গেছে</string>
+    <string name="overlay_unavailable_app">উপলভ্য নয় এমন অ্যাপ</string>
+    <string name="overlay_dock_slot">স্লট %1$d</string>
+    <string name="overlay_dock_slot_with">স্লট %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">ডক · স্লট %1$d</string>
+    <string name="overlay_empty_slot">খালি</string>
+    <string name="overlay_move_before_title">“%1$s” এর আগে সরান…</string>
+    <string name="overlay_move_after_title">“%1$s” এর পরে সরান…</string>
+    <string name="overlay_delete_folder_title">“%1$s” ফোল্ডার মুছবেন?</string>
+    <string name="overlay_folder_header">ফোল্ডার: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, বেছে নেওয়া হয়েছে। এরপর কন্ট্রোল আছে।</string>
+
+    <string name="overlay_picker_category_fallback">বিভাগ</string>
+    <string name="overlay_picker_add_title">%1$s-এ অ্যাপ যোগ করুন</string>
+    <string name="overlay_picker_title">%1$s-এর অ্যাপ</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">%1$dটি বেছে নেওয়া হয়েছে · যোগ করতে বা সরাতে ট্যাপ করুন বা A টিপুন</item>
+        <item quantity="other">%1$dটি বেছে নেওয়া হয়েছে · যোগ করতে বা সরাতে ট্যাপ করুন বা A টিপুন</item>
+    </plurals>
+    <string name="overlay_picker_suggested">সাজেস্ট করা</string>
+    <string name="overlay_picker_all_apps">সব অ্যাপ</string>
+    <string name="overlay_picker_in_category">%1$s, এই বিভাগে আছে</string>
+    <string name="overlay_picker_not_in_category">%1$s, এই বিভাগে নেই</string>
+
+    <string name="overlay_widgets_widget">উইজেট</string>
+    <string name="overlay_widgets_add">উইজেট যোগ করুন</string>
+    <string name="overlay_widgets_loading">উইজেট খোঁজা হচ্ছে…</string>
+    <string name="overlay_widgets_none">আপনার কোনো অ্যাপে উইজেট নেই।</string>
+    <string name="overlay_widgets_unavailable">এই উইজেটটি উপলভ্য নেই</string>
+    <string name="overlay_widgets_height">উচ্চতা</string>
+    <string name="overlay_widgets_remove">উইজেট সরান</string>
+    <string name="overlay_widgets_move_hint">সরাতে উইজেটটি টাচ করে ধরে রেখে টেনে আনুন।</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d সারি</item>
+        <item quantity="other">%1$d সারি</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

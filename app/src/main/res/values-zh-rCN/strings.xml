@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_dots_service_label">Pluto 通知圆点</string>
+    <string name="screen_lock_service_label">Pluto 锁屏</string>
+    <string name="screen_lock_service_description">当你在主屏幕的空白处点按两次时，让 Pluto 锁定屏幕。此服务只执行锁屏操作：不会查看屏幕上的内容，也不会读取你输入的内容。</string>
+</resources>

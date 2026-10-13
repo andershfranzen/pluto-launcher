@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_dots_service_label">نقاط إشعارات Pluto</string>
+    <string name="screen_lock_service_label">قفل الشاشة من Pluto</string>
+    <string name="screen_lock_service_description">تتيح لتطبيق Pluto قفل الشاشة عند النقر مرّتين على مساحة فارغة في الشاشة الرئيسية. لا تنفّذ سوى إجراء القفل: فهي لا ترى ما يظهر على الشاشة ولا ما تكتبه.</string>
+</resources>

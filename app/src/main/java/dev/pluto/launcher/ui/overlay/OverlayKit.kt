@@ -116,6 +116,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.pluto.launcher.ui.focus.ControllerFocusController
 import dev.pluto.launcher.ui.focus.InputMode
 import dev.pluto.launcher.ui.focus.LocalControllerFocus
@@ -795,16 +796,29 @@ private fun <T> SegmentedChoices(idPrefix: String, label: String, options: List<
                     Icon(Icons.Rounded.Check, contentDescription = null, tint = colors.inverseOnSurface, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                 }
-                Text(
-                    text,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = lerp(colors.onSurface, colors.inverseOnSurface, selection.value),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                FitLabel(text, MaterialTheme.typography.labelLarge, lerp(colors.onSurface, colors.inverseOnSurface, selection.value))
             }
         }
     }
+}
+
+/**
+ * A one-line label in an equal-width slot (segmented controls, page tabs). Translations run
+ * longer than English, so it shrinks in steps to 10 sp before it ellipsizes.
+ */
+@Composable
+internal fun FitLabel(text: String, style: androidx.compose.ui.text.TextStyle, color: Color, textAlign: androidx.compose.ui.text.style.TextAlign? = null) {
+    androidx.compose.foundation.text.BasicText(
+        text,
+        style = style.merge(color = color, textAlign = textAlign ?: androidx.compose.ui.text.style.TextAlign.Unspecified),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(
+            minFontSize = 10.sp,
+            maxFontSize = style.fontSize,
+            stepSize = 0.5.sp,
+        ),
+    )
 }
 
 @Composable

@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ROM tabs screen: titles -->
+    <string name="rom_title">Onglets ROM</string>
+    <string name="rom_add_tab">Ajouter un onglet ROM</string>
+    <string name="rom_title_edit">Modifier l\'onglet ROM</string>
+    <string name="rom_title_choose_game_emulator">Choisir l\'émulateur de ce jeu</string>
+    <string name="rom_title_choose_default_emulator">Choisir l\'émulateur par défaut</string>
+
+    <!-- ROM tabs screen: editor -->
+    <string name="rom_default_tab_name">Mes jeux</string>
+    <string name="rom_folder_access_failed">Pluto n\'a pas pu conserver l\'accès à ce dossier. Choisissez un dossier sur cet appareil.</string>
+    <string name="rom_search_installed_apps">Rechercher parmi les applis installées</string>
+    <string name="rom_close_search">Fermer la recherche</string>
+    <string name="rom_saving">Enregistrement…</string>
+    <string name="rom_create_tab">Créer l\'onglet</string>
+    <string name="rom_save_changes">Enregistrer les modifications</string>
+    <string name="rom_cancel">Annuler</string>
+    <string name="rom_name_dialog_title">Nom de l\'onglet</string>
+    <string name="rom_name_dialog_label">Nom</string>
+    <string name="rom_done">OK</string>
+    <string name="rom_discard_title">Abandonner les modifications ?</string>
+    <string name="rom_discard_message">Votre onglet ROM n\'a pas été enregistré.</string>
+    <string name="rom_discard">Abandonner</string>
+    <string name="rom_remove_title">Supprimer %1$s ?</string>
+    <string name="rom_remove_message">Seul cet onglet est supprimé. Vos ROM et fichiers de sauvegarde restent où ils sont.</string>
+    <string name="rom_remove">Supprimer</string>
+    <string name="rom_editor_intro_new">Transformez un dossier de jeux en onglet console. Vos fichiers restent où ils sont.</string>
+    <string name="rom_editor_intro_edit">Choisissez où cet onglet trouve ses jeux et quelle appli les ouvre.</string>
+    <string name="rom_section_folder">1 · Dossier ROM</string>
+    <string name="rom_choose_folder">Choisir le dossier ROM</string>
+    <string name="rom_change_folder">Changer de dossier ROM</string>
+    <string name="rom_choose_folder_supporting">Sélectionnez le dossier qui contient vos jeux</string>
+    <string name="rom_folder_subfolders">Les jeux des sous-dossiers sont inclus. Vous pourrez ajouter de nouveaux jeux à ce dossier plus tard.</string>
+    <string name="rom_suggestions_header">Où se trouvent souvent les jeux</string>
+    <string name="rom_suggestions_intro">Pluto ne peut pas regarder dans un dossier tant que vous ne l\'y avez pas autorisé. Voici les dossiers utilisés par les émulateurs installés ; touchez-en un pour y ouvrir le sélecteur.</string>
+    <string name="rom_suggestion_app">Jeux %1$s</string>
+    <string name="rom_suggestion_folder">Dossier « %1$s »</string>
+    <string name="rom_suggestion_supporting">Chercher dans %1$s sur cet appareil</string>
+    <string name="rom_section_emulator">2 · Émulateur par défaut</string>
+    <string name="rom_ask_each_time">Toujours demander</string>
+    <string name="rom_emulator_ask_supporting">Choisissez un émulateur par défaut pour ouvrir les jeux d\'un seul geste</string>
+    <string name="rom_emulator_default_supporting">Utilisé pour tous les jeux de cet onglet</string>
+    <string name="rom_open_setup">Ouvrir la configuration de %1$s</string>
+    <string name="rom_setup_duckstation">Importez votre BIOS PlayStation dans DuckStation, puis revenez ici</string>
+    <string name="rom_setup_generic">Terminez la première configuration de l\'émulateur, puis revenez ici</string>
+    <string name="rom_emulator_missing">Cet émulateur n\'est plus installé. Choisissez-en un autre par défaut.</string>
+    <string name="rom_section_name">3 · Nom de l\'onglet</string>
+    <string name="rom_name_placeholder">Nommez cet onglet</string>
+    <string name="rom_name_supporting">Par exemple PlayStation 1 ou Game Boy. Affiché en mode console.</string>
+    <string name="rom_advanced">Options avancées</string>
+    <string name="rom_hide_advanced">Masquer les options avancées</string>
+    <string name="rom_advanced_supporting">Utile seulement si un jeu ne s\'ouvre pas correctement</string>
+    <string name="rom_method_title">Ouvrir les jeux avec</string>
+    <string name="rom_method_automatic">Automatique (recommandé)</string>
+    <string name="rom_method_open_with">Demander quelle appli utiliser</string>
+    <string name="rom_method_view">Ouverture de fichier Android</string>
+    <string name="rom_method_direct">Lancement direct dans %1$s</string>
+    <string name="rom_method_supporting">Les émulateurs prennent en charge différents formats et façons d\'ouvrir les jeux. Le lancement direct nécessite que le dossier soit dans le stockage partagé ; essayez Demander quelle appli utiliser si l\'option par défaut ne fonctionne pas.</string>
+    <string name="rom_help_row_editor">Ajouter des jeux et des jaquettes</string>
+    <string name="rom_remove_tab">Supprimer l\'onglet</string>
+
+    <!-- ROM tabs screen: emulator chooser -->
+    <string name="rom_chooser_game_intro">Choisissez l\'appli qui ouvre « %1$s ». Seul ce jeu change ; l\'onglet garde son propre émulateur.</string>
+    <string name="rom_chooser_tab_intro">Choisissez l\'appli avec laquelle les jeux de cet onglet doivent s\'ouvrir. Vous pourrez la changer plus tard.</string>
+    <string name="rom_use_tab_default">Utiliser l\'émulateur de l\'onglet</string>
+    <string name="rom_use_tab_default_supporting">Suivre l\'émulateur de cet onglet, ou demander, selon sa configuration</string>
+    <string name="rom_ask_each_time_supporting">Choisir une appli à chaque ouverture de jeu</string>
+    <string name="rom_search_results">Résultats de recherche</string>
+    <string name="rom_installed_apps">Applis installées</string>
+    <string name="rom_suggested_emulators">Émulateurs suggérés</string>
+    <string name="rom_no_apps_match">Aucune appli installée ne correspond à « %1$s ».</string>
+    <string name="rom_no_suggestions">Recherchez votre émulateur ou affichez toutes les applis installées. S\'il n\'est pas encore installé, installez-le et revenez ici.</string>
+    <string name="rom_show_suggested">Afficher les émulateurs suggérés</string>
+    <string name="rom_show_all_apps">Afficher toutes les applis installées</string>
+    <string name="rom_show_all_apps_supporting">Utiliser n\'importe quel émulateur capable d\'ouvrir vos jeux</string>
+
+    <!-- ROM tabs screen: list of tabs -->
+    <string name="rom_added">%1$s ajouté. Votre onglet apparaît en mode console.</string>
+    <string name="rom_list_intro">Parcourez vos collections de ROM sous forme d\'onglets en mode console. Chaque onglet a son propre dossier et son émulateur par défaut.</string>
+    <string name="rom_finding_games">Recherche de jeux…</string>
+    <plurals name="rom_library_summary">
+        <item quantity="one">%1$d jeu · %2$s</item>
+        <item quantity="many">%1$d de jeux · %2$s</item>
+        <item quantity="other">%1$d jeux · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">Aucun jeu trouvé. Ajoutez des ROM à ce dossier, puis actualisez. Vous pouvez choisir un autre dossier dans Modifier l\'onglet.</string>
+    <string name="rom_view_tab">Voir l\'onglet</string>
+    <string name="rom_edit_tab">Modifier l\'onglet</string>
+    <string name="rom_edit_tab_supporting">%1$s · Dossier, émulateur par défaut et nom</string>
+    <string name="rom_refresh">Actualiser les jeux</string>
+    <string name="rom_games_and_emulators">Jeux et émulateurs</string>
+    <string name="rom_games_and_emulators_supporting">Choisir un émulateur pour un jeu précis et voir ce qui a été joué</string>
+    <string name="rom_diagnostics">Diagnostic</string>
+    <string name="rom_diagnostics_last_check">Dernière analyse : %1$s, %2$s</string>
+    <string name="rom_diagnostics_supporting">Voir ce que Pluto a trouvé dans ce dossier</string>
+    <string name="rom_help_row">Comment ajouter des jeux et des jaquettes</string>
+    <plurals name="rom_count_files">
+        <item quantity="one">%d fichier</item>
+        <item quantity="many">%d de fichiers</item>
+        <item quantity="other">%d fichiers</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="one">%d jeu</item>
+        <item quantity="many">%d de jeux</item>
+        <item quantity="other">%d jeux</item>
+    </plurals>
+
+    <!-- ROM tabs screen: help -->
+    <string name="rom_help_title">Ajouter des jeux et des jaquettes</string>
+    <string name="rom_help_adding_header">Ajouter d\'autres jeux</string>
+    <string name="rom_help_adding_body">Copiez vos jeux dans le dossier choisi, avec leurs pistes ou disques. Les sous-dossiers sont inclus. Pluto recherche les changements quand vous revenez ; Actualiser les jeux vérifie immédiatement.</string>
+    <string name="rom_help_art_header">Jaquettes</string>
+    <string name="rom_help_art_body">Les illustrations ne sont pas téléchargées automatiquement. Placez une image PNG, JPG ou WebP à côté du jeu, avec le même nom de fichier avant l\'extension. Par exemple : Spyro.cue et Spyro.png.</string>
+    <string name="rom_help_art_layouts">Pluto lit aussi les structures créées par les principales interfaces : une image dans boxart/, covers/ ou images/, le jeu Named_Boxarts/ de RetroArch, ou une variante name-thumb.png. Actualisez ensuite l\'onglet.</string>
+    <string name="rom_help_gamelist_body">Si votre dossier provient de RetroPie, Batocera ou d\'une autre installation EmulationStation qui place un gamelist.xml à côté des jeux, conservez-le. Pluto lit le nom et les illustrations de chaque entrée : vos jeux apparaissent avec les titres et jaquettes que vous avez déjà choisis.</string>
+    <string name="rom_help_emulator_header">Configuration de l\'émulateur</string>
+    <string name="rom_help_emulator_body">Installez l\'émulateur voulu, ouvrez-le une fois et terminez sa configuration. Certains systèmes nécessitent un fichier BIOS. Pluto ouvre vos jeux dans cette appli ; les paramètres de l\'émulateur et les sauvegardes y sont gérés.</string>
+
+    <!-- ROM tabs screen: per-game emulators panel -->
+    <string name="rom_games_panel_title">Jeux · %1$s</string>
+    <string name="rom_games_panel_intro">Un jeu s\'ouvre dans l\'émulateur de cet onglet, sauf si vous choisissez ici une autre appli pour lui. Le reste de l\'onglet n\'est pas affecté.</string>
+    <string name="rom_games_panel_empty">Aucun jeu dans ce dossier pour l\'instant. Ajoutez des fichiers, puis actualisez l\'onglet.</string>
+    <string name="rom_find_game">Trouver un jeu</string>
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="one">%1$d jeu affiché sur %2$d. Saisissez une partie d\'un nom pour en trouver un.</item>
+        <item quantity="many">%1$d jeux affichés sur %2$d. Saisissez une partie d\'un nom pour en trouver un.</item>
+        <item quantity="other">%1$d jeux affichés sur %2$d. Saisissez une partie d\'un nom pour en trouver un.</item>
+    </plurals>
+    <string name="rom_games_panel_no_match">Aucun jeu ne correspond à « %1$s ».</string>
+    <string name="rom_game_opens_in">S\'ouvre dans %1$s</string>
+    <string name="rom_game_uses_default">Utilise l\'émulateur de l\'onglet</string>
+    <string name="rom_game_played">%1$s · joué %2$s</string>
+
+    <!-- ROM diagnostics -->
+    <string name="rom_diag_title">Diagnostic · %1$s</string>
+    <string name="rom_diag_folder">Dossier</string>
+    <string name="rom_diag_access_granted">Accès au dossier accordé. Pluto peut lire ce dossier.</string>
+    <string name="rom_diag_access_missing">Accès manquant. Ouvrez Modifier l\'onglet et choisissez à nouveau ce dossier.</string>
+    <string name="rom_diag_access_lost">Android n\'autorise plus Pluto à lire ce dossier.</string>
+    <string name="rom_diag_last_check">Dernière analyse</string>
+    <string name="rom_diag_no_check">Aucune analyse n\'a encore été effectuée dans cette session. Actualiser les jeux lit le dossier maintenant.</string>
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="one">%d fichier analysé</item>
+        <item quantity="many">%d de fichiers analysés</item>
+        <item quantity="other">%d fichiers analysés</item>
+    </plurals>
+    <plurals name="rom_diag_with_art">
+        <item quantity="one">%d avec jaquette</item>
+        <item quantity="many">%d avec jaquette</item>
+        <item quantity="other">%d avec jaquette</item>
+    </plurals>
+    <string name="rom_diag_systems">Systèmes dans ce dossier : %1$s. Chacun sert de filtre dans la grille de navigation console.</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="one">%d jeu a des données de sauvegarde à côté (sauvegardes de cartouche ou états de sauvegarde).</item>
+        <item quantity="many">%d de jeux ont des données de sauvegarde à côté (sauvegardes de cartouche ou états de sauvegarde).</item>
+        <item quantity="other">%d jeux ont des données de sauvegarde à côté (sauvegardes de cartouche ou états de sauvegarde).</item>
+    </plurals>
+    <plurals name="rom_diag_gamelist">
+        <item quantity="one">gamelist.xml : %d entrée lue. Ses noms et illustrations sont utilisés.</item>
+        <item quantity="many">gamelist.xml : %d d\'entrées lues. Ses noms et illustrations sont utilisés.</item>
+        <item quantity="other">gamelist.xml : %d entrées lues. Ses noms et illustrations sont utilisés.</item>
+    </plurals>
+    <string name="rom_diag_no_gamelist">Pas de gamelist.xml ici. Les noms viennent des noms de fichiers ; les illustrations, de la structure boxart.</string>
+    <string name="rom_diag_skipped_header">Non affichés comme jeux</string>
+    <string name="rom_diag_skipped_unchecked">Lancez une analyse pour voir ce qui est ignoré.</string>
+    <string name="rom_diag_skipped_none">Rien d\'ignoré : chaque fichier est un jeu, une illustration ou une piste.</string>
+    <plurals name="rom_diag_skipped">
+        <item quantity="one">%1$d fichier n\'est pas un jeu : %2$s.</item>
+        <item quantity="many">%1$d de fichiers ne sont pas des jeux : %2$s.</item>
+        <item quantity="other">%1$d fichiers ne sont pas des jeux : %2$s.</item>
+    </plurals>
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <string name="rom_extension_none_count">sans extension×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="one">%d playlist lue pour ses pistes et disques.</item>
+        <item quantity="many">%d de playlists lues pour leurs pistes et disques.</item>
+        <item quantity="other">%d playlists lues pour leurs pistes et disques.</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="one">%d piste ou disque cité par une playlist est absent de ce dossier. Copiez-le à côté de la playlist ; ce jeu ne peut pas s\'ouvrir.</item>
+        <item quantity="many">%d de pistes ou disques cités par une playlist sont absents de ce dossier. Copiez-les à côté de la playlist ; ces jeux ne peuvent pas s\'ouvrir.</item>
+        <item quantity="other">%d pistes ou disques cités par une playlist sont absents de ce dossier. Copiez-les à côté de la playlist ; ces jeux ne peuvent pas s\'ouvrir.</item>
+    </plurals>
+    <string name="rom_diag_no_games">Aucun jeu n\'a été trouvé dans ce dossier.</string>
+
+    <!-- How long ago -->
+    <string name="rom_age_today">aujourd\'hui</string>
+    <string name="rom_age_yesterday">hier</string>
+    <plurals name="rom_age_days">
+        <item quantity="one">il y a %d jour</item>
+        <item quantity="many">il y a %d de jours</item>
+        <item quantity="other">il y a %d jours</item>
+    </plurals>
+    <string name="rom_age_a_week">il y a une semaine</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="one">il y a %d semaine</item>
+        <item quantity="many">il y a %d de semaines</item>
+        <item quantity="other">il y a %d semaines</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="one">il y a %d mois</item>
+        <item quantity="many">il y a %d de mois</item>
+        <item quantity="other">il y a %d mois</item>
+    </plurals>
+    <string name="rom_age_a_year">il y a un an</string>
+
+    <!-- Generic system labels -->
+    <string name="rom_system_other">Autre</string>
+    <string name="rom_system_disc">Image disque</string>
+
+    <!-- Opening a game -->
+    <string name="rom_open_chooser">Ouvrir %1$s</string>
+    <string name="rom_launch_failed_no_app">Cette appli n\'a pas pu ouvrir le jeu. Dans Onglets ROM, choisissez un autre émulateur par défaut ou essayez les options avancées.</string>
+    <string name="rom_launch_failed_access">L\'accès au dossier a été perdu. Dans Onglets ROM, modifiez l\'onglet et choisissez à nouveau le dossier ROM.</string>
+    <string name="rom_launch_failed_unavailable">Cette ROM n\'est pas disponible. Actualisez son étagère ou choisissez à nouveau le dossier.</string>
+
+    <!-- Reading a ROM folder failed -->
+    <string name="rom_scan_too_many_folders">Ce dossier contient trop de sous-dossiers. Choisissez un dossier plus petit.</string>
+    <string name="rom_scan_folder_unavailable">Le dossier ROM n\'est pas disponible. Choisissez-le à nouveau.</string>
+    <string name="rom_scan_too_many_files">Ce dossier contient trop de fichiers. Choisissez un dossier plus petit.</string>
+    <string name="rom_scan_playlist_too_large">Une playlist est trop volumineuse pour être lue : %1$s</string>
+    <string name="rom_scan_playlist_unreadable">Impossible de lire %1$s</string>
+
+    <!-- Console mode: shelves -->
+    <string name="console_shelf_recent">Lancements récents</string>
+    <string name="console_shelf_favourites">Favoris</string>
+    <string name="console_all_apps_fallback">Toutes les applis</string>
+    <string name="console_roms_fallback">ROM</string>
+    <string name="console_list_separator">", "</string>
+    <string name="console_position">%1$d sur %2$d</string>
+    <string name="console_shelf_tab_description">Étagère %1$s, %2$s</string>
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <!-- Console mode: button legend -->
+    <string name="console_legend_open">Ouvrir</string>
+    <string name="console_legend_actions">Actions</string>
+    <string name="console_legend_search">Rechercher</string>
+    <string name="console_legend_shelves">Étagères</string>
+    <string name="console_legend_settings">Paramètres</string>
+    <string name="console_legend_select">Choisir</string>
+    <string name="console_touch_hint">Touchez pour ouvrir · Appui prolongé pour les options</string>
+
+    <!-- Console mode: top bar -->
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="one">Batterie de la manette %1$d : %2$d pour cent</item>
+        <item quantity="many">Batterie de la manette %1$d : %2$d pour cent</item>
+        <item quantity="other">Batterie de la manette %1$d : %2$d pour cent</item>
+    </plurals>
+    <plurals name="console_controller_battery">
+        <item quantity="one">Batterie de la manette : %1$d pour cent</item>
+        <item quantity="many">Batterie de la manette : %1$d pour cent</item>
+        <item quantity="other">Batterie de la manette : %1$d pour cent</item>
+    </plurals>
+    <plurals name="console_phone_battery">
+        <item quantity="one">Batterie du téléphone : %1$d pour cent</item>
+        <item quantity="many">Batterie du téléphone : %1$d pour cent</item>
+        <item quantity="other">Batterie du téléphone : %1$d pour cent</item>
+    </plurals>
+    <string name="console_battery_charging">%1$s, en charge</string>
+    <string name="console_battery_percent">%1$d %%</string>
+    <string name="console_browse_title">Parcourir %1$s</string>
+    <string name="console_edit_shelf">Modifier %1$s</string>
+    <string name="console_search_apps">Rechercher des applis</string>
+    <string name="console_all_apps">Toutes les applis</string>
+    <string name="console_launcher_settings">Paramètres du lanceur</string>
+
+    <!-- Console mode: cards -->
+    <string name="console_card_actions">Actions pour %1$s</string>
+    <string name="console_card_has_notifications">a des notifications</string>
+    <string name="console_card_unavailable">indisponible</string>
+
+    <!-- Console mode: empty shelves -->
+    <string name="console_manage_rom_tab">Gérer l\'onglet ROM</string>
+    <string name="console_add_apps">Ajouter des applis</string>
+    <string name="console_empty_recent_title">Aucun lancement récent pour l\'instant</string>
+    <string name="console_empty_recent_detail">Les applis que vous ouvrez depuis Pluto apparaissent ici, les plus récentes en premier.</string>
+    <string name="console_empty_favourites_title">Aucun favori pour l\'instant</string>
+    <string name="console_empty_favourites_detail_controller">Appuyez sur %1$s sur une appli et choisissez Épingler à l\'accueil pour l\'ajouter ici.</string>
+    <string name="console_empty_favourites_detail_touch">Appuyez de manière prolongée sur une appli et choisissez Épingler à l\'accueil pour l\'ajouter ici.</string>
+    <string name="console_empty_rom_title">Aucun jeu dans %1$s pour l\'instant</string>
+    <string name="console_empty_rom_detail">Ajoutez des jeux au dossier de cet onglet, ou choisissez un autre dossier dans Onglets ROM.</string>
+    <string name="console_empty_category_title">Aucune appli dans %1$s pour l\'instant</string>
+    <string name="console_empty_category_detail">Choisissez Ajouter des applis pour sélectionner ce qui va ici.</string>
+
+    <!-- Console browse grid -->
+    <string name="console_browse_no_match">Aucun jeu ne correspond à ce filtre. Modifiez-le ci-dessus ou actualisez les jeux.</string>
+    <string name="console_browse_empty">Cette étagère est vide.</string>
+    <plurals name="console_browse_filtered_games">
+        <item quantity="one">%1$d jeu sur %2$d · Sélectionnez-en un pour revenir au carrousel</item>
+        <item quantity="many">%1$d jeux sur %2$d · Sélectionnez-en un pour revenir au carrousel</item>
+        <item quantity="other">%1$d jeux sur %2$d · Sélectionnez-en un pour revenir au carrousel</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="one">%d élément · Sélectionnez-en un pour revenir au carrousel</item>
+        <item quantity="many">%d d\'éléments · Sélectionnez-en un pour revenir au carrousel</item>
+        <item quantity="other">%d éléments · Sélectionnez-en un pour revenir au carrousel</item>
+    </plurals>
+    <string name="console_chip_all_systems">Tous systèmes</string>
+    <string name="console_chip_favourites">Favoris</string>
+    <string name="console_sort_title">Titre</string>
+    <string name="console_sort_recent">Récents</string>
+    <string name="console_sort_file_name">Nom de fichier</string>
+    <string name="console_chip_selected">%1$s, sélectionné</string>
+    <string name="console_add_favourite">Ajouter aux favoris</string>
+    <string name="console_remove_favourite">Retirer des favoris</string>
+    <string name="console_tile_select">%1$s, sélectionner dans le carrousel</string>
+    <string name="console_tile_favourite">favori</string>
+    <string name="console_tile_played">joué %1$s</string>
+    <string name="console_tile_save_data">données de sauvegarde : %1$s</string>
+    <string name="console_badge_played">Joué %1$s</string>
+    <string name="console_badge_save">Sauv. · %1$s</string>
+</resources>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="overlay_kit_close">Schließen</string>
+    <string name="overlay_kit_cancel">Abbrechen</string>
+    <string name="overlay_kit_done">Fertig</string>
+    <string name="overlay_kit_on">an</string>
+    <string name="overlay_kit_off">aus</string>
+    <string name="overlay_kit_checked">ausgewählt</string>
+    <string name="overlay_kit_not_checked">nicht ausgewählt</string>
+    <string name="overlay_kit_selected">ausgewählt</string>
+    <string name="overlay_kit_unavailable">nicht verfügbar</string>
+    <string name="overlay_kit_decrease">Verringern</string>
+    <string name="overlay_kit_increase">Erhöhen</string>
+    <string name="overlay_kit_unavailable_label">%1$s (nicht verfügbar)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, ausgewählt</string>
+    <string name="overlay_kit_decrease_label">%1$s verringern, %2$s</string>
+    <string name="overlay_kit_increase_label">%1$s erhöhen, %2$s</string>
+    <string name="overlay_kit_percent">%1$d %%</string>
+
+    <string name="overlay_app_actions">App-Aktionen</string>
+    <string name="overlay_app_missing">Diese App ist nicht mehr verfügbar. Sie wurde möglicherweise deinstalliert oder deaktiviert.</string>
+    <string name="overlay_launch">Starten</string>
+    <string name="overlay_pin">An Startbildschirm anheften</string>
+    <string name="overlay_unpin">Vom Startbildschirm lösen</string>
+    <string name="overlay_add_to_dock">Zum Dock hinzufügen</string>
+    <string name="overlay_remove_from_dock">Aus Dock entfernen</string>
+    <string name="overlay_dock_full">Das Dock ist voll. Entferne zuerst eine App aus dem Dock (Startbildschirm bearbeiten).</string>
+    <string name="overlay_categories">Kategorien…</string>
+    <string name="overlay_move_to_folder">In Ordner verschieben…</string>
+    <string name="overlay_hide">Im Launcher ausblenden</string>
+    <string name="overlay_hide_hint">Jederzeit wiederherstellbar unter Einstellungen ▸ Apps ▸ Ausgeblendete Apps</string>
+    <string name="overlay_unhide">Im Launcher wieder anzeigen</string>
+    <string name="overlay_app_info">App-Info</string>
+    <string name="overlay_more_actions">Weitere Aktionen</string>
+    <string name="overlay_quick_pin">Anheften</string>
+    <string name="overlay_quick_unpin">Lösen</string>
+    <string name="overlay_quick_dock">Dock</string>
+    <string name="overlay_quick_undock">Abdocken</string>
+    <string name="overlay_quick_info">Info</string>
+    <string name="overlay_quick_hide">Ausblenden</string>
+    <string name="overlay_quick_show">Anzeigen</string>
+    <string name="overlay_quick_uninstall">Deinstallieren</string>
+    <string name="overlay_uninstall">Deinstallieren…</string>
+    <string name="overlay_uninstall_hint">Android fragt nach einer Bestätigung</string>
+    <string name="overlay_suspended">Derzeit nicht verfügbar (pausiert oder gesperrt)</string>
+    <string name="overlay_in_folder">Im Ordner „%1$s“</string>
+    <string name="overlay_not_in_any_category">In keiner Kategorie</string>
+
+    <string name="overlay_categories_title">Kategorien</string>
+    <string name="overlay_categories_title_for">Kategorien: %1$s</string>
+    <string name="overlay_no_categories">Außer „Alle Apps“ gibt es noch keine Kategorien.</string>
+    <string name="overlay_manage_categories">Kategorien verwalten…</string>
+    <string name="overlay_all_apps_note">Jede App ist immer in „Alle Apps“.</string>
+
+    <string name="overlay_move_title">In Ordner verschieben</string>
+    <string name="overlay_move_title_for">In Ordner verschieben: %1$s</string>
+    <string name="overlay_no_folders">Noch keine Ordner. Erstelle unten einen.</string>
+    <string name="overlay_new_folder">Neuer Ordner…</string>
+    <string name="overlay_new_folder_title">Neuer Ordner</string>
+    <string name="overlay_folder_name">Ordnername</string>
+    <string name="overlay_default_folder_name">Ordner</string>
+    <string name="overlay_widget">Widget</string>
+    <string name="overlay_widget_options">Widget-Optionen</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">%1$d Zeile hoch</item>
+        <item quantity="other">%1$d Zeilen hoch</item>
+    </plurals>
+    <string name="overlay_create">Erstellen</string>
+    <string name="overlay_remove_from_folder">Aus Ordner entfernen</string>
+    <string name="overlay_current_folder">Aktueller Ordner</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$d App</item>
+        <item quantity="other">%1$d Apps</item>
+    </plurals>
+
+    <string name="overlay_edit_title">Startbildschirm bearbeiten</string>
+    <string name="overlay_edit_intro">Wähle ein Element aus, um es zu verschieben, zu entfernen oder zu ändern. Änderungen werden sofort gespeichert.</string>
+    <string name="overlay_home_section">Favoriten auf dem Startbildschirm</string>
+    <string name="overlay_home_empty">Noch keine Favoriten. Nutze oben „Favorit hinzufügen…“.</string>
+    <string name="overlay_add_favourite">Favorit hinzufügen…</string>
+    <string name="overlay_choose_favourite">Favorit hinzufügen</string>
+    <string name="overlay_on_home">Bereits auf dem Startbildschirm</string>
+    <string name="overlay_app_actions_ellipsis">App-Aktionen…</string>
+    <string name="overlay_dock_section">Dock</string>
+    <string name="overlay_folders_section">Ordnerinhalte</string>
+    <string name="overlay_folder_empty">Dieser Ordner ist leer.</string>
+    <string name="overlay_move_up">Nach oben</string>
+    <string name="overlay_move_down">Nach unten</string>
+    <string name="overlay_move_before">Davor verschieben…</string>
+    <string name="overlay_move_after">Dahinter verschieben…</string>
+    <string name="overlay_rename_folder">Ordner umbenennen</string>
+    <string name="overlay_delete_folder">Ordner löschen</string>
+    <string name="overlay_delete_folder_text">Die Apps in diesem Ordner kommen zurück auf den Startbildschirm. Es werden keine Apps deinstalliert.</string>
+    <string name="overlay_delete">Löschen</string>
+    <string name="overlay_rename">Umbenennen</string>
+    <string name="overlay_add_app_to_slot">App auf diesen Platz legen…</string>
+    <string name="overlay_replace_app">App ersetzen…</string>
+    <string name="overlay_choose_app">App auswählen</string>
+    <string name="overlay_no_apps">Keine Apps verfügbar.</string>
+    <string name="overlay_done">Fertig</string>
+    <string name="overlay_unavailable_app">Nicht verfügbare App</string>
+    <string name="overlay_dock_slot">Platz %1$d</string>
+    <string name="overlay_dock_slot_with">Platz %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">Dock · Platz %1$d</string>
+    <string name="overlay_empty_slot">Leer</string>
+    <string name="overlay_move_before_title">„%1$s“ davor verschieben…</string>
+    <string name="overlay_move_after_title">„%1$s“ dahinter verschieben…</string>
+    <string name="overlay_delete_folder_title">Ordner „%1$s“ löschen?</string>
+    <string name="overlay_folder_header">Ordner: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, ausgewählt. Steuerelemente folgen.</string>
+
+    <string name="overlay_picker_category_fallback">Kategorie</string>
+    <string name="overlay_picker_add_title">Apps zu %1$s hinzufügen</string>
+    <string name="overlay_picker_title">Apps in %1$s</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">%1$d ausgewählt · Tippe oder drücke A zum Hinzufügen oder Entfernen</item>
+        <item quantity="other">%1$d ausgewählt · Tippe oder drücke A zum Hinzufügen oder Entfernen</item>
+    </plurals>
+    <string name="overlay_picker_suggested">Vorschläge</string>
+    <string name="overlay_picker_all_apps">Alle Apps</string>
+    <string name="overlay_picker_in_category">%1$s, in dieser Kategorie</string>
+    <string name="overlay_picker_not_in_category">%1$s, nicht in dieser Kategorie</string>
+
+    <string name="overlay_widgets_widget">Widget</string>
+    <string name="overlay_widgets_add">Widget hinzufügen</string>
+    <string name="overlay_widgets_loading">Widgets werden gesucht…</string>
+    <string name="overlay_widgets_none">Keine deiner Apps bietet Widgets an.</string>
+    <string name="overlay_widgets_unavailable">Dieses Widget ist nicht verfügbar</string>
+    <string name="overlay_widgets_height">Höhe</string>
+    <string name="overlay_widgets_remove">Widget entfernen</string>
+    <string name="overlay_widgets_move_hint">Halte das Widget gedrückt und ziehe es, um es zu verschieben.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d Zeile</item>
+        <item quantity="other">%1$d Zeilen</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

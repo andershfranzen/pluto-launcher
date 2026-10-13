@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_dots_service_label">Pluto सूचना बिंदु</string>
+    <string name="screen_lock_service_label">Pluto स्क्रीन लॉक</string>
+    <string name="screen_lock_service_description">होम स्क्रीन पर खाली जगह पर दो बार टैप करने पर Pluto को स्क्रीन लॉक करने देता है. यह सिर्फ़ लॉक करने का काम करता है: यह न तो स्क्रीन पर दिख रही चीज़ें देखता है और न ही आपका टाइप किया गया टेक्स्ट.</string>
+</resources>

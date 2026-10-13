@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared building blocks (OverlayKit) -->
+    <string name="overlay_kit_close">बंद करें</string>
+    <string name="overlay_kit_cancel">रद्द करें</string>
+    <string name="overlay_kit_done">हो गया</string>
+    <string name="overlay_kit_on">चालू है</string>
+    <string name="overlay_kit_off">बंद है</string>
+    <string name="overlay_kit_checked">चुना गया</string>
+    <string name="overlay_kit_not_checked">नहीं चुना गया</string>
+    <string name="overlay_kit_selected">चुना गया</string>
+    <string name="overlay_kit_unavailable">उपलब्ध नहीं है</string>
+    <string name="overlay_kit_decrease">घटाएं</string>
+    <string name="overlay_kit_increase">बढ़ाएं</string>
+    <string name="overlay_kit_unavailable_label">%1$s (उपलब्ध नहीं है)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, चुना गया</string>
+    <string name="overlay_kit_decrease_label">%1$s घटाएं, %2$s</string>
+    <string name="overlay_kit_increase_label">%1$s बढ़ाएं, %2$s</string>
+    <string name="overlay_kit_percent">%1$d%%</string>
+
+    <!-- App actions -->
+    <string name="overlay_app_actions">ऐप की कार्रवाइयां</string>
+    <string name="overlay_app_missing">यह ऐप अब उपलब्ध नहीं है. हो सकता है कि इसे अनइंस्टॉल या बंद कर दिया गया हो.</string>
+    <string name="overlay_launch">खोलें</string>
+    <string name="overlay_pin">होम पर पिन करें</string>
+    <string name="overlay_unpin">होम से अनपिन करें</string>
+    <string name="overlay_add_to_dock">डॉक में जोड़ें</string>
+    <string name="overlay_remove_from_dock">डॉक से हटाएं</string>
+    <string name="overlay_dock_full">डॉक भरा हुआ है. पहले डॉक से कोई ऐप हटाएं (होम में बदलाव करें).</string>
+    <string name="overlay_categories">कैटगरी…</string>
+    <string name="overlay_move_to_folder">फ़ोल्डर में ले जाएं…</string>
+    <string name="overlay_hide">लॉन्चर से छिपाएं</string>
+    <string name="overlay_hide_hint">सेटिंग ▸ ऐप ▸ छिपाए गए ऐप में जाकर इसे कभी भी वापस लाएं</string>
+    <string name="overlay_unhide">लॉन्चर में फिर से दिखाएं</string>
+    <string name="overlay_app_info">ऐप्लिकेशन की जानकारी</string>
+    <string name="overlay_more_actions">और कार्रवाइयां</string>
+    <string name="overlay_quick_pin">पिन</string>
+    <string name="overlay_quick_unpin">अनपिन</string>
+    <string name="overlay_quick_dock">डॉक</string>
+    <string name="overlay_quick_undock">हटाएं</string>
+    <string name="overlay_quick_info">जानकारी</string>
+    <string name="overlay_quick_hide">छिपाएं</string>
+    <string name="overlay_quick_show">दिखाएं</string>
+    <string name="overlay_quick_uninstall">अनइंस्टॉल</string>
+    <string name="overlay_uninstall">अनइंस्टॉल करें…</string>
+    <string name="overlay_uninstall_hint">Android पुष्टि करने के लिए कहेगा</string>
+    <string name="overlay_suspended">फ़िलहाल उपलब्ध नहीं है (रोका गया या निलंबित)</string>
+    <string name="overlay_in_folder">“%1$s” फ़ोल्डर में</string>
+    <string name="overlay_not_in_any_category">किसी कैटगरी में नहीं</string>
+
+    <!-- Category membership -->
+    <string name="overlay_categories_title">कैटगरी</string>
+    <string name="overlay_categories_title_for">कैटगरी: %1$s</string>
+    <string name="overlay_no_categories">सभी ऐप के अलावा अभी कोई कैटगरी नहीं है.</string>
+    <string name="overlay_manage_categories">कैटगरी मैनेज करें…</string>
+    <string name="overlay_all_apps_note">हर ऐप हमेशा सभी ऐप में मौजूद रहता है.</string>
+
+    <!-- Move to folder -->
+    <string name="overlay_move_title">फ़ोल्डर में ले जाएं</string>
+    <string name="overlay_move_title_for">फ़ोल्डर में ले जाएं: %1$s</string>
+    <string name="overlay_no_folders">अभी कोई फ़ोल्डर नहीं है. नीचे एक फ़ोल्डर बनाएं.</string>
+    <string name="overlay_new_folder">नया फ़ोल्डर…</string>
+    <string name="overlay_new_folder_title">नया फ़ोल्डर</string>
+    <string name="overlay_folder_name">फ़ोल्डर का नाम</string>
+    <string name="overlay_default_folder_name">फ़ोल्डर</string>
+    <string name="overlay_widget">विजेट</string>
+    <string name="overlay_widget_options">विजेट के विकल्प</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">%1$d पंक्ति ऊंचा</item>
+        <item quantity="other">%1$d पंक्तियां ऊंचा</item>
+    </plurals>
+    <string name="overlay_create">बनाएं</string>
+    <string name="overlay_remove_from_folder">फ़ोल्डर से हटाएं</string>
+    <string name="overlay_current_folder">मौजूदा फ़ोल्डर</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$d ऐप</item>
+        <item quantity="other">%1$d ऐप</item>
+    </plurals>
+
+    <!-- Edit home -->
+    <string name="overlay_edit_title">होम में बदलाव करें</string>
+    <string name="overlay_edit_intro">किसी आइटम को एक जगह से दूसरी जगह ले जाने, हटाने या बदलने के लिए उसे चुनें. बदलाव तुरंत सेव हो जाते हैं.</string>
+    <string name="overlay_home_section">होम के पसंदीदा</string>
+    <string name="overlay_home_empty">अभी कोई पसंदीदा नहीं है. ऊपर दिए गए पसंदीदा जोड़ें… का इस्तेमाल करें.</string>
+    <string name="overlay_add_favourite">पसंदीदा जोड़ें…</string>
+    <string name="overlay_choose_favourite">पसंदीदा जोड़ें</string>
+    <string name="overlay_on_home">पहले से होम पर है</string>
+    <string name="overlay_app_actions_ellipsis">ऐप की कार्रवाइयां…</string>
+    <string name="overlay_dock_section">डॉक</string>
+    <string name="overlay_folders_section">फ़ोल्डर का कॉन्टेंट</string>
+    <string name="overlay_folder_empty">यह फ़ोल्डर खाली है.</string>
+    <string name="overlay_move_up">ऊपर ले जाएं</string>
+    <string name="overlay_move_down">नीचे ले जाएं</string>
+    <string name="overlay_move_before">इससे पहले ले जाएं…</string>
+    <string name="overlay_move_after">इसके बाद ले जाएं…</string>
+    <string name="overlay_rename_folder">फ़ोल्डर का नाम बदलें</string>
+    <string name="overlay_delete_folder">फ़ोल्डर मिटाएं</string>
+    <string name="overlay_delete_folder_text">इस फ़ोल्डर के ऐप होम स्क्रीन पर वापस चले जाएंगे. कोई भी ऐप अनइंस्टॉल नहीं होगा.</string>
+    <string name="overlay_delete">मिटाएं</string>
+    <string name="overlay_rename">नाम बदलें</string>
+    <string name="overlay_add_app_to_slot">इस स्लॉट में ऐप जोड़ें…</string>
+    <string name="overlay_replace_app">ऐप बदलें…</string>
+    <string name="overlay_choose_app">कोई ऐप चुनें</string>
+    <string name="overlay_no_apps">कोई ऐप उपलब्ध नहीं है.</string>
+    <string name="overlay_done">हो गया</string>
+    <string name="overlay_unavailable_app">उपलब्ध न होने वाला ऐप</string>
+    <string name="overlay_dock_slot">स्लॉट %1$d</string>
+    <string name="overlay_dock_slot_with">स्लॉट %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">डॉक · स्लॉट %1$d</string>
+    <string name="overlay_empty_slot">खाली</string>
+    <string name="overlay_move_before_title">“%1$s” को इससे पहले ले जाएं…</string>
+    <string name="overlay_move_after_title">“%1$s” को इसके बाद ले जाएं…</string>
+    <string name="overlay_delete_folder_title">“%1$s” फ़ोल्डर मिटाना है?</string>
+    <string name="overlay_folder_header">फ़ोल्डर: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, चुना गया. आगे कंट्रोल दिए गए हैं.</string>
+
+    <!-- Category app picker (shelf picker) -->
+    <string name="overlay_picker_category_fallback">कैटगरी</string>
+    <string name="overlay_picker_add_title">%1$s में ऐप जोड़ें</string>
+    <string name="overlay_picker_title">%1$s में मौजूद ऐप</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">%1$d चुना गया · जोड़ने या हटाने के लिए टैप करें या A दबाएं</item>
+        <item quantity="other">%1$d चुने गए · जोड़ने या हटाने के लिए टैप करें या A दबाएं</item>
+    </plurals>
+    <string name="overlay_picker_suggested">सुझाए गए</string>
+    <string name="overlay_picker_all_apps">सभी ऐप</string>
+    <string name="overlay_picker_in_category">%1$s, इस कैटगरी में है</string>
+    <string name="overlay_picker_not_in_category">%1$s, इस कैटगरी में नहीं है</string>
+
+    <!-- Widgets -->
+    <string name="overlay_widgets_widget">विजेट</string>
+    <string name="overlay_widgets_add">विजेट जोड़ें</string>
+    <string name="overlay_widgets_loading">विजेट खोजे जा रहे हैं…</string>
+    <string name="overlay_widgets_none">आपके किसी भी ऐप में विजेट उपलब्ध नहीं हैं.</string>
+    <string name="overlay_widgets_unavailable">यह विजेट उपलब्ध नहीं है</string>
+    <string name="overlay_widgets_height">ऊंचाई</string>
+    <string name="overlay_widgets_remove">विजेट हटाएं</string>
+    <string name="overlay_widgets_move_hint">इसे दूसरी जगह ले जाने के लिए, विजेट को दबाकर रखें और फिर खींचें.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d पंक्ति</item>
+        <item quantity="other">%1$d पंक्तियां</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

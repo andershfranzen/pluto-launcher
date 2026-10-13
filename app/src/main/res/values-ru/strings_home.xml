@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home menu -->
+    <string name="home_surface_label">Главный экран. Действия: поиск, добавить виджет, изменить главный экран, настройки</string>
+    <string name="home_menu_search_apps">Поиск приложений</string>
+    <string name="home_menu_add_widget">Добавить виджет</string>
+    <string name="home_menu_edit_home">Изменить главный экран</string>
+    <string name="home_menu_launcher_settings">Настройки лаунчера</string>
+
+    <!-- Built-in category names -->
+    <string name="home_category_all">Все приложения</string>
+    <string name="home_category_games">Игры</string>
+    <string name="home_category_tools">Инструменты</string>
+
+    <!-- App drawer -->
+    <string name="home_drawer_category_everything">Всё</string>
+    <string name="home_drawer_game_unavailable">Эта игра больше недоступна. Обновите её вкладку ROM.</string>
+    <string name="home_drawer_searching">Поиск…</string>
+    <string name="home_drawer_search_label">Поиск приложений</string>
+    <string name="home_drawer_search_scope_category">Поиск приложений и ярлыков в категории «%1$s»</string>
+    <string name="home_drawer_search_scope_all">Поиск по всем приложениям, играм и ярлыкам</string>
+    <string name="home_drawer_search_scope_actions">%1$s. Нажмите на приложение, чтобы открыть действия.</string>
+    <string name="home_drawer_actions_mode">Режим действий с приложениями</string>
+    <string name="home_drawer_search_hint_category">Поиск: %1$s</string>
+    <string name="home_drawer_search_hint_all">Поиск приложений, игр и ярлыков</string>
+    <string name="home_drawer_clear_search">Очистить поиск</string>
+    <string name="home_drawer_close_search">Закрыть поиск</string>
+    <string name="home_drawer_done">Готово</string>
+    <string name="home_drawer_actions">Выберите приложение, чтобы увидеть действия</string>
+    <string name="home_drawer_actions_done">Закончить выбор приложений</string>
+    <string name="home_drawer_manage_categories">Добавить или изменить категории</string>
+    <string name="home_drawer_actions_hint">Нажмите на приложение, чтобы открыть действия</string>
+    <string name="home_drawer_no_results">По запросу «%1$s» ничего не найдено</string>
+    <string name="home_drawer_no_match">Нет приложений, соответствующих запросу «%1$s»</string>
+    <string name="home_drawer_empty_category">В категории «%1$s» пока нет приложений</string>
+    <string name="home_drawer_empty_all">Нет приложений для показа</string>
+    <string name="home_drawer_search_everything">Искать везде</string>
+    <string name="home_drawer_search_all_apps">Искать во всех приложениях</string>
+    <string name="home_drawer_no_match_category_detail">Поиск в категории «%1$s». Попробуйте «Всё» или более короткое название.</string>
+    <string name="home_drawer_no_match_detail_rich">Поиск идёт по приложениям, названиям ROM и ярлыкам приложений.</string>
+    <string name="home_drawer_no_match_detail">Поиск идёт по названиям приложений и именам пакетов.</string>
+    <string name="home_drawer_empty_category_detail">Выберите, какие приложения сюда входят.</string>
+    <string name="home_drawer_add_apps">Добавить приложения</string>
+    <string name="home_drawer_show_all_apps">Показать все приложения</string>
+    <string name="home_drawer_empty_all_detail">Скрытые приложения можно вернуть: Настройки → Приложения → Скрытые приложения.</string>
+    <string name="home_drawer_hidden_apps">Скрытые приложения</string>
+
+    <!-- Home -->
+    <string name="home_lock_needs_service">Чтобы блокировать экран двойным нажатием, включите «Блокировка экрана Pluto» в настройках специальных возможностей.</string>
+    <string name="home_empty_favourites">Избранного пока нет</string>
+    <string name="home_empty_favourites_detail">Проведите вверх, чтобы найти приложения, затем закрепите избранные. Долгое нажатие на приложение открывает его действия; «Добавить в избранное» работает без жестов.</string>
+    <string name="home_add_favourite">Добавить в избранное</string>
+    <string name="home_drop_remove">Убрать</string>
+    <string name="home_dock_empty_slot">Пустая ячейка дока %1$d. Открывает редактор, чтобы выбрать приложение</string>
+
+    <!-- Open folder -->
+    <string name="home_folder_name">Название папки</string>
+    <string name="home_folder_save_name">Сохранить название</string>
+    <string name="home_folder_cancel_rename">Отменить переименование</string>
+    <string name="home_folder_close">Закрыть папку</string>
+    <string name="home_folder_rename">Переименовать</string>
+    <string name="home_folder_edit">Изменить</string>
+    <string name="home_folder_empty">Эта папка пуста. Перетащите на неё приложение или нажмите и удерживайте приложение, выберите «Ещё…», а затем «Переместить в папку…».</string>
+
+    <!-- Search results -->
+    <string name="home_search_section_apps">Приложения</string>
+    <string name="home_search_section_games">Игры</string>
+    <string name="home_search_section_shortcuts">Ярлыки</string>
+    <string name="home_search_result_options">Параметры: %1$s</string>
+    <string name="home_search_result_app_detail">Приложение</string>
+    <string name="home_search_result_shortcut_detail">%1$s · Ярлык</string>
+    <string name="home_search_result_app">%1$s, приложение</string>
+    <string name="home_search_result_game">%1$s, игра на вкладке %2$s</string>
+    <string name="home_search_result_shortcut">%1$s, ярлык приложения %2$s</string>
+
+    <!-- Startup and storage error screens -->
+    <string name="home_startup_starting">Запуск Pluto</string>
+    <string name="home_startup_loading_apps">Загрузка приложений</string>
+    <string name="home_storage_error_title">Pluto не может открыть сохранённый макет</string>
+    <string name="home_storage_error_detail">Ваше избранное, док, папки и настройки не изменены и не удалены. Повторите попытку или, пока проблема не решена, выберите другой главный экран в настройках Android. Обычно помогает установка более новой версии Pluto, которой вы пользовались раньше.</string>
+    <string name="home_storage_error_technical">Подробности: %1$s</string>
+    <string name="home_storage_error_retry">Повторить</string>
+    <string name="home_storage_error_choose_home">Выбрать главный экран</string>
+
+    <!-- Shared components -->
+    <string name="common_category_tab">Категория «%1$s»</string>
+    <string name="common_message_dismiss_label">Закрыть сообщение</string>
+    <string name="common_message_dismiss">Закрыть</string>
+    <string name="common_clock_description">%1$s, %2$s</string>
+    <string name="common_app_unavailable">%1$s (недоступно)</string>
+    <string name="common_app_actions">Действия с приложением</string>
+    <string name="common_app_opens_actions">%1$s, открывает действия с приложением</string>
+    <string name="common_folder_empty">Папка «%1$s», пусто</string>
+    <plurals name="common_folder_apps">
+        <item quantity="one">Папка «%1$s», %2$d приложение</item>
+        <item quantity="few">Папка «%1$s», %2$d приложения</item>
+        <item quantity="many">Папка «%1$s», %2$d приложений</item>
+        <item quantity="other">Папка «%1$s», %2$d приложения</item>
+    </plurals>
+    <string name="common_folder_edit">Изменить папку</string>
+
+    <!-- Controller button legend -->
+    <string name="common_legend_open">Открыть</string>
+    <string name="common_legend_actions">Действия</string>
+    <string name="common_legend_search">Поиск</string>
+    <string name="common_legend_settings">Настройки</string>
+    <string name="common_legend_category">Категория</string>
+    <string name="common_legend_back">Назад</string>
+    <string name="common_legend_close">Закрыть</string>
+    <string name="common_legend_spoken">Кнопки геймпада: %1$s</string>
+    <string name="common_legend_spoken_entry">%1$s %2$s</string>
+    <string name="common_legend_spoken_or">%1$s или %2$s</string>
+    <string name="common_has_notifications">Есть уведомления</string>
+    <string name="common_more_actions">Другие действия</string>
+
+    <!-- App launch and system action messages -->
+    <string name="common_app_not_installed">Приложение «%1$s» больше не установлено.</string>
+    <string name="common_app_paused">Приложение «%1$s» сейчас приостановлено.</string>
+    <string name="common_app_open_failed">Не удалось открыть «%1$s».</string>
+    <string name="common_app_info_unavailable">Сведения о приложении «%1$s» недоступны.</string>
+    <string name="common_app_info_failed">Не удалось открыть сведения о приложении «%1$s».</string>
+    <string name="common_uninstall_not_here">Приложение «%1$s» нельзя удалить отсюда.</string>
+    <string name="common_uninstall_unavailable">Удаление недоступно на этом устройстве.</string>
+    <string name="common_uninstall_failed">Не удалось удалить «%1$s».</string>
+    <string name="common_shortcut_open_failed">Не удалось открыть «%1$s».</string>
+
+    <!-- Launcher messages (snackbar) -->
+    <string name="home_update_available">Доступна версия Pluto %1$s. Чтобы обновить, откройте Настройки → Общие.</string>
+    <string name="home_rom_shelves_load_failed">Не удалось загрузить полки ROM. Перезапустите Pluto, чтобы повторить попытку.</string>
+    <string name="home_rom_shelf_save_failed">Не удалось сохранить эту полку ROM.</string>
+    <string name="home_rom_shelf_remove_failed">Не удалось удалить эту полку ROM.</string>
+    <string name="home_rom_shelf_missing">Эта полка ROM больше не существует</string>
+    <string name="home_rom_folder_access_lost">Доступ к папке потерян. Выберите папку с ROM снова.</string>
+    <string name="home_rom_folder_read_failed">Не удалось прочитать эту папку с ROM. Выберите её снова.</string>
+    <string name="home_app_open_failed">Не удалось открыть это приложение.</string>
+    <string name="home_shortcut_unavailable">Этот ярлык больше недоступен.</string>
+    <string name="home_shortcut_open_failed">Не удалось открыть этот ярлык.</string>
+    <string name="home_system_app_info_failed">Android сейчас не может открыть сведения о приложении.</string>
+    <string name="home_system_uninstall_failed">Android сейчас не может запросить удаление.</string>
+    <string name="home_layout_saved">Макет сохранён в выбранный файл.</string>
+    <string name="home_layout_write_failed">Не удалось записать файл. Выберите другое место.</string>
+    <string name="home_layout_restored">Макет восстановлен.</string>
+    <string name="home_layout_restore_failed">Не удалось восстановить этот макет. Текущий макет не изменён.</string>
+    <string name="home_layout_too_new">Эта резервная копия создана более новой версией Pluto. Обновите Pluto, затем восстановите её.</string>
+    <string name="home_layout_not_backup">Этот файл не является резервной копией макета Pluto.</string>
+    <string name="home_layout_read_failed">Не удалось прочитать этот файл.</string>
+    <string name="home_save_failed">Не удалось сохранить изменение. Повторите попытку.</string>
+    <string name="home_default_folder_name">Папка</string>
+    <string name="home_default_category_name">Новая категория</string>
+    <string name="home_dock_full">Док заполнен. Сначала уберите из дока какое-нибудь приложение.</string>
+    <string name="home_settings_reset">Файл настроек Pluto был повреждён и сброшен. «Недавние запуски» отключены, пока вы не включите их снова.</string>
+    <string name="home_settings_unreadable">Pluto сейчас не может прочитать свои настройки, поэтому используются значения по умолчанию, а «Недавние запуски» приостановлены.</string>
+</resources>

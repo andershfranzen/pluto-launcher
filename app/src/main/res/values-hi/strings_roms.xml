@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ROM tabs screen: titles -->
+    <string name="rom_title">ROM टैब</string>
+    <string name="rom_add_tab">ROM टैब जोड़ें</string>
+    <string name="rom_title_edit">ROM टैब में बदलाव करें</string>
+    <string name="rom_title_choose_game_emulator">इस गेम के लिए एम्युलेटर चुनें</string>
+    <string name="rom_title_choose_default_emulator">डिफ़ॉल्ट एम्युलेटर चुनें</string>
+
+    <!-- ROM tabs screen: editor -->
+    <string name="rom_default_tab_name">मेरे गेम</string>
+    <string name="rom_folder_access_failed">Pluto इस फ़ोल्डर का ऐक्सेस बनाए नहीं रख सका. इस डिवाइस पर मौजूद कोई फ़ोल्डर चुनें.</string>
+    <string name="rom_search_installed_apps">इंस्टॉल किए गए ऐप खोजें</string>
+    <string name="rom_close_search">खोज बंद करें</string>
+    <string name="rom_saving">सेव किया जा रहा है…</string>
+    <string name="rom_create_tab">टैब बनाएं</string>
+    <string name="rom_save_changes">बदलाव सेव करें</string>
+    <string name="rom_cancel">रद्द करें</string>
+    <string name="rom_name_dialog_title">टैब का नाम</string>
+    <string name="rom_name_dialog_label">नाम</string>
+    <string name="rom_done">हो गया</string>
+    <string name="rom_discard_title">बदलाव खारिज करें?</string>
+    <string name="rom_discard_message">आपका ROM टैब सेव नहीं किया गया है.</string>
+    <string name="rom_discard">खारिज करें</string>
+    <string name="rom_remove_title">%1$s को हटाना है?</string>
+    <string name="rom_remove_message">सिर्फ़ यह टैब हटाया जाएगा. आपके ROM और सेव फ़ाइलें अपनी जगह पर बनी रहेंगी.</string>
+    <string name="rom_remove">हटाएं</string>
+    <string name="rom_editor_intro_new">गेम के किसी फ़ोल्डर को कंसोल टैब में बदलें. आपकी फ़ाइलें अपनी जगह पर बनी रहेंगी.</string>
+    <string name="rom_editor_intro_edit">चुनें कि यह टैब गेम कहां से ढूंढे और उन्हें कौनसा ऐप खोले.</string>
+    <string name="rom_section_folder">1 · ROM फ़ोल्डर</string>
+    <string name="rom_choose_folder">ROM फ़ोल्डर चुनें</string>
+    <string name="rom_change_folder">ROM फ़ोल्डर बदलें</string>
+    <string name="rom_choose_folder_supporting">वह फ़ोल्डर चुनें जिसमें आपके गेम हैं</string>
+    <string name="rom_folder_subfolders">सब-फ़ोल्डर में मौजूद गेम भी शामिल किए जाते हैं. नए गेम बाद में इस फ़ोल्डर में जोड़े जा सकते हैं.</string>
+    <string name="rom_suggestions_header">आम तौर पर गेम कहां होते हैं</string>
+    <string name="rom_suggestions_intro">जब तक आप अनुमति नहीं देते, तब तक Pluto किसी फ़ोल्डर के अंदर नहीं देख सकता. इंस्टॉल किए गए एम्युलेटर इन फ़ोल्डर का इस्तेमाल करते हैं; किसी फ़ोल्डर पर टैप करके वहां पिकर खोलें.</string>
+    <string name="rom_suggestion_app">%1$s के गेम</string>
+    <string name="rom_suggestion_folder">“%1$s” फ़ोल्डर</string>
+    <string name="rom_suggestion_supporting">इस डिवाइस पर %1$s में देखें</string>
+    <string name="rom_section_emulator">2 · डिफ़ॉल्ट एम्युलेटर</string>
+    <string name="rom_ask_each_time">हर बार पूछें</string>
+    <string name="rom_emulator_ask_supporting">एक टैप में गेम खोलने के लिए डिफ़ॉल्ट एम्युलेटर चुनें</string>
+    <string name="rom_emulator_default_supporting">इस टैब के सभी गेम के लिए इस्तेमाल किया जाता है</string>
+    <string name="rom_open_setup">%1$s का सेटअप खोलें</string>
+    <string name="rom_setup_duckstation">DuckStation में अपना PlayStation BIOS इंपोर्ट करें, फिर यहां वापस आएं</string>
+    <string name="rom_setup_generic">एम्युलेटर का पहली बार वाला सेटअप पूरा करें, फिर यहां वापस आएं</string>
+    <string name="rom_emulator_missing">यह एम्युलेटर अब इंस्टॉल नहीं है. कोई दूसरा डिफ़ॉल्ट चुनें.</string>
+    <string name="rom_section_name">3 · टैब का नाम</string>
+    <string name="rom_name_placeholder">इस टैब को नाम दें</string>
+    <string name="rom_name_supporting">उदाहरण के लिए, PlayStation 1 या Game Boy. यह कंसोल मोड में दिखता है.</string>
+    <string name="rom_advanced">बेहतर विकल्प</string>
+    <string name="rom_hide_advanced">बेहतर विकल्प छिपाएं</string>
+    <string name="rom_advanced_supporting">इनकी ज़रूरत सिर्फ़ तब होती है, जब कोई गेम सही तरीके से न खुले</string>
+    <string name="rom_method_title">गेम खोलने का तरीका</string>
+    <string name="rom_method_automatic">अपने-आप (सुझाया गया)</string>
+    <string name="rom_method_open_with">पूछें कि कौनसा ऐप इस्तेमाल करना है</string>
+    <string name="rom_method_view">Android का “फ़ाइल खोलें”</string>
+    <string name="rom_method_direct">%1$s से सीधे लॉन्च करें</string>
+    <string name="rom_method_supporting">अलग-अलग एम्युलेटर अलग-अलग फ़ॉर्मैट और गेम खोलने के तरीकों के साथ काम करते हैं. सीधे लॉन्च करने के लिए फ़ोल्डर का शेयर की गई मेमोरी में होना ज़रूरी है; अगर डिफ़ॉल्ट तरीका काम न करे, तो “पूछें कि कौनसा ऐप इस्तेमाल करना है” आज़माएं.</string>
+    <string name="rom_help_row_editor">गेम और बॉक्स आर्ट जोड़ना</string>
+    <string name="rom_remove_tab">टैब हटाएं</string>
+
+    <!-- ROM tabs screen: emulator chooser -->
+    <string name="rom_chooser_game_intro">वह ऐप चुनें जिससे “%1$s” खुलेगा. सिर्फ़ यह गेम बदलेगा; टैब अपना एम्युलेटर इस्तेमाल करता रहेगा.</string>
+    <string name="rom_chooser_tab_intro">वह ऐप चुनें जिससे इस टैब के गेम खुलने चाहिए. आप इसे बाद में बदल सकते हैं.</string>
+    <string name="rom_use_tab_default">टैब का डिफ़ॉल्ट इस्तेमाल करें</string>
+    <string name="rom_use_tab_default_supporting">इस टैब की सेटिंग के हिसाब से उसका एम्युलेटर इस्तेमाल करें या पूछें</string>
+    <string name="rom_ask_each_time_supporting">जब भी आप कोई गेम खोलें, तब ऐप चुनें</string>
+    <string name="rom_search_results">खोज के नतीजे</string>
+    <string name="rom_installed_apps">इंस्टॉल किए गए ऐप</string>
+    <string name="rom_suggested_emulators">सुझाए गए एम्युलेटर</string>
+    <string name="rom_no_apps_match">इंस्टॉल किया गया कोई भी ऐप “%1$s” से मेल नहीं खाता.</string>
+    <string name="rom_no_suggestions">अपना एम्युलेटर खोजें या इंस्टॉल किए गए सभी ऐप दिखाएं. अगर यह अभी तक इंस्टॉल नहीं है, तो इसे इंस्टॉल करें और यहां वापस आएं.</string>
+    <string name="rom_show_suggested">सुझाए गए एम्युलेटर दिखाएं</string>
+    <string name="rom_show_all_apps">इंस्टॉल किए गए सभी ऐप दिखाएं</string>
+    <string name="rom_show_all_apps_supporting">ऐसा कोई भी एम्युलेटर इस्तेमाल करें जो आपके गेम खोल सके</string>
+
+    <!-- ROM tabs screen: list of tabs -->
+    <string name="rom_added">%1$s जोड़ा गया. आपका टैब कंसोल मोड में दिखेगा.</string>
+    <string name="rom_list_intro">कंसोल मोड में अपने ROM कलेक्शन को टैब के तौर पर ब्राउज़ करें. हर टैब का अपना फ़ोल्डर और डिफ़ॉल्ट एम्युलेटर होता है.</string>
+    <string name="rom_finding_games">गेम ढूंढे जा रहे हैं…</string>
+    <plurals name="rom_library_summary">
+        <item quantity="one">%1$d गेम · %2$s</item>
+        <item quantity="other">%1$d गेम · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">कोई गेम नहीं मिला. इस फ़ोल्डर में ROM जोड़ें, फिर रीफ़्रेश करें. आप “टैब में बदलाव करें” में जाकर कोई दूसरा फ़ोल्डर चुन सकते हैं.</string>
+    <string name="rom_view_tab">टैब देखें</string>
+    <string name="rom_edit_tab">टैब में बदलाव करें</string>
+    <string name="rom_edit_tab_supporting">%1$s · फ़ोल्डर, डिफ़ॉल्ट एम्युलेटर और नाम</string>
+    <string name="rom_refresh">गेम रीफ़्रेश करें</string>
+    <string name="rom_games_and_emulators">गेम और एम्युलेटर</string>
+    <string name="rom_games_and_emulators_supporting">किसी एक गेम के लिए एम्युलेटर चुनें और देखें कि क्या खेला गया है</string>
+    <string name="rom_diagnostics">गड़बड़ी की जांच</string>
+    <string name="rom_diagnostics_last_check">पिछली जांच: %1$s, %2$s</string>
+    <string name="rom_diagnostics_supporting">देखें कि Pluto को इस फ़ोल्डर में क्या मिला</string>
+    <string name="rom_help_row">गेम और बॉक्स आर्ट जोड़ने का तरीका</string>
+    <plurals name="rom_count_files">
+        <item quantity="one">%d फ़ाइल</item>
+        <item quantity="other">%d फ़ाइलें</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="one">%d गेम</item>
+        <item quantity="other">%d गेम</item>
+    </plurals>
+
+    <!-- ROM tabs screen: help -->
+    <string name="rom_help_title">गेम और बॉक्स आर्ट जोड़ें</string>
+    <string name="rom_help_adding_header">और गेम जोड़ना</string>
+    <string name="rom_help_adding_body">अपने गेम, उनके ट्रैक या डिस्क के साथ, अपने चुने गए फ़ोल्डर में कॉपी करें. सब-फ़ोल्डर भी शामिल किए जाते हैं. आपके वापस आने पर Pluto बदलावों की जांच करता है; “गेम रीफ़्रेश करें” तुरंत जांच करता है.</string>
+    <string name="rom_help_art_header">बॉक्स आर्ट</string>
+    <string name="rom_help_art_body">आर्टवर्क अपने-आप डाउनलोड नहीं होता. गेम के बगल में PNG, JPG या WebP इमेज रखें, जिसका फ़ाइल नाम (एक्सटेंशन से पहले का हिस्सा) गेम के फ़ाइल नाम जैसा ही हो. उदाहरण के लिए: Spyro.cue और Spyro.png.</string>
+    <string name="rom_help_art_layouts">Pluto बड़े फ़्रंट एंड के बनाए गए लेआउट भी पढ़ता है: boxart/, covers/ या images/ में मौजूद इमेज, RetroArch का Named_Boxarts/ सेट या name-thumb.png वैरिएंट. इसके बाद टैब रीफ़्रेश करें.</string>
+    <string name="rom_help_gamelist_body">अगर आपका फ़ोल्डर RetroPie, Batocera या EmulationStation के किसी ऐसे दूसरे सेटअप से आया है जो गेम के बगल में gamelist.xml रखता है, तो उसे बनाए रखें. Pluto हर एंट्री का नाम और आर्टवर्क पढ़ता है, ताकि गेम उन्हीं टाइटल और कवर के साथ दिखें जिन्हें आपने पहले से चुना है.</string>
+    <string name="rom_help_emulator_header">एम्युलेटर का सेटअप</string>
+    <string name="rom_help_emulator_body">अपनी पसंद का एम्युलेटर इंस्टॉल करें, उसे एक बार खोलें और उसका सेटअप पूरा करें. कुछ सिस्टम के लिए BIOS फ़ाइल की ज़रूरत होती है. Pluto आपके गेम उसी ऐप में खोलता है; एम्युलेटर की सेटिंग और सेव फ़ाइलें वहीं मैनेज की जाती हैं.</string>
+
+    <!-- ROM tabs screen: per-game emulators panel -->
+    <string name="rom_games_panel_title">गेम · %1$s</string>
+    <string name="rom_games_panel_intro">गेम इस टैब के एम्युलेटर में खुलता है, जब तक कि आप यहां उसके लिए कोई दूसरा ऐप न चुनें. टैब के बाकी गेम पर इसका कोई असर नहीं पड़ता.</string>
+    <string name="rom_games_panel_empty">इस फ़ोल्डर में अभी कोई गेम नहीं है. फ़ाइलें जोड़ें, फिर टैब रीफ़्रेश करें.</string>
+    <string name="rom_find_game">गेम ढूंढें</string>
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="one">%2$d में से %1$d गेम दिखाया जा रहा है. किसी गेम को ढूंढने के लिए उसके नाम का कुछ हिस्सा टाइप करें.</item>
+        <item quantity="other">%2$d में से %1$d गेम दिखाए जा रहे हैं. किसी गेम को ढूंढने के लिए उसके नाम का कुछ हिस्सा टाइप करें.</item>
+    </plurals>
+    <string name="rom_games_panel_no_match">“%1$s” से मेल खाने वाला कोई गेम नहीं है.</string>
+    <string name="rom_game_opens_in">%1$s में खुलता है</string>
+    <string name="rom_game_uses_default">इस टैब का डिफ़ॉल्ट इस्तेमाल करता है</string>
+    <string name="rom_game_played">%1$s · %2$s खेला गया</string>
+
+    <!-- ROM diagnostics -->
+    <string name="rom_diag_title">गड़बड़ी की जांच · %1$s</string>
+    <string name="rom_diag_folder">फ़ोल्डर</string>
+    <string name="rom_diag_access_granted">फ़ोल्डर का ऐक्सेस दिया गया है. Pluto इस फ़ोल्डर को पढ़ सकता है.</string>
+    <string name="rom_diag_access_missing">ऐक्सेस नहीं है. “टैब में बदलाव करें” खोलें और यह फ़ोल्डर फिर से चुनें.</string>
+    <string name="rom_diag_access_lost">Android अब Pluto को यह फ़ोल्डर पढ़ने नहीं दे रहा है.</string>
+    <string name="rom_diag_last_check">पिछली जांच</string>
+    <string name="rom_diag_no_check">इस सेशन में अभी तक कोई जांच नहीं हुई है. “गेम रीफ़्रेश करें” फ़ोल्डर को अभी पढ़ता है.</string>
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="one">%d फ़ाइल की जांच की गई</item>
+        <item quantity="other">%d फ़ाइलों की जांच की गई</item>
+    </plurals>
+    <plurals name="rom_diag_with_art">
+        <item quantity="one">%d में बॉक्स आर्ट है</item>
+        <item quantity="other">%d में बॉक्स आर्ट है</item>
+    </plurals>
+    <string name="rom_diag_systems">इस फ़ोल्डर में मौजूद सिस्टम: %1$s. कंसोल के ब्राउज़ ग्रिड में हर सिस्टम एक फ़िल्टर है.</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="one">%d गेम के बगल में सेव डेटा है (बैटरी सेव या सेवस्टेट).</item>
+        <item quantity="other">%d गेम के बगल में सेव डेटा है (बैटरी सेव या सेवस्टेट).</item>
+    </plurals>
+    <plurals name="rom_diag_gamelist">
+        <item quantity="one">gamelist.xml: %d एंट्री पढ़ी गई. इसके नाम और आर्टवर्क इस्तेमाल किए जाते हैं.</item>
+        <item quantity="other">gamelist.xml: %d एंट्री पढ़ी गईं. इसके नाम और आर्टवर्क इस्तेमाल किए जाते हैं.</item>
+    </plurals>
+    <string name="rom_diag_no_gamelist">यहां कोई gamelist.xml नहीं है. नाम, फ़ाइल नामों से लिए जाते हैं; आर्टवर्क, boxart लेआउट से.</string>
+    <string name="rom_diag_skipped_header">गेम के तौर पर नहीं दिखाया गया</string>
+    <string name="rom_diag_skipped_unchecked">छोड़ी गई फ़ाइलों की सूची देखने के लिए जांच चलाएं.</string>
+    <string name="rom_diag_skipped_none">कुछ भी नहीं छोड़ा गया: हर फ़ाइल कोई गेम, आर्टवर्क या ट्रैक है.</string>
+    <plurals name="rom_diag_skipped">
+        <item quantity="one">%1$d फ़ाइल गेम नहीं है: %2$s.</item>
+        <item quantity="other">%1$d फ़ाइलें गेम नहीं हैं: %2$s.</item>
+    </plurals>
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <string name="rom_extension_none_count">कोई एक्सटेंशन नहीं×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="one">ट्रैक और डिस्क के लिए %d प्लेलिस्ट पढ़ी गई.</item>
+        <item quantity="other">ट्रैक और डिस्क के लिए %d प्लेलिस्ट पढ़ी गईं.</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="one">प्लेलिस्ट में बताया गया %d ट्रैक या डिस्क इस फ़ोल्डर में नहीं है. इसे प्लेलिस्ट के बगल में कॉपी करें; वरना वह गेम नहीं खुलेगा.</item>
+        <item quantity="other">प्लेलिस्ट में बताए गए %d ट्रैक या डिस्क इस फ़ोल्डर में नहीं हैं. इन्हें प्लेलिस्ट के बगल में कॉपी करें; वरना वे गेम नहीं खुलेंगे.</item>
+    </plurals>
+    <string name="rom_diag_no_games">इस फ़ोल्डर में कोई गेम नहीं मिला.</string>
+
+    <!-- How long ago -->
+    <string name="rom_age_today">आज</string>
+    <string name="rom_age_yesterday">कल</string>
+    <plurals name="rom_age_days">
+        <item quantity="one">%d दिन पहले</item>
+        <item quantity="other">%d दिन पहले</item>
+    </plurals>
+    <string name="rom_age_a_week">एक हफ़्ते पहले</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="one">%d हफ़्ते पहले</item>
+        <item quantity="other">%d हफ़्ते पहले</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="one">%d महीने पहले</item>
+        <item quantity="other">%d महीने पहले</item>
+    </plurals>
+    <string name="rom_age_a_year">एक साल पहले</string>
+
+    <!-- Generic system labels -->
+    <string name="rom_system_other">अन्य</string>
+    <string name="rom_system_disc">डिस्क इमेज</string>
+
+    <!-- Opening a game -->
+    <string name="rom_open_chooser">%1$s खोलें</string>
+    <string name="rom_launch_failed_no_app">यह ऐप गेम नहीं खोल सका. ROM टैब में जाकर कोई दूसरा डिफ़ॉल्ट एम्युलेटर चुनें या बेहतर विकल्प आज़माएं.</string>
+    <string name="rom_launch_failed_access">फ़ोल्डर का ऐक्सेस खो गया है. ROM टैब में जाकर टैब में बदलाव करें और ROM फ़ोल्डर फिर से चुनें.</string>
+    <string name="rom_launch_failed_unavailable">यह ROM उपलब्ध नहीं है. इसकी शेल्फ़ रीफ़्रेश करें या फ़ोल्डर फिर से चुनें.</string>
+
+    <!-- Reading a ROM folder failed -->
+    <string name="rom_scan_too_many_folders">इस फ़ोल्डर में बहुत ज़्यादा सब-फ़ोल्डर हैं. कोई छोटा फ़ोल्डर चुनें.</string>
+    <string name="rom_scan_folder_unavailable">ROM फ़ोल्डर उपलब्ध नहीं है. इसे फिर से चुनें.</string>
+    <string name="rom_scan_too_many_files">इस फ़ोल्डर में बहुत ज़्यादा फ़ाइलें हैं. कोई छोटा फ़ोल्डर चुनें.</string>
+    <string name="rom_scan_playlist_too_large">प्लेलिस्ट इतनी बड़ी है कि उसे पढ़ा नहीं जा सकता: %1$s</string>
+    <string name="rom_scan_playlist_unreadable">%1$s को पढ़ा नहीं जा सका</string>
+
+    <!-- Console mode: shelves -->
+    <string name="console_shelf_recent">हाल ही में खोले गए ऐप</string>
+    <string name="console_shelf_favourites">पसंदीदा</string>
+    <string name="console_all_apps_fallback">सभी ऐप</string>
+    <string name="console_roms_fallback">ROM</string>
+    <string name="console_list_separator">", "</string>
+    <string name="console_position">%2$d में से %1$d</string>
+    <string name="console_shelf_tab_description">%1$s शेल्फ़, %2$s</string>
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <!-- Console mode: button legend -->
+    <string name="console_legend_open">खोलें</string>
+    <string name="console_legend_actions">कार्रवाइयां</string>
+    <string name="console_legend_search">खोजें</string>
+    <string name="console_legend_shelves">शेल्फ़</string>
+    <string name="console_legend_settings">सेटिंग</string>
+    <string name="console_legend_select">चुनें</string>
+    <string name="console_touch_hint">खोलने के लिए टैप करें · विकल्पों के लिए दबाकर रखें</string>
+
+    <!-- Console mode: top bar -->
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="one">कंट्रोलर %1$d की बैटरी %2$d प्रतिशत</item>
+        <item quantity="other">कंट्रोलर %1$d की बैटरी %2$d प्रतिशत</item>
+    </plurals>
+    <plurals name="console_controller_battery">
+        <item quantity="one">कंट्रोलर की बैटरी %1$d प्रतिशत</item>
+        <item quantity="other">कंट्रोलर की बैटरी %1$d प्रतिशत</item>
+    </plurals>
+    <plurals name="console_phone_battery">
+        <item quantity="one">फ़ोन की बैटरी %1$d प्रतिशत</item>
+        <item quantity="other">फ़ोन की बैटरी %1$d प्रतिशत</item>
+    </plurals>
+    <string name="console_battery_charging">%1$s, चार्ज हो रही है</string>
+    <string name="console_battery_percent">%1$d%%</string>
+    <string name="console_browse_title">%1$s ब्राउज़ करें</string>
+    <string name="console_edit_shelf">%1$s में बदलाव करें</string>
+    <string name="console_search_apps">ऐप खोजें</string>
+    <string name="console_all_apps">सभी ऐप</string>
+    <string name="console_launcher_settings">लॉन्चर की सेटिंग</string>
+
+    <!-- Console mode: cards -->
+    <string name="console_card_actions">%1$s के लिए कार्रवाइयां</string>
+    <string name="console_card_has_notifications">सूचनाएं हैं</string>
+    <string name="console_card_unavailable">उपलब्ध नहीं है</string>
+
+    <!-- Console mode: empty shelves -->
+    <string name="console_manage_rom_tab">ROM टैब मैनेज करें</string>
+    <string name="console_add_apps">ऐप जोड़ें</string>
+    <string name="console_empty_recent_title">हाल ही में कोई ऐप नहीं खोला गया</string>
+    <string name="console_empty_recent_detail">Pluto से खोले गए ऐप यहां दिखते हैं, सबसे हाल में खोला गया ऐप सबसे पहले.</string>
+    <string name="console_empty_favourites_title">अभी कोई पसंदीदा नहीं है</string>
+    <string name="console_empty_favourites_detail_controller">किसी ऐप को यहां जोड़ने के लिए, उस पर %1$s दबाएं और “होम पर पिन करें” चुनें.</string>
+    <string name="console_empty_favourites_detail_touch">किसी ऐप को यहां जोड़ने के लिए, उसे दबाकर रखें और “होम पर पिन करें” चुनें.</string>
+    <string name="console_empty_rom_title">%1$s में अभी कोई गेम नहीं है</string>
+    <string name="console_empty_rom_detail">इस टैब के फ़ोल्डर में गेम जोड़ें या ROM टैब में जाकर कोई दूसरा फ़ोल्डर चुनें.</string>
+    <string name="console_empty_category_title">%1$s में अभी कोई ऐप नहीं है</string>
+    <string name="console_empty_category_detail">यहां रखे जाने वाले ऐप चुनने के लिए “ऐप जोड़ें” चुनें.</string>
+
+    <!-- Console browse grid -->
+    <string name="console_browse_no_match">इस फ़िल्टर से कोई गेम मेल नहीं खाता. ऊपर फ़िल्टर बदलें या गेम रीफ़्रेश करें.</string>
+    <string name="console_browse_empty">यह शेल्फ़ खाली है.</string>
+    <plurals name="console_browse_filtered_games">
+        <item quantity="one">%2$d में से %1$d गेम · कैरूसेल पर लौटने के लिए कोई आइटम चुनें</item>
+        <item quantity="other">%2$d में से %1$d गेम · कैरूसेल पर लौटने के लिए कोई आइटम चुनें</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="one">%d आइटम · कैरूसेल पर लौटने के लिए कोई आइटम चुनें</item>
+        <item quantity="other">%d आइटम · कैरूसेल पर लौटने के लिए कोई आइटम चुनें</item>
+    </plurals>
+    <string name="console_chip_all_systems">सभी सिस्टम</string>
+    <string name="console_chip_favourites">पसंदीदा</string>
+    <string name="console_sort_title">टाइटल</string>
+    <string name="console_sort_recent">हाल के</string>
+    <string name="console_sort_file_name">फ़ाइल का नाम</string>
+    <string name="console_chip_selected">%1$s, चुना गया</string>
+    <string name="console_add_favourite">पसंदीदा में जोड़ें</string>
+    <string name="console_remove_favourite">पसंदीदा से हटाएं</string>
+    <string name="console_tile_select">%1$s, कैरूसेल में चुनें</string>
+    <string name="console_tile_favourite">पसंदीदा</string>
+    <string name="console_tile_played">%1$s खेला गया</string>
+    <string name="console_tile_save_data">%1$s का सेव डेटा है</string>
+    <string name="console_badge_played">%1$s खेला गया</string>
+    <string name="console_badge_save">सेव · %1$s</string>
+</resources>

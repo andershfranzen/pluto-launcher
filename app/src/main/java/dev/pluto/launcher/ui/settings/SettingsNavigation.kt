@@ -77,12 +77,11 @@ internal fun SettingsNavigation(selectedPage: SettingsPage, onSelect: (SettingsP
                         .padding(horizontal = 4.dp, vertical = 10.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
+                    dev.pluto.launcher.ui.overlay.FitLabel(
                         stringResource(page.titleRes),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (picked) colors.inverseOnSurface else colors.onSurfaceVariant,
-                        maxLines = 1,
-                        textAlign = TextAlign.Center,
+                        MaterialTheme.typography.labelLarge,
+                        if (picked) colors.inverseOnSurface else colors.onSurfaceVariant,
+                        TextAlign.Center,
                     )
                 }
             }

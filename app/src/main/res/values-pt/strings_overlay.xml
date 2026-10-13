@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared building blocks (OverlayKit) -->
+    <string name="overlay_kit_close">Fechar</string>
+    <string name="overlay_kit_cancel">Cancelar</string>
+    <string name="overlay_kit_done">Concluído</string>
+    <string name="overlay_kit_on">ativado</string>
+    <string name="overlay_kit_off">desativado</string>
+    <string name="overlay_kit_checked">marcado</string>
+    <string name="overlay_kit_not_checked">desmarcado</string>
+    <string name="overlay_kit_selected">selecionado</string>
+    <string name="overlay_kit_unavailable">indisponível</string>
+    <string name="overlay_kit_decrease">Diminuir</string>
+    <string name="overlay_kit_increase">Aumentar</string>
+    <string name="overlay_kit_unavailable_label">%1$s (indisponível)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, selecionado</string>
+    <string name="overlay_kit_decrease_label">Diminuir %1$s, %2$s</string>
+    <string name="overlay_kit_increase_label">Aumentar %1$s, %2$s</string>
+    <string name="overlay_kit_percent">%1$d%%</string>
+
+    <!-- App actions -->
+    <string name="overlay_app_actions">Ações do app</string>
+    <string name="overlay_app_missing">Este app não está mais disponível. Ele pode ter sido desinstalado ou desativado.</string>
+    <string name="overlay_launch">Abrir</string>
+    <string name="overlay_pin">Fixar na tela inicial</string>
+    <string name="overlay_unpin">Remover da tela inicial</string>
+    <string name="overlay_add_to_dock">Adicionar ao dock</string>
+    <string name="overlay_remove_from_dock">Remover do dock</string>
+    <string name="overlay_dock_full">O dock está cheio. Primeiro remova um app do dock (Editar tela inicial).</string>
+    <string name="overlay_categories">Categorias…</string>
+    <string name="overlay_move_to_folder">Mover para pasta…</string>
+    <string name="overlay_hide">Ocultar do launcher</string>
+    <string name="overlay_hide_hint">Restaure-o quando quiser em Configurações ▸ Apps ▸ Apps ocultos</string>
+    <string name="overlay_unhide">Mostrar no launcher de novo</string>
+    <string name="overlay_app_info">Informações do app</string>
+    <string name="overlay_more_actions">Mais ações</string>
+    <string name="overlay_quick_pin">Fixar</string>
+    <string name="overlay_quick_unpin">Desafixar</string>
+    <string name="overlay_quick_dock">Dock</string>
+    <string name="overlay_quick_undock">Tirar</string>
+    <string name="overlay_quick_info">Info</string>
+    <string name="overlay_quick_hide">Ocultar</string>
+    <string name="overlay_quick_show">Mostrar</string>
+    <string name="overlay_quick_uninstall">Desinstalar</string>
+    <string name="overlay_uninstall">Desinstalar…</string>
+    <string name="overlay_uninstall_hint">O Android pede confirmação</string>
+    <string name="overlay_suspended">Indisponível no momento (pausado ou suspenso)</string>
+    <string name="overlay_in_folder">Na pasta “%1$s”</string>
+    <string name="overlay_not_in_any_category">Em nenhuma categoria</string>
+
+    <!-- Category membership -->
+    <string name="overlay_categories_title">Categorias</string>
+    <string name="overlay_categories_title_for">Categorias: %1$s</string>
+    <string name="overlay_no_categories">Ainda não há categorias além de Todos os apps.</string>
+    <string name="overlay_manage_categories">Gerenciar categorias…</string>
+    <string name="overlay_all_apps_note">Todo app está sempre em Todos os apps.</string>
+
+    <!-- Move to folder -->
+    <string name="overlay_move_title">Mover para pasta</string>
+    <string name="overlay_move_title_for">Mover para pasta: %1$s</string>
+    <string name="overlay_no_folders">Ainda não há pastas. Crie uma abaixo.</string>
+    <string name="overlay_new_folder">Nova pasta…</string>
+    <string name="overlay_new_folder_title">Nova pasta</string>
+    <string name="overlay_folder_name">Nome da pasta</string>
+    <string name="overlay_default_folder_name">Pasta</string>
+    <string name="overlay_widget">Widget</string>
+    <string name="overlay_widget_options">Opções do widget</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">%1$d fileira de altura</item>
+        <item quantity="many">%1$d fileiras de altura</item>
+        <item quantity="other">%1$d fileiras de altura</item>
+    </plurals>
+    <string name="overlay_create">Criar</string>
+    <string name="overlay_remove_from_folder">Remover da pasta</string>
+    <string name="overlay_current_folder">Pasta atual</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="many">%1$d apps</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+
+    <!-- Edit home -->
+    <string name="overlay_edit_title">Editar tela inicial</string>
+    <string name="overlay_edit_intro">Selecione um item para movê-lo, removê-lo ou alterá-lo. As alterações são salvas na hora.</string>
+    <string name="overlay_home_section">Favoritos da tela inicial</string>
+    <string name="overlay_home_empty">Nenhum favorito ainda. Use Adicionar favorito… acima.</string>
+    <string name="overlay_add_favourite">Adicionar favorito…</string>
+    <string name="overlay_choose_favourite">Adicionar um favorito</string>
+    <string name="overlay_on_home">Já está na tela inicial</string>
+    <string name="overlay_app_actions_ellipsis">Ações do app…</string>
+    <string name="overlay_dock_section">Dock</string>
+    <string name="overlay_folders_section">Conteúdo das pastas</string>
+    <string name="overlay_folder_empty">Esta pasta está vazia.</string>
+    <string name="overlay_move_up">Mover para cima</string>
+    <string name="overlay_move_down">Mover para baixo</string>
+    <string name="overlay_move_before">Mover para antes de…</string>
+    <string name="overlay_move_after">Mover para depois de…</string>
+    <string name="overlay_rename_folder">Renomear pasta</string>
+    <string name="overlay_delete_folder">Excluir pasta</string>
+    <string name="overlay_delete_folder_text">Os apps desta pasta voltam para a tela inicial. Nenhum app é desinstalado.</string>
+    <string name="overlay_delete">Excluir</string>
+    <string name="overlay_rename">Renomear</string>
+    <string name="overlay_add_app_to_slot">Adicionar app a este espaço…</string>
+    <string name="overlay_replace_app">Substituir app…</string>
+    <string name="overlay_choose_app">Escolha um app</string>
+    <string name="overlay_no_apps">Nenhum app disponível.</string>
+    <string name="overlay_done">Concluído</string>
+    <string name="overlay_unavailable_app">App indisponível</string>
+    <string name="overlay_dock_slot">Espaço %1$d</string>
+    <string name="overlay_dock_slot_with">Espaço %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">Dock · Espaço %1$d</string>
+    <string name="overlay_empty_slot">Vazio</string>
+    <string name="overlay_move_before_title">Mover “%1$s” para antes de…</string>
+    <string name="overlay_move_after_title">Mover “%1$s” para depois de…</string>
+    <string name="overlay_delete_folder_title">Excluir a pasta “%1$s”?</string>
+    <string name="overlay_folder_header">Pasta: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, selecionado. Controles a seguir.</string>
+
+    <!-- Category app picker (shelf picker) -->
+    <string name="overlay_picker_category_fallback">categoria</string>
+    <string name="overlay_picker_add_title">Adicionar apps a %1$s</string>
+    <string name="overlay_picker_title">Apps em %1$s</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">%1$d selecionado · toque ou pressione A para adicionar ou remover</item>
+        <item quantity="many">%1$d selecionados · toque ou pressione A para adicionar ou remover</item>
+        <item quantity="other">%1$d selecionados · toque ou pressione A para adicionar ou remover</item>
+    </plurals>
+    <string name="overlay_picker_suggested">Sugeridos</string>
+    <string name="overlay_picker_all_apps">Todos os apps</string>
+    <string name="overlay_picker_in_category">%1$s, nesta categoria</string>
+    <string name="overlay_picker_not_in_category">%1$s, fora desta categoria</string>
+
+    <!-- Widgets -->
+    <string name="overlay_widgets_widget">Widget</string>
+    <string name="overlay_widgets_add">Adicionar widget</string>
+    <string name="overlay_widgets_loading">Procurando widgets…</string>
+    <string name="overlay_widgets_none">Nenhum dos seus apps oferece widgets.</string>
+    <string name="overlay_widgets_unavailable">Este widget não está disponível</string>
+    <string name="overlay_widgets_height">Altura</string>
+    <string name="overlay_widgets_remove">Remover widget</string>
+    <string name="overlay_widgets_move_hint">Para movê-lo, toque no widget, mantenha pressionado e arraste.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d fileira</item>
+        <item quantity="many">%1$d fileiras</item>
+        <item quantity="other">%1$d fileiras</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

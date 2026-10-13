@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_dots_service_label">Titik notifikasi Pluto</string>
+    <string name="screen_lock_service_label">Kunci layar Pluto</string>
+    <string name="screen_lock_service_description">Memungkinkan Pluto mengunci layar saat Anda mengetuk dua kali area kosong di layar utama. Layanan ini hanya menjalankan tindakan kunci: layanan ini tidak melihat isi layar atau apa yang Anda ketik.</string>
+</resources>

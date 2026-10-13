@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rom_title">Tab ROM</string>
+    <string name="rom_add_tab">Tambahkan tab ROM</string>
+    <string name="rom_title_edit">Edit tab ROM</string>
+    <string name="rom_title_choose_game_emulator">Pilih emulator untuk game ini</string>
+    <string name="rom_title_choose_default_emulator">Pilih emulator default</string>
+
+    <string name="rom_default_tab_name">Game saya</string>
+    <string name="rom_folder_access_failed">Pluto tidak dapat mempertahankan akses ke folder ini. Pilih folder di perangkat ini.</string>
+    <string name="rom_search_installed_apps">Telusuri aplikasi terinstal</string>
+    <string name="rom_close_search">Tutup penelusuran</string>
+    <string name="rom_saving">Menyimpan…</string>
+    <string name="rom_create_tab">Buat tab</string>
+    <string name="rom_save_changes">Simpan perubahan</string>
+    <string name="rom_cancel">Batal</string>
+    <string name="rom_name_dialog_title">Nama tab</string>
+    <string name="rom_name_dialog_label">Nama</string>
+    <string name="rom_done">Selesai</string>
+    <string name="rom_discard_title">Buang perubahan?</string>
+    <string name="rom_discard_message">Tab ROM Anda belum disimpan.</string>
+    <string name="rom_discard">Buang</string>
+    <string name="rom_remove_title">Hapus %1$s?</string>
+    <string name="rom_remove_message">Hanya tab ini yang dihapus. ROM dan file simpanan Anda tetap di tempatnya.</string>
+    <string name="rom_remove">Hapus</string>
+    <string name="rom_editor_intro_new">Jadikan folder game sebagai tab konsol. File Anda tetap di tempatnya.</string>
+    <string name="rom_editor_intro_edit">Pilih tempat tab ini menemukan game dan aplikasi yang membukanya.</string>
+    <string name="rom_section_folder">1 · Folder ROM</string>
+    <string name="rom_choose_folder">Pilih folder ROM</string>
+    <string name="rom_change_folder">Ubah folder ROM</string>
+    <string name="rom_choose_folder_supporting">Pilih folder yang berisi game Anda</string>
+    <string name="rom_folder_subfolders">Game di subfolder ikut disertakan. Game baru dapat ditambahkan ke folder ini nanti.</string>
+    <string name="rom_suggestions_header">Lokasi game biasanya</string>
+    <string name="rom_suggestions_intro">Pluto tidak dapat melihat isi folder sebelum Anda mengizinkannya. Berikut folder yang digunakan emulator terinstal; ketuk salah satunya untuk membuka pemilih di sana.</string>
+    <string name="rom_suggestion_app">Game %1$s</string>
+    <string name="rom_suggestion_folder">Folder “%1$s”</string>
+    <string name="rom_suggestion_supporting">Cari di %1$s pada perangkat ini</string>
+    <string name="rom_section_emulator">2 · Emulator default</string>
+    <string name="rom_ask_each_time">Selalu tanyakan</string>
+    <string name="rom_emulator_ask_supporting">Pilih default untuk membuka game dengan sekali ketuk</string>
+    <string name="rom_emulator_default_supporting">Digunakan untuk setiap game di tab ini</string>
+    <string name="rom_open_setup">Buka penyiapan %1$s</string>
+    <string name="rom_setup_duckstation">Impor BIOS PlayStation Anda di DuckStation, lalu kembali ke sini</string>
+    <string name="rom_setup_generic">Selesaikan penyiapan awal emulator, lalu kembali ke sini</string>
+    <string name="rom_emulator_missing">Emulator ini sudah tidak terinstal. Pilih default lain.</string>
+    <string name="rom_section_name">3 · Nama tab</string>
+    <string name="rom_name_placeholder">Beri nama tab ini</string>
+    <string name="rom_name_supporting">Misalnya, PlayStation 1 atau Game Boy. Ditampilkan di mode konsol.</string>
+    <string name="rom_advanced">Opsi lanjutan</string>
+    <string name="rom_hide_advanced">Sembunyikan opsi lanjutan</string>
+    <string name="rom_advanced_supporting">Hanya diperlukan jika game tidak terbuka dengan benar</string>
+    <string name="rom_method_title">Buka game menggunakan</string>
+    <string name="rom_method_automatic">Otomatis (direkomendasikan)</string>
+    <string name="rom_method_open_with">Tanyakan aplikasi yang digunakan</string>
+    <string name="rom_method_view">Buka file Android</string>
+    <string name="rom_method_direct">Peluncuran langsung %1$s</string>
+    <string name="rom_method_supporting">Emulator mendukung format dan cara membuka game yang berbeda-beda. Peluncuran langsung memerlukan folder di penyimpanan bersama; coba Tanyakan aplikasi yang digunakan jika default tidak berfungsi.</string>
+    <string name="rom_help_row_editor">Menambahkan game dan sampul</string>
+    <string name="rom_remove_tab">Hapus tab</string>
+
+    <string name="rom_chooser_game_intro">Pilih aplikasi yang membuka “%1$s”. Hanya game itu yang berubah; tab tetap memakai emulatornya sendiri.</string>
+    <string name="rom_chooser_tab_intro">Pilih aplikasi untuk membuka game di tab ini. Anda dapat mengubahnya nanti.</string>
+    <string name="rom_use_tab_default">Gunakan default tab</string>
+    <string name="rom_use_tab_default_supporting">Ikuti emulator tab ini, atau tanyakan, sesuai penyiapannya</string>
+    <string name="rom_ask_each_time_supporting">Pilih aplikasi setiap kali Anda membuka game</string>
+    <string name="rom_search_results">Hasil penelusuran</string>
+    <string name="rom_installed_apps">Aplikasi terinstal</string>
+    <string name="rom_suggested_emulators">Emulator yang disarankan</string>
+    <string name="rom_no_apps_match">Tidak ada aplikasi terinstal yang cocok dengan “%1$s”.</string>
+    <string name="rom_no_suggestions">Telusuri emulator Anda atau tampilkan semua aplikasi terinstal. Jika belum terinstal, instal lalu kembali ke sini.</string>
+    <string name="rom_show_suggested">Tampilkan emulator yang disarankan</string>
+    <string name="rom_show_all_apps">Tampilkan semua aplikasi terinstal</string>
+    <string name="rom_show_all_apps_supporting">Gunakan emulator apa pun yang dapat membuka game Anda</string>
+
+    <string name="rom_added">%1$s ditambahkan. Tab Anda muncul di mode konsol.</string>
+    <string name="rom_list_intro">Jelajahi koleksi ROM Anda sebagai tab di mode konsol. Setiap tab memiliki folder dan emulator default sendiri.</string>
+    <string name="rom_finding_games">Mencari game…</string>
+    <plurals name="rom_library_summary">
+        <item quantity="other">%1$d game · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">Tidak ada game yang ditemukan. Tambahkan ROM ke folder ini, lalu muat ulang. Anda dapat memilih folder lain di Edit tab.</string>
+    <string name="rom_view_tab">Lihat tab</string>
+    <string name="rom_edit_tab">Edit tab</string>
+    <string name="rom_edit_tab_supporting">%1$s · Folder, emulator default, dan nama</string>
+    <string name="rom_refresh">Muat ulang game</string>
+    <string name="rom_games_and_emulators">Game dan emulator</string>
+    <string name="rom_games_and_emulators_supporting">Pilih emulator untuk satu game, dan lihat apa yang telah dimainkan</string>
+    <string name="rom_diagnostics">Diagnostik</string>
+    <string name="rom_diagnostics_last_check">Pemeriksaan terakhir: %1$s, %2$s</string>
+    <string name="rom_diagnostics_supporting">Lihat apa yang ditemukan Pluto di folder ini</string>
+    <string name="rom_help_row">Cara menambahkan game dan sampul</string>
+    <plurals name="rom_count_files">
+        <item quantity="other">%d file</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="other">%d game</item>
+    </plurals>
+
+    <string name="rom_help_title">Tambahkan game dan sampul</string>
+    <string name="rom_help_adding_header">Menambahkan game lain</string>
+    <string name="rom_help_adding_body">Salin game Anda ke folder yang Anda pilih, termasuk track atau disk-nya. Subfolder ikut disertakan. Pluto memeriksa perubahan saat Anda kembali; Muat ulang game langsung memeriksanya.</string>
+    <string name="rom_help_art_header">Sampul</string>
+    <string name="rom_help_art_body">Gambar sampul tidak didownload otomatis. Letakkan gambar PNG, JPG, atau WebP di samping game dengan nama file yang sama sebelum ekstensi. Contoh: Spyro.cue dan Spyro.png.</string>
+    <string name="rom_help_art_layouts">Pluto juga membaca tata letak yang dibuat oleh front end populer: gambar di boxart/, covers/, atau images/, set Named_Boxarts/ milik RetroArch, atau varian name-thumb.png. Lalu muat ulang tab.</string>
+    <string name="rom_help_gamelist_body">Jika folder Anda berasal dari RetroPie, Batocera, atau penyiapan EmulationStation lain yang menyimpan gamelist.xml di samping game, pertahankan file tersebut. Pluto membaca nama dan gambar setiap entri, sehingga game muncul dengan judul dan sampul yang sudah Anda kurasi.</string>
+    <string name="rom_help_emulator_header">Penyiapan emulator</string>
+    <string name="rom_help_emulator_body">Instal emulator yang Anda inginkan, buka sekali, dan selesaikan penyiapannya. Beberapa sistem memerlukan file BIOS. Pluto membuka game Anda di aplikasi tersebut; setelan emulator dan file simpanan dikelola di sana.</string>
+
+    <string name="rom_games_panel_title">Game · %1$s</string>
+    <string name="rom_games_panel_intro">Game dibuka di emulator tab ini kecuali Anda memilih aplikasi lain untuknya di sini. Bagian tab lainnya tidak terpengaruh.</string>
+    <string name="rom_games_panel_empty">Belum ada game di folder ini. Tambahkan file, lalu muat ulang tab.</string>
+    <string name="rom_find_game">Cari game</string>
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="other">Menampilkan %1$d dari %2$d game. Ketik sebagian nama untuk menemukannya.</item>
+    </plurals>
+    <string name="rom_games_panel_no_match">Tidak ada game yang cocok dengan “%1$s”.</string>
+    <string name="rom_game_opens_in">Dibuka di %1$s</string>
+    <string name="rom_game_uses_default">Menggunakan default tab ini</string>
+    <string name="rom_game_played">%1$s · dimainkan %2$s</string>
+
+    <string name="rom_diag_title">Diagnostik · %1$s</string>
+    <string name="rom_diag_folder">Folder</string>
+    <string name="rom_diag_access_granted">Akses folder diberikan. Pluto dapat membaca folder ini.</string>
+    <string name="rom_diag_access_missing">Akses tidak ada. Buka Edit tab dan pilih lagi folder ini.</string>
+    <string name="rom_diag_access_lost">Android tidak lagi mengizinkan Pluto membaca folder ini.</string>
+    <string name="rom_diag_last_check">Pemeriksaan terakhir</string>
+    <string name="rom_diag_no_check">Belum ada pemeriksaan di sesi ini. Muat ulang game akan membaca folder sekarang.</string>
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="other">%d file diperiksa</item>
+    </plurals>
+    <plurals name="rom_diag_with_art">
+        <item quantity="other">%d dengan sampul</item>
+    </plurals>
+    <string name="rom_diag_systems">Sistem di folder ini: %1$s. Masing-masing menjadi filter di petak jelajah konsol.</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="other">%d game memiliki data simpanan di sampingnya (simpanan baterai atau savestate).</item>
+    </plurals>
+    <plurals name="rom_diag_gamelist">
+        <item quantity="other">gamelist.xml: %d entri dibaca. Nama dan gambarnya digunakan.</item>
+    </plurals>
+    <string name="rom_diag_no_gamelist">Tidak ada gamelist.xml di sini. Nama diambil dari nama file; gambar dari tata letak boxart.</string>
+    <string name="rom_diag_skipped_header">Tidak ditampilkan sebagai game</string>
+    <string name="rom_diag_skipped_unchecked">Jalankan pemeriksaan untuk melihat daftar yang dilewati.</string>
+    <string name="rom_diag_skipped_none">Tidak ada yang dilewati: setiap file adalah game, gambar, atau track.</string>
+    <plurals name="rom_diag_skipped">
+        <item quantity="other">%1$d file bukan game: %2$s.</item>
+    </plurals>
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <string name="rom_extension_none_count">tanpa ekstensi×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="other">%d playlist dibaca untuk track dan disk-nya.</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="other">%d track atau disk yang disebut dalam playlist tidak ada di folder ini. Salin ke samping playlist; game tersebut tidak dapat dibuka.</item>
+    </plurals>
+    <string name="rom_diag_no_games">Tidak ada game yang ditemukan di folder ini.</string>
+
+    <string name="rom_age_today">hari ini</string>
+    <string name="rom_age_yesterday">kemarin</string>
+    <plurals name="rom_age_days">
+        <item quantity="other">%d hari lalu</item>
+    </plurals>
+    <string name="rom_age_a_week">seminggu lalu</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="other">%d minggu lalu</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="other">%d bulan lalu</item>
+    </plurals>
+    <string name="rom_age_a_year">setahun lalu</string>
+
+    <string name="rom_system_other">Lainnya</string>
+    <string name="rom_system_disc">Image disk</string>
+
+    <string name="rom_open_chooser">Buka %1$s</string>
+    <string name="rom_launch_failed_no_app">Aplikasi ini tidak dapat membuka game. Di Tab ROM, pilih emulator default lain atau coba Opsi lanjutan.</string>
+    <string name="rom_launch_failed_access">Akses folder hilang. Di Tab ROM, edit tab dan pilih lagi folder ROM.</string>
+    <string name="rom_launch_failed_unavailable">ROM ini tidak tersedia. Muat ulang raknya atau pilih lagi foldernya.</string>
+
+    <string name="rom_scan_too_many_folders">Folder ini memiliki terlalu banyak subfolder. Pilih folder yang lebih kecil.</string>
+    <string name="rom_scan_folder_unavailable">Folder ROM tidak tersedia. Pilih lagi.</string>
+    <string name="rom_scan_too_many_files">Folder ini memiliki terlalu banyak file. Pilih folder yang lebih kecil.</string>
+    <string name="rom_scan_playlist_too_large">Playlist terlalu besar untuk dibaca: %1$s</string>
+    <string name="rom_scan_playlist_unreadable">Tidak dapat membaca %1$s</string>
+
+    <string name="console_shelf_recent">Peluncuran terbaru</string>
+    <string name="console_shelf_favourites">Favorit</string>
+    <string name="console_all_apps_fallback">Semua aplikasi</string>
+    <string name="console_roms_fallback">ROM</string>
+    <string name="console_list_separator">", "</string>
+    <string name="console_position">%1$d dari %2$d</string>
+    <string name="console_shelf_tab_description">Rak %1$s, %2$s</string>
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <string name="console_legend_open">Buka</string>
+    <string name="console_legend_actions">Tindakan</string>
+    <string name="console_legend_search">Telusuri</string>
+    <string name="console_legend_shelves">Rak</string>
+    <string name="console_legend_settings">Setelan</string>
+    <string name="console_legend_select">Pilih</string>
+    <string name="console_touch_hint">Ketuk untuk membuka · Tekan lama untuk opsi</string>
+
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="other">Controller %1$d, baterai %2$d persen</item>
+    </plurals>
+    <plurals name="console_controller_battery">
+        <item quantity="other">Baterai controller %1$d persen</item>
+    </plurals>
+    <plurals name="console_phone_battery">
+        <item quantity="other">Baterai ponsel %1$d persen</item>
+    </plurals>
+    <string name="console_battery_charging">%1$s, mengisi daya</string>
+    <string name="console_battery_percent">%1$d%%</string>
+    <string name="console_browse_title">Jelajahi %1$s</string>
+    <string name="console_edit_shelf">Edit %1$s</string>
+    <string name="console_search_apps">Telusuri aplikasi</string>
+    <string name="console_all_apps">Semua aplikasi</string>
+    <string name="console_launcher_settings">Setelan peluncur</string>
+
+    <string name="console_card_actions">Tindakan untuk %1$s</string>
+    <string name="console_card_has_notifications">ada notifikasi</string>
+    <string name="console_card_unavailable">tidak tersedia</string>
+
+    <string name="console_manage_rom_tab">Kelola tab ROM</string>
+    <string name="console_add_apps">Tambahkan aplikasi</string>
+    <string name="console_empty_recent_title">Belum ada peluncuran terbaru</string>
+    <string name="console_empty_recent_detail">Aplikasi yang Anda buka dari Pluto muncul di sini, yang terbaru lebih dulu.</string>
+    <string name="console_empty_favourites_title">Belum ada favorit</string>
+    <string name="console_empty_favourites_detail_controller">Tekan %1$s pada aplikasi dan pilih Sematkan ke layar utama untuk menambahkannya di sini.</string>
+    <string name="console_empty_favourites_detail_touch">Tekan lama aplikasi dan pilih Sematkan ke layar utama untuk menambahkannya di sini.</string>
+    <string name="console_empty_rom_title">Belum ada game di %1$s</string>
+    <string name="console_empty_rom_detail">Tambahkan game ke folder tab ini, atau pilih folder lain di Tab ROM.</string>
+    <string name="console_empty_category_title">Belum ada aplikasi di %1$s</string>
+    <string name="console_empty_category_detail">Pilih Tambahkan aplikasi untuk memilih isinya.</string>
+
+    <string name="console_browse_no_match">Tidak ada game yang cocok dengan filter ini. Ubah di atas, atau muat ulang game.</string>
+    <string name="console_browse_empty">Rak ini kosong.</string>
+    <plurals name="console_browse_filtered_games">
+        <item quantity="other">%1$d dari %2$d game · Pilih untuk kembali ke korsel</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="other">%d item · Pilih untuk kembali ke korsel</item>
+    </plurals>
+    <string name="console_chip_all_systems">Semua sistem</string>
+    <string name="console_chip_favourites">Favorit</string>
+    <string name="console_sort_title">Judul</string>
+    <string name="console_sort_recent">Terbaru</string>
+    <string name="console_sort_file_name">Nama file</string>
+    <string name="console_chip_selected">%1$s, dipilih</string>
+    <string name="console_add_favourite">Tambahkan favorit</string>
+    <string name="console_remove_favourite">Hapus favorit</string>
+    <string name="console_tile_select">%1$s, pilih di korsel</string>
+    <string name="console_tile_favourite">favorit</string>
+    <string name="console_tile_played">dimainkan %1$s</string>
+    <string name="console_tile_save_data">ada data simpanan dari %1$s</string>
+    <string name="console_badge_played">Dimainkan %1$s</string>
+    <string name="console_badge_save">Simpanan · %1$s</string>
+</resources>

@@ -2,9 +2,8 @@
 <!--
     ROM tabs, ROM diagnostics and console mode (Handheld layout, shelves, browse grid).
     System and emulator names (PlayStation, SNES, DuckStation…) are proper nouns kept in code.
-    MissingTranslation is ignored until the da/de/fr/sv translations of this file land; remove it then.
 -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
 
     <!-- ROM tabs screen: titles -->
     <string name="rom_title">ROM tabs</string>
@@ -282,6 +281,7 @@
     <!-- Shoulder buttons switch shelves -->
     <string name="console_legend_shelves">Shelves</string>
     <string name="console_legend_settings">Settings</string>
+    <!-- Verb (choose): what the Confirm button does on a tab or button. Not the controller's Select button. -->
     <string name="console_legend_select">Select</string>
     <string name="console_touch_hint">Tap to open · Press and hold for options</string>
 
@@ -343,7 +343,7 @@
     <!-- Console browse grid -->
     <string name="console_browse_no_match">No games match this filter. Change it above, or refresh games.</string>
     <string name="console_browse_empty">This shelf is empty.</string>
-    <!-- %1$d: games shown; %2$d: games on the shelf (the quantity) -->
+    <!-- %1$d: games shown; %2$d: games on the shelf (the quantity). "Select" is the verb (choose an item). -->
     <plurals name="console_browse_filtered_games">
         <item quantity="one">%1$d of %2$d game · Select to return to the carousel</item>
         <item quantity="other">%1$d of %2$d games · Select to return to the carousel</item>

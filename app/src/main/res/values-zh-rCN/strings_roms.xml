@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ROM tabs screen: titles -->
+    <string name="rom_title">ROM 标签页</string>
+    <string name="rom_add_tab">添加 ROM 标签页</string>
+    <string name="rom_title_edit">编辑 ROM 标签页</string>
+    <string name="rom_title_choose_game_emulator">为此游戏选择模拟器</string>
+    <string name="rom_title_choose_default_emulator">选择默认模拟器</string>
+
+    <!-- ROM tabs screen: editor -->
+    <string name="rom_default_tab_name">我的游戏</string>
+    <string name="rom_folder_access_failed">Pluto 无法保留对此文件夹的访问权限。请选择此设备上的文件夹。</string>
+    <string name="rom_search_installed_apps">搜索已安装的应用</string>
+    <string name="rom_close_search">关闭搜索</string>
+    <string name="rom_saving">正在保存…</string>
+    <string name="rom_create_tab">创建标签页</string>
+    <string name="rom_save_changes">保存更改</string>
+    <string name="rom_cancel">取消</string>
+    <string name="rom_name_dialog_title">标签页名称</string>
+    <string name="rom_name_dialog_label">名称</string>
+    <string name="rom_done">完成</string>
+    <string name="rom_discard_title">要舍弃更改吗？</string>
+    <string name="rom_discard_message">你的 ROM 标签页尚未保存。</string>
+    <string name="rom_discard">舍弃</string>
+    <string name="rom_remove_title">要移除“%1$s”吗？</string>
+    <string name="rom_remove_message">只会移除此标签页。你的 ROM 和存档文件会保留在原处。</string>
+    <string name="rom_remove">移除</string>
+    <string name="rom_editor_intro_new">将一个游戏文件夹变成主机模式中的标签页。你的文件会保留在原处。</string>
+    <string name="rom_editor_intro_edit">选择此标签页从哪里查找游戏，以及用哪个应用打开它们。</string>
+    <string name="rom_section_folder">1 · ROM 文件夹</string>
+    <string name="rom_choose_folder">选择 ROM 文件夹</string>
+    <string name="rom_change_folder">更改 ROM 文件夹</string>
+    <string name="rom_choose_folder_supporting">选择包含游戏的文件夹</string>
+    <string name="rom_folder_subfolders">子文件夹中的游戏也会包含在内。之后可以继续向此文件夹添加新游戏。</string>
+    <string name="rom_suggestions_header">游戏通常所在的位置</string>
+    <string name="rom_suggestions_intro">在你授权之前，Pluto 无法查看文件夹内的内容。以下是已安装的模拟器所使用的文件夹；点按其中一个即可在该位置打开选择器。</string>
+    <string name="rom_suggestion_app">%1$s 游戏</string>
+    <string name="rom_suggestion_folder">“%1$s”文件夹</string>
+    <string name="rom_suggestion_supporting">在此设备上的 %1$s 中查找</string>
+    <string name="rom_section_emulator">2 · 默认模拟器</string>
+    <string name="rom_ask_each_time">每次都询问</string>
+    <string name="rom_emulator_ask_supporting">选择默认模拟器，点按一下即可打开游戏</string>
+    <string name="rom_emulator_default_supporting">用于此标签页中的所有游戏</string>
+    <string name="rom_open_setup">打开 %1$s 设置</string>
+    <string name="rom_setup_duckstation">在 DuckStation 中导入你的 PlayStation BIOS，然后返回此处</string>
+    <string name="rom_setup_generic">完成模拟器的首次设置，然后返回此处</string>
+    <string name="rom_emulator_missing">此模拟器已不再安装。请选择其他默认模拟器。</string>
+    <string name="rom_section_name">3 · 标签页名称</string>
+    <string name="rom_name_placeholder">为此标签页命名</string>
+    <string name="rom_name_supporting">例如 PlayStation 1 或 Game Boy。会显示在主机模式中。</string>
+    <string name="rom_advanced">高级选项</string>
+    <string name="rom_hide_advanced">隐藏高级选项</string>
+    <string name="rom_advanced_supporting">仅在游戏无法正常打开时需要</string>
+    <string name="rom_method_title">打开游戏的方式</string>
+    <string name="rom_method_automatic">自动（推荐）</string>
+    <string name="rom_method_open_with">询问使用哪个应用</string>
+    <string name="rom_method_view">Android“打开文件”</string>
+    <string name="rom_method_direct">%1$s 直接启动</string>
+    <string name="rom_method_supporting">不同模拟器支持的格式和打开游戏的方式各不相同。直接启动要求文件夹位于共享存储空间中；如果默认方式无效，请尝试“询问使用哪个应用”。</string>
+    <string name="rom_help_row_editor">添加游戏和封面图</string>
+    <string name="rom_remove_tab">移除标签页</string>
+
+    <!-- ROM tabs screen: emulator chooser -->
+    <string name="rom_chooser_game_intro">选择用于打开“%1$s”的应用。只有这个游戏会更改；标签页仍使用自己的模拟器。</string>
+    <string name="rom_chooser_tab_intro">选择用于打开此标签页中游戏的应用。之后可以更改。</string>
+    <string name="rom_use_tab_default">使用标签页的默认设置</string>
+    <string name="rom_use_tab_default_supporting">按照此标签页的设置使用其模拟器或每次询问</string>
+    <string name="rom_ask_each_time_supporting">每次打开游戏时选择应用</string>
+    <string name="rom_search_results">搜索结果</string>
+    <string name="rom_installed_apps">已安装的应用</string>
+    <string name="rom_suggested_emulators">推荐的模拟器</string>
+    <string name="rom_no_apps_match">没有与“%1$s”匹配的已安装应用。</string>
+    <string name="rom_no_suggestions">搜索你的模拟器，或显示所有已安装的应用。如果尚未安装，请先安装，然后返回此处。</string>
+    <string name="rom_show_suggested">显示推荐的模拟器</string>
+    <string name="rom_show_all_apps">显示所有已安装的应用</string>
+    <string name="rom_show_all_apps_supporting">使用任何能打开你游戏的模拟器</string>
+
+    <!-- ROM tabs screen: list of tabs -->
+    <string name="rom_added">已添加“%1$s”。该标签页会显示在主机模式中。</string>
+    <string name="rom_list_intro">在主机模式中以标签页的形式浏览你的 ROM 收藏。每个标签页都有自己的文件夹和默认模拟器。</string>
+    <string name="rom_finding_games">正在查找游戏…</string>
+    <plurals name="rom_library_summary">
+        <item quantity="other">%1$d 个游戏 · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">未找到游戏。请将 ROM 添加到此文件夹，然后刷新。你可以在“编辑标签页”中选择其他文件夹。</string>
+    <string name="rom_view_tab">查看标签页</string>
+    <string name="rom_edit_tab">编辑标签页</string>
+    <string name="rom_edit_tab_supporting">%1$s · 文件夹、默认模拟器和名称</string>
+    <string name="rom_refresh">刷新游戏</string>
+    <string name="rom_games_and_emulators">游戏和模拟器</string>
+    <string name="rom_games_and_emulators_supporting">为单个游戏选择模拟器，并查看游玩记录</string>
+    <string name="rom_diagnostics">诊断</string>
+    <string name="rom_diagnostics_last_check">上次检查：%1$s，%2$s</string>
+    <string name="rom_diagnostics_supporting">查看 Pluto 在此文件夹中找到的内容</string>
+    <string name="rom_help_row">如何添加游戏和封面图</string>
+    <plurals name="rom_count_files">
+        <item quantity="other">%d 个文件</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="other">%d 个游戏</item>
+    </plurals>
+
+    <!-- ROM tabs screen: help -->
+    <string name="rom_help_title">添加游戏和封面图</string>
+    <string name="rom_help_adding_header">添加更多游戏</string>
+    <string name="rom_help_adding_body">将游戏（包括其音轨文件或光盘文件）复制到你选择的文件夹中。子文件夹也会包含在内。你返回时 Pluto 会检查变化；“刷新游戏”会立即检查。</string>
+    <string name="rom_help_art_header">封面图</string>
+    <string name="rom_help_art_body">封面图不会自动下载。请在游戏旁放置一张与游戏文件同名（扩展名之前的部分相同）的 PNG、JPG 或 WebP 图片。例如：Spyro.cue 和 Spyro.png。</string>
+    <string name="rom_help_art_layouts">Pluto 也能读取主流前端程序所用的布局：boxart/、covers/ 或 images/ 中的图片，RetroArch 的 Named_Boxarts/ 图集，或 name-thumb.png 形式的图片。添加后请刷新标签页。</string>
+    <string name="rom_help_gamelist_body">如果你的文件夹来自 RetroPie、Batocera 或其他在游戏旁保存 gamelist.xml 的 EmulationStation 环境，请保留该文件。Pluto 会读取其中每个条目的名称和封面图，这样游戏就会显示你已整理好的标题和封面。</string>
+    <string name="rom_help_emulator_header">模拟器设置</string>
+    <string name="rom_help_emulator_body">安装你想用的模拟器，打开一次并完成设置。某些平台需要 BIOS 文件。Pluto 会在该应用中打开你的游戏；模拟器设置和存档文件都在该应用中管理。</string>
+
+    <!-- ROM tabs screen: per-game emulators panel -->
+    <string name="rom_games_panel_title">游戏 · %1$s</string>
+    <string name="rom_games_panel_intro">除非你在这里为某个游戏选择了其他应用，否则游戏会在此标签页的模拟器中打开。标签页中的其他游戏不受影响。</string>
+    <string name="rom_games_panel_empty">此文件夹中还没有游戏。请添加文件，然后刷新标签页。</string>
+    <string name="rom_find_game">查找游戏</string>
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="other">正在显示 %1$d 个游戏（共 %2$d 个）。输入名称的一部分即可查找。</item>
+    </plurals>
+    <string name="rom_games_panel_no_match">没有与“%1$s”匹配的游戏。</string>
+    <string name="rom_game_opens_in">在 %1$s 中打开</string>
+    <string name="rom_game_uses_default">使用此标签页的默认设置</string>
+    <string name="rom_game_played">%1$s · %2$s玩过</string>
+
+    <!-- ROM diagnostics -->
+    <string name="rom_diag_title">诊断 · %1$s</string>
+    <string name="rom_diag_folder">文件夹</string>
+    <string name="rom_diag_access_granted">已授予文件夹访问权限。Pluto 可以读取此文件夹。</string>
+    <string name="rom_diag_access_missing">缺少访问权限。请打开“编辑标签页”并重新选择此文件夹。</string>
+    <string name="rom_diag_access_lost">Android 已不再允许 Pluto 读取此文件夹。</string>
+    <string name="rom_diag_last_check">上次检查</string>
+    <string name="rom_diag_no_check">本次会话中尚未进行检查。“刷新游戏”会立即读取文件夹。</string>
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="other">已检查 %d 个文件</item>
+    </plurals>
+    <plurals name="rom_diag_with_art">
+        <item quantity="other">%d 个有封面图</item>
+    </plurals>
+    <string name="rom_diag_systems">此文件夹中的平台：%1$s。每个平台都是主机模式浏览网格中的一个筛选条件。</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="other">%d 个游戏旁有存档数据（电池存档或即时存档）。</item>
+    </plurals>
+    <plurals name="rom_diag_gamelist">
+        <item quantity="other">gamelist.xml：已读取 %d 个条目，并使用其中的名称和封面图。</item>
+    </plurals>
+    <string name="rom_diag_no_gamelist">此处没有 gamelist.xml。名称取自文件名；封面图取自 boxart 布局。</string>
+    <string name="rom_diag_skipped_header">未显示为游戏</string>
+    <string name="rom_diag_skipped_unchecked">运行检查以列出跳过的文件。</string>
+    <string name="rom_diag_skipped_none">没有跳过任何文件：每个文件都是游戏、封面图或音轨。</string>
+    <plurals name="rom_diag_skipped">
+        <item quantity="other">%1$d 个文件不是游戏：%2$s。</item>
+    </plurals>
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <string name="rom_extension_none_count">无扩展名×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="other">已读取 %d 个播放列表中的音轨和光盘。</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="other">播放列表中指定的 %d 个音轨或光盘不在此文件夹中。请将其复制到播放列表旁；否则相应游戏无法打开。</item>
+    </plurals>
+    <string name="rom_diag_no_games">此文件夹中未找到任何游戏。</string>
+
+    <!-- How long ago -->
+    <string name="rom_age_today">今天</string>
+    <string name="rom_age_yesterday">昨天</string>
+    <plurals name="rom_age_days">
+        <item quantity="other">%d 天前</item>
+    </plurals>
+    <string name="rom_age_a_week">1 周前</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="other">%d 周前</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="other">%d 个月前</item>
+    </plurals>
+    <string name="rom_age_a_year">1 年前</string>
+
+    <!-- Generic system labels -->
+    <string name="rom_system_other">其他</string>
+    <string name="rom_system_disc">光盘映像</string>
+
+    <!-- Opening a game -->
+    <string name="rom_open_chooser">打开 %1$s</string>
+    <string name="rom_launch_failed_no_app">此应用无法打开该游戏。请在“ROM 标签页”中选择其他默认模拟器，或尝试“高级选项”。</string>
+    <string name="rom_launch_failed_access">文件夹访问权限已丢失。请在“ROM 标签页”中编辑该标签页，并重新选择 ROM 文件夹。</string>
+    <string name="rom_launch_failed_unavailable">此 ROM 不可用。请刷新其栏目，或重新选择文件夹。</string>
+
+    <!-- Reading a ROM folder failed -->
+    <string name="rom_scan_too_many_folders">此文件夹包含的子文件夹过多。请选择较小的文件夹。</string>
+    <string name="rom_scan_folder_unavailable">ROM 文件夹不可用。请重新选择。</string>
+    <string name="rom_scan_too_many_files">此文件夹包含的文件过多。请选择较小的文件夹。</string>
+    <string name="rom_scan_playlist_too_large">播放列表过大，无法读取：%1$s</string>
+    <string name="rom_scan_playlist_unreadable">无法读取 %1$s</string>
+
+    <!-- Console mode: shelves -->
+    <string name="console_shelf_recent">最近启动</string>
+    <string name="console_shelf_favourites">收藏</string>
+    <string name="console_all_apps_fallback">所有应用</string>
+    <string name="console_roms_fallback">ROM</string>
+    <string name="console_list_separator">"，"</string>
+    <string name="console_position">第 %1$d 个，共 %2$d 个</string>
+    <string name="console_shelf_tab_description">%1$s栏目，%2$s</string>
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <!-- Console mode: button legend -->
+    <string name="console_legend_open">打开</string>
+    <string name="console_legend_actions">操作</string>
+    <string name="console_legend_search">搜索</string>
+    <string name="console_legend_shelves">栏目</string>
+    <string name="console_legend_settings">设置</string>
+    <string name="console_legend_select">选择</string>
+    <string name="console_touch_hint">点按即可打开 · 按住可查看选项</string>
+
+    <!-- Console mode: top bar -->
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="other">控制器 %1$d 电量百分之 %2$d</item>
+    </plurals>
+    <plurals name="console_controller_battery">
+        <item quantity="other">控制器电量百分之 %1$d</item>
+    </plurals>
+    <plurals name="console_phone_battery">
+        <item quantity="other">手机电量百分之 %1$d</item>
+    </plurals>
+    <string name="console_battery_charging">%1$s，正在充电</string>
+    <string name="console_battery_percent">%1$d%%</string>
+    <string name="console_browse_title">浏览%1$s</string>
+    <string name="console_edit_shelf">编辑%1$s</string>
+    <string name="console_search_apps">搜索应用</string>
+    <string name="console_all_apps">所有应用</string>
+    <string name="console_launcher_settings">启动器设置</string>
+
+    <!-- Console mode: cards -->
+    <string name="console_card_actions">%1$s 的操作</string>
+    <string name="console_card_has_notifications">有通知</string>
+    <string name="console_card_unavailable">不可用</string>
+
+    <!-- Console mode: empty shelves -->
+    <string name="console_manage_rom_tab">管理 ROM 标签页</string>
+    <string name="console_add_apps">添加应用</string>
+    <string name="console_empty_recent_title">还没有最近启动的应用</string>
+    <string name="console_empty_recent_detail">你从 Pluto 打开的应用会显示在这里，最近打开的排在最前面。</string>
+    <string name="console_empty_favourites_title">还没有收藏</string>
+    <string name="console_empty_favourites_detail_controller">在应用上按 %1$s 键，然后选择“固定到主屏幕”即可将其添加到这里。</string>
+    <string name="console_empty_favourites_detail_touch">按住应用，然后选择“固定到主屏幕”即可将其添加到这里。</string>
+    <string name="console_empty_rom_title">“%1$s”中还没有游戏</string>
+    <string name="console_empty_rom_detail">将游戏添加到此标签页的文件夹，或在“ROM 标签页”中选择其他文件夹。</string>
+    <string name="console_empty_category_title">“%1$s”中还没有应用</string>
+    <string name="console_empty_category_detail">选择“添加应用”来挑选要放在这里的内容。</string>
+
+    <!-- Console browse grid -->
+    <string name="console_browse_no_match">没有符合此筛选条件的游戏。请在上方更改筛选条件，或刷新游戏。</string>
+    <string name="console_browse_empty">此栏目为空。</string>
+    <plurals name="console_browse_filtered_games">
+        <item quantity="other">%1$d/%2$d 个游戏 · 选择一项即可返回轮播</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="other">%d 项 · 选择一项即可返回轮播</item>
+    </plurals>
+    <string name="console_chip_all_systems">所有平台</string>
+    <string name="console_chip_favourites">收藏</string>
+    <string name="console_sort_title">标题</string>
+    <string name="console_sort_recent">最近</string>
+    <string name="console_sort_file_name">文件名</string>
+    <string name="console_chip_selected">%1$s，已选择</string>
+    <string name="console_add_favourite">添加收藏</string>
+    <string name="console_remove_favourite">移除收藏</string>
+    <string name="console_tile_select">%1$s，在轮播中选择</string>
+    <string name="console_tile_favourite">已收藏</string>
+    <string name="console_tile_played">%1$s玩过</string>
+    <string name="console_tile_save_data">有%1$s的存档数据</string>
+    <string name="console_badge_played">%1$s玩过</string>
+    <string name="console_badge_save">存档 · %1$s</string>
+</resources>

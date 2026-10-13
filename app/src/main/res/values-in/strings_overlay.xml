@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="overlay_kit_close">Tutup</string>
+    <string name="overlay_kit_cancel">Batal</string>
+    <string name="overlay_kit_done">Selesai</string>
+    <string name="overlay_kit_on">aktif</string>
+    <string name="overlay_kit_off">nonaktif</string>
+    <string name="overlay_kit_checked">dicentang</string>
+    <string name="overlay_kit_not_checked">tidak dicentang</string>
+    <string name="overlay_kit_selected">dipilih</string>
+    <string name="overlay_kit_unavailable">tidak tersedia</string>
+    <string name="overlay_kit_decrease">Kurangi</string>
+    <string name="overlay_kit_increase">Tambah</string>
+    <string name="overlay_kit_unavailable_label">%1$s (tidak tersedia)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, dipilih</string>
+    <string name="overlay_kit_decrease_label">Kurangi %1$s, %2$s</string>
+    <string name="overlay_kit_increase_label">Tambah %1$s, %2$s</string>
+    <string name="overlay_kit_percent">%1$d%%</string>
+
+    <string name="overlay_app_actions">Tindakan aplikasi</string>
+    <string name="overlay_app_missing">Aplikasi ini sudah tidak tersedia. Mungkin telah di-uninstal atau dinonaktifkan.</string>
+    <string name="overlay_launch">Buka</string>
+    <string name="overlay_pin">Sematkan ke layar utama</string>
+    <string name="overlay_unpin">Lepas sematan dari layar utama</string>
+    <string name="overlay_add_to_dock">Tambahkan ke dok</string>
+    <string name="overlay_remove_from_dock">Hapus dari dok</string>
+    <string name="overlay_dock_full">Dok penuh. Hapus dulu aplikasi dari dok (Edit layar utama).</string>
+    <string name="overlay_categories">Kategori…</string>
+    <string name="overlay_move_to_folder">Pindahkan ke folder…</string>
+    <string name="overlay_hide">Sembunyikan dari peluncur</string>
+    <string name="overlay_hide_hint">Pulihkan kapan saja dari Setelan ▸ Aplikasi ▸ Aplikasi tersembunyi</string>
+    <string name="overlay_unhide">Tampilkan lagi di peluncur</string>
+    <string name="overlay_app_info">Info aplikasi</string>
+    <string name="overlay_more_actions">Tindakan lainnya</string>
+    <string name="overlay_quick_pin">Sematkan</string>
+    <string name="overlay_quick_unpin">Lepas</string>
+    <string name="overlay_quick_dock">Dok</string>
+    <string name="overlay_quick_undock">Keluarkan</string>
+    <string name="overlay_quick_info">Info</string>
+    <string name="overlay_quick_hide">Sembunyikan</string>
+    <string name="overlay_quick_show">Tampilkan</string>
+    <string name="overlay_quick_uninstall">Uninstal</string>
+    <string name="overlay_uninstall">Uninstal…</string>
+    <string name="overlay_uninstall_hint">Android akan meminta konfirmasi</string>
+    <string name="overlay_suspended">Saat ini tidak tersedia (dijeda atau ditangguhkan)</string>
+    <string name="overlay_in_folder">Di folder “%1$s”</string>
+    <string name="overlay_not_in_any_category">Tidak ada di kategori mana pun</string>
+
+    <string name="overlay_categories_title">Kategori</string>
+    <string name="overlay_categories_title_for">Kategori: %1$s</string>
+    <string name="overlay_no_categories">Belum ada kategori selain Semua aplikasi.</string>
+    <string name="overlay_manage_categories">Kelola kategori…</string>
+    <string name="overlay_all_apps_note">Setiap aplikasi selalu ada di Semua aplikasi.</string>
+
+    <string name="overlay_move_title">Pindahkan ke folder</string>
+    <string name="overlay_move_title_for">Pindahkan ke folder: %1$s</string>
+    <string name="overlay_no_folders">Belum ada folder. Buat di bawah.</string>
+    <string name="overlay_new_folder">Folder baru…</string>
+    <string name="overlay_new_folder_title">Folder baru</string>
+    <string name="overlay_folder_name">Nama folder</string>
+    <string name="overlay_default_folder_name">Folder</string>
+    <string name="overlay_widget">Widget</string>
+    <string name="overlay_widget_options">Opsi widget</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="other">Tinggi %1$d baris</item>
+    </plurals>
+    <string name="overlay_create">Buat</string>
+    <string name="overlay_remove_from_folder">Hapus dari folder</string>
+    <string name="overlay_current_folder">Folder saat ini</string>
+    <plurals name="overlay_app_count">
+        <item quantity="other">%1$d aplikasi</item>
+    </plurals>
+
+    <string name="overlay_edit_title">Edit layar utama</string>
+    <string name="overlay_edit_intro">Pilih item untuk memindahkan, menghapus, atau mengubahnya. Perubahan langsung disimpan.</string>
+    <string name="overlay_home_section">Favorit layar utama</string>
+    <string name="overlay_home_empty">Belum ada favorit. Gunakan Tambahkan favorit… di atas.</string>
+    <string name="overlay_add_favourite">Tambahkan favorit…</string>
+    <string name="overlay_choose_favourite">Tambahkan favorit</string>
+    <string name="overlay_on_home">Sudah ada di layar utama</string>
+    <string name="overlay_app_actions_ellipsis">Tindakan aplikasi…</string>
+    <string name="overlay_dock_section">Dok</string>
+    <string name="overlay_folders_section">Isi folder</string>
+    <string name="overlay_folder_empty">Folder ini kosong.</string>
+    <string name="overlay_move_up">Pindahkan ke atas</string>
+    <string name="overlay_move_down">Pindahkan ke bawah</string>
+    <string name="overlay_move_before">Pindahkan sebelum…</string>
+    <string name="overlay_move_after">Pindahkan setelah…</string>
+    <string name="overlay_rename_folder">Ganti nama folder</string>
+    <string name="overlay_delete_folder">Hapus folder</string>
+    <string name="overlay_delete_folder_text">Aplikasi di folder ini akan kembali ke layar utama. Tidak ada aplikasi yang di-uninstal.</string>
+    <string name="overlay_delete">Hapus</string>
+    <string name="overlay_rename">Ganti nama</string>
+    <string name="overlay_add_app_to_slot">Tambahkan aplikasi ke slot ini…</string>
+    <string name="overlay_replace_app">Ganti aplikasi…</string>
+    <string name="overlay_choose_app">Pilih aplikasi</string>
+    <string name="overlay_no_apps">Tidak ada aplikasi yang tersedia.</string>
+    <string name="overlay_done">Selesai</string>
+    <string name="overlay_unavailable_app">Aplikasi tidak tersedia</string>
+    <string name="overlay_dock_slot">Slot %1$d</string>
+    <string name="overlay_dock_slot_with">Slot %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">Dok · Slot %1$d</string>
+    <string name="overlay_empty_slot">Kosong</string>
+    <string name="overlay_move_before_title">Pindahkan “%1$s” sebelum…</string>
+    <string name="overlay_move_after_title">Pindahkan “%1$s” setelah…</string>
+    <string name="overlay_delete_folder_title">Hapus folder “%1$s”?</string>
+    <string name="overlay_folder_header">Folder: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, dipilih. Kontrol menyusul.</string>
+
+    <string name="overlay_picker_category_fallback">kategori</string>
+    <string name="overlay_picker_add_title">Tambahkan aplikasi ke %1$s</string>
+    <string name="overlay_picker_title">Aplikasi di %1$s</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="other">%1$d dipilih · ketuk atau tekan A untuk menambahkan atau menghapus</item>
+    </plurals>
+    <string name="overlay_picker_suggested">Disarankan</string>
+    <string name="overlay_picker_all_apps">Semua aplikasi</string>
+    <string name="overlay_picker_in_category">%1$s, ada di kategori ini</string>
+    <string name="overlay_picker_not_in_category">%1$s, tidak ada di kategori ini</string>
+
+    <string name="overlay_widgets_widget">Widget</string>
+    <string name="overlay_widgets_add">Tambahkan widget</string>
+    <string name="overlay_widgets_loading">Mencari widget…</string>
+    <string name="overlay_widgets_none">Tidak ada aplikasi Anda yang menyediakan widget.</string>
+    <string name="overlay_widgets_unavailable">Widget ini tidak tersedia</string>
+    <string name="overlay_widgets_height">Tinggi</string>
+    <string name="overlay_widgets_remove">Hapus widget</string>
+    <string name="overlay_widgets_move_hint">Untuk memindahkannya, tekan lama widget, lalu tarik.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="other">%1$d baris</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

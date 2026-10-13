@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_dots_service_label">Pluto বিজ্ঞপ্তি ডট</string>
+    <string name="screen_lock_service_label">Pluto স্ক্রিন লক</string>
+    <string name="screen_lock_service_description">হোম স্ক্রিনের ফাঁকা জায়গায় দুবার ট্যাপ করলে Pluto-কে স্ক্রিন লক করতে দেয়। এটি শুধু লক করার কাজটি করে: স্ক্রিনে কী আছে বা আপনি কী টাইপ করছেন তা এটি দেখতে পায় না।</string>
+</resources>

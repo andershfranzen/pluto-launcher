@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared building blocks (OverlayKit) -->
+    <string name="overlay_kit_close">Luk</string>
+    <string name="overlay_kit_cancel">Annuller</string>
+    <string name="overlay_kit_done">Udført</string>
+    <string name="overlay_kit_on">til</string>
+    <string name="overlay_kit_off">fra</string>
+    <string name="overlay_kit_checked">markeret</string>
+    <string name="overlay_kit_not_checked">ikke markeret</string>
+    <string name="overlay_kit_selected">valgt</string>
+    <string name="overlay_kit_unavailable">ikke tilgængelig</string>
+    <string name="overlay_kit_decrease">Formindsk</string>
+    <string name="overlay_kit_increase">Forøg</string>
+    <string name="overlay_kit_unavailable_label">%1$s (ikke tilgængelig)</string>
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <string name="overlay_kit_option_selected">%1$s: %2$s, valgt</string>
+    <string name="overlay_kit_decrease_label">Formindsk %1$s, %2$s</string>
+    <string name="overlay_kit_increase_label">Forøg %1$s, %2$s</string>
+    <string name="overlay_kit_percent">%1$d %%</string>
+
+    <!-- App actions -->
+    <string name="overlay_app_actions">Apphandlinger</string>
+    <string name="overlay_app_missing">Appen er ikke længere tilgængelig. Den kan være afinstalleret eller deaktiveret.</string>
+    <string name="overlay_launch">Åbn</string>
+    <string name="overlay_pin">Fastgør til hjemmeskærm</string>
+    <string name="overlay_unpin">Frigør fra hjemmeskærm</string>
+    <string name="overlay_add_to_dock">Føj til dock</string>
+    <string name="overlay_remove_from_dock">Fjern fra dock</string>
+    <string name="overlay_dock_full">Docken er fuld. Fjern først en app fra docken (Rediger hjemmeskærm).</string>
+    <string name="overlay_categories">Kategorier…</string>
+    <string name="overlay_move_to_folder">Flyt til mappe…</string>
+    <string name="overlay_hide">Skjul i launcher</string>
+    <string name="overlay_hide_hint">Gendan den når som helst under Indstillinger ▸ Apps ▸ Skjulte apps</string>
+    <string name="overlay_unhide">Vis i launcher igen</string>
+    <string name="overlay_app_info">Appinfo</string>
+    <string name="overlay_more_actions">Flere handlinger</string>
+    <string name="overlay_quick_pin">Fastgør</string>
+    <string name="overlay_quick_unpin">Frigør</string>
+    <string name="overlay_quick_dock">Dock</string>
+    <string name="overlay_quick_undock">Fjern</string>
+    <string name="overlay_quick_info">Info</string>
+    <string name="overlay_quick_hide">Skjul</string>
+    <string name="overlay_quick_show">Vis</string>
+    <string name="overlay_quick_uninstall">Afinstaller</string>
+    <string name="overlay_uninstall">Afinstaller…</string>
+    <string name="overlay_uninstall_hint">Android beder om bekræftelse</string>
+    <string name="overlay_suspended">Ikke tilgængelig lige nu (sat på pause eller suspenderet)</string>
+    <string name="overlay_in_folder">I mappen »%1$s«</string>
+    <string name="overlay_not_in_any_category">Ikke i nogen kategori</string>
+
+    <!-- Category membership -->
+    <string name="overlay_categories_title">Kategorier</string>
+    <string name="overlay_categories_title_for">Kategorier: %1$s</string>
+    <string name="overlay_no_categories">Der er endnu ingen andre kategorier end Alle apps.</string>
+    <string name="overlay_manage_categories">Administrer kategorier…</string>
+    <string name="overlay_all_apps_note">Alle apps er altid i Alle apps.</string>
+
+    <!-- Move to folder -->
+    <string name="overlay_move_title">Flyt til mappe</string>
+    <string name="overlay_move_title_for">Flyt til mappe: %1$s</string>
+    <string name="overlay_no_folders">Ingen mapper endnu. Opret en nedenfor.</string>
+    <string name="overlay_new_folder">Ny mappe…</string>
+    <string name="overlay_new_folder_title">Ny mappe</string>
+    <string name="overlay_folder_name">Mappenavn</string>
+    <string name="overlay_default_folder_name">Mappe</string>
+    <string name="overlay_widget">Widget</string>
+    <string name="overlay_widget_options">Valgmuligheder for widget</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">%1$d række høj</item>
+        <item quantity="other">%1$d rækker høj</item>
+    </plurals>
+    <string name="overlay_create">Opret</string>
+    <string name="overlay_remove_from_folder">Fjern fra mappe</string>
+    <string name="overlay_current_folder">Nuværende mappe</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+
+    <!-- Edit home -->
+    <string name="overlay_edit_title">Rediger hjemmeskærm</string>
+    <string name="overlay_edit_intro">Vælg et element for at flytte, fjerne eller ændre det. Ændringer gemmes med det samme.</string>
+    <string name="overlay_home_section">Favoritter på hjemmeskærmen</string>
+    <string name="overlay_home_empty">Ingen favoritter endnu. Brug Tilføj favorit… ovenfor.</string>
+    <string name="overlay_add_favourite">Tilføj favorit…</string>
+    <string name="overlay_choose_favourite">Tilføj en favorit</string>
+    <string name="overlay_on_home">Allerede på hjemmeskærmen</string>
+    <string name="overlay_app_actions_ellipsis">Apphandlinger…</string>
+    <string name="overlay_dock_section">Dock</string>
+    <string name="overlay_folders_section">Mappernes indhold</string>
+    <string name="overlay_folder_empty">Mappen er tom.</string>
+    <string name="overlay_move_up">Flyt op</string>
+    <string name="overlay_move_down">Flyt ned</string>
+    <string name="overlay_move_before">Flyt før…</string>
+    <string name="overlay_move_after">Flyt efter…</string>
+    <string name="overlay_rename_folder">Omdøb mappe</string>
+    <string name="overlay_delete_folder">Slet mappe</string>
+    <string name="overlay_delete_folder_text">Apps i mappen flyttes tilbage til hjemmeskærmen. Ingen apps afinstalleres.</string>
+    <string name="overlay_delete">Slet</string>
+    <string name="overlay_rename">Omdøb</string>
+    <string name="overlay_add_app_to_slot">Føj app til denne plads…</string>
+    <string name="overlay_replace_app">Erstat app…</string>
+    <string name="overlay_choose_app">Vælg en app</string>
+    <string name="overlay_no_apps">Ingen tilgængelige apps.</string>
+    <string name="overlay_done">Udført</string>
+    <string name="overlay_unavailable_app">App ikke tilgængelig</string>
+    <string name="overlay_dock_slot">Plads %1$d</string>
+    <string name="overlay_dock_slot_with">Plads %1$d: %2$s</string>
+    <string name="overlay_in_dock_slot">Dock · Plads %1$d</string>
+    <string name="overlay_empty_slot">Tom</string>
+    <string name="overlay_move_before_title">Flyt »%1$s« før…</string>
+    <string name="overlay_move_after_title">Flyt »%1$s« efter…</string>
+    <string name="overlay_delete_folder_title">Vil du slette mappen »%1$s«?</string>
+    <string name="overlay_folder_header">Mappe: %1$s</string>
+    <string name="overlay_selected_hint">%1$s, valgt. Knapperne følger nedenfor.</string>
+
+    <!-- Category app picker -->
+    <string name="overlay_picker_category_fallback">kategori</string>
+    <string name="overlay_picker_add_title">Føj apps til %1$s</string>
+    <string name="overlay_picker_title">Apps i %1$s</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">%1$d valgt · tryk, eller tryk på A for at tilføje eller fjerne</item>
+        <item quantity="other">%1$d valgt · tryk, eller tryk på A for at tilføje eller fjerne</item>
+    </plurals>
+    <string name="overlay_picker_suggested">Forslag</string>
+    <string name="overlay_picker_all_apps">Alle apps</string>
+    <string name="overlay_picker_in_category">%1$s, i denne kategori</string>
+    <string name="overlay_picker_not_in_category">%1$s, ikke i denne kategori</string>
+
+    <!-- Widgets -->
+    <string name="overlay_widgets_widget">Widget</string>
+    <string name="overlay_widgets_add">Tilføj widget</string>
+    <string name="overlay_widgets_loading">Søger efter widgets…</string>
+    <string name="overlay_widgets_none">Ingen af dine apps tilbyder widgets.</string>
+    <string name="overlay_widgets_unavailable">Widgetten er ikke tilgængelig</string>
+    <string name="overlay_widgets_height">Højde</string>
+    <string name="overlay_widgets_remove">Fjern widget</string>
+    <string name="overlay_widgets_move_hint">Hvis du vil flytte den, skal du holde fingeren på widgetten og derefter trække.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d række</item>
+        <item quantity="other">%1$d rækker</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

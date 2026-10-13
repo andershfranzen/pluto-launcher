@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- The app name stays "Pluto"; it is a brand, not a word to translate. -->
+    <string name="notification_dots_service_label">Pluto Benachrichtigungspunkte</string>
     <string name="screen_lock_service_label">Pluto Bildschirmsperre</string>
     <string name="screen_lock_service_description">Ermöglicht Pluto, den Bildschirm zu sperren, wenn du auf dem Startbildschirm zweimal auf eine freie Fläche tippst. Der Dienst führt nur die Sperre aus: Er sieht nicht, was auf dem Bildschirm steht oder was du eingibst.</string>
-    <string name="notification_dots_service_label">Pluto Benachrichtigungspunkte</string>
 </resources>

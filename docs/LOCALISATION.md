@@ -1,60 +1,67 @@
 # Localisation
 
-Pluto mirrors right-to-left layouts (`android:supportsRtl="true"`). The language list for
-Android 13+'s per-app language picker is ready in `app/src/main/res/xml/locales_config.xml`,
-but the manifest does not reference it yet: offering Danish or German in that picker while
-almost every screen stays English would be a broken promise. Add
-`android:localeConfig="@xml/locales_config"` to `<application>` once the UI text below has
-been extracted. Until then, the translated strings apply when the whole phone uses that language.
+Pluto's interface text lives in Android string resources and ships in 13 languages:
+English (default), Simplified Chinese, Hindi, Spanish, Arabic, French, Bengali, Portuguese
+(Brazil), Russian and Indonesian — the ten most spoken languages by total speakers in
+Ethnologue's 2025 ranking — plus Danish, German and Swedish. Android 13+ lists them in the
+per-app language picker (Settings → System → Languages → App languages); on older versions
+Pluto follows the phone's language. Right-to-left languages are mirrored throughout,
+including console mode.
 
-## What is translated today
+## Where the text is
 
-Only the strings that already live in `app/src/main/res/values/strings.xml`:
-
-| Key | Where it is read |
+| File | What it holds |
 | --- | --- |
-| `app_name` | Launcher label. Never translate: it is the product name. |
-| `notification_dots_service_label` | Android's notification-access list. |
-| `screen_lock_service_label` | Accessibility services list. |
-| `screen_lock_service_description` | The sentence a user reads before enabling "Pluto screen lock". |
+| `app/src/main/res/values/strings.xml` | Labels Android shows for Pluto's services. |
+| `values/strings_settings.xml` | Settings, onboarding, controller screen, updates, privacy, crash reports. |
+| `values/strings_overlay.xml` | App actions, edit mode, pickers, dialogs, widgets. |
+| `values/strings_roms.xml` | ROM tabs, diagnostics, console mode chrome and browse grid. |
+| `values/strings_home.xml` | Home, drawer, search, button legends, messages, built-in category names. |
 
-Shipped: English (default), Danish, German, French and Swedish. Every language in
-`app/src/main/res/xml/locales_config.xml` must have a `values-<lang>` folder, and every
-`values-<lang>` folder must be listed there — Android's lint check enforces both directions.
+Each `values-<lang>` folder has files with the same names. XML comments above a string say
+where it appears and how short it must stay; read them before translating.
+
+In Kotlin, composables use `stringResource`/`pluralStringResource`. Code outside composition
+(the `SettingsText`, `OverlayText` and `HomeText` objects, view-model messages) reads through
+`dev.pluto.launcher.ui.UiText`. `MainActivity` handles locale changes itself, so it re-attaches
+`UiText` and keys the composition on the locale: switching language rebuilds the screen with
+the new text.
+
+Built-in categories (All apps, Games, Tools) are stored under their English names. They are
+shown translated (`Category.displayName`) until the user renames one, after which the user's
+own name is shown.
+
+Not translated on purpose: product and emulator names, the layout backup file format, and the
+crash report text that goes into a GitHub issue.
 
 ## Adding a language
 
-1. Copy `app/src/main/res/values/strings.xml` to `app/src/main/res/values-<lang>/strings.xml`
-   and translate the values (leave `app_name` as `Pluto`).
+1. Copy the five `values/strings*.xml` files to `app/src/main/res/values-<lang>/` and
+   translate every string and plural. Keep placeholders such as `%1$s` and `%2$d` (reorder them
+   freely), give plurals every quantity the language needs, and write apostrophes as `\'`.
 2. Add `<locale android:name="<lang>"/>` to `app/src/main/res/xml/locales_config.xml`.
-3. Check it on a device without changing the whole system language:
+3. Check the files without a build:
+
+   ```sh
+   scripts/check-translations.py <lang>
+   ```
+
+   It reports missing or unknown keys, placeholder mismatches, plurals without `other` and
+   unescaped apostrophes. CI runs it for every language.
+4. Look at it on a device without changing the whole system language:
 
    ```sh
    adb shell cmd locale set-app-locales dev.pluto.launcher --locales <lang>
    adb shell cmd locale set-app-locales dev.pluto.launcher --locales ""   # back to the system
    ```
 
-Right-to-left languages (`ar`, `he`, `fa`, `ur`) need no layout work: the launcher already
-mirrors for them, including console mode. Check the screen-lock description and the
-notification-access row, which are the two places these strings appear.
+Release lint fails when a string is missing from any language, so a new English string needs
+its translations in the same change (or a follow-up before the next release).
 
-## The real work: the UI text is in Kotlin
+## Testing constraints
 
-Nearly all of Pluto's text is inline in Kotlin — `SettingsText` and `OverlayStrings` hold a
-few hundred constants, and layouts contain literals such as `"Finding games…"`. Until those
-are extracted into `strings.xml`, a new language changes only the four rows above.
-
-The extraction is deliberately not half-done. When it happens, it should be one pass that
-moves `SettingsText`, `OverlayStrings` and the inline literals into resources and switches
-them to `stringResource`, keeping the wording identical so the tests below keep passing.
-Rough order of value: settings screens, onboarding, the management screens, console chrome,
-then small labels.
-
-Two constraints worth knowing before that pass:
-
-- **Format placeholders.** Several strings interpolate values (`"${n} games"`); those become
-  `plurals` or `%1$d`-style resources so translators can reorder them.
-- **The benchmark journeys assert on English text** (`By.text("Finish")`, `By.text("Skip")`
-  in `baselineprofile/src/.../Journeys.kt`). The benchmarks run on the emulator's default
-  locale, so they are unaffected, but a translation of those words must not be assumed in
-  the journeys.
+- **The benchmark journeys and instrumented UI tests assert on English text**
+  (`By.text("Finish")`, `onNodeWithText("Theme & background")`). They run in the emulator's
+  default locale, so they are unaffected, but they must not be run with an app locale set.
+- JVM unit tests have no Android resources: domain code returns data (enums, counts) and the
+  UI formats it. Calling `UiText` from a JVM test throws.

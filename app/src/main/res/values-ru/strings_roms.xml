@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ROM tabs screen: titles -->
+    <string name="rom_title">Вкладки ROM</string>
+    <string name="rom_add_tab">Добавить вкладку ROM</string>
+    <string name="rom_title_edit">Изменить вкладку ROM</string>
+    <string name="rom_title_choose_game_emulator">Эмулятор для этой игры</string>
+    <string name="rom_title_choose_default_emulator">Эмулятор по умолчанию</string>
+
+    <!-- ROM tabs screen: editor -->
+    <string name="rom_default_tab_name">Мои игры</string>
+    <string name="rom_folder_access_failed">Pluto не удалось сохранить доступ к этой папке. Выберите папку на этом устройстве.</string>
+    <string name="rom_search_installed_apps">Поиск среди установленных приложений</string>
+    <string name="rom_close_search">Закрыть поиск</string>
+    <string name="rom_saving">Сохранение…</string>
+    <string name="rom_create_tab">Создать вкладку</string>
+    <string name="rom_save_changes">Сохранить изменения</string>
+    <string name="rom_cancel">Отмена</string>
+    <string name="rom_name_dialog_title">Название вкладки</string>
+    <string name="rom_name_dialog_label">Название</string>
+    <string name="rom_done">Готово</string>
+    <string name="rom_discard_title">Отменить изменения?</string>
+    <string name="rom_discard_message">Вкладка ROM не сохранена.</string>
+    <string name="rom_discard">Не сохранять</string>
+    <string name="rom_remove_title">Удалить «%1$s»?</string>
+    <string name="rom_remove_message">Удаляется только эта вкладка. Ваши ROM и файлы сохранений останутся на месте.</string>
+    <string name="rom_remove">Удалить</string>
+    <string name="rom_editor_intro_new">Превратите папку с играми во вкладку консоли. Ваши файлы останутся на месте.</string>
+    <string name="rom_editor_intro_edit">Выберите, где эта вкладка ищет игры и какое приложение их открывает.</string>
+    <string name="rom_section_folder">1 · Папка с ROM</string>
+    <string name="rom_choose_folder">Выбрать папку с ROM</string>
+    <string name="rom_change_folder">Сменить папку с ROM</string>
+    <string name="rom_choose_folder_supporting">Выберите папку с вашими играми</string>
+    <string name="rom_folder_subfolders">Игры во вложенных папках тоже учитываются. Новые игры можно будет добавить в эту папку позже.</string>
+    <string name="rom_suggestions_header">Где обычно хранятся игры</string>
+    <string name="rom_suggestions_intro">Pluto не может заглянуть в папку, пока вы этого не разрешите. Вот папки, которые используют установленные эмуляторы; нажмите на одну, чтобы открыть в ней окно выбора.</string>
+    <string name="rom_suggestion_app">Игры %1$s</string>
+    <string name="rom_suggestion_folder">Папка «%1$s»</string>
+    <string name="rom_suggestion_supporting">Искать в %1$s на этом устройстве</string>
+    <string name="rom_section_emulator">2 · Эмулятор по умолчанию</string>
+    <string name="rom_ask_each_time">Спрашивать каждый раз</string>
+    <string name="rom_emulator_ask_supporting">Выберите эмулятор по умолчанию, чтобы открывать игры одним нажатием</string>
+    <string name="rom_emulator_default_supporting">Используется для всех игр на этой вкладке</string>
+    <string name="rom_open_setup">Открыть настройку %1$s</string>
+    <string name="rom_setup_duckstation">Импортируйте BIOS PlayStation в DuckStation, затем вернитесь сюда</string>
+    <string name="rom_setup_generic">Завершите первоначальную настройку эмулятора, затем вернитесь сюда</string>
+    <string name="rom_emulator_missing">Этот эмулятор больше не установлен. Выберите другой по умолчанию.</string>
+    <string name="rom_section_name">3 · Название вкладки</string>
+    <string name="rom_name_placeholder">Назовите вкладку</string>
+    <string name="rom_name_supporting">Например, PlayStation 1 или Game Boy. Показывается в режиме консоли.</string>
+    <string name="rom_advanced">Дополнительные параметры</string>
+    <string name="rom_hide_advanced">Скрыть дополнительные параметры</string>
+    <string name="rom_advanced_supporting">Нужны, только если игра открывается неправильно</string>
+    <string name="rom_method_title">Способ открытия игр</string>
+    <string name="rom_method_automatic">Автоматически (рекомендуется)</string>
+    <string name="rom_method_open_with">Спрашивать, каким приложением</string>
+    <string name="rom_method_view">«Открыть файл» Android</string>
+    <string name="rom_method_direct">Прямой запуск %1$s</string>
+    <string name="rom_method_supporting">Эмуляторы поддерживают разные форматы и способы открытия игр. Для прямого запуска папка должна быть в общем хранилище; если вариант по умолчанию не работает, попробуйте «Спрашивать, каким приложением».</string>
+    <string name="rom_help_row_editor">Добавление игр и обложек</string>
+    <string name="rom_remove_tab">Удалить вкладку</string>
+
+    <!-- ROM tabs screen: emulator chooser -->
+    <string name="rom_chooser_game_intro">Выберите приложение, которое будет открывать «%1$s». Изменится только эта игра; у вкладки останется свой эмулятор.</string>
+    <string name="rom_chooser_tab_intro">Выберите приложение, в котором будут открываться игры этой вкладки. Его можно изменить позже.</string>
+    <string name="rom_use_tab_default">Как на вкладке</string>
+    <string name="rom_use_tab_default_supporting">Использовать эмулятор вкладки или спрашивать — как настроено</string>
+    <string name="rom_ask_each_time_supporting">Выбирать приложение при каждом открытии игры</string>
+    <string name="rom_search_results">Результаты поиска</string>
+    <string name="rom_installed_apps">Установленные приложения</string>
+    <string name="rom_suggested_emulators">Рекомендуемые эмуляторы</string>
+    <string name="rom_no_apps_match">Нет установленных приложений, соответствующих запросу «%1$s».</string>
+    <string name="rom_no_suggestions">Найдите свой эмулятор или покажите все установленные приложения. Если он ещё не установлен, установите его и вернитесь сюда.</string>
+    <string name="rom_show_suggested">Показать рекомендуемые эмуляторы</string>
+    <string name="rom_show_all_apps">Показать все установленные приложения</string>
+    <string name="rom_show_all_apps_supporting">Использовать любой эмулятор, который может открыть ваши игры</string>
+
+    <!-- ROM tabs screen: list of tabs -->
+    <string name="rom_added">Вкладка «%1$s» добавлена. Она появится в режиме консоли.</string>
+    <string name="rom_list_intro">Просматривайте коллекции ROM как вкладки в режиме консоли. У каждой вкладки своя папка и свой эмулятор по умолчанию.</string>
+    <string name="rom_finding_games">Поиск игр…</string>
+    <plurals name="rom_library_summary">
+        <item quantity="one">%1$d игра · %2$s</item>
+        <item quantity="few">%1$d игры · %2$s</item>
+        <item quantity="many">%1$d игр · %2$s</item>
+        <item quantity="other">%1$d игры · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">Игры не найдены. Добавьте ROM в эту папку и обновите список. Другую папку можно выбрать в разделе «Изменить вкладку».</string>
+    <string name="rom_view_tab">Открыть вкладку</string>
+    <string name="rom_edit_tab">Изменить вкладку</string>
+    <string name="rom_edit_tab_supporting">%1$s · Папка, эмулятор по умолчанию и название</string>
+    <string name="rom_refresh">Обновить игры</string>
+    <string name="rom_games_and_emulators">Игры и эмуляторы</string>
+    <string name="rom_games_and_emulators_supporting">Выберите эмулятор для отдельной игры и посмотрите, во что играли</string>
+    <string name="rom_diagnostics">Диагностика</string>
+    <string name="rom_diagnostics_last_check">Последняя проверка: %1$s, %2$s</string>
+    <string name="rom_diagnostics_supporting">Что Pluto нашёл в этой папке</string>
+    <string name="rom_help_row">Как добавить игры и обложки</string>
+    <plurals name="rom_count_files">
+        <item quantity="one">%d файл</item>
+        <item quantity="few">%d файла</item>
+        <item quantity="many">%d файлов</item>
+        <item quantity="other">%d файла</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="one">%d игра</item>
+        <item quantity="few">%d игры</item>
+        <item quantity="many">%d игр</item>
+        <item quantity="other">%d игры</item>
+    </plurals>
+
+    <!-- ROM tabs screen: help -->
+    <string name="rom_help_title">Добавление игр и обложек</string>
+    <string name="rom_help_adding_header">Как добавить игры</string>
+    <string name="rom_help_adding_body">Скопируйте игры в выбранную папку вместе с их треками или дисками. Вложенные папки учитываются. Pluto проверяет изменения, когда вы возвращаетесь; «Обновить игры» проверяет сразу.</string>
+    <string name="rom_help_art_header">Обложки</string>
+    <string name="rom_help_art_body">Обложки не загружаются автоматически. Положите изображение PNG, JPG или WebP рядом с игрой с тем же именем файла до расширения. Например: Spyro.cue и Spyro.png.</string>
+    <string name="rom_help_art_layouts">Pluto также понимает структуры, которые создают популярные оболочки: изображение в boxart/, covers/ или images/, набор Named_Boxarts/ из RetroArch или вариант name-thumb.png. Затем обновите вкладку.</string>
+    <string name="rom_help_gamelist_body">Если ваша папка взята из RetroPie, Batocera или другой системы на базе EmulationStation, где рядом с играми лежит gamelist.xml, сохраните его. Pluto считывает название и обложку каждой записи, поэтому игры появятся с уже подобранными вами названиями и обложками.</string>
+    <string name="rom_help_emulator_header">Настройка эмулятора</string>
+    <string name="rom_help_emulator_body">Установите нужный эмулятор, откройте его один раз и завершите настройку. Для некоторых систем нужен файл BIOS. Pluto открывает игры в этом приложении; настройки эмулятора и сохранения управляются там.</string>
+
+    <!-- ROM tabs screen: per-game emulators panel -->
+    <string name="rom_games_panel_title">Игры · %1$s</string>
+    <string name="rom_games_panel_intro">Игра открывается в эмуляторе этой вкладки, если вы не выберете для неё другое приложение здесь. Остальные игры вкладки это не затронет.</string>
+    <string name="rom_games_panel_empty">В этой папке пока нет игр. Добавьте файлы, затем обновите вкладку.</string>
+    <string name="rom_find_game">Найти игру</string>
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="one">Показано %1$d из %2$d игры. Введите часть названия, чтобы найти нужную.</item>
+        <item quantity="few">Показано %1$d из %2$d игр. Введите часть названия, чтобы найти нужную.</item>
+        <item quantity="many">Показано %1$d из %2$d игр. Введите часть названия, чтобы найти нужную.</item>
+        <item quantity="other">Показано %1$d из %2$d игры. Введите часть названия, чтобы найти нужную.</item>
+    </plurals>
+    <string name="rom_games_panel_no_match">Нет игр, соответствующих запросу «%1$s».</string>
+    <string name="rom_game_opens_in">Открывается в %1$s</string>
+    <string name="rom_game_uses_default">Как на вкладке</string>
+    <string name="rom_game_played">%1$s · играли %2$s</string>
+
+    <!-- ROM diagnostics -->
+    <string name="rom_diag_title">Диагностика · %1$s</string>
+    <string name="rom_diag_folder">Папка</string>
+    <string name="rom_diag_access_granted">Доступ к папке предоставлен. Pluto может читать эту папку.</string>
+    <string name="rom_diag_access_missing">Нет доступа. Откройте «Изменить вкладку» и выберите эту папку снова.</string>
+    <string name="rom_diag_access_lost">Android больше не разрешает Pluto читать эту папку.</string>
+    <string name="rom_diag_last_check">Последняя проверка</string>
+    <string name="rom_diag_no_check">В этом сеансе проверка ещё не выполнялась. «Обновить игры» прочитает папку сейчас.</string>
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="one">Проверен %d файл</item>
+        <item quantity="few">Проверено %d файла</item>
+        <item quantity="many">Проверено %d файлов</item>
+        <item quantity="other">Проверено %d файла</item>
+    </plurals>
+    <plurals name="rom_diag_with_art">
+        <item quantity="one">%d с обложкой</item>
+        <item quantity="few">%d с обложкой</item>
+        <item quantity="many">%d с обложкой</item>
+        <item quantity="other">%d с обложкой</item>
+    </plurals>
+    <string name="rom_diag_systems">Системы в этой папке: %1$s. Каждая доступна как фильтр в сетке обзора консоли.</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="one">У %d игры рядом есть данные сохранений (сохранения картриджа или сейвстейты).</item>
+        <item quantity="few">У %d игр рядом есть данные сохранений (сохранения картриджа или сейвстейты).</item>
+        <item quantity="many">У %d игр рядом есть данные сохранений (сохранения картриджа или сейвстейты).</item>
+        <item quantity="other">У %d игры рядом есть данные сохранений (сохранения картриджа или сейвстейты).</item>
+    </plurals>
+    <plurals name="rom_diag_gamelist">
+        <item quantity="one">gamelist.xml: прочитана %d запись. Используются её названия и обложки.</item>
+        <item quantity="few">gamelist.xml: прочитано %d записи. Используются их названия и обложки.</item>
+        <item quantity="many">gamelist.xml: прочитано %d записей. Используются их названия и обложки.</item>
+        <item quantity="other">gamelist.xml: прочитано %d записи. Используются их названия и обложки.</item>
+    </plurals>
+    <string name="rom_diag_no_gamelist">Файла gamelist.xml здесь нет. Названия берутся из имён файлов, обложки — из структуры boxart.</string>
+    <string name="rom_diag_skipped_header">Не показаны как игры</string>
+    <string name="rom_diag_skipped_unchecked">Запустите проверку, чтобы увидеть, что пропущено.</string>
+    <string name="rom_diag_skipped_none">Ничего не пропущено: каждый файл — игра, обложка или трек.</string>
+    <plurals name="rom_diag_skipped">
+        <item quantity="one">%1$d файл не является игрой: %2$s.</item>
+        <item quantity="few">%1$d файла не являются играми: %2$s.</item>
+        <item quantity="many">%1$d файлов не являются играми: %2$s.</item>
+        <item quantity="other">%1$d файла не являются играми: %2$s.</item>
+    </plurals>
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <string name="rom_extension_none_count">без расширения×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="one">Прочитан %d плейлист с треками и дисками.</item>
+        <item quantity="few">Прочитано %d плейлиста с треками и дисками.</item>
+        <item quantity="many">Прочитано %d плейлистов с треками и дисками.</item>
+        <item quantity="other">Прочитано %d плейлиста с треками и дисками.</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="one">В этой папке нет %d трека или диска, указанного в плейлисте. Скопируйте его рядом с плейлистом — без него игра не откроется.</item>
+        <item quantity="few">В этой папке нет %d треков или дисков, указанных в плейлисте. Скопируйте их рядом с плейлистом — без них игры не откроются.</item>
+        <item quantity="many">В этой папке нет %d треков или дисков, указанных в плейлисте. Скопируйте их рядом с плейлистом — без них игры не откроются.</item>
+        <item quantity="other">В этой папке нет %d трека или диска, указанных в плейлисте. Скопируйте их рядом с плейлистом — без них игры не откроются.</item>
+    </plurals>
+    <string name="rom_diag_no_games">В этой папке не найдено игр.</string>
+
+    <!-- How long ago -->
+    <string name="rom_age_today">сегодня</string>
+    <string name="rom_age_yesterday">вчера</string>
+    <plurals name="rom_age_days">
+        <item quantity="one">%d день назад</item>
+        <item quantity="few">%d дня назад</item>
+        <item quantity="many">%d дней назад</item>
+        <item quantity="other">%d дня назад</item>
+    </plurals>
+    <string name="rom_age_a_week">неделю назад</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="one">%d неделю назад</item>
+        <item quantity="few">%d недели назад</item>
+        <item quantity="many">%d недель назад</item>
+        <item quantity="other">%d недели назад</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="one">%d месяц назад</item>
+        <item quantity="few">%d месяца назад</item>
+        <item quantity="many">%d месяцев назад</item>
+        <item quantity="other">%d месяца назад</item>
+    </plurals>
+    <string name="rom_age_a_year">год назад</string>
+
+    <!-- Generic system labels -->
+    <string name="rom_system_other">Другое</string>
+    <string name="rom_system_disc">Образ диска</string>
+
+    <!-- Opening a game -->
+    <string name="rom_open_chooser">Открыть «%1$s»</string>
+    <string name="rom_launch_failed_no_app">Это приложение не смогло открыть игру. В разделе «Вкладки ROM» выберите другой эмулятор по умолчанию или попробуйте дополнительные параметры.</string>
+    <string name="rom_launch_failed_access">Доступ к папке потерян. В разделе «Вкладки ROM» измените вкладку и выберите папку с ROM снова.</string>
+    <string name="rom_launch_failed_unavailable">Этот ROM недоступен. Обновите его полку или выберите папку снова.</string>
+
+    <!-- Reading a ROM folder failed -->
+    <string name="rom_scan_too_many_folders">В этой папке слишком много вложенных папок. Выберите папку поменьше.</string>
+    <string name="rom_scan_folder_unavailable">Папка с ROM недоступна. Выберите её снова.</string>
+    <string name="rom_scan_too_many_files">В этой папке слишком много файлов. Выберите папку поменьше.</string>
+    <string name="rom_scan_playlist_too_large">Плейлист слишком большой для чтения: %1$s</string>
+    <string name="rom_scan_playlist_unreadable">Не удалось прочитать %1$s</string>
+
+    <!-- Console mode: shelves -->
+    <string name="console_shelf_recent">Недавние запуски</string>
+    <string name="console_shelf_favourites">Избранное</string>
+    <string name="console_all_apps_fallback">Все приложения</string>
+    <string name="console_roms_fallback">ROM</string>
+    <string name="console_list_separator">", "</string>
+    <string name="console_position">%1$d из %2$d</string>
+    <string name="console_shelf_tab_description">Полка «%1$s», %2$s</string>
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <!-- Console mode: button legend -->
+    <string name="console_legend_open">Открыть</string>
+    <string name="console_legend_actions">Действия</string>
+    <string name="console_legend_search">Поиск</string>
+    <string name="console_legend_shelves">Полки</string>
+    <string name="console_legend_settings">Настройки</string>
+    <string name="console_legend_select">Выбрать</string>
+    <string name="console_touch_hint">Нажмите, чтобы открыть · Удерживайте для параметров</string>
+
+    <!-- Console mode: top bar -->
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="one">Заряд геймпада %1$d: %2$d процент</item>
+        <item quantity="few">Заряд геймпада %1$d: %2$d процента</item>
+        <item quantity="many">Заряд геймпада %1$d: %2$d процентов</item>
+        <item quantity="other">Заряд геймпада %1$d: %2$d процента</item>
+    </plurals>
+    <plurals name="console_controller_battery">
+        <item quantity="one">Заряд геймпада: %1$d процент</item>
+        <item quantity="few">Заряд геймпада: %1$d процента</item>
+        <item quantity="many">Заряд геймпада: %1$d процентов</item>
+        <item quantity="other">Заряд геймпада: %1$d процента</item>
+    </plurals>
+    <plurals name="console_phone_battery">
+        <item quantity="one">Заряд телефона: %1$d процент</item>
+        <item quantity="few">Заряд телефона: %1$d процента</item>
+        <item quantity="many">Заряд телефона: %1$d процентов</item>
+        <item quantity="other">Заряд телефона: %1$d процента</item>
+    </plurals>
+    <string name="console_battery_charging">%1$s, заряжается</string>
+    <string name="console_battery_percent">%1$d %%</string>
+    <string name="console_browse_title">Обзор: %1$s</string>
+    <string name="console_edit_shelf">Изменить «%1$s»</string>
+    <string name="console_search_apps">Поиск приложений</string>
+    <string name="console_all_apps">Все приложения</string>
+    <string name="console_launcher_settings">Настройки лаунчера</string>
+
+    <!-- Console mode: cards -->
+    <string name="console_card_actions">Действия: %1$s</string>
+    <string name="console_card_has_notifications">есть уведомления</string>
+    <string name="console_card_unavailable">недоступно</string>
+
+    <!-- Console mode: empty shelves -->
+    <string name="console_manage_rom_tab">Управление вкладкой ROM</string>
+    <string name="console_add_apps">Добавить приложения</string>
+    <string name="console_empty_recent_title">Недавних запусков пока нет</string>
+    <string name="console_empty_recent_detail">Здесь появятся приложения, открытые из Pluto, — сначала самые недавние.</string>
+    <string name="console_empty_favourites_title">Избранного пока нет</string>
+    <string name="console_empty_favourites_detail_controller">Нажмите %1$s на приложении и выберите «Закрепить на главном экране», чтобы добавить его сюда.</string>
+    <string name="console_empty_favourites_detail_touch">Нажмите и удерживайте приложение, затем выберите «Закрепить на главном экране», чтобы добавить его сюда.</string>
+    <string name="console_empty_rom_title">В «%1$s» пока нет игр</string>
+    <string name="console_empty_rom_detail">Добавьте игры в папку этой вкладки или выберите другую папку в разделе «Вкладки ROM».</string>
+    <string name="console_empty_category_title">В «%1$s» пока нет приложений</string>
+    <string name="console_empty_category_detail">Нажмите «Добавить приложения», чтобы выбрать, что здесь будет.</string>
+
+    <!-- Console browse grid -->
+    <string name="console_browse_no_match">Нет игр, соответствующих фильтру. Измените его выше или обновите игры.</string>
+    <string name="console_browse_empty">Эта полка пуста.</string>
+    <plurals name="console_browse_filtered_games">
+        <item quantity="one">%1$d из %2$d игры · Выберите, чтобы вернуться к карусели</item>
+        <item quantity="few">%1$d из %2$d игр · Выберите, чтобы вернуться к карусели</item>
+        <item quantity="many">%1$d из %2$d игр · Выберите, чтобы вернуться к карусели</item>
+        <item quantity="other">%1$d из %2$d игры · Выберите, чтобы вернуться к карусели</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="one">%d элемент · Выберите, чтобы вернуться к карусели</item>
+        <item quantity="few">%d элемента · Выберите, чтобы вернуться к карусели</item>
+        <item quantity="many">%d элементов · Выберите, чтобы вернуться к карусели</item>
+        <item quantity="other">%d элемента · Выберите, чтобы вернуться к карусели</item>
+    </plurals>
+    <string name="console_chip_all_systems">Все системы</string>
+    <string name="console_chip_favourites">Избранное</string>
+    <string name="console_sort_title">Название</string>
+    <string name="console_sort_recent">Недавние</string>
+    <string name="console_sort_file_name">Имя файла</string>
+    <string name="console_chip_selected">%1$s, выбрано</string>
+    <string name="console_add_favourite">Добавить в избранное</string>
+    <string name="console_remove_favourite">Убрать из избранного</string>
+    <string name="console_tile_select">%1$s, выбрать в карусели</string>
+    <string name="console_tile_favourite">в избранном</string>
+    <string name="console_tile_played">играли %1$s</string>
+    <string name="console_tile_save_data">есть сохранение: %1$s</string>
+    <string name="console_badge_played">Играли %1$s</string>
+    <string name="console_badge_save">Сохр. · %1$s</string>
+</resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Home screens, app drawer, shared components and launcher messages. -->
-<!-- MissingTranslation is ignored until the da/de/fr/sv translations of this file land; remove it then. -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
     <!-- Home menu (press and hold empty space on Home) -->
     <!-- Screen-reader description of the home surface; the listed actions are the home menu entries. -->
     <string name="home_surface_label">Home screen. Actions: search, add widget, edit home, settings</string>

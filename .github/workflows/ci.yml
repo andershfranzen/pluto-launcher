@@ -49,6 +49,9 @@ jobs:
             python3 "$test"
           done
 
+      - name: Translations match the English resources
+        run: python3 scripts/check-translations.py
+
       - name: Android lint
         run: ./gradlew --console=plain lintDebug
 

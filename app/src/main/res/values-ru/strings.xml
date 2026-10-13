@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_dots_service_label">Значки уведомлений Pluto</string>
+    <string name="screen_lock_service_label">Блокировка экрана Pluto</string>
+    <string name="screen_lock_service_description">Позволяет Pluto блокировать экран двойным нажатием на пустое место главного экрана. Сервис только выполняет блокировку: он не видит, что на экране, и не видит, что вы вводите.</string>
+</resources>

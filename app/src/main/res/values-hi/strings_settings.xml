@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ==================== Settings pages ==================== -->
+    <string name="settings_title">सेटिंग</string>
+    <string name="settings_page_appearance">दिखावट</string>
+    <string name="settings_page_layout">लेआउट</string>
+    <string name="settings_page_apps">ऐप</string>
+    <string name="settings_page_general">सामान्य</string>
+    <string name="settings_page_appearance_description">दिखावट की सेटिंग</string>
+    <string name="settings_page_layout_description">लेआउट की सेटिंग</string>
+    <string name="settings_page_apps_description">ऐप की सेटिंग</string>
+    <string name="settings_page_general_description">सामान्य सेटिंग</string>
+
+    <!-- Appearance -->
+    <string name="settings_appearance">दिखावट</string>
+    <string name="settings_theme_and_background">थीम और बैकग्राउंड</string>
+    <string name="settings_theme">थीम</string>
+    <string name="settings_theme_system">सिस्टम</string>
+    <string name="settings_theme_light">हल्की</string>
+    <string name="settings_theme_dark">गहरी</string>
+    <string name="settings_background">बैकग्राउंड</string>
+    <string name="settings_background_help">सामान्य मोड में होम, फ़ोल्डर और ऐप ड्रॉअर.</string>
+    <string name="settings_console_background">कंसोल का बैकग्राउंड</string>
+    <string name="settings_console_background_help">कंसोल मोड के पीछे.</string>
+    <string name="settings_background_wallpaper">वॉलपेपर</string>
+    <string name="settings_background_xmb">XMB लहरें</string>
+    <string name="settings_background_animation">बैकग्राउंड ऐनिमेशन</string>
+    <string name="settings_background_animation_help">स्मूद ज़्यादा सहज दिखता है; बैटरी सेवर आधी बार रीड्रॉ करता है.</string>
+    <string name="settings_background_smooth">स्मूद</string>
+    <string name="settings_background_battery_saver">बैटरी सेवर</string>
+    <string name="settings_scrim">वॉलपेपर का कंट्रास्ट</string>
+    <string name="settings_scrim_help">वॉलपेपर को गहरा (या हल्का) करता है, ताकि लेबल आसानी से पढ़े जा सकें.</string>
+    <string name="settings_icons">आइकॉन</string>
+    <string name="settings_icon_pack">आइकॉन पैक</string>
+    <string name="settings_system_icons">सिस्टम आइकॉन</string>
+    <string name="settings_system_icons_help">हर ऐप का अपना आइकॉन</string>
+    <string name="settings_icon_packs_loading">आइकॉन पैक खोजे जा रहे हैं…</string>
+    <string name="settings_no_icon_packs">कोई आइकॉन पैक इंस्टॉल नहीं है. अपने ऐप स्टोर से कोई आइकॉन पैक इंस्टॉल करें (ज़्यादातर Nova या ADW लॉन्चर के साथ काम करते हैं), फिर उसे यहां चुनें.</string>
+    <string name="settings_icon_pack_missing">आइकॉन पैक इंस्टॉल नहीं है: सिस्टम आइकॉन इस्तेमाल किए जा रहे हैं</string>
+    <string name="settings_size_and_motion">साइज़ और मोशन</string>
+    <string name="settings_icon_size">आइकॉन का साइज़</string>
+    <string name="settings_text_size">टेक्स्ट का साइज़</string>
+    <string name="settings_text_size_help">Android के फ़ॉन्ट साइज़ के ऊपर लागू होता है.</string>
+    <string name="settings_reduce_motion">मोशन कम करें</string>
+    <string name="settings_reduce_motion_help">गैर-ज़रूरी ऐनिमेशन छोड़ें.</string>
+
+    <!-- XMB colour picker -->
+    <string name="settings_xmb_colour">XMB रंग</string>
+    <string name="settings_xmb_colour_auto">अपने-आप (हर महीने बदलता है)</string>
+    <string name="settings_xmb_colour_blue">नीला</string>
+    <string name="settings_xmb_colour_purple">बैंगनी</string>
+    <string name="settings_xmb_colour_pink">गुलाबी</string>
+    <string name="settings_xmb_colour_red">लाल</string>
+    <string name="settings_xmb_colour_orange">नारंगी</string>
+    <string name="settings_xmb_colour_gold">सुनहरा</string>
+    <string name="settings_xmb_colour_green">हरा</string>
+    <string name="settings_xmb_colour_teal">हरा-नीला</string>
+    <string name="settings_xmb_colour_silver">चांदी जैसा</string>
+    <string name="settings_xmb_colour_black">काला</string>
+    <string name="settings_xmb_swatch_auto">अपने-आप चुना गया रंग</string>
+    <string name="settings_xmb_swatch_blue">नीला रंग</string>
+    <string name="settings_xmb_swatch_purple">बैंगनी रंग</string>
+    <string name="settings_xmb_swatch_pink">गुलाबी रंग</string>
+    <string name="settings_xmb_swatch_red">लाल रंग</string>
+    <string name="settings_xmb_swatch_orange">नारंगी रंग</string>
+    <string name="settings_xmb_swatch_gold">सुनहरा रंग</string>
+    <string name="settings_xmb_swatch_green">हरा रंग</string>
+    <string name="settings_xmb_swatch_teal">हरा-नीला रंग</string>
+    <string name="settings_xmb_swatch_silver">चांदी जैसा रंग</string>
+    <string name="settings_xmb_swatch_black">काला रंग</string>
+    <string name="settings_xmb_swatch_selected">%1$s, चुना गया</string>
+
+    <!-- Layout & rotation -->
+    <string name="settings_layout">लेआउट और रोटेशन</string>
+    <string name="settings_rotation">रोटेशन</string>
+    <string name="settings_rotation_help">सिर्फ़ लॉन्चर पर लागू होता है. आपके खोले गए ऐप अपना ओरिएंटेशन बनाए रखते हैं.</string>
+    <string name="settings_rotation_held_by_console">कंसोल मोड “हमेशा” पर सेट है, इसलिए लॉन्चर लैंडस्केप में ही रहता है.</string>
+    <string name="settings_rotation_follow">सिस्टम के हिसाब से</string>
+    <string name="settings_rotation_portrait">पोर्ट्रेट</string>
+    <string name="settings_rotation_landscape">लैंडस्केप</string>
+    <string name="settings_rotation_controller">कंट्रोलर कनेक्ट होने पर लैंडस्केप</string>
+    <string name="settings_handheld">कंसोल मोड</string>
+    <string name="settings_handheld_help">कंसोल मोड, कंट्रोलर से आसानी से इस्तेमाल होने वाला कैरूसेल है, जिसमें शेल्फ़ और बटन के हिंट होते हैं. “अपने-आप” इसे तब इस्तेमाल करता है, जब फ़ोन लैंडस्केप में हो और कंट्रोलर कनेक्ट हो. “हमेशा” Pluto को कंसोल मोड और लैंडस्केप में ही रखता है. यह Android कंसोल या हैंडहेल्ड डिवाइस के लिए है.</string>
+    <string name="settings_handheld_auto">अपने-आप</string>
+    <string name="settings_handheld_always">लैंडस्केप में हमेशा</string>
+    <string name="settings_handheld_never">कभी नहीं</string>
+    <string name="settings_handheld_everywhere">हमेशा (लॉन्चर लैंडस्केप में रहता है)</string>
+    <string name="settings_carousel">कंसोल कैरूसेल</string>
+    <string name="settings_carousel_help">कंसोल मोड में गेम और ऐप किस तरह दिखें.</string>
+    <string name="settings_carousel_coverflow">कवरफ़्लो</string>
+    <string name="settings_carousel_showcase">शोकेस: एक सपाट पंक्ति</string>
+    <string name="settings_carousel_arc">आर्क</string>
+    <string name="settings_carousel_ring">रिंग: घूमता हुआ ड्रम</string>
+    <string name="settings_carousel_deck">डेक: अगले गेम एक के ऊपर एक</string>
+    <string name="settings_console_favourites">पसंदीदा शेल्फ़</string>
+    <string name="settings_console_favourites_help">कंसोल मोड में होम के पसंदीदा ऐप को एक शेल्फ़ के तौर पर दिखाएं.</string>
+    <string name="settings_alphabet_rail">वर्णमाला पट्टी</string>
+    <string name="settings_alphabet_rail_help">ऐप ड्रॉअर के किनारे पर A–Z पट्टी दिखाएं; किसी अक्षर पर जाने के लिए इसे खींचें.</string>
+
+    <!-- Gestures -->
+    <string name="settings_gestures">जेस्चर</string>
+    <string name="settings_swipe_down">होम पर नीचे की ओर स्वाइप करें</string>
+    <string name="settings_swipe_down_help">होम पर नीचे की ओर स्वाइप करने से क्या खुलेगा.</string>
+    <string name="settings_swipe_down_notifications">सूचनाएं</string>
+    <string name="settings_swipe_down_search">ऐप खोजें</string>
+    <string name="settings_swipe_down_nothing">कुछ नहीं</string>
+    <string name="settings_double_tap_lock">लॉक करने के लिए दो बार टैप करें</string>
+    <string name="settings_double_tap_lock_help">स्क्रीन बंद करने के लिए, होम पर खाली जगह पर दो बार टैप करें. इसके लिए Pluto की स्क्रीन लॉक सेवा ज़रूरी है.</string>
+    <string name="settings_double_tap_lock_ready">चालू है. लॉक करने के लिए होम पर खाली जगह पर दो बार टैप करें.</string>
+    <string name="settings_double_tap_lock_needs_service">सुलभता सेटिंग में “Pluto स्क्रीन लॉक” चालू करें. यह सिर्फ़ स्क्रीन लॉक करता है; यह स्क्रीन पर मौजूद चीज़ें नहीं देख सकता.</string>
+
+    <!-- Notifications -->
+    <string name="settings_notifications">सूचनाएं</string>
+    <string name="settings_notification_dots">सूचना बिंदु</string>
+    <string name="settings_notification_dots_on">चालू सूचनाओं के लिए छोटे लाल बिंदु</string>
+    <string name="settings_notification_dots_needs_access">Android सूचनाओं का ऐक्सेस ज़रूरी है</string>
+    <string name="settings_notification_access">सूचनाओं का ऐक्सेस</string>
+    <string name="settings_notification_access_allowed">अनुमति है · चल रही सूचनाओं के लिए बिंदु नहीं दिखते</string>
+    <string name="settings_notification_access_needed">Pluto को सूचना बिंदु दिखाने की अनुमति दें</string>
+
+    <!-- Organisation -->
+    <string name="settings_organisation">व्यवस्थित करें</string>
+    <string name="settings_categories">कैटगरी…</string>
+    <string name="settings_hidden_apps">छिपाए गए ऐप…</string>
+    <string name="settings_edit_home">होम में बदलाव करें…</string>
+    <string name="settings_edit_home_help">पसंदीदा, डॉक और फ़ोल्डर का क्रम बदलें</string>
+    <string name="settings_rom_tabs">ROM टैब</string>
+    <string name="settings_rom_tabs_help">गेम जोड़ें और उनके डिफ़ॉल्ट एम्युलेटर चुनें</string>
+    <string name="settings_none_hidden">कोई ऐप छिपाया नहीं गया</string>
+    <plurals name="settings_hidden_count">
+        <item quantity="one">%1$d ऐप छिपाया गया</item>
+        <item quantity="other">%1$d ऐप छिपाए गए</item>
+    </plurals>
+    <plurals name="settings_category_count">
+        <item quantity="one">%1$d कैटगरी</item>
+        <item quantity="other">%1$d कैटगरी</item>
+    </plurals>
+
+    <!-- History -->
+    <string name="settings_history">हाल ही में खोले गए ऐप</string>
+    <string name="settings_keep_history">इतिहास सेव रखें</string>
+    <string name="settings_keep_history_on">Pluto से खोले गए पिछले 12 ऐप याद रखता है. यह जानकारी सिर्फ़ इस डिवाइस पर सेव होती है.</string>
+    <string name="settings_keep_history_off">बंद है. कुछ भी रिकॉर्ड नहीं किया जाता.</string>
+    <string name="settings_disable_history_title">इतिहास बंद करना है?</string>
+    <string name="settings_disable_history_text">सेव किया गया इतिहास मिटा दिया जाएगा और नए खोले गए ऐप रिकॉर्ड नहीं किए जाएंगे.</string>
+    <string name="settings_turn_off">बंद करें</string>
+    <string name="settings_clear_history">इतिहास मिटाएं</string>
+    <string name="settings_clear_history_title">हाल ही में खोले गए ऐप की सूची मिटानी है?</string>
+    <string name="settings_clear_history_text">“हाल ही में खोले गए ऐप” वाली पंक्ति खाली हो जाएगी. ऐप पर इसका कोई असर नहीं पड़ेगा.</string>
+    <string name="settings_clear">मिटाएं</string>
+    <string name="settings_history_empty">खाली</string>
+    <plurals name="settings_history_count">
+        <item quantity="one">%1$d ऐप</item>
+        <item quantity="other">%1$d ऐप</item>
+    </plurals>
+
+    <!-- Controller row -->
+    <string name="settings_controller">कंट्रोलर…</string>
+    <string name="settings_controller_help_none">कोई कंट्रोलर कनेक्ट नहीं है · मैपिंग, स्टिक ट्यूनिंग, गड़बड़ी की जांच</string>
+    <plurals name="settings_controllers_connected">
+        <item quantity="one">%1$d कंट्रोलर कनेक्ट है</item>
+        <item quantity="other">%1$d कंट्रोलर कनेक्ट हैं</item>
+    </plurals>
+
+    <!-- Default launcher -->
+    <string name="settings_default_launcher">डिफ़ॉल्ट लॉन्चर</string>
+    <string name="settings_is_default">Pluto आपका होम ऐप है.</string>
+    <string name="settings_not_default">Pluto अभी आपका होम ऐप नहीं है.</string>
+    <string name="settings_set_default">Pluto को होम ऐप के तौर पर सेट करें</string>
+    <string name="settings_how_to_switch_back">वापस पहले वाले लॉन्चर पर जाने का तरीका: Android की सेटिंग ▸ ऐप्लिकेशन ▸ डिफ़ॉल्ट ऐप्लिकेशन ▸ होम ऐप्लिकेशन खोलें और अपना पिछला लॉन्चर चुनें.</string>
+    <string name="settings_open_default_apps">डिफ़ॉल्ट ऐप्लिकेशन की सेटिंग खोलें</string>
+    <string name="settings_home_role_declined">Pluto अभी आपका होम ऐप नहीं है. आप इसे कभी भी Android की सेटिंग ▸ ऐप्लिकेशन ▸ डिफ़ॉल्ट ऐप्लिकेशन ▸ होम ऐप्लिकेशन में जाकर चुन सकते हैं.</string>
+    <string name="settings_profiles_notice">इस वर्शन में वर्क प्रोफ़ाइल और प्राइवेट स्पेस के ऐप नहीं दिखाए जाते.</string>
+
+    <!-- Troubleshooting -->
+    <string name="settings_troubleshooting">समस्या हल करना</string>
+    <string name="settings_crash_reports">क्रैश रिपोर्ट</string>
+    <string name="settings_crashes_none">कोई क्रैश रिकॉर्ड नहीं हुआ. क्रैश की जानकारी सिर्फ़ इस डिवाइस पर, यहीं रखी जाती है.</string>
+    <plurals name="settings_crashes_recorded">
+        <item quantity="one">%1$d क्रैश रिकॉर्ड हुआ. जब तक आप इसकी शिकायत नहीं करते, तब तक यह इसी डिवाइस पर रहेगा.</item>
+        <item quantity="other">%1$d क्रैश रिकॉर्ड हुए. जब तक आप इनकी शिकायत नहीं करते, तब तक ये इसी डिवाइस पर रहेंगे.</item>
+    </plurals>
+    <string name="settings_no_file_picker">इस डिवाइस में फ़ाइल पिकर नहीं है, इसलिए Pluto यहां कोई फ़ाइल नहीं चुन सकता.</string>
+    <string name="settings_backup_layout">लेआउट का बैकअप लें</string>
+    <string name="settings_backup_layout_help">पसंदीदा, डॉक, फ़ोल्डर, कैटगरी और छिपाए गए ऐप को आपकी चुनी गई फ़ाइल में सेव करता है.</string>
+    <string name="settings_restore_layout">लेआउट वापस लाएं</string>
+    <string name="settings_restore_layout_help">Pluto की लेआउट फ़ाइल को पढ़कर इस डिवाइस पर वापस लाता है.</string>
+    <string name="settings_restore_layout_title">इस डिवाइस का लेआउट बदलना है?</string>
+    <string name="settings_restore_layout_text">होम ग्रिड, डॉक, फ़ोल्डर, कैटगरी और छिपाए गए ऐप, सब कुछ फ़ाइल से लिया जाएगा. विजेट अपनी जगह पर बने रहेंगे. अगर कोई ऐप अब आपके पास नहीं है, तो वह तब तक छिपा रहेगा, जब तक आप उसे फिर से इंस्टॉल नहीं करते.</string>
+
+    <!-- About -->
+    <string name="settings_about">जानकारी</string>
+    <string name="settings_license">MIT लाइसेंस के तहत ओपन सोर्स.</string>
+    <string name="settings_privacy">कोई खाता, विज्ञापन या ऐनलिटिक्स नहीं. GitHub से सिर्फ़ वैकल्पिक अपडेट जांच और डाउनलोड के लिए संपर्क किया जाता है.</string>
+    <string name="settings_privacy_play">कोई खाता, विज्ञापन या ऐनलिटिक्स नहीं. आपका लेआउट और लॉन्चर का इतिहास इसी डिवाइस पर रहता है.</string>
+    <string name="settings_privacy_policy">निजता नीति</string>
+    <string name="settings_limitations">मौजूदा सीमाएं: वर्क प्रोफ़ाइल और प्राइवेट स्पेस के ऐप अभी काम नहीं करते; विजेट हमेशा होम ग्रिड की पूरी पंक्ति लेते हैं.</string>
+    <string name="settings_support">Pluto की मदद करें</string>
+    <string name="settings_kofi">Ko-fi पर मुझे एक कॉफ़ी पिलाएं</string>
+
+    <!-- Hidden apps -->
+    <string name="settings_hidden_title">छिपाए गए ऐप</string>
+    <string name="settings_hidden_explanation">छिपाने से ऐप सिर्फ़ Pluto की सूचियों से हटते हैं. यह सुरक्षा या निजता से जुड़ी सुविधा नहीं है; छिपाए गए ऐप अब भी सेटिंग या दूसरे ऐप से खोले जा सकते हैं.</string>
+    <string name="settings_hidden_empty">कोई ऐप छिपाया नहीं गया है. किसी ऐप को छिपाने के लिए, होम या सभी ऐप में उसे दबाकर रखें और “छिपाएं” चुनें (या कंट्रोलर से उस पर X दबाएं).</string>
+    <string name="settings_restore">वापस लाएं</string>
+    <string name="settings_restore_all">सभी वापस लाएं</string>
+
+    <!-- Categories -->
+    <string name="settings_categories_title">कैटगरी</string>
+    <string name="settings_categories_help">कैटगरी, ब्राउज़ करने के लिए ऐप व्यवस्थित करती हैं. इनसे ऐक्सेस कभी सीमित नहीं होता: हर ऐप हमेशा सभी ऐप में मौजूद रहता है.</string>
+    <string name="settings_add_category">कैटगरी जोड़ें</string>
+    <string name="settings_new_category">नई कैटगरी</string>
+    <string name="settings_category_name">कैटगरी का नाम</string>
+    <string name="settings_rename">नाम बदलें</string>
+    <string name="settings_rename_category">कैटगरी का नाम बदलें</string>
+    <string name="settings_move_up">ऊपर ले जाएं</string>
+    <string name="settings_move_down">नीचे ले जाएं</string>
+    <string name="settings_delete">मिटाएं</string>
+    <string name="settings_save">सेव करें</string>
+    <string name="settings_add">जोड़ें</string>
+    <string name="settings_all_category_note">पहले से मौजूद · इसमें हमेशा सभी ऐप होते हैं</string>
+    <string name="settings_delete_category_title">“%1$s” कैटगरी मिटानी है?</string>
+    <string name="settings_delete_category_text">इस कैटगरी के ऐप पर कोई असर नहीं पड़ेगा और न ही उन्हें अनइंस्टॉल किया जाएगा.</string>
+    <plurals name="settings_member_count">
+        <item quantity="one">%1$d ऐप</item>
+        <item quantity="other">%1$d ऐप</item>
+    </plurals>
+
+    <!-- Controller settings -->
+    <string name="settings_controller_title">कंट्रोलर</string>
+    <string name="settings_connected">कनेक्ट किए गए कंट्रोलर</string>
+    <string name="settings_no_controller">कोई कंट्रोलर कनेक्ट नहीं है. आप किसी भी समय USB या ब्लूटूथ से कंट्रोलर कनेक्ट कर सकते हैं.</string>
+    <string name="settings_controller_ids">वेंडर %1$04X · प्रॉडक्ट %2$04X</string>
+    <string name="settings_controller_descriptor">आईडी %1$s</string>
+    <string name="settings_controller_details">वेंडर %1$04X · प्रॉडक्ट %2$04X · आईडी %3$s</string>
+    <string name="settings_diagnostics">लाइव इनपुट</string>
+    <string name="settings_diagnostics_help">यह देखने के लिए कंट्रोलर के बटन दबाएं या स्टिक हिलाएं कि Android क्या रिपोर्ट करता है.</string>
+    <string name="settings_diagnostics_unavailable">लाइव इनपुट फ़िलहाल उपलब्ध नहीं है.</string>
+    <string name="settings_last_key">पिछला बटन</string>
+    <string name="settings_no_key_yet">अभी तक कोई नहीं</string>
+    <string name="settings_axes">स्टिक और D-pad</string>
+    <string name="settings_no_motion_yet">अभी तक कोई हलचल नहीं</string>
+    <string name="settings_last_key_value">%1$s (%2$s)</string>
+    <string name="settings_last_key_value_device">%1$s (%2$s) · %3$s</string>
+    <string name="settings_key_number">बटन %1$s</string>
+    <string name="settings_stick_summary">बाईं स्टिक %1$s, दाईं स्टिक %2$s</string>
+    <string name="settings_axes_values">बाईं स्टिक %1$+.2f, %2$+.2f\nदाईं स्टिक %3$+.2f, %4$+.2f\nD-pad (हैट) %5$+.0f, %6$+.0f</string>
+    <string name="settings_axes_values_dead_zone">बाईं स्टिक %1$+.2f, %2$+.2f (डेड ज़ोन)\nदाईं स्टिक %3$+.2f, %4$+.2f\nD-pad (हैट) %5$+.0f, %6$+.0f</string>
+    <string name="settings_stick_centred">बीच में</string>
+    <string name="settings_stick_up">ऊपर</string>
+    <string name="settings_stick_down">नीचे</string>
+    <string name="settings_stick_left">बाएं</string>
+    <string name="settings_stick_right">दाएं</string>
+    <string name="settings_stick_up_left">ऊपर-बाएं</string>
+    <string name="settings_stick_up_right">ऊपर-दाएं</string>
+    <string name="settings_stick_down_left">नीचे-बाएं</string>
+    <string name="settings_stick_down_right">नीचे-दाएं</string>
+    <string name="settings_mapping">बटन मैपिंग</string>
+    <string name="settings_mapping_help">प्रॉम्प्ट में वही नाम इस्तेमाल किए जाते हैं जो Android रिपोर्ट करता है, क्योंकि अलग-अलग कंट्रोलर में बटन के अक्षर अलग होते हैं. मूवमेंट (D-pad और बाईं स्टिक), होम और हाल ही के ऐप बटन को रीमैप नहीं किया जा सकता.</string>
+    <string name="settings_apply_to">बदलाव इस पर लागू करें</string>
+    <string name="settings_this_controller">यह कंट्रोलर</string>
+    <string name="settings_all_controllers">सभी कंट्रोलर</string>
+    <string name="settings_using_override">यह कंट्रोलर अपनी अलग मैपिंग इस्तेमाल करता है.</string>
+    <string name="settings_using_default">यह कंट्रोलर सभी कंट्रोलर वाली मैपिंग इस्तेमाल करता है.</string>
+    <string name="settings_remap">रीमैप करें</string>
+    <string name="settings_not_assigned">असाइन नहीं किया गया</string>
+    <string name="settings_press_a_button">कंट्रोलर पर कोई बटन दबाएं…</string>
+    <plurals name="settings_capture_for">
+        <item quantity="one">“%1$s” को रीमैप किया जा रहा है. कोई बटन दबाएं… (%2$d सेकंड में रद्द हो जाएगा)</item>
+        <item quantity="other">“%1$s” को रीमैप किया जा रहा है. कोई बटन दबाएं… (%2$d सेकंड में रद्द हो जाएगा)</item>
+    </plurals>
+    <string name="settings_capture_refused">वह बटन मूवमेंट या सिस्टम के लिए रिज़र्व है. कोई दूसरा बटन दबाएं.</string>
+    <string name="settings_capture_timeout">कोई बटन नहीं दबाया गया. रीमैप रद्द किया गया.</string>
+    <string name="settings_capture_cancelled">रीमैप रद्द किया गया.</string>
+    <string name="settings_captured">“%1$s” अब “%2$s” करता है.</string>
+    <string name="settings_captured_replacing">“%1$s” अब “%2$s” करता है. यह अब “%3$s” नहीं करता.</string>
+    <string name="settings_reset">डिफ़ॉल्ट पर रीसेट करें</string>
+    <string name="settings_reset_done">मैपिंग को डिफ़ॉल्ट पर रीसेट किया गया.</string>
+    <string name="settings_stick">स्टिक ट्यूनिंग</string>
+    <string name="settings_dead_zone">डेड ज़ोन</string>
+    <string name="settings_dead_zone_help">इससे कम स्टिक मूवमेंट को अनदेखा किया जाता है.</string>
+    <string name="settings_repeat_delay">दोहराने में देरी</string>
+    <string name="settings_repeat_delay_help">मूवमेंट दोहराए जाने से पहले कितनी देर दबाकर रखना है.</string>
+    <string name="settings_repeat_interval">दोहराने का अंतराल</string>
+    <string name="settings_repeat_interval_help">दबाकर रखने पर, दोहराए गए हर मूवमेंट के बीच का समय.</string>
+    <string name="settings_move">मूव करें</string>
+    <string name="settings_move_keys">D-pad या बाईं स्टिक</string>
+    <string name="settings_move_line">%1$s: %2$s</string>
+    <string name="settings_ms">%1$d मि॰से॰</string>
+    <string name="settings_action_confirm">खोलें / पुष्टि करें</string>
+    <string name="settings_action_back">वापस जाएं / बंद करें</string>
+    <string name="settings_action_actions">ऐप की कार्रवाइयां</string>
+    <string name="settings_action_search">खोजें</string>
+    <string name="settings_action_settings">सेटिंग</string>
+    <string name="settings_action_prev_category">पिछली कैटगरी</string>
+    <string name="settings_action_next_category">अगली कैटगरी</string>
+
+    <!-- Onboarding -->
+    <string name="settings_onboarding_title">Pluto सेट अप करें</string>
+    <string name="settings_welcome_title">Pluto में आपका स्वागत है</string>
+    <string name="settings_welcome_text">Pluto एक होम स्क्रीन है, जो फ़ोन के रोज़मर्रा के इस्तेमाल और कंट्रोलर से गेम खेलने, दोनों के लिए बनी है. फ़ोन घुमाने या कंट्रोलर कनेक्ट करने पर यह खुद को उसके हिसाब से ढाल लेती है और आपके पसंदीदा, फ़ोल्डर और कैटगरी हर जगह एक जैसे रखती है.</string>
+    <string name="settings_welcome_ready">Pluto, डिफ़ॉल्ट लेआउट के साथ इस्तेमाल के लिए तैयार है. यहां दी गई सभी चीज़ें वैकल्पिक हैं और इन्हें बाद में सेटिंग में बदला जा सकता है.</string>
+    <plurals name="settings_apps_found">
+        <item quantity="one">%1$d ऐप मिला.</item>
+        <item quantity="other">%1$d ऐप मिले.</item>
+    </plurals>
+    <string name="settings_loading_apps">ऐप खोजे जा रहे हैं…</string>
+    <string name="settings_no_apps_problem">Pluto को दिखाने के लिए कोई ऐप नहीं मिला. देखें कि ऐप इंस्टॉल हैं और उन पर पाबंदी नहीं लगी है, फिर Pluto को दोबारा खोलें. जब तक ऐप न दिखें, तब तक अपना मौजूदा होम ऐप इस्तेमाल करते रहें.</string>
+    <string name="settings_step_games_title">अपने गेम चुनें (वैकल्पिक)</string>
+    <string name="settings_step_games_text">आप जिन ऐप पर सही का निशान लगाएंगे वे गेम कैटगरी में चले जाएंगे. कंसोल मोड इस कैटगरी को अपनी अलग शेल्फ़ के तौर पर दिखाता है. आप इसे कभी भी बदल सकते हैं: किसी ऐप को दबाकर रखें, “ज़्यादा…” चुनें और फिर “कैटगरी” चुनें.</string>
+    <string name="settings_no_games_category">गेम कैटगरी उपलब्ध नहीं है. आप बाद में सेटिंग में जाकर कैटगरी बना सकते हैं.</string>
+    <plurals name="settings_games_selected">
+        <item quantity="one">गेम में %1$d ऐप</item>
+        <item quantity="other">गेम में %1$d ऐप</item>
+    </plurals>
+    <string name="settings_step_controller_title">कंट्रोलर से कंट्रोल करना</string>
+    <string name="settings_step_controller_text">Pluto की हर सुविधा, टच या गेम कंट्रोलर से काम करती है. कंट्रोलर को कभी भी कनेक्ट करें; लैंडस्केप में Pluto तब कंसोल मोड पर स्विच हो जाता है.</string>
+    <string name="settings_controller_now">कंट्रोलर कनेक्ट है. इससे इस स्क्रीन पर इधर-उधर जाकर देखें.</string>
+    <string name="settings_step_home_title">Pluto को अपने होम ऐप के तौर पर सेट करें</string>
+    <string name="settings_step_home_text">होम दबाने पर Pluto खुले, इसके लिए सेट करें. Android आपसे पुष्टि करने के लिए कहेगा.</string>
+    <string name="settings_step_home_done">Pluto अब आपका होम ऐप है.</string>
+    <string name="settings_not_now">अभी नहीं</string>
+    <string name="settings_next">आगे बढ़ें</string>
+    <string name="settings_back">वापस जाएं</string>
+    <string name="settings_skip">छोड़ें</string>
+    <string name="settings_finish">पूरा करें</string>
+    <string name="settings_start">Pluto इस्तेमाल करना शुरू करें</string>
+    <string name="settings_step_of">%2$d में से चरण %1$d</string>
+
+    <!-- Crash reports -->
+    <string name="settings_crashes_empty">कोई क्रैश रिकॉर्ड नहीं हुआ. अगर Pluto कभी क्रैश होता है, तो उसका ट्रेस यहां रखा जाता है — सिर्फ़ इस डिवाइस पर — ताकि आप तय कर सकें कि उसकी शिकायत करनी है या नहीं.</string>
+    <string name="settings_crashes_kept_locally">सिर्फ़ इस डिवाइस पर रखा जाता है. जब तक आप GitHub पर रिपोर्ट खोलकर उसे खुद सबमिट नहीं करते, तब तक कुछ भी नहीं भेजा जाता.</string>
+    <string name="settings_crash_report_on_github">GitHub पर शिकायत करें</string>
+    <string name="settings_crash_clear_all">सभी मिटाएं</string>
+    <string name="settings_crash_trace_truncated">… पूरा ट्रेस रिपोर्ट में है.</string>
+    <string name="settings_crash_label_date_pattern">d MMM, HH:mm</string>
+
+    <!-- Optional permission disclosures -->
+    <string name="settings_access_lock_title">दो बार टैप करके स्क्रीन लॉक करने की अनुमति देनी है?</string>
+    <string name="settings_access_notifications_title">सूचना बिंदु दिखाने की अनुमति देनी है?</string>
+    <string name="settings_access_lock_text">Pluto, Android के Accessibility Service API का इस्तेमाल सिर्फ़ तब आपकी स्क्रीन लॉक करने के लिए करता है, जब आप होम पर खाली जगह पर दो बार टैप करते हैं. यह सेवा स्क्रीन का कॉन्टेंट नहीं पढ़ सकती और सुलभता से जुड़े इवेंट पर नज़र नहीं रखती. यह निजी डेटा को इकट्ठा, सेव या शेयर नहीं करती. स्क्रीन लॉक करने की सुविधा वैकल्पिक है. आप Android की सुलभता सेटिंग में जाकर किसी भी समय “Pluto स्क्रीन लॉक” बंद कर सकते हैं.</string>
+    <string name="settings_access_notifications_text">Android सूचनाओं के ऐक्सेस से Pluto को सूचनाओं की जानकारी मिलती है. इसमें Pluto के बैकग्राउंड में होने का समय भी शामिल है. Pluto, ऐप और प्रोफ़ाइल आइडेंटिफ़ायर, सूचना फ़्लैग, और बैज की ज़रूरी शर्तों का इस्तेमाल सिर्फ़ बिंदु दिखाने के लिए करता है. यह मैसेज का टेक्स्ट नहीं पढ़ता और न ही सेव करता है. यह मेटाडेटा आपके डिवाइस की मेमोरी में ही रहता है और इसे कभी भी किसी सर्वर पर नहीं भेजा जाता. सूचना बिंदु वैकल्पिक हैं. आप Android की सेटिंग में जाकर किसी भी समय सूचनाओं का ऐक्सेस वापस ले सकते हैं.</string>
+    <string name="settings_access_agree">सहमति दें और जारी रखें</string>
+
+    <!-- Privacy policy -->
+    <string name="settings_privacy_byline">Pluto Launcher · Anders (andershfranzen) · 12 अक्टूबर 2026 को अपडेट किया गया</string>
+    <string name="settings_privacy_device_title">आपकी जानकारी आपके डिवाइस पर ही रहती है</string>
+    <string name="settings_privacy_device_text">Pluto में कोई खाता, विज्ञापन, ऐनलिटिक्स, ट्रैकिंग SDK या रिमोट क्रैश रिपोर्टिंग नहीं है. डेवलपर को आपके इंस्टॉल किए गए ऐप की सूची, लेआउट, खोज, ROM, सूचनाएं या ऐप खोलने का इतिहास नहीं मिलता.</string>
+    <string name="settings_privacy_apps_title">ऐप, लेआउट और हाल ही में खोले गए ऐप</string>
+    <string name="settings_privacy_apps_text">Pluto, खोले जा सकने वाले ऐप के नाम, आइकॉन और शॉर्टकट पढ़ता है, ताकि उन्हें दिखाया और खोजा जा सके. पसंदीदा, फ़ोल्डर, छिपाए गए ऐप, कैटगरी, विजेट आईडी और सेटिंग, ऐप के निजी स्टोरेज में सेव की जाती हैं. हाल ही में खोले गए ऐप की वैकल्पिक सूची डिवाइस पर ही सेव होती है; आप इसे मिटा सकते हैं या सेटिंग में इतिहास बंद कर सकते हैं. खोज क्वेरी का इस्तेमाल सिर्फ़ डिवाइस पर होता है और उन्हें खोज इतिहास के तौर पर सेव नहीं किया जाता.</string>
+    <string name="settings_privacy_roms_title">ROM फ़ोल्डर और आर्टवर्क</string>
+    <string name="settings_privacy_roms_text">Pluto सिर्फ़ उन फ़ोल्डर और इमेज को ऐक्सेस करता है जिन्हें आप Android के फ़ाइल पिकर से चुनते हैं. यह आपकी लाइब्रेरी बनाने के लिए फ़ाइल रेफ़रंस, गेम के नाम और आर्टवर्क डिवाइस पर ही सेव करता है. किसी गेम को खोलने पर, आपके चुने गए एम्युलेटर को उस गेम की चुनी गई फ़ाइल का ऐक्सेस मिलता है. ROM टैब हटाने से Pluto के लाइब्रेरी रिकॉर्ड मिटते हैं, आपकी गेम फ़ाइलें नहीं. एम्युलेटर और विजेट उपलब्ध कराने वाले ऐप अपना डेटा अपनी नीतियों के तहत मैनेज करते हैं.</string>
+    <string name="settings_privacy_dots_title">सूचना बिंदु</string>
+    <string name="settings_privacy_dots_text">Android सूचनाओं के वैकल्पिक ऐक्सेस का इस्तेमाल ऐप/प्रोफ़ाइल आइडेंटिफ़ायर, सूचना फ़्लैग, और बैज की ज़रूरी शर्तों के लिए किया जाता है. यह मेटाडेटा सिर्फ़ मेमोरी में रहता है. ऐक्सेस चालू रहने पर, यह बैकग्राउंड में भी मेमोरी में रहता है. Pluto सूचना के मैसेज का टेक्स्ट नहीं पढ़ता या सेव नहीं करता और न ही सूचना का डेटा डिवाइस से बाहर भेजता है. लिसनर को बंद करने के लिए, Android की सेटिंग में ऐक्सेस वापस लें.</string>
+    <string name="settings_privacy_lock_title">दो बार टैप करके स्क्रीन लॉक करना</string>
+    <string name="settings_privacy_lock_text">वैकल्पिक Accessibility Service API का इस्तेमाल सिर्फ़ आपके दो बार टैप करने के बाद, Android की लॉक स्क्रीन वाली कार्रवाई करने के लिए किया जाता है. यह स्क्रीन का कॉन्टेंट नहीं ले सकता और सुलभता से जुड़े इवेंट की सदस्यता नहीं लेता. इस सेवा से कोई भी निजी डेटा इकट्ठा, सेव या शेयर नहीं किया जाता. ऐक्सेस वापस लेने के लिए, Android की सुलभता सेटिंग में “Pluto स्क्रीन लॉक” बंद करें.</string>
+    <string name="settings_privacy_updates_title">अपडेट और बाहरी लिंक</string>
+    <string name="settings_privacy_updates_text">Google Play बिल्ड के पास न तो इंटरनेट की अनुमति है और न ही GitHub अपडेटर. Google Play, Google की अपनी निजता नीति के तहत इसके अपडेट मैनेज करता है. GitHub बिल्ड, GitHub से सिर्फ़ उन अपडेट जांचों के लिए संपर्क करता है जिनकी आप अनुमति देते हैं और उन डाउनलोड के लिए जिनका आप अनुरोध करते हैं. GitHub को कनेक्शन से जुड़ा सामान्य मेटाडेटा मिलता है, जैसे कि आपका आईपी पता और Pluto का वर्शन; लॉन्चर से जुड़ी कोई गतिविधि नहीं भेजी जाती. अपडेट की जांच वैकल्पिक है और डाउनलोड के लिए आपकी मंज़ूरी ज़रूरी है. सहायता के बाहरी लिंक आपके ब्राउज़र में खुलते हैं और उन पर उस वेबसाइट की निजता नीति लागू होती है.</string>
+    <string name="settings_privacy_retention_title">डेटा का रखरखाव और उसे मिटाना</string>
+    <string name="settings_privacy_retention_text">Pluto का सेव किया गया डेटा, डिवाइस के उसके निजी स्टोरेज में तब तक रहता है, जब तक आप उसे हटा नहीं देते, ऐप का स्टोरेज खाली नहीं करते या ऐप को अनइंस्टॉल नहीं करते. Android बैकअप बंद है. फ़ाइल की अनुमतियां वापस लेने से आगे का ऐक्सेस बंद हो जाता है. Pluto का स्टोरेज खाली करने से, आपकी चुनी गई ROM फ़ाइलें या आर्टवर्क नहीं मिटते. Pluto के पास न तो कोई सर्वर खाता है और न ही सर्वर पर रखे गए उपयोगकर्ता रिकॉर्ड, जिन्हें मिटाना पड़े.</string>
+    <string name="settings_privacy_contact_title">संपर्क करें</string>
+    <string name="settings_privacy_contact_text">निजता से जुड़े सवालों के लिए, anders@afive.dev पर ईमेल करें. आप Pluto Launcher के GitHub समस्या ट्रैकर के ज़रिए भी समस्याओं की शिकायत कर सकते हैं. सार्वजनिक समस्या में निजी जानकारी शामिल न करें.</string>
+    <string name="settings_privacy_email">डेवलपर को ईमेल करें</string>
+    <string name="settings_privacy_website">सार्वजनिक निजता नीति देखें</string>
+
+    <!-- Updates (both distributions) -->
+    <string name="settings_updates">अपडेट</string>
+    <string name="settings_updates_play">Google Play, Pluto को अप-टू-डेट रखता है.</string>
+    <string name="settings_updates_open_play">Play Store में खोलें</string>
+    <string name="settings_updates_auto">अपने-आप जांच करें</string>
+    <string name="settings_updates_auto_help">Pluto खोलने पर दिन में एक बार GitHub पर जांच करें. डाउनलोड के लिए हमेशा आपकी मंज़ूरी ज़रूरी होती है.</string>
+    <string name="settings_updates_checking">GitHub पर जांच की जा रही है…</string>
+    <string name="settings_updates_downloading">Pluto %1$s डाउनलोड हो रहा है…</string>
+    <string name="settings_updates_verifying">अपडेट की पुष्टि की जा रही है…</string>
+    <string name="settings_updates_ready">आपका अपडेट तैयार है. Android आपसे इंस्टॉल करने की मंज़ूरी मांगेगा.</string>
+    <string name="settings_updates_available">Pluto %1$s उपलब्ध है.</string>
+    <string name="settings_updates_up_to_date">आपके पास नया वर्शन है.</string>
+    <string name="settings_updates_idle">Pluto की नई स्टेबल रिलीज़ की जांच करें.</string>
+    <string name="settings_updates_last_checked">पिछली बार जांच की गई: %1$s</string>
+    <string name="settings_updates_check">अपडेट की जांच करें</string>
+    <string name="settings_updates_cancel">डाउनलोड रद्द करें</string>
+    <string name="settings_updates_install">अपडेट इंस्टॉल करें</string>
+    <string name="settings_updates_download">डाउनलोड और अपडेट करें</string>
+    <string name="settings_updates_notes">रिलीज़ नोट देखें</string>
+    <string name="settings_updates_disclosure">अपडेट की जांच के लिए GitHub से संपर्क किया जाता है. लॉन्चर से जुड़ी कोई गतिविधि या निजी डेटा नहीं भेजा जाता. आपका लेआउट जैसा है वैसा ही रहता है.</string>
+    <string name="settings_updates_consent_title">Pluto को अप-टू-डेट रखना है?</string>
+    <string name="settings_updates_consent_decline">रहने दें</string>
+    <string name="settings_updates_consent_allow">अपने-आप जांच की अनुमति दें</string>
+    <string name="settings_updates_consent_question">क्या GitHub पर नई रिलीज़ की जांच अपने-आप करनी है?</string>
+    <string name="settings_updates_consent_daily">दिन में एक बार, जब आप Pluto खोलें</string>
+    <string name="settings_updates_consent_approval">डाउनलोड और इंस्टॉल करने की मंज़ूरी आप देते हैं</string>
+    <string name="settings_updates_consent_footer">इस्तेमाल से जुड़ा कोई डेटा शेयर नहीं किया जाता. इसे कभी भी सेटिंग में बदलें.</string>
+    <string name="settings_updates_logo">Pluto का लोगो</string>
+
+    <!-- Update errors (GitHub build) -->
+    <string name="settings_update_error_check">GitHub पर जांच नहीं की जा सकी. अपना कनेक्शन देखें और फिर से कोशिश करें.</string>
+    <string name="settings_update_error_download">अपडेट डाउनलोड नहीं किया जा सका. अपना कनेक्शन और खाली स्टोरेज देखें, फिर से कोशिश करें.</string>
+    <string name="settings_update_error_installer">Android इंस्टॉलर नहीं खोल सका. फिर से कोशिश करें.</string>
+    <string name="settings_update_error_permission">यह अपडेट इंस्टॉल करने के लिए, Android के पूछने पर Pluto को ऐप इंस्टॉल करने की अनुमति दें. आपका डाउनलोड फिर से कोशिश करने के लिए तैयार है.</string>
+    <string name="settings_update_error_response_too_large">रिलीज़ का रिस्पॉन्स बहुत बड़ा था.</string>
+    <string name="settings_update_error_no_stable">कोई स्टेबल रिलीज़ उपलब्ध नहीं है.</string>
+    <string name="settings_update_error_unsupported_version">रिलीज़ का वर्शन काम नहीं करता.</string>
+    <string name="settings_update_error_cannot_compare">यह बिल्ड, रिलीज़ के वर्शन की तुलना नहीं कर सकता.</string>
+    <string name="settings_update_error_no_apk_yet">इस रिलीज़ में अभी कोई APK नहीं है. बाद में फिर से कोशिश करें.</string>
+    <string name="settings_update_error_apk_mismatch">डाउनलोड किया गया APK, रिलीज़ से मेल नहीं खाता.</string>
+    <string name="settings_update_error_incomplete">डाउनलोड पूरा नहीं हुआ. फिर से कोशिश करें.</string>
+    <string name="settings_update_error_save">अपडेट सेव नहीं किया जा सका. खाली स्टोरेज देखें और फिर से कोशिश करें.</string>
+    <string name="settings_update_error_checksum">APK का चेकसम मेल नहीं खाता. इसे फिर से डाउनलोड करें.</string>
+    <string name="settings_update_error_invalid_apk">डाउनलोड की गई फ़ाइल, मान्य Android APK नहीं है.</string>
+    <string name="settings_update_error_redirect_outside">डाउनलोड को GitHub के बाहर रीडायरेक्ट किया गया.</string>
+    <string name="settings_update_error_missing_location">डाउनलोड की जगह मौजूद नहीं है.</string>
+    <string name="settings_update_error_rate_limited">GitHub अनुरोधों को सीमित कर रहा है. बाद में फिर से कोशिश करें.</string>
+    <string name="settings_update_error_too_many_redirects">डाउनलोड को बहुत ज़्यादा बार रीडायरेक्ट किया गया.</string>
+    <string name="settings_update_error_not_pluto_repo">यह रिलीज़ Pluto की GitHub रिपॉज़िटरी से नहीं है.</string>
+    <string name="settings_update_error_no_supported_apk">इस रिलीज़ में Pluto का कोई काम करने वाला APK नहीं है.</string>
+    <string name="settings_update_error_unexpected_size">रिलीज़ के APK का साइज़ अनुमान के मुताबिक नहीं है.</string>
+    <string name="settings_update_error_no_checksum">इस रिलीज़ में अभी तक APK का पुष्टि किया गया चेकसम नहीं है. बाद में फिर से कोशिश करें.</string>
+    <string name="settings_update_error_not_pluto">यह APK, Pluto नहीं है.</string>
+    <string name="settings_update_error_not_newer">यह APK, Pluto की नई रिलीज़ नहीं है.</string>
+    <string name="settings_update_error_signing_key">यह अपडेट किसी दूसरी साइनिंग कुंजी का इस्तेमाल करता है और आपका लेआउट बनाए नहीं रख सकता. अपना मौजूदा इंस्टॉलेशन बनाए रखें; इसे अनइंस्टॉल न करें.</string>
+</resources>

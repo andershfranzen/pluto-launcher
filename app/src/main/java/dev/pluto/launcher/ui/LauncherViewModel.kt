@@ -372,6 +372,14 @@ class LauncherViewModel(
         checkForUpdatesAutomatically()
     }
 
+    /**
+     * A handled configuration change. A per-app language switch arrives here without a resume,
+     * and app labels are read in the launcher's language, so the catalog reloads if stale.
+     */
+    fun onConfigurationChanged() {
+        boundary("refresh app catalog") { container.catalog.refreshIfStale() }
+    }
+
     /** Home button pressed while launcher is already in front: close all layers and clear search. */
     fun onHomePressed() = closeAllLayers()
 

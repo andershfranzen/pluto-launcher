@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_surface_label">الشاشة الرئيسية. الإجراءات: البحث، وإضافة أداة، وتعديل الشاشة الرئيسية، والإعدادات</string>
+    <string name="home_menu_search_apps">البحث في التطبيقات</string>
+    <string name="home_menu_add_widget">إضافة أداة</string>
+    <string name="home_menu_edit_home">تعديل الشاشة الرئيسية</string>
+    <string name="home_menu_launcher_settings">إعدادات المشغّل</string>
+
+    <string name="home_category_all">كل التطبيقات</string>
+    <string name="home_category_games">الألعاب</string>
+    <string name="home_category_tools">أدوات مساعدة</string>
+
+    <string name="home_drawer_category_everything">الكل</string>
+    <string name="home_drawer_game_unavailable">لم تعد هذه اللعبة متاحة. حدِّث علامة تبويب ROM الخاصة بها.</string>
+    <string name="home_drawer_searching">جارٍ البحث…</string>
+    <string name="home_drawer_search_label">البحث في التطبيقات</string>
+    <string name="home_drawer_search_scope_category">البحث في التطبيقات والاختصارات ضمن %1$s</string>
+    <string name="home_drawer_search_scope_all">البحث في كل التطبيقات والألعاب والاختصارات</string>
+    <string name="home_drawer_search_scope_actions">%1$s. انقر على تطبيق لعرض إجراءاته.</string>
+    <string name="home_drawer_actions_mode">وضع إجراءات التطبيقات</string>
+    <string name="home_drawer_search_hint_category">البحث في %1$s</string>
+    <string name="home_drawer_search_hint_all">البحث في التطبيقات والألعاب والاختصارات</string>
+    <string name="home_drawer_clear_search">محو البحث</string>
+    <string name="home_drawer_close_search">إغلاق البحث</string>
+    <string name="home_drawer_done">تم</string>
+    <string name="home_drawer_actions">اختر تطبيقًا لعرض إجراءاته</string>
+    <string name="home_drawer_actions_done">تم اختيار التطبيقات</string>
+    <string name="home_drawer_manage_categories">إضافة الفئات أو تعديلها</string>
+    <string name="home_drawer_actions_hint">انقر على تطبيق لعرض إجراءاته</string>
+    <string name="home_drawer_no_results">لا توجد نتائج عن “%1$s”</string>
+    <string name="home_drawer_no_match">لا توجد تطبيقات تطابق “%1$s”</string>
+    <string name="home_drawer_empty_category">لا توجد تطبيقات في %1$s بعد</string>
+    <string name="home_drawer_empty_all">لا توجد تطبيقات لعرضها</string>
+    <string name="home_drawer_search_everything">البحث في الكل</string>
+    <string name="home_drawer_search_all_apps">البحث في كل التطبيقات</string>
+    <string name="home_drawer_no_match_category_detail">البحث ضمن %1$s. جرِّب \"الكل\" أو اسمًا أقصر.</string>
+    <string name="home_drawer_no_match_detail_rich">يشمل البحث التطبيقات وعناوين ROM واختصارات التطبيقات.</string>
+    <string name="home_drawer_no_match_detail">يشمل البحث أسماء التطبيقات وأسماء الحزم.</string>
+    <string name="home_drawer_empty_category_detail">اختر التطبيقات التي تنتمي إلى هنا.</string>
+    <string name="home_drawer_add_apps">إضافة تطبيقات</string>
+    <string name="home_drawer_show_all_apps">عرض كل التطبيقات</string>
+    <string name="home_drawer_empty_all_detail">يمكن استعادة التطبيقات المخفية من الإعدادات ← التطبيقات ← التطبيقات المخفية.</string>
+    <string name="home_drawer_hidden_apps">التطبيقات المخفية</string>
+
+    <string name="home_lock_needs_service">للقفل بالنقر مرّتين، فعِّل “قفل الشاشة من Pluto” في إعدادات تسهيل الاستخدام.</string>
+    <string name="home_empty_favourites">لا توجد مفضّلات بعد</string>
+    <string name="home_empty_favourites_detail">مرِّر سريعًا للأعلى للعثور على التطبيقات، ثم ثبِّت مفضّلاتك. يؤدي الضغط مع الاستمرار على تطبيق إلى فتح إجراءاته، ويعمل \"إضافة إلى المفضّلة\" بدون إيماءات.</string>
+    <string name="home_add_favourite">إضافة إلى المفضّلة</string>
+    <string name="home_drop_remove">إزالة</string>
+    <string name="home_dock_empty_slot">خانة فارغة %1$d في شريط الإرساء. تفتح وضع التعديل لاختيار تطبيق</string>
+
+    <string name="home_folder_name">اسم المجلد</string>
+    <string name="home_folder_save_name">حفظ الاسم</string>
+    <string name="home_folder_cancel_rename">إلغاء إعادة التسمية</string>
+    <string name="home_folder_close">إغلاق المجلد</string>
+    <string name="home_folder_rename">إعادة تسمية</string>
+    <string name="home_folder_edit">تعديل</string>
+    <string name="home_folder_empty">هذا المجلد فارغ. اسحب تطبيقًا إليه، أو اضغط مع الاستمرار على تطبيق واختر \"إجراءات إضافية\" ثم \"نقل إلى مجلد…\".</string>
+
+    <string name="home_search_section_apps">التطبيقات</string>
+    <string name="home_search_section_games">الألعاب</string>
+    <string name="home_search_section_shortcuts">الاختصارات</string>
+    <string name="home_search_result_options">خيارات %1$s</string>
+    <string name="home_search_result_app_detail">تطبيق</string>
+    <string name="home_search_result_shortcut_detail">%1$s · اختصار</string>
+    <string name="home_search_result_app">%1$s، تطبيق</string>
+    <string name="home_search_result_game">%1$s، لعبة في %2$s</string>
+    <string name="home_search_result_shortcut">%1$s، اختصار %2$s</string>
+
+    <string name="home_startup_starting">جارٍ تشغيل Pluto</string>
+    <string name="home_startup_loading_apps">جارٍ تحميل التطبيقات</string>
+    <string name="home_storage_error_title">يتعذّر على Pluto فتح التخطيط المحفوظ</string>
+    <string name="home_storage_error_detail">لم يتم تغيير مفضّلاتك أو شريط الإرساء أو المجلدات أو الإعدادات ولم يُحذف شيء منها. أعِد المحاولة، أو اختر تطبيقًا آخر للشاشة الرئيسية في إعدادات Android ريثما تُحلّ المشكلة. عادةً ما يحلّ تثبيت إصدار Pluto الأحدث الذي استخدمته سابقًا هذه المشكلة.</string>
+    <string name="home_storage_error_technical">التفاصيل: %1$s</string>
+    <string name="home_storage_error_retry">إعادة المحاولة</string>
+    <string name="home_storage_error_choose_home">اختيار تطبيق الشاشة الرئيسية</string>
+
+    <string name="common_category_tab">فئة %1$s</string>
+    <string name="common_message_dismiss_label">إغلاق الرسالة</string>
+    <string name="common_message_dismiss">إغلاق</string>
+    <string name="common_clock_description">%1$s، %2$s</string>
+    <string name="common_app_unavailable">%1$s (غير متاح)</string>
+    <string name="common_app_actions">إجراءات التطبيق</string>
+    <string name="common_app_opens_actions">%1$s، يفتح إجراءات التطبيق</string>
+    <string name="common_folder_empty">مجلد %1$s، فارغ</string>
+    <plurals name="common_folder_apps">
+        <item quantity="zero">مجلد %1$s، عدد التطبيقات: %2$d</item>
+        <item quantity="one">مجلد %1$s، عدد التطبيقات: %2$d</item>
+        <item quantity="two">مجلد %1$s، عدد التطبيقات: %2$d</item>
+        <item quantity="few">مجلد %1$s، %2$d تطبيقات</item>
+        <item quantity="many">مجلد %1$s، %2$d تطبيقًا</item>
+        <item quantity="other">مجلد %1$s، %2$d تطبيق</item>
+    </plurals>
+    <string name="common_folder_edit">تعديل المجلد</string>
+
+    <string name="common_legend_open">فتح</string>
+    <string name="common_legend_actions">إجراءات</string>
+    <string name="common_legend_search">بحث</string>
+    <string name="common_legend_settings">الإعدادات</string>
+    <string name="common_legend_category">الفئة</string>
+    <string name="common_legend_back">رجوع</string>
+    <string name="common_legend_close">إغلاق</string>
+    <string name="common_legend_spoken">أزرار وحدة التحكم: %1$s</string>
+    <string name="common_legend_spoken_entry">%1$s %2$s</string>
+    <string name="common_legend_spoken_or">%1$s أو %2$s</string>
+    <string name="common_has_notifications">به إشعارات</string>
+    <string name="common_more_actions">إجراءات إضافية</string>
+
+    <string name="common_app_not_installed">لم يعد %1$s مثبّتًا.</string>
+    <string name="common_app_paused">%1$s متوقف مؤقتًا حاليًا.</string>
+    <string name="common_app_open_failed">تعذّر فتح %1$s.</string>
+    <string name="common_app_info_unavailable">معلومات التطبيق غير متاحة لـ %1$s.</string>
+    <string name="common_app_info_failed">تعذّر فتح معلومات التطبيق لـ %1$s.</string>
+    <string name="common_uninstall_not_here">لا يمكن إلغاء تثبيت %1$s من هنا.</string>
+    <string name="common_uninstall_unavailable">إلغاء التثبيت غير متاح على هذا الجهاز.</string>
+    <string name="common_uninstall_failed">تعذّر إلغاء تثبيت %1$s.</string>
+    <string name="common_shortcut_open_failed">تعذّر فتح “%1$s”.</string>
+
+    <string name="home_update_available">يتوفّر Pluto %1$s. افتح الإعدادات ← عام للتحديث.</string>
+    <string name="home_rom_shelves_load_failed">تعذّر تحميل رفوف ROM. أعِد تشغيل Pluto للمحاولة مجددًا.</string>
+    <string name="home_rom_shelf_save_failed">تعذّر حفظ رف ROM هذا.</string>
+    <string name="home_rom_shelf_remove_failed">تعذّرت إزالة رف ROM هذا.</string>
+    <string name="home_rom_shelf_missing">لم يعد رف ROM هذا موجودًا</string>
+    <string name="home_rom_folder_access_lost">فُقد الوصول إلى المجلد. اختر مجلد ROM مجددًا.</string>
+    <string name="home_rom_folder_read_failed">تعذّرت قراءة مجلد ROM هذا. اختره مجددًا.</string>
+    <string name="home_app_open_failed">تعذّر فتح هذا التطبيق.</string>
+    <string name="home_shortcut_unavailable">لم يعد هذا الاختصار متاحًا.</string>
+    <string name="home_shortcut_open_failed">تعذّر فتح هذا الاختصار.</string>
+    <string name="home_system_app_info_failed">تعذّر على Android فتح معلومات التطبيق حاليًا.</string>
+    <string name="home_system_uninstall_failed">تعذّر على Android طلب إلغاء التثبيت حاليًا.</string>
+    <string name="home_layout_saved">تم حفظ التخطيط في الملف الذي اخترته.</string>
+    <string name="home_layout_write_failed">تعذّرت الكتابة في هذا الملف. جرِّب موقعًا آخر.</string>
+    <string name="home_layout_restored">تمت استعادة التخطيط.</string>
+    <string name="home_layout_restore_failed">تعذّرت استعادة هذا التخطيط. لم يتغيّر تخطيطك الحالي.</string>
+    <string name="home_layout_too_new">أُنشئت هذه النسخة الاحتياطية بإصدار أحدث من Pluto. حدِّث Pluto ثم استعِدها.</string>
+    <string name="home_layout_not_backup">هذا الملف ليس نسخة احتياطية لتخطيط Pluto.</string>
+    <string name="home_layout_read_failed">تعذّرت قراءة هذا الملف.</string>
+    <string name="home_save_failed">تعذّر حفظ هذا التغيير. يُرجى إعادة المحاولة.</string>
+    <string name="home_default_folder_name">مجلد</string>
+    <string name="home_default_category_name">فئة جديدة</string>
+    <string name="home_dock_full">شريط الإرساء ممتلئ. أزِل تطبيقًا منه أولاً.</string>
+    <string name="home_settings_reset">تلف ملف إعدادات Pluto وتمت إعادة ضبطه. سيبقى \"آخر التطبيقات المفتوحة\" متوقفًا إلى أن تفعّله مجددًا.</string>
+    <string name="home_settings_unreadable">يتعذّر على Pluto قراءة إعداداته حاليًا، لذا تُستخدم الإعدادات التلقائية ويتوقف \"آخر التطبيقات المفتوحة\" مؤقتًا.</string>
+</resources>

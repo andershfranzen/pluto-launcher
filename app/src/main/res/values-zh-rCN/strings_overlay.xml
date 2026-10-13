@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared building blocks (OverlayKit) -->
+    <string name="overlay_kit_close">关闭</string>
+    <string name="overlay_kit_cancel">取消</string>
+    <string name="overlay_kit_done">完成</string>
+    <string name="overlay_kit_on">已开启</string>
+    <string name="overlay_kit_off">已关闭</string>
+    <string name="overlay_kit_checked">已勾选</string>
+    <string name="overlay_kit_not_checked">未勾选</string>
+    <string name="overlay_kit_selected">已选择</string>
+    <string name="overlay_kit_unavailable">不可用</string>
+    <string name="overlay_kit_decrease">减小</string>
+    <string name="overlay_kit_increase">增大</string>
+    <string name="overlay_kit_unavailable_label">%1$s（不可用）</string>
+    <string name="overlay_kit_option">%1$s：%2$s</string>
+    <string name="overlay_kit_option_selected">%1$s：%2$s，已选择</string>
+    <string name="overlay_kit_decrease_label">减小%1$s，当前为 %2$s</string>
+    <string name="overlay_kit_increase_label">增大%1$s，当前为 %2$s</string>
+    <string name="overlay_kit_percent">%1$d%%</string>
+
+    <!-- App actions -->
+    <string name="overlay_app_actions">应用操作</string>
+    <string name="overlay_app_missing">此应用已不可用，可能已被卸载或停用。</string>
+    <string name="overlay_launch">打开</string>
+    <string name="overlay_pin">固定到主屏幕</string>
+    <string name="overlay_unpin">从主屏幕取消固定</string>
+    <string name="overlay_add_to_dock">添加到程序坞</string>
+    <string name="overlay_remove_from_dock">从程序坞移除</string>
+    <string name="overlay_dock_full">程序坞已满。请先从程序坞中移除一个应用（编辑主屏幕）。</string>
+    <string name="overlay_categories">分类…</string>
+    <string name="overlay_move_to_folder">移至文件夹…</string>
+    <string name="overlay_hide">在启动器中隐藏</string>
+    <string name="overlay_hide_hint">可随时在“设置 ▸ 应用 ▸ 隐藏的应用”中恢复</string>
+    <string name="overlay_unhide">重新在启动器中显示</string>
+    <string name="overlay_app_info">应用信息</string>
+    <string name="overlay_more_actions">更多操作</string>
+    <string name="overlay_quick_pin">固定</string>
+    <string name="overlay_quick_unpin">取消固定</string>
+    <string name="overlay_quick_dock">程序坞</string>
+    <string name="overlay_quick_undock">移出</string>
+    <string name="overlay_quick_info">信息</string>
+    <string name="overlay_quick_hide">隐藏</string>
+    <string name="overlay_quick_show">显示</string>
+    <string name="overlay_quick_uninstall">卸载</string>
+    <string name="overlay_uninstall">卸载…</string>
+    <string name="overlay_uninstall_hint">Android 会请求确认</string>
+    <string name="overlay_suspended">暂时不可用（已暂停或停用）</string>
+    <string name="overlay_in_folder">位于文件夹“%1$s”中</string>
+    <string name="overlay_not_in_any_category">不属于任何分类</string>
+
+    <!-- Category membership -->
+    <string name="overlay_categories_title">分类</string>
+    <string name="overlay_categories_title_for">分类：%1$s</string>
+    <string name="overlay_no_categories">除“所有应用”外，还没有任何分类。</string>
+    <string name="overlay_manage_categories">管理分类…</string>
+    <string name="overlay_all_apps_note">每个应用都始终位于“所有应用”中。</string>
+
+    <!-- Move to folder -->
+    <string name="overlay_move_title">移至文件夹</string>
+    <string name="overlay_move_title_for">移至文件夹：%1$s</string>
+    <string name="overlay_no_folders">还没有文件夹。请在下方新建一个。</string>
+    <string name="overlay_new_folder">新建文件夹…</string>
+    <string name="overlay_new_folder_title">新建文件夹</string>
+    <string name="overlay_folder_name">文件夹名称</string>
+    <string name="overlay_default_folder_name">文件夹</string>
+    <string name="overlay_widget">微件</string>
+    <string name="overlay_widget_options">微件选项</string>
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="other">高 %1$d 行</item>
+    </plurals>
+    <string name="overlay_create">创建</string>
+    <string name="overlay_remove_from_folder">从文件夹中移除</string>
+    <string name="overlay_current_folder">当前文件夹</string>
+    <plurals name="overlay_app_count">
+        <item quantity="other">%1$d 个应用</item>
+    </plurals>
+
+    <!-- Edit home -->
+    <string name="overlay_edit_title">编辑主屏幕</string>
+    <string name="overlay_edit_intro">选择一项即可移动、移除或更改它。更改会立即保存。</string>
+    <string name="overlay_home_section">主屏幕收藏</string>
+    <string name="overlay_home_empty">还没有收藏。请使用上方的“添加收藏…”。</string>
+    <string name="overlay_add_favourite">添加收藏…</string>
+    <string name="overlay_choose_favourite">添加收藏</string>
+    <string name="overlay_on_home">已在主屏幕上</string>
+    <string name="overlay_app_actions_ellipsis">应用操作…</string>
+    <string name="overlay_dock_section">程序坞</string>
+    <string name="overlay_folders_section">文件夹内容</string>
+    <string name="overlay_folder_empty">此文件夹为空。</string>
+    <string name="overlay_move_up">上移</string>
+    <string name="overlay_move_down">下移</string>
+    <string name="overlay_move_before">移到…之前</string>
+    <string name="overlay_move_after">移到…之后</string>
+    <string name="overlay_rename_folder">重命名文件夹</string>
+    <string name="overlay_delete_folder">删除文件夹</string>
+    <string name="overlay_delete_folder_text">此文件夹中的应用会回到主屏幕。不会卸载任何应用。</string>
+    <string name="overlay_delete">删除</string>
+    <string name="overlay_rename">重命名</string>
+    <string name="overlay_add_app_to_slot">向此位置添加应用…</string>
+    <string name="overlay_replace_app">替换应用…</string>
+    <string name="overlay_choose_app">选择应用</string>
+    <string name="overlay_no_apps">没有可用的应用。</string>
+    <string name="overlay_done">完成</string>
+    <string name="overlay_unavailable_app">不可用的应用</string>
+    <string name="overlay_dock_slot">位置 %1$d</string>
+    <string name="overlay_dock_slot_with">位置 %1$d：%2$s</string>
+    <string name="overlay_in_dock_slot">程序坞 · 位置 %1$d</string>
+    <string name="overlay_empty_slot">空</string>
+    <string name="overlay_move_before_title">将“%1$s”移到…之前</string>
+    <string name="overlay_move_after_title">将“%1$s”移到…之后</string>
+    <string name="overlay_delete_folder_title">要删除文件夹“%1$s”吗？</string>
+    <string name="overlay_folder_header">文件夹：%1$s</string>
+    <string name="overlay_selected_hint">已选择%1$s。后面是相关控件。</string>
+
+    <!-- Category app picker (shelf picker) -->
+    <string name="overlay_picker_category_fallback">分类</string>
+    <string name="overlay_picker_add_title">向“%1$s”添加应用</string>
+    <string name="overlay_picker_title">“%1$s”中的应用</string>
+    <plurals name="overlay_picker_selected">
+        <item quantity="other">已选择 %1$d 个 · 点按或按 A 键可添加或移除</item>
+    </plurals>
+    <string name="overlay_picker_suggested">推荐</string>
+    <string name="overlay_picker_all_apps">所有应用</string>
+    <string name="overlay_picker_in_category">%1$s，在此分类中</string>
+    <string name="overlay_picker_not_in_category">%1$s，不在此分类中</string>
+
+    <!-- Widgets -->
+    <string name="overlay_widgets_widget">微件</string>
+    <string name="overlay_widgets_add">添加微件</string>
+    <string name="overlay_widgets_loading">正在查找微件…</string>
+    <string name="overlay_widgets_none">你的应用均未提供微件。</string>
+    <string name="overlay_widgets_unavailable">此微件不可用</string>
+    <string name="overlay_widgets_height">高度</string>
+    <string name="overlay_widgets_remove">移除微件</string>
+    <string name="overlay_widgets_move_hint">如需移动，请按住微件，然后拖动。</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="other">%1$d 行</item>
+    </plurals>
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

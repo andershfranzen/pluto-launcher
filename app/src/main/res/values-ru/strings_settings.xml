@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ==================== Settings pages ==================== -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_page_appearance">Вид</string>
+    <string name="settings_page_layout">Макет</string>
+    <string name="settings_page_apps">Приложения</string>
+    <string name="settings_page_general">Общие</string>
+    <string name="settings_page_appearance_description">Настройки внешнего вида</string>
+    <string name="settings_page_layout_description">Настройки макета</string>
+    <string name="settings_page_apps_description">Настройки приложений</string>
+    <string name="settings_page_general_description">Общие настройки</string>
+
+    <!-- Appearance -->
+    <string name="settings_appearance">Внешний вид</string>
+    <string name="settings_theme_and_background">Тема и фон</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_system">Системная</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_background">Фон</string>
+    <string name="settings_background_help">Главный экран, папки и список приложений в обычном режиме.</string>
+    <string name="settings_console_background">Фон режима консоли</string>
+    <string name="settings_console_background_help">Под режимом консоли.</string>
+    <string name="settings_background_wallpaper">Обои</string>
+    <string name="settings_background_xmb">Волны XMB</string>
+    <string name="settings_background_animation">Анимация фона</string>
+    <string name="settings_background_animation_help">«Плавная» выглядит плавно; «Экономия заряда» перерисовывает вдвое реже.</string>
+    <string name="settings_background_smooth">Плавная</string>
+    <string name="settings_background_battery_saver">Экономия заряда</string>
+    <string name="settings_scrim">Контраст обоев</string>
+    <string name="settings_scrim_help">Затемняет (или осветляет) обои, чтобы подписи оставались читаемыми.</string>
+    <string name="settings_icons">Значки</string>
+    <string name="settings_icon_pack">Набор значков</string>
+    <string name="settings_system_icons">Системные значки</string>
+    <string name="settings_system_icons_help">Собственный значок каждого приложения</string>
+    <string name="settings_icon_packs_loading">Поиск наборов значков…</string>
+    <string name="settings_no_icon_packs">Наборы значков не установлены. Установите набор из магазина приложений (большинство поддерживают лаунчеры Nova или ADW), затем выберите его здесь.</string>
+    <string name="settings_icon_pack_missing">Набор значков не установлен: используются системные значки</string>
+    <string name="settings_size_and_motion">Размер и анимация</string>
+    <string name="settings_icon_size">Размер значков</string>
+    <string name="settings_text_size">Размер текста</string>
+    <string name="settings_text_size_help">Применяется поверх размера шрифта Android.</string>
+    <string name="settings_reduce_motion">Меньше анимации</string>
+    <string name="settings_reduce_motion_help">Пропускать необязательные анимации.</string>
+
+    <!-- XMB colour picker -->
+    <string name="settings_xmb_colour">Цвет XMB</string>
+    <string name="settings_xmb_colour_auto">Авто (меняется каждый месяц)</string>
+    <string name="settings_xmb_colour_blue">Синий</string>
+    <string name="settings_xmb_colour_purple">Фиолетовый</string>
+    <string name="settings_xmb_colour_pink">Розовый</string>
+    <string name="settings_xmb_colour_red">Красный</string>
+    <string name="settings_xmb_colour_orange">Оранжевый</string>
+    <string name="settings_xmb_colour_gold">Золотой</string>
+    <string name="settings_xmb_colour_green">Зелёный</string>
+    <string name="settings_xmb_colour_teal">Бирюзовый</string>
+    <string name="settings_xmb_colour_silver">Серебристый</string>
+    <string name="settings_xmb_colour_black">Чёрный</string>
+    <string name="settings_xmb_swatch_auto">Автоматический цвет</string>
+    <string name="settings_xmb_swatch_blue">синий цвет</string>
+    <string name="settings_xmb_swatch_purple">фиолетовый цвет</string>
+    <string name="settings_xmb_swatch_pink">розовый цвет</string>
+    <string name="settings_xmb_swatch_red">красный цвет</string>
+    <string name="settings_xmb_swatch_orange">оранжевый цвет</string>
+    <string name="settings_xmb_swatch_gold">золотой цвет</string>
+    <string name="settings_xmb_swatch_green">зелёный цвет</string>
+    <string name="settings_xmb_swatch_teal">бирюзовый цвет</string>
+    <string name="settings_xmb_swatch_silver">серебристый цвет</string>
+    <string name="settings_xmb_swatch_black">чёрный цвет</string>
+    <string name="settings_xmb_swatch_selected">%1$s, выбран</string>
+
+    <!-- Layout & rotation -->
+    <string name="settings_layout">Макет и поворот</string>
+    <string name="settings_rotation">Поворот экрана</string>
+    <string name="settings_rotation_help">Действует только на лаунчер. Открытые приложения сохраняют свою ориентацию.</string>
+    <string name="settings_rotation_held_by_console">Для режима консоли выбрано «Всегда», поэтому лаунчер остаётся в альбомной ориентации.</string>
+    <string name="settings_rotation_follow">Как в системе</string>
+    <string name="settings_rotation_portrait">Книжная</string>
+    <string name="settings_rotation_landscape">Альбомная</string>
+    <string name="settings_rotation_controller">Альбомная при подключённом геймпаде</string>
+    <string name="settings_handheld">Режим консоли</string>
+    <string name="settings_handheld_help">Режим консоли — удобная для геймпада карусель с полками и подсказками кнопок. «Автоматически» включает его в альбомной ориентации, когда подключён геймпад. «Всегда» держит Pluto в режиме консоли и в альбомной ориентации — для Android-приставки или портативной консоли.</string>
+    <string name="settings_handheld_auto">Автоматически</string>
+    <string name="settings_handheld_always">Всегда в альбомной</string>
+    <string name="settings_handheld_never">Никогда</string>
+    <string name="settings_handheld_everywhere">Всегда (лаунчер в альбомной ориентации)</string>
+    <string name="settings_carousel">Карусель консоли</string>
+    <string name="settings_carousel_help">Как игры и приложения расположены в режиме консоли.</string>
+    <string name="settings_carousel_coverflow">Coverflow</string>
+    <string name="settings_carousel_showcase">Витрина: плоский ряд</string>
+    <string name="settings_carousel_arc">Дуга</string>
+    <string name="settings_carousel_ring">Кольцо: вращающийся барабан</string>
+    <string name="settings_carousel_deck">Стопка: следующие игры сложены</string>
+    <string name="settings_console_favourites">Полка избранного</string>
+    <string name="settings_console_favourites_help">Показывать избранное с главного экрана как полку в режиме консоли.</string>
+    <string name="settings_alphabet_rail">Алфавитная шкала</string>
+    <string name="settings_alphabet_rail_help">Показывать полосу A–Z у края списка приложений; проведите по ней, чтобы переходить между буквами.</string>
+
+    <!-- Gestures -->
+    <string name="settings_gestures">Жесты</string>
+    <string name="settings_swipe_down">Свайп вниз на главном экране</string>
+    <string name="settings_swipe_down_help">Что открывает свайп вниз по главному экрану.</string>
+    <string name="settings_swipe_down_notifications">Уведомления</string>
+    <string name="settings_swipe_down_search">Поиск приложений</string>
+    <string name="settings_swipe_down_nothing">Ничего</string>
+    <string name="settings_double_tap_lock">Блокировка двойным нажатием</string>
+    <string name="settings_double_tap_lock_help">Дважды нажмите на пустое место главного экрана, чтобы выключить экран. Нужен сервис блокировки экрана Pluto.</string>
+    <string name="settings_double_tap_lock_ready">Включено. Дважды нажмите на пустое место главного экрана, чтобы заблокировать.</string>
+    <string name="settings_double_tap_lock_needs_service">Включите «Блокировка экрана Pluto» в настройках специальных возможностей. Сервис только блокирует экран и не видит его содержимое.</string>
+
+    <!-- Notifications -->
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_notification_dots">Значки уведомлений</string>
+    <string name="settings_notification_dots_on">Маленькие красные точки для активных уведомлений</string>
+    <string name="settings_notification_dots_needs_access">Нужен доступ к уведомлениям Android</string>
+    <string name="settings_notification_access">Доступ к уведомлениям</string>
+    <string name="settings_notification_access_allowed">Разрешён · для постоянных уведомлений точки не показываются</string>
+    <string name="settings_notification_access_needed">Разрешите Pluto показывать значки уведомлений</string>
+
+    <!-- Organisation -->
+    <string name="settings_organisation">Организация</string>
+    <string name="settings_categories">Категории…</string>
+    <string name="settings_hidden_apps">Скрытые приложения…</string>
+    <string name="settings_edit_home">Изменить главный экран…</string>
+    <string name="settings_edit_home_help">Порядок избранного, дока и папок</string>
+    <string name="settings_rom_tabs">Вкладки ROM</string>
+    <string name="settings_rom_tabs_help">Добавляйте игры и выбирайте для них эмуляторы по умолчанию</string>
+    <string name="settings_none_hidden">Скрытых нет</string>
+    <plurals name="settings_hidden_count">
+        <item quantity="one">Скрыто %1$d приложение</item>
+        <item quantity="few">Скрыто %1$d приложения</item>
+        <item quantity="many">Скрыто %1$d приложений</item>
+        <item quantity="other">Скрыто %1$d приложения</item>
+    </plurals>
+    <plurals name="settings_category_count">
+        <item quantity="one">%1$d категория</item>
+        <item quantity="few">%1$d категории</item>
+        <item quantity="many">%1$d категорий</item>
+        <item quantity="other">%1$d категории</item>
+    </plurals>
+
+    <!-- History -->
+    <string name="settings_history">Недавние запуски</string>
+    <string name="settings_keep_history">Сохранять историю</string>
+    <string name="settings_keep_history_on">Запоминает 12 последних приложений, открытых из Pluto. Хранится только на этом устройстве.</string>
+    <string name="settings_keep_history_off">Выключено. Ничего не записывается.</string>
+    <string name="settings_disable_history_title">Отключить историю?</string>
+    <string name="settings_disable_history_text">Сохранённая история будет удалена, а новые запуски не будут записываться.</string>
+    <string name="settings_turn_off">Отключить</string>
+    <string name="settings_clear_history">Очистить историю</string>
+    <string name="settings_clear_history_title">Очистить недавние запуски?</string>
+    <string name="settings_clear_history_text">Ряд «Недавние запуски» будет очищен. Приложения это не затронет.</string>
+    <string name="settings_clear">Очистить</string>
+    <string name="settings_history_empty">Пусто</string>
+    <plurals name="settings_history_count">
+        <item quantity="one">%1$d приложение</item>
+        <item quantity="few">%1$d приложения</item>
+        <item quantity="many">%1$d приложений</item>
+        <item quantity="other">%1$d приложения</item>
+    </plurals>
+
+    <!-- Controller row -->
+    <string name="settings_controller">Геймпад…</string>
+    <string name="settings_controller_help_none">Геймпад не подключён · назначение кнопок, настройка стиков, диагностика</string>
+    <plurals name="settings_controllers_connected">
+        <item quantity="one">Подключён %1$d геймпад</item>
+        <item quantity="few">Подключено %1$d геймпада</item>
+        <item quantity="many">Подключено %1$d геймпадов</item>
+        <item quantity="other">Подключено %1$d геймпада</item>
+    </plurals>
+
+    <!-- Default launcher -->
+    <string name="settings_default_launcher">Лаунчер по умолчанию</string>
+    <string name="settings_is_default">Pluto — ваш главный экран.</string>
+    <string name="settings_not_default">Pluto пока не выбран главным экраном.</string>
+    <string name="settings_set_default">Сделать Pluto главным экраном</string>
+    <string name="settings_how_to_switch_back">Как вернуть прежний: откройте Настройки Android ▸ Приложения ▸ Приложения по умолчанию ▸ Главный экран и выберите прежний лаунчер.</string>
+    <string name="settings_open_default_apps">Открыть «Приложения по умолчанию»</string>
+    <string name="settings_home_role_declined">Pluto пока не выбран главным экраном. Это можно сделать в любое время: Настройки Android ▸ Приложения ▸ Приложения по умолчанию ▸ Главный экран.</string>
+    <string name="settings_profiles_notice">Приложения рабочего профиля и личного пространства в этой версии не показываются.</string>
+
+    <!-- Troubleshooting -->
+    <string name="settings_troubleshooting">Устранение неполадок</string>
+    <string name="settings_crash_reports">Отчёты о сбоях</string>
+    <string name="settings_crashes_none">Сбоев не зафиксировано. Сведения о сбое хранятся здесь, только на этом устройстве.</string>
+    <plurals name="settings_crashes_recorded">
+        <item quantity="one">Зафиксирован %1$d сбой. Он хранится на этом устройстве, пока вы не отправите отчёт.</item>
+        <item quantity="few">Зафиксировано %1$d сбоя. Они хранятся на этом устройстве, пока вы не отправите отчёт.</item>
+        <item quantity="many">Зафиксировано %1$d сбоев. Они хранятся на этом устройстве, пока вы не отправите отчёт.</item>
+        <item quantity="other">Зафиксировано %1$d сбоя. Они хранятся на этом устройстве, пока вы не отправите отчёт.</item>
+    </plurals>
+    <string name="settings_no_file_picker">На этом устройстве нет средства выбора файлов, поэтому Pluto не может выбрать файл.</string>
+    <string name="settings_backup_layout">Создать резервную копию макета</string>
+    <string name="settings_backup_layout_help">Сохраняет избранное, док, папки, категории и скрытые приложения в выбранный файл.</string>
+    <string name="settings_restore_layout">Восстановить макет</string>
+    <string name="settings_restore_layout_help">Загружает файл макета Pluto обратно на это устройство.</string>
+    <string name="settings_restore_layout_title">Заменить макет на этом устройстве?</string>
+    <string name="settings_restore_layout_text">Сетка главного экрана, док, папки, категории и скрытые приложения будут взяты из файла. Виджеты останутся на месте, а приложение, которого у вас больше нет, будет скрыто, пока вы снова его не установите.</string>
+
+    <!-- About -->
+    <string name="settings_about">О приложении</string>
+    <string name="settings_license">Открытый исходный код по лицензии MIT.</string>
+    <string name="settings_privacy">Без аккаунта, рекламы и аналитики. К GitHub приложение обращается только для необязательной проверки и загрузки обновлений.</string>
+    <string name="settings_privacy_play">Без аккаунта, рекламы и аналитики. Ваш макет и история лаунчера остаются на этом устройстве.</string>
+    <string name="settings_privacy_policy">Политика конфиденциальности</string>
+    <string name="settings_limitations">Известные ограничения: приложения рабочего профиля и личного пространства пока не поддерживаются; виджеты всегда занимают целый ряд сетки главного экрана.</string>
+    <string name="settings_support">Поддержать Pluto</string>
+    <string name="settings_kofi">Угостить кофе на Ko-fi</string>
+
+    <!-- Hidden apps -->
+    <string name="settings_hidden_title">Скрытые приложения</string>
+    <string name="settings_hidden_explanation">Скрытие лишь убирает приложения из списков Pluto. Это не функция безопасности или конфиденциальности: скрытые приложения по-прежнему можно открыть из настроек или других приложений.</string>
+    <string name="settings_hidden_empty">Скрытых приложений нет. Чтобы скрыть приложение, нажмите и удерживайте его на главном экране или во «Всех приложениях» и выберите «Скрыть» (или нажмите на нём X на геймпаде).</string>
+    <string name="settings_restore">Восстановить</string>
+    <string name="settings_restore_all">Восстановить все</string>
+
+    <!-- Categories -->
+    <string name="settings_categories_title">Категории</string>
+    <string name="settings_categories_help">Категории упорядочивают приложения для просмотра. Они никогда не ограничивают доступ: каждое приложение всегда есть во «Всех приложениях».</string>
+    <string name="settings_add_category">Добавить категорию</string>
+    <string name="settings_new_category">Новая категория</string>
+    <string name="settings_category_name">Название категории</string>
+    <string name="settings_rename">Переименовать</string>
+    <string name="settings_rename_category">Переименовать категорию</string>
+    <string name="settings_move_up">Вверх</string>
+    <string name="settings_move_down">Вниз</string>
+    <string name="settings_delete">Удалить</string>
+    <string name="settings_save">Сохранить</string>
+    <string name="settings_add">Добавить</string>
+    <string name="settings_all_category_note">Встроенная · всегда содержит все приложения</string>
+    <string name="settings_delete_category_title">Удалить категорию «%1$s»?</string>
+    <string name="settings_delete_category_text">Приложения из этой категории не изменятся и не будут удалены.</string>
+    <plurals name="settings_member_count">
+        <item quantity="one">%1$d приложение</item>
+        <item quantity="few">%1$d приложения</item>
+        <item quantity="many">%1$d приложений</item>
+        <item quantity="other">%1$d приложения</item>
+    </plurals>
+
+    <!-- Controller settings -->
+    <string name="settings_controller_title">Геймпад</string>
+    <string name="settings_connected">Подключённые геймпады</string>
+    <string name="settings_no_controller">Геймпад не подключён. Подключите его по USB или Bluetooth в любое время.</string>
+    <string name="settings_controller_ids">Производитель %1$04X · Продукт %2$04X</string>
+    <string name="settings_controller_descriptor">ID %1$s</string>
+    <string name="settings_controller_details">Производитель %1$04X · Продукт %2$04X · ID %3$s</string>
+    <string name="settings_diagnostics">Ввод в реальном времени</string>
+    <string name="settings_diagnostics_help">Нажимайте кнопки или двигайте стики геймпада, чтобы увидеть, что сообщает Android.</string>
+    <string name="settings_diagnostics_unavailable">Ввод в реальном времени сейчас недоступен.</string>
+    <string name="settings_last_key">Последняя кнопка</string>
+    <string name="settings_no_key_yet">Пока нет</string>
+    <string name="settings_axes">Стики и крестовина</string>
+    <string name="settings_no_motion_yet">Движения пока нет</string>
+    <string name="settings_last_key_value">%1$s (%2$s)</string>
+    <string name="settings_last_key_value_device">%1$s (%2$s) · %3$s</string>
+    <string name="settings_key_number">Клавиша %1$s</string>
+    <string name="settings_stick_summary">Левый стик: %1$s, правый стик: %2$s</string>
+    <string name="settings_axes_values">Левый стик %1$+.2f, %2$+.2f\nПравый стик %3$+.2f, %4$+.2f\nКрестовина (hat) %5$+.0f, %6$+.0f</string>
+    <string name="settings_axes_values_dead_zone">Левый стик %1$+.2f, %2$+.2f (мёртвая зона)\nПравый стик %3$+.2f, %4$+.2f\nКрестовина (hat) %5$+.0f, %6$+.0f</string>
+    <string name="settings_stick_centred">в центре</string>
+    <string name="settings_stick_up">вверх</string>
+    <string name="settings_stick_down">вниз</string>
+    <string name="settings_stick_left">влево</string>
+    <string name="settings_stick_right">вправо</string>
+    <string name="settings_stick_up_left">вверх-влево</string>
+    <string name="settings_stick_up_right">вверх-вправо</string>
+    <string name="settings_stick_down_left">вниз-влево</string>
+    <string name="settings_stick_down_right">вниз-вправо</string>
+    <string name="settings_mapping">Назначение кнопок</string>
+    <string name="settings_mapping_help">В подсказках используются названия, которые сообщает Android, так как буквы кнопок у разных геймпадов отличаются. Перемещение (крестовина и левый стик), «Домой» и «Недавние» переназначить нельзя.</string>
+    <string name="settings_apply_to">Применить изменения к</string>
+    <string name="settings_this_controller">Этому геймпаду</string>
+    <string name="settings_all_controllers">Всем геймпадам</string>
+    <string name="settings_using_override">Этот геймпад использует собственное назначение кнопок.</string>
+    <string name="settings_using_default">Этот геймпад использует общее назначение кнопок.</string>
+    <string name="settings_remap">Переназначить</string>
+    <string name="settings_not_assigned">Не назначено</string>
+    <string name="settings_press_a_button">Нажмите кнопку на геймпаде…</string>
+    <plurals name="settings_capture_for">
+        <item quantity="one">Переназначение «%1$s». Нажмите кнопку… (отмена через %2$d с)</item>
+        <item quantity="few">Переназначение «%1$s». Нажмите кнопку… (отмена через %2$d с)</item>
+        <item quantity="many">Переназначение «%1$s». Нажмите кнопку… (отмена через %2$d с)</item>
+        <item quantity="other">Переназначение «%1$s». Нажмите кнопку… (отмена через %2$d с)</item>
+    </plurals>
+    <string name="settings_capture_refused">Эта кнопка зарезервирована для перемещения или системы. Нажмите другую кнопку.</string>
+    <string name="settings_capture_timeout">Кнопка не нажата. Переназначение отменено.</string>
+    <string name="settings_capture_cancelled">Переназначение отменено.</string>
+    <string name="settings_captured">«%1$s» теперь выполняет «%2$s».</string>
+    <string name="settings_captured_replacing">«%1$s» теперь выполняет «%2$s» вместо «%3$s».</string>
+    <string name="settings_reset">Сбросить настройки</string>
+    <string name="settings_reset_done">Назначение кнопок сброшено.</string>
+    <string name="settings_stick">Настройка стиков</string>
+    <string name="settings_dead_zone">Мёртвая зона</string>
+    <string name="settings_dead_zone_help">Движения стика меньше этого значения игнорируются.</string>
+    <string name="settings_repeat_delay">Задержка повтора</string>
+    <string name="settings_repeat_delay_help">Сколько удерживать, прежде чем перемещение начнёт повторяться.</string>
+    <string name="settings_repeat_interval">Интервал повтора</string>
+    <string name="settings_repeat_interval_help">Время между повторными перемещениями при удержании.</string>
+    <string name="settings_move">Перемещение</string>
+    <string name="settings_move_keys">Крестовина или левый стик</string>
+    <string name="settings_move_line">%1$s: %2$s</string>
+    <string name="settings_ms">%1$d мс</string>
+    <string name="settings_action_confirm">Открыть / подтвердить</string>
+    <string name="settings_action_back">Назад / закрыть</string>
+    <string name="settings_action_actions">Действия с приложением</string>
+    <string name="settings_action_search">Поиск</string>
+    <string name="settings_action_settings">Настройки</string>
+    <string name="settings_action_prev_category">Предыдущая категория</string>
+    <string name="settings_action_next_category">Следующая категория</string>
+
+    <!-- Onboarding -->
+    <string name="settings_onboarding_title">Настройка Pluto</string>
+    <string name="settings_welcome_title">Добро пожаловать в Pluto</string>
+    <string name="settings_welcome_text">Pluto — главный экран и для повседневного использования телефона, и для игр с геймпадом. Он подстраивается, когда вы поворачиваете телефон или подключаете геймпад, а избранное, папки и категории остаются одинаковыми везде.</string>
+    <string name="settings_welcome_ready">Pluto готов к работе со стандартным макетом. Всё здесь необязательно, и это можно изменить позже в настройках.</string>
+    <plurals name="settings_apps_found">
+        <item quantity="one">Найдено %1$d приложение.</item>
+        <item quantity="few">Найдено %1$d приложения.</item>
+        <item quantity="many">Найдено %1$d приложений.</item>
+        <item quantity="other">Найдено %1$d приложения.</item>
+    </plurals>
+    <string name="settings_loading_apps">Поиск приложений…</string>
+    <string name="settings_no_apps_problem">Pluto не нашёл приложений для показа. Убедитесь, что приложения установлены и не ограничены, затем снова откройте Pluto. Пока приложения не появятся, оставьте текущий главный экран.</string>
+    <string name="settings_step_games_title">Выберите игры (необязательно)</string>
+    <string name="settings_step_games_text">Отмеченные приложения попадут в категорию «Игры», которую режим консоли показывает отдельной полкой. Это можно изменить в любое время: нажмите и удерживайте приложение, выберите «Ещё…», а затем «Категории».</string>
+    <string name="settings_no_games_category">Категория «Игры» недоступна. Категории можно создать позже в настройках.</string>
+    <plurals name="settings_games_selected">
+        <item quantity="one">%1$d приложение в «Играх»</item>
+        <item quantity="few">%1$d приложения в «Играх»</item>
+        <item quantity="many">%1$d приложений в «Играх»</item>
+        <item quantity="other">%1$d приложения в «Играх»</item>
+    </plurals>
+    <string name="settings_step_controller_title">Управление с геймпада</string>
+    <string name="settings_step_controller_text">Всё в Pluto работает как с сенсорным экраном, так и с геймпадом. Подключите геймпад в любое время — в альбомной ориентации Pluto перейдёт в режим консоли.</string>
+    <string name="settings_controller_now">Геймпад подключён. Попробуйте перемещаться по этому экрану с его помощью.</string>
+    <string name="settings_step_home_title">Сделайте Pluto главным экраном</string>
+    <string name="settings_step_home_text">Pluto будет открываться при нажатии кнопки «Домой». Android попросит подтверждение.</string>
+    <string name="settings_step_home_done">Теперь Pluto — ваш главный экран.</string>
+    <string name="settings_not_now">Не сейчас</string>
+    <string name="settings_next">Далее</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_skip">Пропустить</string>
+    <string name="settings_finish">Готово</string>
+    <string name="settings_start">Начать работу с Pluto</string>
+    <string name="settings_step_of">Шаг %1$d из %2$d</string>
+
+    <!-- Crash reports -->
+    <string name="settings_crashes_empty">Сбоев не зафиксировано. Если в Pluto произойдёт сбой, трассировка сохранится здесь — только на этом устройстве, — и вы сами решите, отправлять ли отчёт.</string>
+    <string name="settings_crashes_kept_locally">Хранится только на этом устройстве. Ничего не отправляется, пока вы сами не откроете отчёт на GitHub и не отправите его.</string>
+    <string name="settings_crash_report_on_github">Сообщить на GitHub</string>
+    <string name="settings_crash_clear_all">Очистить все</string>
+    <string name="settings_crash_trace_truncated">… полная трассировка есть в отчёте.</string>
+    <string name="settings_crash_label_date_pattern">d MMM, HH:mm</string>
+
+    <!-- Optional permission disclosures -->
+    <string name="settings_access_lock_title">Разрешить блокировку экрана двойным нажатием?</string>
+    <string name="settings_access_notifications_title">Разрешить значки уведомлений?</string>
+    <string name="settings_access_lock_text">Pluto использует API Accessibility Service в Android только для того, чтобы блокировать экран, когда вы дважды нажимаете на пустое место главного экрана. Этот сервис не может читать содержимое экрана и не отслеживает события специальных возможностей. Он не собирает, не хранит и не передаёт личные данные. Блокировка экрана необязательна. Вы можете в любое время отключить «Блокировка экрана Pluto» в настройках специальных возможностей Android.</string>
+    <string name="settings_access_notifications_text">Доступ к уведомлениям Android позволяет Pluto получать информацию об уведомлениях, в том числе когда Pluto работает в фоне. Pluto использует идентификаторы приложений и профилей, флаги уведомлений и признак допустимости значка только для показа точек. Он не читает и не хранит текст сообщений. Эти метаданные остаются в памяти вашего устройства и никогда не отправляются на сервер. Значки уведомлений необязательны. Вы можете отозвать доступ к уведомлениям в настройках Android в любое время.</string>
+    <string name="settings_access_agree">Принять и продолжить</string>
+
+    <!-- Privacy policy -->
+    <string name="settings_privacy_byline">Pluto Launcher · Anders (andershfranzen) · Обновлено 12 октября 2026 г.</string>
+    <string name="settings_privacy_device_title">Ваши данные остаются на устройстве</string>
+    <string name="settings_privacy_device_text">В Pluto нет аккаунтов, рекламы, аналитики, SDK для отслеживания и удалённой отправки отчётов о сбоях. Разработчик не получает список установленных приложений, ваш макет, поисковые запросы, ROM, уведомления или историю запусков.</string>
+    <string name="settings_privacy_apps_title">Приложения, макет и недавние запуски</string>
+    <string name="settings_privacy_apps_text">Pluto считывает названия, значки и ярлыки запускаемых приложений, чтобы показывать их и искать по ним. Избранное, папки, скрытые приложения, категории, идентификаторы виджетов и настройки сохраняются в личном хранилище приложения. Необязательные недавние запуски хранятся локально; их можно очистить или отключить историю в настройках. Поисковые запросы обрабатываются локально и не сохраняются в историю поиска.</string>
+    <string name="settings_privacy_roms_title">Папки с ROM и обложки</string>
+    <string name="settings_privacy_roms_text">Pluto получает доступ только к папкам и изображениям, которые вы выбираете через средство выбора файлов Android. Ссылки на файлы, названия игр и обложки сохраняются локально для создания библиотеки. При открытии игры выбранный эмулятор получает доступ к выбранному файлу. Удаление вкладки ROM удаляет записи библиотеки Pluto, но не файлы игр. Эмуляторы и поставщики виджетов обрабатывают свои данные по собственным правилам.</string>
+    <string name="settings_privacy_dots_title">Значки уведомлений</string>
+    <string name="settings_privacy_dots_text">Необязательный доступ к уведомлениям Android используется для идентификаторов приложений и профилей, флагов уведомлений и признака допустимости значка. Эти метаданные хранятся только в памяти, в том числе в фоне, пока доступ включён. Pluto не читает и не хранит текст уведомлений и не передаёт данные уведомлений за пределы устройства. Чтобы остановить прослушивание, отзовите доступ в настройках Android.</string>
+    <string name="settings_privacy_lock_title">Блокировка экрана двойным нажатием</string>
+    <string name="settings_privacy_lock_text">Необязательный API Accessibility Service используется только для выполнения действия блокировки экрана Android после двойного нажатия. Он не может получать содержимое экрана и не подписывается на события специальных возможностей. Через этот сервис не собираются, не хранятся и не передаются личные данные. Чтобы отозвать доступ, отключите «Блокировка экрана Pluto» в настройках специальных возможностей Android.</string>
+    <string name="settings_privacy_updates_title">Обновления и внешние ссылки</string>
+    <string name="settings_privacy_updates_text">У версии для Google Play нет разрешения на доступ к интернету и модуля обновлений через GitHub. Google Play обновляет её в соответствии с политикой конфиденциальности Google. Версия с GitHub обращается к GitHub только для разрешённых вами проверок обновлений и запрошенных вами загрузок. GitHub получает обычные метаданные подключения, например ваш IP-адрес и версию Pluto; действия в лаунчере не передаются. Проверка обновлений необязательна, а загрузки требуют вашего подтверждения. Внешние ссылки поддержки открываются в браузере, и на них распространяется политика конфиденциальности соответствующего сайта.</string>
+    <string name="settings_privacy_retention_title">Хранение и удаление</string>
+    <string name="settings_privacy_retention_text">Сохранённые данные Pluto остаются в его личном хранилище на устройстве, пока вы не удалите их, не очистите хранилище приложения или не удалите приложение. Резервное копирование Android отключено. Отзыв разрешений на доступ к файлам прекращает дальнейший доступ. Очистка хранилища Pluto не удаляет выбранные вами файлы ROM и обложки. У Pluto нет серверных аккаунтов или записей пользователей на сервере, которые нужно было бы удалять.</string>
+    <string name="settings_privacy_contact_title">Контакты</string>
+    <string name="settings_privacy_contact_text">По вопросам конфиденциальности пишите на anders@afive.dev. Также можно сообщать о проблемах через трекер задач Pluto Launcher на GitHub. Не указывайте личную информацию в публичных задачах.</string>
+    <string name="settings_privacy_email">Написать разработчику</string>
+    <string name="settings_privacy_website">Открыть публичную политику конфиденциальности</string>
+
+    <!-- Updates (both distributions) -->
+    <string name="settings_updates">Обновления</string>
+    <string name="settings_updates_play">Google Play поддерживает Pluto в актуальном состоянии.</string>
+    <string name="settings_updates_open_play">Открыть в Play Маркете</string>
+    <string name="settings_updates_auto">Проверять автоматически</string>
+    <string name="settings_updates_auto_help">Проверять GitHub раз в день при открытии Pluto. Для загрузки всегда нужно ваше подтверждение.</string>
+    <string name="settings_updates_checking">Проверка GitHub…</string>
+    <string name="settings_updates_downloading">Загрузка Pluto %1$s…</string>
+    <string name="settings_updates_verifying">Проверка обновления…</string>
+    <string name="settings_updates_ready">Обновление готово. Android попросит подтвердить установку.</string>
+    <string name="settings_updates_available">Доступна версия Pluto %1$s.</string>
+    <string name="settings_updates_up_to_date">У вас последняя версия.</string>
+    <string name="settings_updates_idle">Проверьте наличие последней стабильной версии Pluto.</string>
+    <string name="settings_updates_last_checked">Последняя проверка: %1$s</string>
+    <string name="settings_updates_check">Проверить обновления</string>
+    <string name="settings_updates_cancel">Отменить загрузку</string>
+    <string name="settings_updates_install">Установить обновление</string>
+    <string name="settings_updates_download">Загрузить и обновить</string>
+    <string name="settings_updates_notes">Список изменений</string>
+    <string name="settings_updates_disclosure">При проверке обновлений Pluto обращается к GitHub. Действия в лаунчере и личные данные не передаются. Ваш макет сохранится.</string>
+    <string name="settings_updates_consent_title">Обновлять Pluto?</string>
+    <string name="settings_updates_consent_decline">Нет, спасибо</string>
+    <string name="settings_updates_consent_allow">Разрешить автопроверку</string>
+    <string name="settings_updates_consent_question">Автоматически проверять новые версии на GitHub?</string>
+    <string name="settings_updates_consent_daily">Раз в день при открытии Pluto</string>
+    <string name="settings_updates_consent_approval">Загрузку и установку подтверждаете вы</string>
+    <string name="settings_updates_consent_footer">Данные об использовании не передаются. Это можно изменить в настройках в любое время.</string>
+    <string name="settings_updates_logo">Логотип Pluto</string>
+
+    <!-- Update errors (GitHub build) -->
+    <string name="settings_update_error_check">Не удалось проверить GitHub. Проверьте подключение и повторите попытку.</string>
+    <string name="settings_update_error_download">Не удалось загрузить обновление. Проверьте подключение и свободное место, затем повторите попытку.</string>
+    <string name="settings_update_error_installer">Android не удалось открыть установщик. Повторите попытку.</string>
+    <string name="settings_update_error_permission">Чтобы установить обновление, разрешите Pluto устанавливать приложения, когда Android попросит. Загрузку можно повторить.</string>
+    <string name="settings_update_error_response_too_large">Ответ о версии слишком большой.</string>
+    <string name="settings_update_error_no_stable">Стабильных версий нет.</string>
+    <string name="settings_update_error_unsupported_version">Неподдерживаемый номер версии.</string>
+    <string name="settings_update_error_cannot_compare">Эта сборка не может сравнить номера версий.</string>
+    <string name="settings_update_error_no_apk_yet">Для этой версии ещё нет APK. Повторите попытку позже.</string>
+    <string name="settings_update_error_apk_mismatch">Загруженный APK не соответствует версии.</string>
+    <string name="settings_update_error_incomplete">Загрузка не завершена. Повторите попытку.</string>
+    <string name="settings_update_error_save">Не удалось сохранить обновление. Проверьте свободное место и повторите попытку.</string>
+    <string name="settings_update_error_checksum">Контрольная сумма APK не совпадает. Загрузите файл ещё раз.</string>
+    <string name="settings_update_error_invalid_apk">Загруженный файл не является корректным APK для Android.</string>
+    <string name="settings_update_error_redirect_outside">Загрузка была перенаправлена за пределы GitHub.</string>
+    <string name="settings_update_error_missing_location">Не указан адрес загрузки.</string>
+    <string name="settings_update_error_rate_limited">GitHub ограничивает число запросов. Повторите попытку позже.</string>
+    <string name="settings_update_error_too_many_redirects">Слишком много перенаправлений при загрузке.</string>
+    <string name="settings_update_error_not_pluto_repo">Версия опубликована не в репозитории Pluto на GitHub.</string>
+    <string name="settings_update_error_no_supported_apk">В этой версии нет подходящего APK Pluto.</string>
+    <string name="settings_update_error_unexpected_size">У APK этой версии неожиданный размер.</string>
+    <string name="settings_update_error_no_checksum">У этой версии ещё нет проверенной контрольной суммы APK. Повторите попытку позже.</string>
+    <string name="settings_update_error_not_pluto">Этот APK не является Pluto.</string>
+    <string name="settings_update_error_not_newer">Этот APK не новее установленной версии Pluto.</string>
+    <string name="settings_update_error_signing_key">Это обновление подписано другим ключом и не сможет сохранить ваш макет. Оставьте текущую установку и не удаляйте её.</string>
+</resources>

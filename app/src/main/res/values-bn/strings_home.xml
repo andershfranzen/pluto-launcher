@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_surface_label">হোম স্ক্রিন। অ্যাকশন: সার্চ, উইজেট যোগ করুন, হোম এডিট করুন, সেটিংস</string>
+    <string name="home_menu_search_apps">অ্যাপ সার্চ করুন</string>
+    <string name="home_menu_add_widget">উইজেট যোগ করুন</string>
+    <string name="home_menu_edit_home">হোম এডিট করুন</string>
+    <string name="home_menu_launcher_settings">লঞ্চার সেটিংস</string>
+
+    <string name="home_category_all">সব অ্যাপ</string>
+    <string name="home_category_games">গেম</string>
+    <string name="home_category_tools">টুল</string>
+
+    <string name="home_drawer_category_everything">সবকিছু</string>
+    <string name="home_drawer_game_unavailable">এই গেমটি আর উপলভ্য নেই। এর ROM ট্যাব রিফ্রেশ করুন।</string>
+    <string name="home_drawer_searching">সার্চ করা হচ্ছে…</string>
+    <string name="home_drawer_search_label">অ্যাপ সার্চ করুন</string>
+    <string name="home_drawer_search_scope_category">%1$s-এ অ্যাপ ও শর্টকাট সার্চ করা হচ্ছে</string>
+    <string name="home_drawer_search_scope_all">সব অ্যাপ, গেম ও শর্টকাট সার্চ করা হচ্ছে</string>
+    <string name="home_drawer_search_scope_actions">%1$s। অ্যাকশন দেখতে কোনো অ্যাপে ট্যাপ করুন।</string>
+    <string name="home_drawer_actions_mode">অ্যাপ অ্যাকশন মোড</string>
+    <string name="home_drawer_search_hint_category">%1$s-এ সার্চ করুন</string>
+    <string name="home_drawer_search_hint_all">অ্যাপ, গেম ও শর্টকাট সার্চ করুন</string>
+    <string name="home_drawer_clear_search">সার্চ মুছুন</string>
+    <string name="home_drawer_close_search">সার্চ বন্ধ করুন</string>
+    <string name="home_drawer_done">হয়ে গেছে</string>
+    <string name="home_drawer_actions">অ্যাকশন দেখতে একটি অ্যাপ বেছে নিন</string>
+    <string name="home_drawer_actions_done">অ্যাপ বেছে নেওয়া শেষ</string>
+    <string name="home_drawer_manage_categories">বিভাগ যোগ বা এডিট করুন</string>
+    <string name="home_drawer_actions_hint">অ্যাকশন দেখতে কোনো অ্যাপে ট্যাপ করুন</string>
+    <string name="home_drawer_no_results">“%1$s”-এর জন্য কোনো ফলাফল নেই</string>
+    <string name="home_drawer_no_match">“%1$s”-এর সাথে কোনো অ্যাপ মেলেনি</string>
+    <string name="home_drawer_empty_category">%1$s-এ এখনও কোনো অ্যাপ নেই</string>
+    <string name="home_drawer_empty_all">দেখানোর মতো কোনো অ্যাপ নেই</string>
+    <string name="home_drawer_search_everything">সবকিছুতে সার্চ করুন</string>
+    <string name="home_drawer_search_all_apps">সব অ্যাপে সার্চ করুন</string>
+    <string name="home_drawer_no_match_category_detail">%1$s-এ সার্চ করা হচ্ছে। \"সবকিছু\" বা আরও ছোট নাম দিয়ে চেষ্টা করুন।</string>
+    <string name="home_drawer_no_match_detail_rich">সার্চে অ্যাপ, ROM-এর নাম ও অ্যাপ শর্টকাট দেখা হয়।</string>
+    <string name="home_drawer_no_match_detail">সার্চে অ্যাপের নাম ও প্যাকেজের নাম দেখা হয়।</string>
+    <string name="home_drawer_empty_category_detail">কোন কোন অ্যাপ এখানে থাকবে বেছে নিন।</string>
+    <string name="home_drawer_add_apps">অ্যাপ যোগ করুন</string>
+    <string name="home_drawer_show_all_apps">সব অ্যাপ দেখুন</string>
+    <string name="home_drawer_empty_all_detail">লুকানো অ্যাপ সেটিংস → অ্যাপ → লুকানো অ্যাপ থেকে ফিরিয়ে আনা যায়।</string>
+    <string name="home_drawer_hidden_apps">লুকানো অ্যাপ</string>
+
+    <string name="home_lock_needs_service">দুবার ট্যাপ করে লক করতে, অ্যাক্সেসিবিলিটি সেটিংসে “Pluto স্ক্রিন লক” চালু করুন।</string>
+    <string name="home_empty_favourites">এখনও কোনো পছন্দসই নেই</string>
+    <string name="home_empty_favourites_detail">অ্যাপ খুঁজতে উপরের দিকে সোয়াইপ করুন, তারপর পছন্দসই অ্যাপ পিন করুন। কোনো অ্যাপ টাচ করে ধরে রাখলে তার অ্যাকশন খোলে; \"পছন্দসইতে যোগ করুন\" জেসচার ছাড়াই কাজ করে।</string>
+    <string name="home_add_favourite">পছন্দসইতে যোগ করুন</string>
+    <string name="home_drop_remove">সরান</string>
+    <string name="home_dock_empty_slot">ডকের খালি স্লট %1$d। অ্যাপ বেছে নিতে এডিট খোলে</string>
+
+    <string name="home_folder_name">ফোল্ডারের নাম</string>
+    <string name="home_folder_save_name">নাম সেভ করুন</string>
+    <string name="home_folder_cancel_rename">নাম পরিবর্তন বাতিল করুন</string>
+    <string name="home_folder_close">ফোল্ডার বন্ধ করুন</string>
+    <string name="home_folder_rename">নাম পরিবর্তন</string>
+    <string name="home_folder_edit">এডিট</string>
+    <string name="home_folder_empty">এই ফোল্ডারটি খালি। এতে কোনো অ্যাপ টেনে আনুন, অথবা কোনো অ্যাপ টাচ করে ধরে রেখে \"আরও অ্যাকশন\" এবং তারপর \"ফোল্ডারে সরান…\" বেছে নিন।</string>
+
+    <string name="home_search_section_apps">অ্যাপ</string>
+    <string name="home_search_section_games">গেম</string>
+    <string name="home_search_section_shortcuts">শর্টকাট</string>
+    <string name="home_search_result_options">%1$s-এর বিকল্প</string>
+    <string name="home_search_result_app_detail">অ্যাপ</string>
+    <string name="home_search_result_shortcut_detail">%1$s · শর্টকাট</string>
+    <string name="home_search_result_app">%1$s, অ্যাপ</string>
+    <string name="home_search_result_game">%1$s, %2$s-এর গেম</string>
+    <string name="home_search_result_shortcut">%1$s, %2$s শর্টকাট</string>
+
+    <string name="home_startup_starting">Pluto চালু হচ্ছে</string>
+    <string name="home_startup_loading_apps">অ্যাপ লোড হচ্ছে</string>
+    <string name="home_storage_error_title">Pluto তার সেভ করা লেআউট খুলতে পারছে না</string>
+    <string name="home_storage_error_detail">আপনার পছন্দসই, ডক, ফোল্ডার ও সেটিংস পরিবর্তন বা মুছে ফেলা হয়নি। আবার চেষ্টা করুন, অথবা সমস্যাটির সমাধান না হওয়া পর্যন্ত Android সেটিংসে অন্য একটি হোম অ্যাপ বেছে নিন। সাধারণত আগে ব্যবহার করা Pluto-র নতুন বিল্ড ইনস্টল করলে এটি ঠিক হয়ে যায়।</string>
+    <string name="home_storage_error_technical">বিস্তারিত: %1$s</string>
+    <string name="home_storage_error_retry">আবার চেষ্টা করুন</string>
+    <string name="home_storage_error_choose_home">হোম অ্যাপ বেছে নিন</string>
+
+    <string name="common_category_tab">%1$s বিভাগ</string>
+    <string name="common_message_dismiss_label">মেসেজ বাতিল করুন</string>
+    <string name="common_message_dismiss">বাতিল করুন</string>
+    <string name="common_clock_description">%1$s, %2$s</string>
+    <string name="common_app_unavailable">%1$s (উপলভ্য নেই)</string>
+    <string name="common_app_actions">অ্যাপ অ্যাকশন</string>
+    <string name="common_app_opens_actions">%1$s, অ্যাপ অ্যাকশন খোলে</string>
+    <string name="common_folder_empty">ফোল্ডার %1$s, খালি</string>
+    <plurals name="common_folder_apps">
+        <item quantity="one">ফোল্ডার %1$s, %2$dটি অ্যাপ</item>
+        <item quantity="other">ফোল্ডার %1$s, %2$dটি অ্যাপ</item>
+    </plurals>
+    <string name="common_folder_edit">ফোল্ডার এডিট করুন</string>
+
+    <string name="common_legend_open">খুলুন</string>
+    <string name="common_legend_actions">অ্যাকশন</string>
+    <string name="common_legend_search">সার্চ</string>
+    <string name="common_legend_settings">সেটিংস</string>
+    <string name="common_legend_category">বিভাগ</string>
+    <string name="common_legend_back">ফিরুন</string>
+    <string name="common_legend_close">বন্ধ</string>
+    <string name="common_legend_spoken">কন্ট্রোলারের বোতাম: %1$s</string>
+    <string name="common_legend_spoken_entry">%1$s %2$s</string>
+    <string name="common_legend_spoken_or">%1$s বা %2$s</string>
+    <string name="common_has_notifications">বিজ্ঞপ্তি আছে</string>
+    <string name="common_more_actions">আরও অ্যাকশন</string>
+
+    <string name="common_app_not_installed">%1$s আর ইনস্টল করা নেই।</string>
+    <string name="common_app_paused">%1$s এখন পজ করা আছে।</string>
+    <string name="common_app_open_failed">%1$s খোলা যায়নি।</string>
+    <string name="common_app_info_unavailable">%1$s-এর অ্যাপ তথ্য উপলভ্য নেই।</string>
+    <string name="common_app_info_failed">%1$s-এর অ্যাপ তথ্য খোলা যায়নি।</string>
+    <string name="common_uninstall_not_here">%1$s এখান থেকে আনইনস্টল করা যাবে না।</string>
+    <string name="common_uninstall_unavailable">এই ডিভাইসে আনইনস্টল করার সুবিধা উপলভ্য নেই।</string>
+    <string name="common_uninstall_failed">%1$s আনইনস্টল করা যায়নি।</string>
+    <string name="common_shortcut_open_failed">“%1$s” খোলা যায়নি।</string>
+
+    <string name="home_update_available">Pluto %1$s উপলভ্য। আপডেট করতে সেটিংস → সাধারণ খুলুন।</string>
+    <string name="home_rom_shelves_load_failed">ROM তাক লোড করা যায়নি। আবার চেষ্টা করতে Pluto রিস্টার্ট করুন।</string>
+    <string name="home_rom_shelf_save_failed">এই ROM তাকটি সেভ করা যায়নি।</string>
+    <string name="home_rom_shelf_remove_failed">এই ROM তাকটি সরানো যায়নি।</string>
+    <string name="home_rom_shelf_missing">এই ROM তাকটি আর নেই</string>
+    <string name="home_rom_folder_access_lost">ফোল্ডারের অ্যাক্সেস হারিয়ে গেছে। ROM ফোল্ডারটি আবার বেছে নিন।</string>
+    <string name="home_rom_folder_read_failed">এই ROM ফোল্ডারটি পড়া যায়নি। এটি আবার বেছে নিন।</string>
+    <string name="home_app_open_failed">অ্যাপটি খোলা যায়নি।</string>
+    <string name="home_shortcut_unavailable">শর্টকাটটি আর উপলভ্য নেই।</string>
+    <string name="home_shortcut_open_failed">শর্টকাটটি খোলা যায়নি।</string>
+    <string name="home_system_app_info_failed">Android এখন অ্যাপ তথ্য খুলতে পারেনি।</string>
+    <string name="home_system_uninstall_failed">Android এখন আনইনস্টলের অনুরোধ করতে পারেনি।</string>
+    <string name="home_layout_saved">আপনার বেছে নেওয়া ফাইলে লেআউট সেভ করা হয়েছে।</string>
+    <string name="home_layout_write_failed">ফাইলটিতে লেখা যায়নি। অন্য কোনো লোকেশন বেছে নিন।</string>
+    <string name="home_layout_restored">লেআউট ফিরিয়ে আনা হয়েছে।</string>
+    <string name="home_layout_restore_failed">লেআউটটি ফিরিয়ে আনা যায়নি। আপনার বর্তমান লেআউট অপরিবর্তিত আছে।</string>
+    <string name="home_layout_too_new">এই ব্যাকআপটি Pluto-র নতুন ভার্সনে তৈরি। Pluto আপডেট করে তারপর ফিরিয়ে আনুন।</string>
+    <string name="home_layout_not_backup">এই ফাইলটি Pluto লেআউটের ব্যাকআপ নয়।</string>
+    <string name="home_layout_read_failed">ফাইলটি পড়া যায়নি।</string>
+    <string name="home_save_failed">পরিবর্তনটি সেভ করা যায়নি। আবার চেষ্টা করুন।</string>
+    <string name="home_default_folder_name">ফোল্ডার</string>
+    <string name="home_default_category_name">নতুন বিভাগ</string>
+    <string name="home_dock_full">ডক ভর্তি। প্রথমে ডক থেকে একটি অ্যাপ সরান।</string>
+    <string name="home_settings_reset">Pluto-র সেটিংস ফাইল নষ্ট হয়ে গিয়েছিল এবং রিসেট করা হয়েছে। আপনি আবার চালু না করা পর্যন্ত \"সম্প্রতি খোলা\" বন্ধ থাকবে।</string>
+    <string name="home_settings_unreadable">Pluto এখন তার সেটিংস পড়তে পারছে না, তাই ডিফল্ট সেটিংস ব্যবহার হচ্ছে এবং \"সম্প্রতি খোলা\" পজ করা আছে।</string>
+</resources>

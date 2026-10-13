@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Settings, onboarding, privacy and update text. MissingTranslation is ignored here only until
-    the de/sv/fr/da translations of this file land; remove the tools:ignore then.
+    Settings, onboarding, privacy and update text.
 -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
     <!-- ==================== Settings pages ==================== -->
     <string name="settings_title">Settings</string>
     <!-- Settings page tab; short, shown in a four-way segmented bar -->

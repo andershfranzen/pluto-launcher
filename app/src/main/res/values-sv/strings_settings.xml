@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ==================== Settings pages ==================== -->
+    <string name="settings_title">Inställningar</string>
+    <string name="settings_page_appearance">Utseende</string>
+    <string name="settings_page_layout">Layout</string>
+    <string name="settings_page_apps">Appar</string>
+    <string name="settings_page_general">Allmänt</string>
+    <string name="settings_page_appearance_description">Inställningar för utseende</string>
+    <string name="settings_page_layout_description">Inställningar för layout</string>
+    <string name="settings_page_apps_description">Inställningar för appar</string>
+    <string name="settings_page_general_description">Allmänna inställningar</string>
+
+    <!-- Appearance -->
+    <string name="settings_appearance">Utseende</string>
+    <string name="settings_theme_and_background">Tema och bakgrund</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Ljust</string>
+    <string name="settings_theme_dark">Mörkt</string>
+    <string name="settings_background">Bakgrund</string>
+    <string name="settings_background_help">Hemskärmen, mappar och applådan i normalt läge.</string>
+    <string name="settings_console_background">Bakgrund i konsolläge</string>
+    <string name="settings_console_background_help">Bakom konsolläget.</string>
+    <string name="settings_background_wallpaper">Bakgrundsbild</string>
+    <string name="settings_background_xmb">XMB-vågor</string>
+    <string name="settings_background_animation">Bakgrundsanimering</string>
+    <string name="settings_background_animation_help">Mjuk ser flytande ut. Batterisparläge ritar om hälften så ofta.</string>
+    <string name="settings_background_smooth">Mjuk</string>
+    <string name="settings_background_battery_saver">Batterisparläge</string>
+    <string name="settings_scrim">Kontrast för bakgrundsbild</string>
+    <string name="settings_scrim_help">Gör bakgrundsbilden mörkare (eller ljusare) så att texterna förblir läsbara.</string>
+    <string name="settings_icons">Ikoner</string>
+    <string name="settings_icon_pack">Ikonpaket</string>
+    <string name="settings_system_icons">Systemikoner</string>
+    <string name="settings_system_icons_help">Varje apps egen ikon</string>
+    <string name="settings_icon_packs_loading">Letar efter ikonpaket…</string>
+    <string name="settings_no_icon_packs">Inga ikonpaket är installerade. Installera ett från din appbutik (de flesta stöder Nova- eller ADW-launchers) och välj det sedan här.</string>
+    <string name="settings_icon_pack_missing">Ikonpaketet är inte installerat: systemikoner används</string>
+    <string name="settings_size_and_motion">Storlek och rörelse</string>
+    <string name="settings_icon_size">Ikonstorlek</string>
+    <string name="settings_text_size">Textstorlek</string>
+    <string name="settings_text_size_help">Tillämpas utöver Androids teckenstorlek.</string>
+    <string name="settings_reduce_motion">Minska rörelser</string>
+    <string name="settings_reduce_motion_help">Hoppa över animeringar som inte är nödvändiga.</string>
+
+    <!-- XMB colour picker -->
+    <string name="settings_xmb_colour">XMB-färg</string>
+    <string name="settings_xmb_colour_auto">Automatisk (byts varje månad)</string>
+    <string name="settings_xmb_colour_blue">Blå</string>
+    <string name="settings_xmb_colour_purple">Lila</string>
+    <string name="settings_xmb_colour_pink">Rosa</string>
+    <string name="settings_xmb_colour_red">Röd</string>
+    <string name="settings_xmb_colour_orange">Orange</string>
+    <string name="settings_xmb_colour_gold">Guld</string>
+    <string name="settings_xmb_colour_green">Grön</string>
+    <string name="settings_xmb_colour_teal">Blågrön</string>
+    <string name="settings_xmb_colour_silver">Silver</string>
+    <string name="settings_xmb_colour_black">Svart</string>
+    <string name="settings_xmb_swatch_auto">Automatisk färg</string>
+    <string name="settings_xmb_swatch_blue">blå färg</string>
+    <string name="settings_xmb_swatch_purple">lila färg</string>
+    <string name="settings_xmb_swatch_pink">rosa färg</string>
+    <string name="settings_xmb_swatch_red">röd färg</string>
+    <string name="settings_xmb_swatch_orange">orange färg</string>
+    <string name="settings_xmb_swatch_gold">guldfärg</string>
+    <string name="settings_xmb_swatch_green">grön färg</string>
+    <string name="settings_xmb_swatch_teal">blågrön färg</string>
+    <string name="settings_xmb_swatch_silver">silverfärg</string>
+    <string name="settings_xmb_swatch_black">svart färg</string>
+    <string name="settings_xmb_swatch_selected">%1$s, vald</string>
+
+    <!-- Layout & rotation -->
+    <string name="settings_layout">Layout och rotation</string>
+    <string name="settings_rotation">Rotation</string>
+    <string name="settings_rotation_help">Gäller bara launchern. Appar som du öppnar behåller sin egen orientering.</string>
+    <string name="settings_rotation_held_by_console">Konsolläget är inställt på Alltid, så launchern stannar i liggande läge.</string>
+    <string name="settings_rotation_follow">Följ systemet</string>
+    <string name="settings_rotation_portrait">Stående</string>
+    <string name="settings_rotation_landscape">Liggande</string>
+    <string name="settings_rotation_controller">Liggande när en handkontroll är ansluten</string>
+    <string name="settings_handheld">Konsolläge</string>
+    <string name="settings_handheld_help">Konsolläget är en karusell anpassad för handkontroller, med hyllor och knapptips. Automatiskt använder det i liggande läge när en handkontroll är ansluten. Alltid håller Pluto i konsolläge och liggande läge, för en Android-konsol eller en handhållen enhet.</string>
+    <string name="settings_handheld_auto">Automatiskt</string>
+    <string name="settings_handheld_always">Alltid i liggande läge</string>
+    <string name="settings_handheld_never">Aldrig</string>
+    <string name="settings_handheld_everywhere">Alltid (launchern stannar i liggande läge)</string>
+    <string name="settings_carousel">Konsolkarusell</string>
+    <string name="settings_carousel_help">Hur spel och appar placeras i konsolläget.</string>
+    <string name="settings_carousel_coverflow">Coverflow</string>
+    <string name="settings_carousel_showcase">Skyltfönster: en platt rad</string>
+    <string name="settings_carousel_arc">Båge</string>
+    <string name="settings_carousel_ring">Ring: en roterande trumma</string>
+    <string name="settings_carousel_deck">Hög: nästa spel staplade</string>
+    <string name="settings_console_favourites">Favorithylla</string>
+    <string name="settings_console_favourites_help">Visa dina favoriter från hemskärmen som en hylla i konsolläget.</string>
+    <string name="settings_alphabet_rail">Alfabetlist</string>
+    <string name="settings_alphabet_rail_help">Visa A–Ö-listen längs kanten av applådan. Dra i den för att hoppa mellan bokstäver.</string>
+
+    <!-- Gestures -->
+    <string name="settings_gestures">Rörelser</string>
+    <string name="settings_swipe_down">Svep nedåt på hemskärmen</string>
+    <string name="settings_swipe_down_help">Vad som öppnas när du sveper nedåt på hemskärmen.</string>
+    <string name="settings_swipe_down_notifications">Aviseringar</string>
+    <string name="settings_swipe_down_search">Sök efter appar</string>
+    <string name="settings_swipe_down_nothing">Ingenting</string>
+    <string name="settings_double_tap_lock">Tryck två gånger för att låsa</string>
+    <string name="settings_double_tap_lock_help">Tryck två gånger på en tom yta på hemskärmen för att stänga av skärmen. Kräver Plutos skärmlåstjänst.</string>
+    <string name="settings_double_tap_lock_ready">På. Tryck två gånger på en tom yta på hemskärmen för att låsa.</string>
+    <string name="settings_double_tap_lock_needs_service">Aktivera ”Plutos skärmlås” i inställningarna för Tillgänglighet. Den utför bara låsningen och kan inte se skärmen.</string>
+
+    <!-- Notifications -->
+    <string name="settings_notifications">Aviseringar</string>
+    <string name="settings_notification_dots">Aviseringsprickar</string>
+    <string name="settings_notification_dots_on">Små röda prickar för aktiva aviseringar</string>
+    <string name="settings_notification_dots_needs_access">Kräver åtkomst till aviseringar i Android</string>
+    <string name="settings_notification_access">Åtkomst till aviseringar</string>
+    <string name="settings_notification_access_allowed">Tillåts · pågående aviseringar visar inga prickar</string>
+    <string name="settings_notification_access_needed">Tillåt Pluto att visa aviseringsprickar</string>
+
+    <!-- Organisation -->
+    <string name="settings_organisation">Organisering</string>
+    <string name="settings_categories">Kategorier…</string>
+    <string name="settings_hidden_apps">Dolda appar…</string>
+    <string name="settings_edit_home">Redigera hemskärmen…</string>
+    <string name="settings_edit_home_help">Ändra ordning på favoriter, dockan och mappar</string>
+    <string name="settings_rom_tabs">ROM-flikar</string>
+    <string name="settings_rom_tabs_help">Lägg till spel och välj deras standardemulatorer</string>
+    <string name="settings_none_hidden">Inga dolda</string>
+    <plurals name="settings_hidden_count">
+        <item quantity="one">%1$d app dold</item>
+        <item quantity="other">%1$d appar dolda</item>
+    </plurals>
+    <plurals name="settings_category_count">
+        <item quantity="one">%1$d kategori</item>
+        <item quantity="other">%1$d kategorier</item>
+    </plurals>
+
+    <!-- History -->
+    <string name="settings_history">Senast öppnade</string>
+    <string name="settings_keep_history">Spara historik</string>
+    <string name="settings_keep_history_on">Kommer ihåg de senaste 12 apparna som öppnats från Pluto. Sparas bara på den här enheten.</string>
+    <string name="settings_keep_history_off">Av. Ingenting registreras.</string>
+    <string name="settings_disable_history_title">Vill du stänga av historiken?</string>
+    <string name="settings_disable_history_text">Sparad historik raderas och nya öppningar registreras inte.</string>
+    <string name="settings_turn_off">Stäng av</string>
+    <string name="settings_clear_history">Rensa historik</string>
+    <string name="settings_clear_history_title">Vill du rensa Senast öppnade?</string>
+    <string name="settings_clear_history_text">Raden Senast öppnade töms. Apparna påverkas inte.</string>
+    <string name="settings_clear">Rensa</string>
+    <string name="settings_history_empty">Tom</string>
+    <plurals name="settings_history_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d appar</item>
+    </plurals>
+
+    <!-- Controller row -->
+    <string name="settings_controller">Handkontroll…</string>
+    <string name="settings_controller_help_none">Ingen handkontroll ansluten · knappmappning, spakinställning, diagnostik</string>
+    <plurals name="settings_controllers_connected">
+        <item quantity="one">%1$d handkontroll ansluten</item>
+        <item quantity="other">%1$d handkontroller anslutna</item>
+    </plurals>
+
+    <!-- Default launcher -->
+    <string name="settings_default_launcher">Standardlauncher</string>
+    <string name="settings_is_default">Pluto är din hemskärmsapp.</string>
+    <string name="settings_not_default">Pluto är inte din hemskärmsapp än.</string>
+    <string name="settings_set_default">Ange Pluto som hemskärmsapp</string>
+    <string name="settings_how_to_switch_back">Så byter du tillbaka: öppna Androids Inställningar ▸ Appar ▸ Standardappar ▸ Hemskärmsapp och välj din tidigare launcher.</string>
+    <string name="settings_open_default_apps">Öppna inställningar för standardappar</string>
+    <string name="settings_home_role_declined">Pluto är inte din hemskärmsapp än. Du kan välja den när som helst under Androids Inställningar ▸ Appar ▸ Standardappar ▸ Hemskärmsapp.</string>
+    <string name="settings_profiles_notice">Appar i jobbprofilen och Privat utrymme visas inte i den här versionen.</string>
+
+    <!-- Troubleshooting -->
+    <string name="settings_troubleshooting">Felsökning</string>
+    <string name="settings_crash_reports">Kraschrapporter</string>
+    <string name="settings_crashes_none">Inga registrerade. En krasch sparas här, bara på den här enheten.</string>
+    <plurals name="settings_crashes_recorded">
+        <item quantity="one">%1$d krasch registrerad. Den stannar på den här enheten tills du rapporterar den.</item>
+        <item quantity="other">%1$d krascher registrerade. De stannar på den här enheten tills du rapporterar dem.</item>
+    </plurals>
+    <string name="settings_no_file_picker">Enheten saknar filväljare, så Pluto kan inte välja en fil här.</string>
+    <string name="settings_backup_layout">Säkerhetskopiera layout</string>
+    <string name="settings_backup_layout_help">Sparar favoriter, dockan, mappar, kategorier och dolda appar i en fil som du väljer.</string>
+    <string name="settings_restore_layout">Återställ layout</string>
+    <string name="settings_restore_layout_help">Läser in en layoutfil från Pluto på den här enheten igen.</string>
+    <string name="settings_restore_layout_title">Vill du ersätta enhetens layout?</string>
+    <string name="settings_restore_layout_text">Hemskärmens rutnät, dockan, mappar, kategorier och dolda appar hämtas alla från filen. Widgetar stannar där de är, och en app som du inte längre har förblir dold tills du installerar den igen.</string>
+
+    <!-- About -->
+    <string name="settings_about">Om</string>
+    <string name="settings_license">Öppen källkod under MIT-licensen.</string>
+    <string name="settings_privacy">Inget konto, inga annonser och ingen analys. GitHub kontaktas bara vid valfria uppdateringskontroller och nedladdningar.</string>
+    <string name="settings_privacy_play">Inget konto, inga annonser och ingen analys. Din layout och launcherhistorik stannar på den här enheten.</string>
+    <string name="settings_privacy_policy">Integritetspolicy</string>
+    <string name="settings_limitations">Kända begränsningar: appar i jobbprofilen och Privat utrymme stöds inte än. Widgetar tar alltid upp en hel rad i hemskärmens rutnät.</string>
+    <string name="settings_support">Stöd Pluto</string>
+    <string name="settings_kofi">Bjud mig på en kaffe via Ko-fi</string>
+
+    <!-- Hidden apps -->
+    <string name="settings_hidden_title">Dolda appar</string>
+    <string name="settings_hidden_explanation">Att dölja tar bara bort appar från Plutos listor. Det är ingen säkerhets- eller integritetsfunktion. Dolda appar kan fortfarande öppnas från Inställningar eller andra appar.</string>
+    <string name="settings_hidden_empty">Inga dolda appar. Om du vill dölja en håller du ned den på hemskärmen eller i Alla appar och väljer Dölj (eller trycker på X på den med en handkontroll).</string>
+    <string name="settings_restore">Återställ</string>
+    <string name="settings_restore_all">Återställ alla</string>
+
+    <!-- Categories -->
+    <string name="settings_categories_title">Kategorier</string>
+    <string name="settings_categories_help">Kategorier ordnar appar så att de är lätta att bläddra bland. De begränsar aldrig åtkomsten: alla appar finns alltid i Alla appar.</string>
+    <string name="settings_add_category">Lägg till kategori</string>
+    <string name="settings_new_category">Ny kategori</string>
+    <string name="settings_category_name">Kategorinamn</string>
+    <string name="settings_rename">Byt namn</string>
+    <string name="settings_rename_category">Byt namn på kategori</string>
+    <string name="settings_move_up">Flytta upp</string>
+    <string name="settings_move_down">Flytta ned</string>
+    <string name="settings_delete">Radera</string>
+    <string name="settings_save">Spara</string>
+    <string name="settings_add">Lägg till</string>
+    <string name="settings_all_category_note">Inbyggd · innehåller alltid alla appar</string>
+    <string name="settings_delete_category_title">Vill du radera kategorin ”%1$s”?</string>
+    <string name="settings_delete_category_text">Appar i kategorin påverkas inte och avinstalleras inte.</string>
+    <plurals name="settings_member_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d appar</item>
+    </plurals>
+
+    <!-- Controller settings -->
+    <string name="settings_controller_title">Handkontroll</string>
+    <string name="settings_connected">Anslutna handkontroller</string>
+    <string name="settings_no_controller">Ingen handkontroll ansluten. Du kan ansluta en via USB eller Bluetooth när som helst.</string>
+    <string name="settings_controller_ids">Tillverkare %1$04X · Produkt %2$04X</string>
+    <string name="settings_controller_descriptor">ID %1$s</string>
+    <string name="settings_controller_details">Tillverkare %1$04X · Produkt %2$04X · ID %3$s</string>
+    <string name="settings_diagnostics">Indata i realtid</string>
+    <string name="settings_diagnostics_help">Tryck på knappar eller rör spakarna på handkontrollen för att se vad Android registrerar.</string>
+    <string name="settings_diagnostics_unavailable">Indata i realtid är inte tillgängligt just nu.</string>
+    <string name="settings_last_key">Senaste knapp</string>
+    <string name="settings_no_key_yet">Ingen än</string>
+    <string name="settings_axes">Spakar och styrkors</string>
+    <string name="settings_no_motion_yet">Ingen rörelse än</string>
+    <string name="settings_last_key_value">%1$s (%2$s)</string>
+    <string name="settings_last_key_value_device">%1$s (%2$s) · %3$s</string>
+    <string name="settings_key_number">Tangent %1$s</string>
+    <string name="settings_stick_summary">Vänster spak %1$s, höger spak %2$s</string>
+    <string name="settings_axes_values">Vänster spak %1$+.2f, %2$+.2f\nHöger spak %3$+.2f, %4$+.2f\nStyrkors (hat) %5$+.0f, %6$+.0f</string>
+    <string name="settings_axes_values_dead_zone">Vänster spak %1$+.2f, %2$+.2f (dödzon)\nHöger spak %3$+.2f, %4$+.2f\nStyrkors (hat) %5$+.0f, %6$+.0f</string>
+    <string name="settings_stick_centred">centrerad</string>
+    <string name="settings_stick_up">upp</string>
+    <string name="settings_stick_down">ned</string>
+    <string name="settings_stick_left">vänster</string>
+    <string name="settings_stick_right">höger</string>
+    <string name="settings_stick_up_left">upp till vänster</string>
+    <string name="settings_stick_up_right">upp till höger</string>
+    <string name="settings_stick_down_left">ned till vänster</string>
+    <string name="settings_stick_down_right">ned till höger</string>
+    <string name="settings_mapping">Knappmappning</string>
+    <string name="settings_mapping_help">Uppmaningarna använder de namn som Android rapporterar, eftersom knapparnas bokstäver skiljer sig mellan handkontroller. Rörelse (styrkors och vänster spak), Hem och Senaste kan inte mappas om.</string>
+    <string name="settings_apply_to">Tillämpa ändringar på</string>
+    <string name="settings_this_controller">Den här handkontrollen</string>
+    <string name="settings_all_controllers">Alla handkontroller</string>
+    <string name="settings_using_override">Den här handkontrollen använder en egen mappning.</string>
+    <string name="settings_using_default">Den här handkontrollen använder mappningen för alla handkontroller.</string>
+    <string name="settings_remap">Mappa om</string>
+    <string name="settings_not_assigned">Inte tilldelad</string>
+    <string name="settings_press_a_button">Tryck på en knapp på handkontrollen…</string>
+    <plurals name="settings_capture_for">
+        <item quantity="one">Mappar om ”%1$s”. Tryck på en knapp… (avbryts om %2$d s)</item>
+        <item quantity="other">Mappar om ”%1$s”. Tryck på en knapp… (avbryts om %2$d s)</item>
+    </plurals>
+    <string name="settings_capture_refused">Knappen är reserverad för rörelse eller systemet. Tryck på en annan knapp.</string>
+    <string name="settings_capture_timeout">Ingen knapp trycktes. Ommappningen avbröts.</string>
+    <string name="settings_capture_cancelled">Ommappningen avbröts.</string>
+    <string name="settings_captured">”%1$s” utför nu ”%2$s”.</string>
+    <string name="settings_captured_replacing">”%1$s” utför nu ”%2$s”. Den utför inte längre ”%3$s”.</string>
+    <string name="settings_reset">Återställ standard</string>
+    <string name="settings_reset_done">Mappningen har återställts till standard.</string>
+    <string name="settings_stick">Spakinställning</string>
+    <string name="settings_dead_zone">Dödzon</string>
+    <string name="settings_dead_zone_help">Spakrörelser som är mindre än så här ignoreras.</string>
+    <string name="settings_repeat_delay">Fördröjning före upprepning</string>
+    <string name="settings_repeat_delay_help">Hur länge du ska hålla ned innan rörelsen upprepas.</string>
+    <string name="settings_repeat_interval">Upprepningsintervall</string>
+    <string name="settings_repeat_interval_help">Tid mellan upprepade rörelser medan du håller ned.</string>
+    <string name="settings_move">Flytta</string>
+    <string name="settings_move_keys">Styrkors eller vänster spak</string>
+    <string name="settings_move_line">%1$s: %2$s</string>
+    <string name="settings_ms">%1$d ms</string>
+    <string name="settings_action_confirm">Öppna/bekräfta</string>
+    <string name="settings_action_back">Tillbaka/stäng</string>
+    <string name="settings_action_actions">Appåtgärder</string>
+    <string name="settings_action_search">Sök</string>
+    <string name="settings_action_settings">Inställningar</string>
+    <string name="settings_action_prev_category">Föregående kategori</string>
+    <string name="settings_action_next_category">Nästa kategori</string>
+
+    <!-- Onboarding -->
+    <string name="settings_onboarding_title">Konfigurera Pluto</string>
+    <string name="settings_welcome_title">Välkommen till Pluto</string>
+    <string name="settings_welcome_text">Pluto är en hemskärm för vardagsanvändning av telefonen och för spel med handkontroll. Den anpassar sig när du vrider telefonen eller ansluter en handkontroll, och dina favoriter, mappar och kategorier är desamma överallt.</string>
+    <string name="settings_welcome_ready">Pluto är redo att användas med en standardlayout. Allt här är valfritt och kan ändras senare i Inställningar.</string>
+    <plurals name="settings_apps_found">
+        <item quantity="one">%1$d app hittades.</item>
+        <item quantity="other">%1$d appar hittades.</item>
+    </plurals>
+    <string name="settings_loading_apps">Letar efter appar…</string>
+    <string name="settings_no_apps_problem">Pluto hittade inga appar att visa. Kontrollera att appar är installerade och inte begränsade och öppna sedan Pluto igen. Behåll din nuvarande hemskärmsapp tills appar visas.</string>
+    <string name="settings_step_games_title">Välj dina spel (valfritt)</string>
+    <string name="settings_step_games_text">Appar som du markerar hamnar i kategorin Spel, som konsolläget visar som en egen hylla. Du kan ändra detta när som helst: håll ned en app, välj Mer… och sedan Kategorier.</string>
+    <string name="settings_no_games_category">Kategorin Spel är inte tillgänglig. Du kan skapa kategorier senare i Inställningar.</string>
+    <plurals name="settings_games_selected">
+        <item quantity="one">%1$d app i Spel</item>
+        <item quantity="other">%1$d appar i Spel</item>
+    </plurals>
+    <string name="settings_step_controller_title">Styrning med handkontroll</string>
+    <string name="settings_step_controller_text">Allt i Pluto fungerar med touch eller en spelkontroll. Anslut en handkontroll när som helst. I liggande läge växlar Pluto då till konsolläge.</string>
+    <string name="settings_controller_now">En handkontroll är ansluten. Testa att navigera på den här skärmen med den.</string>
+    <string name="settings_step_home_title">Ange Pluto som din hemskärmsapp</string>
+    <string name="settings_step_home_text">Låt Pluto öppnas när du trycker på Hem. Android ber dig bekräfta.</string>
+    <string name="settings_step_home_done">Pluto är nu din hemskärmsapp.</string>
+    <string name="settings_not_now">Inte nu</string>
+    <string name="settings_next">Nästa</string>
+    <string name="settings_back">Tillbaka</string>
+    <string name="settings_skip">Hoppa över</string>
+    <string name="settings_finish">Slutför</string>
+    <string name="settings_start">Börja använda Pluto</string>
+    <string name="settings_step_of">Steg %1$d av %2$d</string>
+
+    <!-- Crash reports -->
+    <string name="settings_crashes_empty">Inga krascher registrerade. Om Pluto någon gång kraschar sparas spårningen här – bara på den här enheten – så att du kan bestämma om du vill rapportera den.</string>
+    <string name="settings_crashes_kept_locally">Sparas bara på den här enheten. Ingenting skickas förrän du öppnar rapporten på GitHub och skickar in den själv.</string>
+    <string name="settings_crash_report_on_github">Rapportera på GitHub</string>
+    <string name="settings_crash_clear_all">Rensa alla</string>
+    <string name="settings_crash_trace_truncated">… hela spårningen finns i rapporten.</string>
+    <string name="settings_crash_label_date_pattern">d MMM, HH:mm</string>
+
+    <!-- Optional permission disclosures -->
+    <string name="settings_access_lock_title">Vill du tillåta skärmlåsning med dubbeltryck?</string>
+    <string name="settings_access_notifications_title">Vill du tillåta aviseringsprickar?</string>
+    <string name="settings_access_lock_text">Pluto använder Androids Accessibility Service API enbart för att låsa skärmen när du trycker två gånger på en tom yta på hemskärmen. Tjänsten kan inte läsa skärminnehåll och övervakar inte tillgänglighetshändelser. Den samlar inte in, lagrar eller delar personuppgifter. Skärmlåsning är valfritt. Du kan när som helst stänga av ”Plutos skärmlås” i Androids inställningar för Tillgänglighet.</string>
+    <string name="settings_access_notifications_text">Med åtkomst till aviseringar i Android kan Pluto ta emot information om aviseringar, även när Pluto körs i bakgrunden. Pluto använder app- och profil-ID:n, aviseringsflaggor och om en app kan visa märken enbart för att visa prickar. Pluto läser eller lagrar inte meddelandetext. Metadata stannar i minnet på din enhet och skickas aldrig till en server. Aviseringsprickar är valfria. Du kan när som helst återkalla åtkomsten till aviseringar i Androids inställningar.</string>
+    <string name="settings_access_agree">Godkänn och fortsätt</string>
+
+    <!-- Privacy policy -->
+    <string name="settings_privacy_byline">Pluto Launcher · Anders (andershfranzen) · Uppdaterad 12 oktober 2026</string>
+    <string name="settings_privacy_device_title">Din information stannar på din enhet</string>
+    <string name="settings_privacy_device_text">Pluto har inget konto, inga annonser, ingen analys, inga spårnings-SDK:er och ingen fjärrapportering av krascher. Utvecklaren får inte din lista över installerade appar, din layout, dina sökningar, ROM-filer, aviseringar eller historik över öppnade appar.</string>
+    <string name="settings_privacy_apps_title">Appar, layout och senast öppnade</string>
+    <string name="settings_privacy_apps_text">Pluto läser namn, ikoner och genvägar för appar som kan öppnas för att visa och söka bland dem. Favoriter, mappar, dolda appar, kategorier, widget-ID:n och inställningar sparas i appens privata lagringsutrymme. Valfri historik över senast öppnade appar sparas lokalt. Du kan rensa den eller stänga av historiken i Inställningar. Sökfrågor används lokalt och sparas inte som sökhistorik.</string>
+    <string name="settings_privacy_roms_title">ROM-mappar och bilder</string>
+    <string name="settings_privacy_roms_text">Pluto har bara åtkomst till mappar och bilder som du väljer med Androids filväljare. Filreferenser, spelnamn och bilder sparas lokalt för att bygga upp ditt bibliotek. När du öppnar ett spel får den valda emulatorn åtkomst till den valda filen. Om du tar bort en ROM-flik raderas Plutos biblioteksposter, inte dina spelfiler. Emulatorer och widgetleverantörer hanterar sina egna data enligt sina egna policyer.</string>
+    <string name="settings_privacy_dots_title">Aviseringsprickar</string>
+    <string name="settings_privacy_dots_text">Valfri åtkomst till aviseringar i Android används för app- och profil-ID:n, aviseringsflaggor och om en app kan visa märken. Denna metadata finns bara i minnet, även i bakgrunden medan åtkomsten är aktiverad. Pluto läser eller lagrar inte aviseringars meddelandetext och skickar inte aviseringsdata från enheten. Återkalla åtkomsten i Androids inställningar för att stoppa lyssnaren.</string>
+    <string name="settings_privacy_lock_title">Skärmlåsning med dubbeltryck</string>
+    <string name="settings_privacy_lock_text">Det valfria Accessibility Service API:et används enbart för att utföra Androids skärmlåsåtgärd efter ditt dubbeltryck. Det kan inte hämta skärminnehåll och prenumererar inte på tillgänglighetshändelser. Inga personuppgifter samlas in, lagras eller delas via den här tjänsten. Stäng av ”Plutos skärmlås” i Androids inställningar för Tillgänglighet för att återkalla åtkomsten.</string>
+    <string name="settings_privacy_updates_title">Uppdateringar och externa länkar</string>
+    <string name="settings_privacy_updates_text">Google Play-versionen har ingen internetbehörighet och ingen GitHub-uppdaterare. Google Play hanterar dess uppdateringar enligt Googles egen integritetspolicy. GitHub-versionen kontaktar GitHub bara för uppdateringskontroller som du tillåter och nedladdningar som du begär. GitHub tar emot vanlig anslutningsmetadata, till exempel din IP-adress och Pluto-version. Ingen launcheraktivitet skickas. Uppdateringskontroller är valfria och nedladdningar kräver ditt godkännande. Externa supportlänkar öppnas i webbläsaren och omfattas av destinationens integritetspolicy.</string>
+    <string name="settings_privacy_retention_title">Lagring och radering</string>
+    <string name="settings_privacy_retention_text">Plutos sparade data finns kvar i appens privata lagringsutrymme på enheten tills du tar bort dem, rensar appens lagringsutrymme eller avinstallerar appen. Säkerhetskopiering i Android är inaktiverad. Om du återkallar filbehörigheter stoppas framtida åtkomst. Att rensa Plutos lagringsutrymme raderar inte ROM-filerna eller bilderna som du har valt. Pluto har inget serverkonto eller användardata på en server som behöver raderas.</string>
+    <string name="settings_privacy_contact_title">Kontakt</string>
+    <string name="settings_privacy_contact_text">Har du frågor om integritet kan du mejla anders@afive.dev. Du kan också rapportera problem via ärendehanteraren för Pluto Launcher på GitHub. Undvik att ta med privat information i ett offentligt ärende.</string>
+    <string name="settings_privacy_email">Mejla utvecklaren</string>
+    <string name="settings_privacy_website">Visa offentlig integritetspolicy</string>
+
+    <!-- Updates (both distributions) -->
+    <string name="settings_updates">Uppdateringar</string>
+    <string name="settings_updates_play">Google Play håller Pluto uppdaterad.</string>
+    <string name="settings_updates_open_play">Öppna i Play Butik</string>
+    <string name="settings_updates_auto">Sök automatiskt</string>
+    <string name="settings_updates_auto_help">Sök på GitHub en gång om dagen när du öppnar Pluto. Nedladdningar kräver alltid ditt godkännande.</string>
+    <string name="settings_updates_checking">Söker på GitHub…</string>
+    <string name="settings_updates_downloading">Laddar ned Pluto %1$s…</string>
+    <string name="settings_updates_verifying">Verifierar uppdateringen…</string>
+    <string name="settings_updates_ready">Uppdateringen är klar. Android ber dig godkänna installationen.</string>
+    <string name="settings_updates_available">Pluto %1$s är tillgänglig.</string>
+    <string name="settings_updates_up_to_date">Du har den senaste versionen.</string>
+    <string name="settings_updates_idle">Sök efter den senaste stabila versionen av Pluto.</string>
+    <string name="settings_updates_last_checked">Senast kontrollerad: %1$s</string>
+    <string name="settings_updates_check">Sök efter uppdateringar</string>
+    <string name="settings_updates_cancel">Avbryt nedladdning</string>
+    <string name="settings_updates_install">Installera uppdatering</string>
+    <string name="settings_updates_download">Ladda ned och uppdatera</string>
+    <string name="settings_updates_notes">Visa versionsinformation</string>
+    <string name="settings_updates_disclosure">Uppdateringskontroller kontaktar GitHub. Ingen launcheraktivitet eller personlig information skickas. Din layout behålls.</string>
+    <string name="settings_updates_consent_title">Vill du hålla Pluto uppdaterad?</string>
+    <string name="settings_updates_consent_decline">Nej tack</string>
+    <string name="settings_updates_consent_allow">Tillåt automatisk sökning</string>
+    <string name="settings_updates_consent_question">Vill du söka efter nya versioner på GitHub automatiskt?</string>
+    <string name="settings_updates_consent_daily">En gång om dagen, när du öppnar Pluto</string>
+    <string name="settings_updates_consent_approval">Du godkänner nedladdningar och installation</string>
+    <string name="settings_updates_consent_footer">Ingen användningsdata delas. Du kan ändra detta när som helst i Inställningar.</string>
+    <string name="settings_updates_logo">Plutos logotyp</string>
+
+    <!-- Update errors (GitHub build) -->
+    <string name="settings_update_error_check">Det gick inte att söka på GitHub. Kontrollera anslutningen och försök igen.</string>
+    <string name="settings_update_error_download">Det gick inte att ladda ned uppdateringen. Kontrollera anslutningen och ledigt lagringsutrymme och försök sedan igen.</string>
+    <string name="settings_update_error_installer">Android kunde inte öppna installationsprogrammet. Försök igen.</string>
+    <string name="settings_update_error_permission">Om du vill installera uppdateringen tillåter du Pluto att installera appar när Android frågar. Nedladdningen är redo att försökas igen.</string>
+    <string name="settings_update_error_response_too_large">Svaret om versionen var för stort.</string>
+    <string name="settings_update_error_no_stable">Ingen stabil version är tillgänglig.</string>
+    <string name="settings_update_error_unsupported_version">Versionen har ett versionsnummer som inte stöds.</string>
+    <string name="settings_update_error_cannot_compare">Den här versionen kan inte jämföra versionsnummer.</string>
+    <string name="settings_update_error_no_apk_yet">Versionen har ingen APK än. Försök igen senare.</string>
+    <string name="settings_update_error_apk_mismatch">Den nedladdade APK-filen matchar inte versionen.</string>
+    <string name="settings_update_error_incomplete">Nedladdningen var ofullständig. Försök igen.</string>
+    <string name="settings_update_error_save">Det gick inte att spara uppdateringen. Kontrollera ledigt lagringsutrymme och försök igen.</string>
+    <string name="settings_update_error_checksum">APK-filens kontrollsumma stämmer inte. Ladda ned den igen.</string>
+    <string name="settings_update_error_invalid_apk">Nedladdningen är inte en giltig APK-fil för Android.</string>
+    <string name="settings_update_error_redirect_outside">Nedladdningen omdirigerades utanför GitHub.</string>
+    <string name="settings_update_error_missing_location">Nedladdningsplatsen saknas.</string>
+    <string name="settings_update_error_rate_limited">GitHub begränsar antalet förfrågningar. Försök igen senare.</string>
+    <string name="settings_update_error_too_many_redirects">Nedladdningen omdirigerades för många gånger.</string>
+    <string name="settings_update_error_not_pluto_repo">Versionen kommer inte från Plutos GitHub-repository.</string>
+    <string name="settings_update_error_no_supported_apk">Versionen har ingen APK-fil för Pluto som stöds.</string>
+    <string name="settings_update_error_unexpected_size">Versionens APK-fil har en oväntad storlek.</string>
+    <string name="settings_update_error_no_checksum">Versionen har ingen verifierad kontrollsumma för APK-filen än. Försök igen senare.</string>
+    <string name="settings_update_error_not_pluto">Den här APK-filen är inte Pluto.</string>
+    <string name="settings_update_error_not_newer">Den här APK-filen är inte en nyare version av Pluto.</string>
+    <string name="settings_update_error_signing_key">Uppdateringen använder en annan signeringsnyckel och kan inte behålla din layout. Behåll din nuvarande installation och avinstallera den inte.</string>
+</resources>

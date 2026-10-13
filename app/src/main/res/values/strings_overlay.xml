@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MissingTranslation is ignored until the da/de/fr/sv translations of these strings land; remove tools:ignore then. -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
     <!-- Shared building blocks (OverlayKit) -->
     <!-- Button / screen-reader label: closes a panel or dialog. -->
     <string name="overlay_kit_close">Close</string>

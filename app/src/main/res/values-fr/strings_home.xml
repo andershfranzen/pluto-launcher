@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home menu -->
+    <string name="home_surface_label">Écran d\'accueil. Actions : rechercher, ajouter un widget, modifier l\'accueil, paramètres</string>
+    <string name="home_menu_search_apps">Rechercher des applis</string>
+    <string name="home_menu_add_widget">Ajouter un widget</string>
+    <string name="home_menu_edit_home">Modifier l\'accueil</string>
+    <string name="home_menu_launcher_settings">Paramètres du lanceur</string>
+
+    <!-- Built-in category names -->
+    <string name="home_category_all">Toutes les applis</string>
+    <string name="home_category_games">Jeux</string>
+    <string name="home_category_tools">Outils</string>
+
+    <!-- App drawer -->
+    <string name="home_drawer_category_everything">Tout</string>
+    <string name="home_drawer_game_unavailable">Ce jeu n\'est plus disponible. Actualisez son onglet ROM.</string>
+    <string name="home_drawer_searching">Recherche…</string>
+    <string name="home_drawer_search_label">Rechercher des applis</string>
+    <string name="home_drawer_search_scope_category">Recherche d\'applis et de raccourcis dans %1$s</string>
+    <string name="home_drawer_search_scope_all">Recherche dans toutes les applis, jeux et raccourcis</string>
+    <string name="home_drawer_search_scope_actions">%1$s. Touchez une appli pour voir ses actions.</string>
+    <string name="home_drawer_actions_mode">Mode actions des applis</string>
+    <string name="home_drawer_search_hint_category">Rechercher dans %1$s</string>
+    <string name="home_drawer_search_hint_all">Rechercher applis, jeux et raccourcis</string>
+    <string name="home_drawer_clear_search">Effacer la recherche</string>
+    <string name="home_drawer_close_search">Fermer la recherche</string>
+    <string name="home_drawer_done">OK</string>
+    <string name="home_drawer_actions">Choisissez une appli pour voir ses actions</string>
+    <string name="home_drawer_actions_done">Fin du choix des applis</string>
+    <string name="home_drawer_manage_categories">Ajouter ou modifier des catégories</string>
+    <string name="home_drawer_actions_hint">Touchez une appli pour voir ses actions</string>
+    <string name="home_drawer_no_results">Aucun résultat pour « %1$s »</string>
+    <string name="home_drawer_no_match">Aucune appli ne correspond à « %1$s »</string>
+    <string name="home_drawer_empty_category">Aucune appli dans %1$s pour l\'instant</string>
+    <string name="home_drawer_empty_all">Aucune appli à afficher</string>
+    <string name="home_drawer_search_everything">Tout rechercher</string>
+    <string name="home_drawer_search_all_apps">Rechercher dans toutes les applis</string>
+    <string name="home_drawer_no_match_category_detail">Recherche dans %1$s. Essayez Tout ou un nom plus court.</string>
+    <string name="home_drawer_no_match_detail_rich">La recherche porte sur les applis, les titres de ROM et les raccourcis d\'applis.</string>
+    <string name="home_drawer_no_match_detail">La recherche porte sur les noms d\'applis et les noms de packages.</string>
+    <string name="home_drawer_empty_category_detail">Choisissez les applis qui vont ici.</string>
+    <string name="home_drawer_add_apps">Ajouter des applis</string>
+    <string name="home_drawer_show_all_apps">Afficher toutes les applis</string>
+    <string name="home_drawer_empty_all_detail">Les applis masquées peuvent être restaurées depuis Paramètres → Applis → Applis masquées.</string>
+    <string name="home_drawer_hidden_apps">Applis masquées</string>
+
+    <!-- Home -->
+    <string name="home_lock_needs_service">Pour verrouiller par double appui, activez « Verrouillage de l\'écran Pluto » dans les paramètres d\'accessibilité.</string>
+    <string name="home_empty_favourites">Aucun favori pour l\'instant</string>
+    <string name="home_empty_favourites_detail">Balayez vers le haut pour trouver des applis, puis épinglez vos favoris. Un appui prolongé sur une appli ouvre ses actions ; Ajouter un favori fonctionne sans gestes.</string>
+    <string name="home_add_favourite">Ajouter un favori</string>
+    <string name="home_drop_remove">Retirer</string>
+    <string name="home_dock_empty_slot">Emplacement %1$d du dock vide. Ouvre la modification pour choisir une appli</string>
+
+    <!-- Open folder -->
+    <string name="home_folder_name">Nom du dossier</string>
+    <string name="home_folder_save_name">Enregistrer le nom</string>
+    <string name="home_folder_cancel_rename">Annuler le renommage</string>
+    <string name="home_folder_close">Fermer le dossier</string>
+    <string name="home_folder_rename">Renommer</string>
+    <string name="home_folder_edit">Modifier</string>
+    <string name="home_folder_empty">Ce dossier est vide. Faites glisser une appli dessus, ou appuyez de manière prolongée sur une appli, choisissez Plus… puis Déplacer vers un dossier….</string>
+
+    <!-- Search results -->
+    <string name="home_search_section_apps">Applis</string>
+    <string name="home_search_section_games">Jeux</string>
+    <string name="home_search_section_shortcuts">Raccourcis</string>
+    <string name="home_search_result_options">Options pour %1$s</string>
+    <string name="home_search_result_app_detail">Appli</string>
+    <string name="home_search_result_shortcut_detail">%1$s · Raccourci</string>
+    <string name="home_search_result_app">%1$s, appli</string>
+    <string name="home_search_result_game">%1$s, jeu dans %2$s</string>
+    <string name="home_search_result_shortcut">%1$s, raccourci de %2$s</string>
+
+    <!-- Startup and storage error screens -->
+    <string name="home_startup_starting">Démarrage de Pluto</string>
+    <string name="home_startup_loading_apps">Chargement des applis</string>
+    <string name="home_storage_error_title">Pluto ne peut pas ouvrir sa disposition enregistrée</string>
+    <string name="home_storage_error_detail">Vos favoris, votre dock, vos dossiers et vos paramètres n\'ont été ni modifiés ni supprimés. Réessayez, ou choisissez une autre appli d\'écran d\'accueil dans les Paramètres Android le temps de résoudre le problème. Installer la version plus récente de Pluto que vous utilisiez auparavant règle généralement ce problème.</string>
+    <string name="home_storage_error_technical">Détails : %1$s</string>
+    <string name="home_storage_error_retry">Réessayer</string>
+    <string name="home_storage_error_choose_home">Choisir l\'appli d\'accueil</string>
+
+    <!-- Shared components -->
+    <string name="common_category_tab">Catégorie %1$s</string>
+    <string name="common_message_dismiss_label">Ignorer le message</string>
+    <string name="common_message_dismiss">Ignorer</string>
+    <string name="common_clock_description">%1$s, %2$s</string>
+    <string name="common_app_unavailable">%1$s (indisponible)</string>
+    <string name="common_app_actions">Actions de l\'appli</string>
+    <string name="common_app_opens_actions">%1$s, ouvre les actions de l\'appli</string>
+    <string name="common_folder_empty">Dossier %1$s, vide</string>
+    <plurals name="common_folder_apps">
+        <item quantity="one">Dossier %1$s, %2$d appli</item>
+        <item quantity="many">Dossier %1$s, %2$d d\'applis</item>
+        <item quantity="other">Dossier %1$s, %2$d applis</item>
+    </plurals>
+    <string name="common_folder_edit">Modifier le dossier</string>
+
+    <!-- Controller button legend -->
+    <string name="common_legend_open">Ouvrir</string>
+    <string name="common_legend_actions">Actions</string>
+    <string name="common_legend_search">Rechercher</string>
+    <string name="common_legend_settings">Paramètres</string>
+    <string name="common_legend_category">Catégorie</string>
+    <string name="common_legend_back">Retour</string>
+    <string name="common_legend_close">Fermer</string>
+    <string name="common_legend_spoken">Boutons de la manette : %1$s</string>
+    <string name="common_legend_spoken_entry">%1$s %2$s</string>
+    <string name="common_legend_spoken_or">%1$s ou %2$s</string>
+    <string name="common_has_notifications">A des notifications</string>
+    <string name="common_more_actions">Plus d\'actions</string>
+
+    <!-- App launch and system action messages -->
+    <string name="common_app_not_installed">L\'appli %1$s n\'est plus installée.</string>
+    <string name="common_app_paused">L\'appli %1$s est en pause pour le moment.</string>
+    <string name="common_app_open_failed">Impossible d\'ouvrir %1$s.</string>
+    <string name="common_app_info_unavailable">Les infos sur l\'appli ne sont pas disponibles pour %1$s.</string>
+    <string name="common_app_info_failed">Impossible d\'ouvrir les infos sur l\'appli %1$s.</string>
+    <string name="common_uninstall_not_here">Impossible de désinstaller %1$s depuis cet écran.</string>
+    <string name="common_uninstall_unavailable">La désinstallation n\'est pas disponible sur cet appareil.</string>
+    <string name="common_uninstall_failed">Impossible de désinstaller %1$s.</string>
+    <string name="common_shortcut_open_failed">Impossible d\'ouvrir « %1$s ».</string>
+
+    <!-- Launcher messages (snackbar) -->
+    <string name="home_update_available">Pluto %1$s est disponible. Ouvrez Paramètres → Général pour mettre à jour.</string>
+    <string name="home_rom_shelves_load_failed">Impossible de charger les étagères ROM. Redémarrez Pluto pour réessayer.</string>
+    <string name="home_rom_shelf_save_failed">Impossible d\'enregistrer cette étagère ROM.</string>
+    <string name="home_rom_shelf_remove_failed">Impossible de supprimer cette étagère ROM.</string>
+    <string name="home_rom_shelf_missing">Cette étagère ROM n\'existe plus</string>
+    <string name="home_rom_folder_access_lost">L\'accès au dossier a été perdu. Choisissez à nouveau le dossier ROM.</string>
+    <string name="home_rom_folder_read_failed">Impossible de lire ce dossier ROM. Choisissez-le à nouveau.</string>
+    <string name="home_app_open_failed">Impossible d\'ouvrir cette appli.</string>
+    <string name="home_shortcut_unavailable">Ce raccourci n\'est plus disponible.</string>
+    <string name="home_shortcut_open_failed">Impossible d\'ouvrir ce raccourci.</string>
+    <string name="home_system_app_info_failed">Android ne peut pas ouvrir les infos sur l\'appli pour le moment.</string>
+    <string name="home_system_uninstall_failed">Android ne peut pas lancer la désinstallation pour le moment.</string>
+    <string name="home_layout_saved">Disposition enregistrée dans le fichier choisi.</string>
+    <string name="home_layout_write_failed">Impossible d\'écrire ce fichier. Essayez un autre emplacement.</string>
+    <string name="home_layout_restored">Disposition restaurée.</string>
+    <string name="home_layout_restore_failed">Impossible de restaurer cette disposition. Votre disposition actuelle n\'a pas changé.</string>
+    <string name="home_layout_too_new">Cette sauvegarde a été créée par une version plus récente de Pluto. Mettez Pluto à jour, puis restaurez-la.</string>
+    <string name="home_layout_not_backup">Ce fichier n\'est pas une sauvegarde de disposition Pluto.</string>
+    <string name="home_layout_read_failed">Impossible de lire ce fichier.</string>
+    <string name="home_save_failed">Impossible d\'enregistrer cette modification. Veuillez réessayer.</string>
+    <string name="home_default_folder_name">Dossier</string>
+    <string name="home_default_category_name">Nouvelle catégorie</string>
+    <string name="home_dock_full">Le dock est plein. Retirez d\'abord une appli du dock.</string>
+    <string name="home_settings_reset">Le fichier de paramètres de Pluto était endommagé et a été réinitialisé. Lancements récents est désactivé jusqu\'à ce que vous le réactiviez.</string>
+    <string name="home_settings_unreadable">Pluto ne peut pas lire ses paramètres pour le moment : les valeurs par défaut sont utilisées et Lancements récents est en pause.</string>
+</resources>

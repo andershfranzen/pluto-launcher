@@ -192,6 +192,10 @@ Pluto never forces rotation on the app you are using.
   *Reduce motion* or Android's "Remove animations".
 
 **Privacy**
+- Pluto speaks 13 languages: English, Simplified Chinese, Hindi, Spanish, Arabic, French,
+  Bengali, Portuguese (Brazil), Russian, Indonesian, Danish, German and Swedish. It follows the
+  phone's language, or pick one for Pluto alone in Android 13+'s App languages setting.
+  Arabic is mirrored throughout. To add a language, see [docs/LOCALISATION.md](docs/LOCALISATION.md).
 - No account, ads, analytics or cloud sync. Normal launcher and ROM features work offline.
 - On first launch Pluto asks whether to check GitHub for updates, with automatic checks
   as the default choice. No request is sent until you answer. If allowed, checks run at
