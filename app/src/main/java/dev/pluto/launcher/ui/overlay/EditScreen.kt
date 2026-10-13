@@ -564,7 +564,7 @@ private fun TargetPicker(
         }
         is EditTarget.Dock -> (0 until Organization.DOCK_SLOTS).filter { it != target.slot }.map { slot ->
             val entry = state.dock.getOrNull(slot)
-            Triple("$DOCK_PREFIX$slot", "${OverlayText.dockSlot(slot)}: ${entry?.label ?: OverlayText.EMPTY_SLOT}", entry)
+            Triple("$DOCK_PREFIX$slot", OverlayText.dockSlotWith(slot, entry?.label ?: OverlayText.EMPTY_SLOT), entry)
         }
         is EditTarget.FolderApp -> target.folder.apps.filter { it.key != target.entry.key }.map {
             Triple(it.key.encode(), it.label, it)
@@ -625,7 +625,7 @@ private fun AppPicker(
                         label = app.label,
                         supporting = listOfNotNull(
                             currentLabel?.takeIf { current },
-                            if (slot >= 0) "${OverlayText.DOCK_SECTION} · ${OverlayText.dockSlot(slot)}" else null,
+                            if (slot >= 0) OverlayText.inDockSlot(slot) else null,
                         ).joinToString(" · ").ifEmpty { null },
                         leading = { AppIcon(app, 32.dp) },
                         selected = current,

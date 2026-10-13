@@ -197,7 +197,7 @@ fun CategoryMembershipDialog(key: AppKey, state: LauncherUiState, vm: LauncherVi
     rememberScreenFocus(categories.firstOrNull()?.let { "membership:cat:${it.id}" } ?: "membership:manage")
 
     ModalPanel(
-        title = entry?.label?.let { "${OverlayText.CATEGORIES_TITLE}: $it" } ?: OverlayText.CATEGORIES_TITLE,
+        title = entry?.label?.let { OverlayText.categoriesTitleFor(it) } ?: OverlayText.CATEGORIES_TITLE,
         idPrefix = "membership",
         onDismiss = { vm.back() },
         trapFocus = isTop,
@@ -242,7 +242,7 @@ fun MoveToFolderDialog(key: AppKey, state: LauncherUiState, vm: LauncherViewMode
 
     Box(Modifier.fillMaxSize()) {
         ModalPanel(
-            title = entry?.label?.let { "${OverlayText.MOVE_TITLE}: $it" } ?: OverlayText.MOVE_TITLE,
+            title = entry?.label?.let { OverlayText.moveTitleFor(it) } ?: OverlayText.MOVE_TITLE,
             idPrefix = "movefolder",
             onDismiss = { vm.back() },
             trapFocus = isTop,

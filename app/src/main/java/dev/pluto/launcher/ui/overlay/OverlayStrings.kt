@@ -1,91 +1,101 @@
 package dev.pluto.launcher.ui.overlay
 
-/** Plain-English texts for the overlay layers (inline for 0.1; one place for later localisation). */
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
+
+/** Texts for the overlay layers, read from strings_overlay.xml in the current language. */
 internal object OverlayText {
+    // Dock slot with its content (app name or EMPTY_SLOT).
+    fun dockSlotWith(slot: Int, content: String) = UiText.get(R.string.overlay_dock_slot_with, slot + 1, content)
+    fun inDockSlot(slot: Int) = UiText.get(R.string.overlay_in_dock_slot, slot + 1)
+    fun categoriesTitleFor(app: String) = UiText.get(R.string.overlay_categories_title_for, app)
+    fun moveTitleFor(app: String) = UiText.get(R.string.overlay_move_title_for, app)
+
     // App actions
-    const val APP_ACTIONS = "App actions"
-    const val APP_MISSING = "This app is no longer available. It may have been uninstalled or disabled."
-    const val LAUNCH = "Launch"
-    const val PIN = "Pin to home"
-    const val UNPIN = "Unpin from home"
-    const val ADD_TO_DOCK = "Add to dock"
-    const val REMOVE_FROM_DOCK = "Remove from dock"
-    const val DOCK_FULL = "Dock is full. Remove an app from the dock first (Edit home)."
-    const val CATEGORIES = "Categories…"
-    const val MOVE_TO_FOLDER = "Move to folder…"
-    const val HIDE = "Hide from launcher"
-    const val HIDE_HINT = "Restore it any time from Settings ▸ Apps ▸ Hidden apps"
-    const val UNHIDE = "Show in launcher again"
-    const val APP_INFO = "App info"
-    const val MORE_ACTIONS = "More actions"
+    val APP_ACTIONS: String get() = UiText.get(R.string.overlay_app_actions)
+    val APP_MISSING: String get() = UiText.get(R.string.overlay_app_missing)
+    val LAUNCH: String get() = UiText.get(R.string.overlay_launch)
+    val PIN: String get() = UiText.get(R.string.overlay_pin)
+    val UNPIN: String get() = UiText.get(R.string.overlay_unpin)
+    val ADD_TO_DOCK: String get() = UiText.get(R.string.overlay_add_to_dock)
+    val REMOVE_FROM_DOCK: String get() = UiText.get(R.string.overlay_remove_from_dock)
+    val DOCK_FULL: String get() = UiText.get(R.string.overlay_dock_full)
+    val CATEGORIES: String get() = UiText.get(R.string.overlay_categories)
+    val MOVE_TO_FOLDER: String get() = UiText.get(R.string.overlay_move_to_folder)
+    val HIDE: String get() = UiText.get(R.string.overlay_hide)
+    val HIDE_HINT: String get() = UiText.get(R.string.overlay_hide_hint)
+    val UNHIDE: String get() = UiText.get(R.string.overlay_unhide)
+    val APP_INFO: String get() = UiText.get(R.string.overlay_app_info)
+    val MORE_ACTIONS: String get() = UiText.get(R.string.overlay_more_actions)
     // One-word labels under the long-press menu's action icons (full wording is spoken).
-    const val QUICK_PIN = "Pin"
-    const val QUICK_UNPIN = "Unpin"
-    const val QUICK_DOCK = "Dock"
-    const val QUICK_UNDOCK = "Undock"
-    const val QUICK_INFO = "Info"
-    const val QUICK_HIDE = "Hide"
-    const val QUICK_SHOW = "Show"
-    const val QUICK_UNINSTALL = "Uninstall"
-    const val UNINSTALL = "Uninstall…"
-    const val UNINSTALL_HINT = "Android asks for confirmation"
-    const val SUSPENDED = "Currently unavailable (paused or suspended)"
-    fun inFolder(name: String) = "In folder “$name”"
-    fun inCategories(names: List<String>) = if (names.isEmpty()) "Not in any category" else names.joinToString(", ")
+    val QUICK_PIN: String get() = UiText.get(R.string.overlay_quick_pin)
+    val QUICK_UNPIN: String get() = UiText.get(R.string.overlay_quick_unpin)
+    val QUICK_DOCK: String get() = UiText.get(R.string.overlay_quick_dock)
+    val QUICK_UNDOCK: String get() = UiText.get(R.string.overlay_quick_undock)
+    val QUICK_INFO: String get() = UiText.get(R.string.overlay_quick_info)
+    val QUICK_HIDE: String get() = UiText.get(R.string.overlay_quick_hide)
+    val QUICK_SHOW: String get() = UiText.get(R.string.overlay_quick_show)
+    val QUICK_UNINSTALL: String get() = UiText.get(R.string.overlay_quick_uninstall)
+    val UNINSTALL: String get() = UiText.get(R.string.overlay_uninstall)
+    val UNINSTALL_HINT: String get() = UiText.get(R.string.overlay_uninstall_hint)
+    val SUSPENDED: String get() = UiText.get(R.string.overlay_suspended)
+    fun inFolder(name: String) = UiText.get(R.string.overlay_in_folder, name)
+    fun inCategories(names: List<String>) =
+        if (names.isEmpty()) UiText.get(R.string.overlay_not_in_any_category) else names.joinToString(", ")
 
     // Category membership
-    const val CATEGORIES_TITLE = "Categories"
-    const val NO_CATEGORIES = "There are no categories yet besides All apps."
-    const val MANAGE_CATEGORIES = "Manage categories…"
-    const val ALL_APPS_NOTE = "Every app is always in All apps."
+    val CATEGORIES_TITLE: String get() = UiText.get(R.string.overlay_categories_title)
+    val NO_CATEGORIES: String get() = UiText.get(R.string.overlay_no_categories)
+    val MANAGE_CATEGORIES: String get() = UiText.get(R.string.overlay_manage_categories)
+    val ALL_APPS_NOTE: String get() = UiText.get(R.string.overlay_all_apps_note)
 
     // Move to folder
-    const val MOVE_TITLE = "Move to folder"
-    const val NO_FOLDERS = "No folders yet. Create one below."
-    const val NEW_FOLDER = "New folder…"
-    const val NEW_FOLDER_TITLE = "New folder"
-    const val FOLDER_NAME = "Folder name"
-    const val DEFAULT_FOLDER_NAME = "Folder"
-    const val WIDGET = "Widget"
-    const val WIDGET_OPTIONS = "Widget options"
-    fun widgetRows(rows: Int) = if (rows == 1) "1 row tall" else "$rows rows tall"
-    const val CREATE = "Create"
-    const val REMOVE_FROM_FOLDER = "Remove from folder"
-    const val CURRENT_FOLDER = "Current folder"
-    fun appCount(n: Int) = if (n == 1) "1 app" else "$n apps"
+    val MOVE_TITLE: String get() = UiText.get(R.string.overlay_move_title)
+    val NO_FOLDERS: String get() = UiText.get(R.string.overlay_no_folders)
+    val NEW_FOLDER: String get() = UiText.get(R.string.overlay_new_folder)
+    val NEW_FOLDER_TITLE: String get() = UiText.get(R.string.overlay_new_folder_title)
+    val FOLDER_NAME: String get() = UiText.get(R.string.overlay_folder_name)
+    val DEFAULT_FOLDER_NAME: String get() = UiText.get(R.string.overlay_default_folder_name)
+    val WIDGET: String get() = UiText.get(R.string.overlay_widget)
+    val WIDGET_OPTIONS: String get() = UiText.get(R.string.overlay_widget_options)
+    fun widgetRows(rows: Int) = UiText.plural(R.plurals.overlay_widget_rows_tall, rows, rows)
+    val CREATE: String get() = UiText.get(R.string.overlay_create)
+    val REMOVE_FROM_FOLDER: String get() = UiText.get(R.string.overlay_remove_from_folder)
+    val CURRENT_FOLDER: String get() = UiText.get(R.string.overlay_current_folder)
+    fun appCount(n: Int) = UiText.plural(R.plurals.overlay_app_count, n, n)
 
     // Edit
-    const val EDIT_TITLE = "Edit home"
-    const val EDIT_INTRO = "Select an item to move it, remove it or change it. Changes are saved immediately."
-    const val HOME_SECTION = "Home favourites"
-    const val HOME_EMPTY = "No favourites yet. Use Add favourite… above."
-    const val ADD_FAVOURITE = "Add favourite…"
-    const val CHOOSE_FAVOURITE = "Add a favourite"
-    const val ON_HOME = "Already on home"
-    const val APP_ACTIONS_ELLIPSIS = "App actions…"
-    const val DOCK_SECTION = "Dock"
-    const val FOLDERS_SECTION = "Folder contents"
-    const val FOLDER_EMPTY = "This folder is empty."
-    const val MOVE_UP = "Move up"
-    const val MOVE_DOWN = "Move down"
-    const val MOVE_BEFORE = "Move before…"
-    const val MOVE_AFTER = "Move after…"
-    const val RENAME_FOLDER = "Rename folder"
-    const val DELETE_FOLDER = "Delete folder"
-    const val DELETE_FOLDER_TEXT = "Apps in this folder go back to the home screen. No apps are uninstalled."
-    const val DELETE = "Delete"
-    const val RENAME = "Rename"
-    const val ADD_APP_TO_SLOT = "Add app to this slot…"
-    const val REPLACE_APP = "Replace app…"
-    const val CHOOSE_APP = "Choose an app"
-    const val NO_APPS = "No apps available."
-    const val DONE = "Done"
-    const val UNAVAILABLE_APP = "Unavailable app"
-    fun dockSlot(slot: Int) = "Slot ${slot + 1}"
-    const val EMPTY_SLOT = "Empty"
-    fun moveBeforeTitle(name: String) = "Move “$name” before…"
-    fun moveAfterTitle(name: String) = "Move “$name” after…"
-    fun deleteFolderTitle(name: String) = "Delete folder “$name”?"
-    fun folderHeader(name: String) = "Folder: $name"
-    fun selectedHint(name: String) = "$name, selected. Controls follow."
+    val EDIT_TITLE: String get() = UiText.get(R.string.overlay_edit_title)
+    val EDIT_INTRO: String get() = UiText.get(R.string.overlay_edit_intro)
+    val HOME_SECTION: String get() = UiText.get(R.string.overlay_home_section)
+    val HOME_EMPTY: String get() = UiText.get(R.string.overlay_home_empty)
+    val ADD_FAVOURITE: String get() = UiText.get(R.string.overlay_add_favourite)
+    val CHOOSE_FAVOURITE: String get() = UiText.get(R.string.overlay_choose_favourite)
+    val ON_HOME: String get() = UiText.get(R.string.overlay_on_home)
+    val APP_ACTIONS_ELLIPSIS: String get() = UiText.get(R.string.overlay_app_actions_ellipsis)
+    val DOCK_SECTION: String get() = UiText.get(R.string.overlay_dock_section)
+    val FOLDERS_SECTION: String get() = UiText.get(R.string.overlay_folders_section)
+    val FOLDER_EMPTY: String get() = UiText.get(R.string.overlay_folder_empty)
+    val MOVE_UP: String get() = UiText.get(R.string.overlay_move_up)
+    val MOVE_DOWN: String get() = UiText.get(R.string.overlay_move_down)
+    val MOVE_BEFORE: String get() = UiText.get(R.string.overlay_move_before)
+    val MOVE_AFTER: String get() = UiText.get(R.string.overlay_move_after)
+    val RENAME_FOLDER: String get() = UiText.get(R.string.overlay_rename_folder)
+    val DELETE_FOLDER: String get() = UiText.get(R.string.overlay_delete_folder)
+    val DELETE_FOLDER_TEXT: String get() = UiText.get(R.string.overlay_delete_folder_text)
+    val DELETE: String get() = UiText.get(R.string.overlay_delete)
+    val RENAME: String get() = UiText.get(R.string.overlay_rename)
+    val ADD_APP_TO_SLOT: String get() = UiText.get(R.string.overlay_add_app_to_slot)
+    val REPLACE_APP: String get() = UiText.get(R.string.overlay_replace_app)
+    val CHOOSE_APP: String get() = UiText.get(R.string.overlay_choose_app)
+    val NO_APPS: String get() = UiText.get(R.string.overlay_no_apps)
+    val DONE: String get() = UiText.get(R.string.overlay_done)
+    val UNAVAILABLE_APP: String get() = UiText.get(R.string.overlay_unavailable_app)
+    fun dockSlot(slot: Int) = UiText.get(R.string.overlay_dock_slot, slot + 1)
+    val EMPTY_SLOT: String get() = UiText.get(R.string.overlay_empty_slot)
+    fun moveBeforeTitle(name: String) = UiText.get(R.string.overlay_move_before_title, name)
+    fun moveAfterTitle(name: String) = UiText.get(R.string.overlay_move_after_title, name)
+    fun deleteFolderTitle(name: String) = UiText.get(R.string.overlay_delete_folder_title, name)
+    fun folderHeader(name: String) = UiText.get(R.string.overlay_folder_header, name)
+    fun selectedHint(name: String) = UiText.get(R.string.overlay_selected_hint, name)
 }

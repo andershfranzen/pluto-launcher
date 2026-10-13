@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.widgets
 
+import dev.pluto.launcher.ui.UiText
+import dev.pluto.launcher.R
 import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetProviderInfo
 import android.os.Build
@@ -292,17 +294,17 @@ private fun WidgetChoice(info: AppWidgetProviderInfo, onPick: () -> Unit) {
 private fun widgetCells(info: AppWidgetProviderInfo, density: Float): String {
     val w = if (Build.VERSION.SDK_INT >= 31 && info.targetCellWidth > 0) info.targetCellWidth else ((info.minWidth / density + 30) / 70).toInt().coerceAtLeast(1)
     val h = if (Build.VERSION.SDK_INT >= 31 && info.targetCellHeight > 0) info.targetCellHeight else ((info.minHeight / density + 30) / 70).toInt().coerceAtLeast(1)
-    return "$w × $h"
+    return UiText.get(R.string.overlay_widgets_cells, w, h)
 }
 
 internal object WidgetText {
-    const val WIDGET = "Widget"
-    const val ADD_WIDGET = "Add widget"
-    const val LOADING = "Looking for widgets…"
-    const val NONE = "None of your apps offer widgets."
-    const val UNAVAILABLE = "This widget isn't available"
-    const val HEIGHT = "Height"
-    const val REMOVE = "Remove widget"
-    const val MOVE_HINT = "To move it, press and hold the widget, then drag."
-    fun rows(n: Int) = if (n == 1) "1 row" else "$n rows"
+    val WIDGET: String get() = UiText.get(R.string.overlay_widgets_widget)
+    val ADD_WIDGET: String get() = UiText.get(R.string.overlay_widgets_add)
+    val LOADING: String get() = UiText.get(R.string.overlay_widgets_loading)
+    val NONE: String get() = UiText.get(R.string.overlay_widgets_none)
+    val UNAVAILABLE: String get() = UiText.get(R.string.overlay_widgets_unavailable)
+    val HEIGHT: String get() = UiText.get(R.string.overlay_widgets_height)
+    val REMOVE: String get() = UiText.get(R.string.overlay_widgets_remove)
+    val MOVE_HINT: String get() = UiText.get(R.string.overlay_widgets_move_hint)
+    fun rows(n: Int) = UiText.plural(R.plurals.overlay_widgets_rows, n, n)
 }
