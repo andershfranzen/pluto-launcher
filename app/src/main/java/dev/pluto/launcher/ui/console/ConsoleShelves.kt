@@ -56,12 +56,16 @@ interface ShelfLabels {
     val allApps: String
     val roms: String
 
+    /** A category tab's name; stored names by default, so pure tests need no resources. */
+    fun category(category: Category): String = category.name
+
     /** Translated labels, read when asked (UiText follows the current locale). */
     object Resources : ShelfLabels {
         override val recent: String get() = UiText.get(R.string.console_shelf_recent)
         override val favourites: String get() = UiText.get(R.string.console_shelf_favourites)
         override val allApps: String get() = UiText.get(R.string.console_all_apps_fallback)
         override val roms: String get() = UiText.get(R.string.console_roms_fallback)
+        override fun category(category: Category): String = category.displayName
     }
 }
 
@@ -159,7 +163,7 @@ object ConsoleShelves {
         ShelfId.Favourites -> labels.favourites.let { Shelf(id, it, it, favourites) }
         is ShelfId.OfCategory -> {
             val category = categories.firstOrNull { it.id == id.categoryId }
-            val name = category?.name ?: labels.allApps
+            val name = category?.let(labels::category) ?: labels.allApps
             val apps = if (category == null || category.isAll) {
                 visibleApps
             } else {
@@ -180,7 +184,7 @@ object ConsoleShelves {
         is ShelfId.OfRomLibrary -> romLibraries.firstOrNull { it.id == id.libraryId }?.name ?: labels.roms
         ShelfId.Recent -> labels.recent
         ShelfId.Favourites -> labels.favourites
-        is ShelfId.OfCategory -> categories.firstOrNull { it.id == id.categoryId }?.name ?: labels.allApps
+        is ShelfId.OfCategory -> categories.firstOrNull { it.id == id.categoryId }?.let(labels::category) ?: labels.allApps
     }
 
     /**

@@ -86,7 +86,7 @@ fun ShelfPickerScreen(categoryId: Long, state: LauncherUiState, vm: LauncherView
     val firstId = (suggested.firstOrNull() ?: others.firstOrNull())?.let { pickerId(it.key) } ?: "picker:close"
     rememberScreenFocus(firstId, refocusKey = suggested.isNotEmpty())
 
-    val name = category?.name ?: stringResource(R.string.overlay_picker_category_fallback)
+    val name = category?.displayName ?: stringResource(R.string.overlay_picker_category_fallback)
     LayerScaffold(
         title = stringResource(if (members.isEmpty()) R.string.overlay_picker_add_title else R.string.overlay_picker_title, name),
         idPrefix = "picker",

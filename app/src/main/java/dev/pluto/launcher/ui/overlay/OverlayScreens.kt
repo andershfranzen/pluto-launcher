@@ -96,7 +96,7 @@ private fun AppActionsPanel(key: AppKey, entry: AppEntry?, state: LauncherUiStat
             val isHidden = key in state.hidden
             val categoryNames = state.categories
                 .filter { !it.isAll && key in state.categoryMembers[it.id].orEmpty() }
-                .map { it.name }
+                .map { it.displayName }
 
             fun Modifier.entrance(index: Int) = staggerIn(index, enabled = stagger)
             shortcuts.forEach { shortcut ->
@@ -213,7 +213,7 @@ fun CategoryMembershipDialog(key: AppKey, state: LauncherUiState, vm: LauncherVi
             val member = key in state.categoryMembers[category.id].orEmpty()
             CheckRow(
                 id = "membership:cat:${category.id}",
-                label = category.name,
+                label = category.displayName,
                 checked = member,
                 onCheckedChange = { vm.setCategoryMembership(category.id, key, it) },
             )

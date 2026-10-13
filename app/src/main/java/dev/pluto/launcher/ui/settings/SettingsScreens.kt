@@ -692,7 +692,7 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
                             idPrefix = "categories:rename",
                             title = SettingsText.RENAME_CATEGORY,
                             fieldLabel = SettingsText.CATEGORY_NAME,
-                            initial = category.name,
+                            initial = category.displayName,
                             confirmLabel = SettingsText.SAVE,
                             onConfirm = { name ->
                                 vm.renameCategory(category.id, name)
@@ -704,7 +704,7 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     CategoryDialogKind.DELETE -> if (category != null && !category.isAll) {
                         ConfirmDialog(
                             idPrefix = "categories:delete",
-                            title = SettingsText.deleteCategoryTitle(category.name),
+                            title = SettingsText.deleteCategoryTitle(category.displayName),
                             text = SettingsText.DELETE_CATEGORY_TEXT,
                             confirmLabel = SettingsText.DELETE,
                             destructive = true,
@@ -736,7 +736,7 @@ fun CategoriesScreen(state: LauncherUiState, vm: LauncherViewModel) {
             val count = if (category.isAll) state.apps.size else state.categoryMembers[category.id].orEmpty().size
             Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                 Text(
-                    category.name,
+                    category.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(horizontal = 12.dp),
