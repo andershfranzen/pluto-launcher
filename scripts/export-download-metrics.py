@@ -59,6 +59,6 @@ if __name__ == "__main__":
     snapshot = downloads.make_snapshot(args.repository, downloads.fetch_releases(args.repository),
                                         dt.datetime.now(dt.timezone.utc))
     downloads.save_snapshot(args.history, snapshot, collection_note=(
-        "Collection runs daily around 08:00 Europe/Copenhagen on the homelab, independently of T3. "
+        "Snapshot collected from public GitHub APK download counters. "
         "A repeat run replaces that UTC day's snapshot. No app telemetry is collected."))
     atomic_write(args.metrics, render_metrics(snapshot))

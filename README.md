@@ -271,9 +271,6 @@ running. To capture and publish a snapshot manually, run
 `scripts/publish-download-stats.sh` with Python 3 and GitHub push access. History lives
 on the separate `download-stats` branch.
 
-For self-hosted monitoring, the [Prometheus collector and Grafana dashboard](docs/monitoring/README.md)
-provide daily collection, download trends and data freshness independently of T3.
-
 ## Development
 
 [scripts/dev.sh](scripts/dev.sh) wraps the local loop on a headless emulator (AVD `pluto36`:

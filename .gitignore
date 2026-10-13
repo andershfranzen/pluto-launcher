@@ -11,3 +11,7 @@ captures/
 *.keystore
 *.jks
 *signing.properties
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]

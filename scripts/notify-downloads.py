@@ -15,7 +15,7 @@ spec.loader.exec_module(exporter)
 
 def publish(message, title):
     payload = {'topic': os.environ['NTFY_TOPIC'], 'title': title, 'message': message,
-               'tags': ['package'], 'click': 'https://grafana.taile2ec74.ts.net/d/pluto-downloads/pluto-c2b7-apk-downloads'}
+               'tags': ['package']}
     request = urllib.request.Request(os.environ['NTFY_BASE_URL'], data=json.dumps(payload).encode(),
         headers={'Authorization': 'Bearer ' + os.environ['NTFY_TOKEN'], 'Content-Type': 'application/json'}, method='POST')
     with urllib.request.urlopen(request, timeout=30) as response:
