@@ -63,6 +63,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // en-XA (accented, longer) and ar-XB (mirrored) expose untranslated text and
+            // truncation without waiting for a real translation; see docs/LOCALISATION.md.
+            isPseudoLocalesEnabled = true
+        }
         release {
             // R8 + resource shrinking: Compose in a debug build runs unoptimised and is
             // noticeably janky; daily use should always be on a release build.
@@ -94,6 +99,12 @@ android {
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
+    }
+    lint {
+        // A string not yet translated falls back to English rather than blocking a release;
+        // scripts/check-translations.py reports how complete each language is. Broken
+        // placeholders and plurals (StringFormat*, MissingQuantity) stay errors.
+        warning += "MissingTranslation"
     }
 }
 

@@ -34,29 +34,55 @@ own name is shown.
 Not translated on purpose: product and emulator names, the layout backup file format, and the
 crash report text that goes into a GitHub issue.
 
-## Adding a language
+## Changing English text
 
-1. Copy the five `values/strings*.xml` files to `app/src/main/res/values-<lang>/` and
-   translate every string and plural. Keep placeholders such as `%1$s` and `%2$d` (reorder them
-   freely), give plurals every quantity the language needs, and write apostrophes as `\'`.
-2. Add `<locale android:name="<lang>"/>` to `app/src/main/res/xml/locales_config.xml`.
-3. Check the files without a build:
+- **New string:** add it to the English file. Translations can follow later: until they do,
+  Android shows that string in English, and the checker reports the language as less than
+  100% translated. Release lint only warns about missing translations.
+- **Changed meaning:** edit the English. Every translation of that key becomes *stale* and the
+  checker lists it, so translators know what to revisit. Fixing a typo that changes nothing for
+  translators still marks them stale; accept them unchanged (below).
+- **New code:** use `stringResource` in composables; reach for `UiText` only outside composition.
+
+## Translating
+
+1. Read your language's section of [`l10n/glossary.md`](../l10n/glossary.md) and keep to its terms.
+2. Translate into `app/src/main/res/values-<lang>/` (same five file names as the English). Keep
+   placeholders such as `%1$s` and `%2$d` (reorder them freely), give plurals every quantity the
+   language needs, and write apostrophes as `\'`.
+3. Check, without a build:
 
    ```sh
    scripts/check-translations.py <lang>
    ```
 
-   It reports missing or unknown keys, placeholder mismatches, plurals without `other` and
-   unescaped apostrophes. CI runs it for every language.
-4. Look at it on a device without changing the whole system language:
+   Errors (broken placeholders, unknown keys, plurals without `other`, unescaped apostrophes,
+   malformed XML) fail it and CI. Missing and stale strings are listed as warnings with a
+   completeness percentage; `--strict` makes them fail too.
+4. When the translations are done and match today's English, record that:
 
    ```sh
-   adb shell cmd locale set-app-locales dev.pluto.launcher --locales <lang>
-   adb shell cmd locale set-app-locales dev.pluto.launcher --locales ""   # back to the system
+   scripts/check-translations.py --accept <lang>            # the whole language
+   scripts/check-translations.py --accept <lang> KEY KEY…   # only the strings you updated
    ```
 
-Release lint fails when a string is missing from any language, so a new English string needs
-its translations in the same change (or a follow-up before the next release).
+   This writes `l10n/fingerprints/<lang>.tsv`, a hash of the English each translation was made
+   from. Commit it with the translation; it is how the next English change is noticed.
+
+To add a language, also add `<locale android:name="<lang>"/>` to
+`app/src/main/res/xml/locales_config.xml` and a section to the glossary.
+
+## Looking at it
+
+Debug builds include Android's pseudo-locales. `en-XA` shows every translated string accented
+and about a third longer (`[Šéţţîñĝš one two]`), so English that is still hard-coded stands out
+and truncation shows up before any real translation exists; `ar-XB` mirrors the layout like
+Arabic. Switch Pluto alone, without changing the phone's language:
+
+```sh
+adb shell cmd locale set-app-locales dev.pluto.launcher --locales en-XA   # or ar-XB, de, hi…
+adb shell cmd locale set-app-locales dev.pluto.launcher --locales ""      # back to the system
+```
 
 ## Testing constraints
 
