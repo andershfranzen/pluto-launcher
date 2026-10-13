@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MissingTranslation is ignored until the da/de/fr/sv translations of these strings land; remove tools:ignore then. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- Shared building blocks (OverlayKit) -->
+    <!-- Button / screen-reader label: closes a panel or dialog. -->
+    <string name="overlay_kit_close">Close</string>
+    <!-- Button: dismisses a dialog without changing anything. -->
+    <string name="overlay_kit_cancel">Cancel</string>
+    <!-- Button: finishes and closes a panel. -->
+    <string name="overlay_kit_done">Done</string>
+    <!-- Screen-reader state of a switch row, spoken after its label (lowercase). -->
+    <string name="overlay_kit_on">on</string>
+    <!-- Screen-reader state of a switch row, spoken after its label (lowercase). -->
+    <string name="overlay_kit_off">off</string>
+    <!-- Screen-reader state of a checkbox row (lowercase). -->
+    <string name="overlay_kit_checked">checked</string>
+    <!-- Screen-reader state of a checkbox row (lowercase). -->
+    <string name="overlay_kit_not_checked">not checked</string>
+    <!-- Screen-reader state of a chosen option (lowercase). -->
+    <string name="overlay_kit_selected">selected</string>
+    <!-- Screen-reader state of a disabled control (lowercase). -->
+    <string name="overlay_kit_unavailable">unavailable</string>
+    <!-- Verb: lowers a stepper value. -->
+    <string name="overlay_kit_decrease">Decrease</string>
+    <!-- Verb: raises a stepper value. -->
+    <string name="overlay_kit_increase">Increase</string>
+    <!-- Screen-reader name of a disabled button. %1$s = button label. -->
+    <string name="overlay_kit_unavailable_label">%1$s (unavailable)</string>
+    <!-- Screen-reader name of one option of a choice group. %1$s = setting name, %2$s = option. -->
+    <string name="overlay_kit_option">%1$s: %2$s</string>
+    <!-- Same as above for the chosen option. %1$s = setting name, %2$s = option. -->
+    <string name="overlay_kit_option_selected">%1$s: %2$s, selected</string>
+    <!-- Screen-reader name of a stepper's minus button. %1$s = setting name, %2$s = current value. -->
+    <string name="overlay_kit_decrease_label">Decrease %1$s, %2$s</string>
+    <!-- Screen-reader name of a stepper's plus button. %1$s = setting name, %2$s = current value. -->
+    <string name="overlay_kit_increase_label">Increase %1$s, %2$s</string>
+    <!-- A percentage value shown in steppers. %1$d = whole number. -->
+    <string name="overlay_kit_percent">%1$d%%</string>
+
+    <!-- App actions -->
+    <string name="overlay_app_actions">App actions</string>
+    <string name="overlay_app_missing">This app is no longer available. It may have been uninstalled or disabled.</string>
+    <!-- Action: starts the app. -->
+    <string name="overlay_launch">Launch</string>
+    <string name="overlay_pin">Pin to home</string>
+    <string name="overlay_unpin">Unpin from home</string>
+    <string name="overlay_add_to_dock">Add to dock</string>
+    <string name="overlay_remove_from_dock">Remove from dock</string>
+    <string name="overlay_dock_full">Dock is full. Remove an app from the dock first (Edit home).</string>
+    <string name="overlay_categories">Categories…</string>
+    <string name="overlay_move_to_folder">Move to folder…</string>
+    <string name="overlay_hide">Hide from launcher</string>
+    <string name="overlay_hide_hint">Restore it any time from Settings ▸ Apps ▸ Hidden apps</string>
+    <string name="overlay_unhide">Show in launcher again</string>
+    <string name="overlay_app_info">App info</string>
+    <string name="overlay_more_actions">More actions</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short); the full wording is spoken. Pins the app to home. -->
+    <string name="overlay_quick_pin">Pin</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short). Unpins the app from home. -->
+    <string name="overlay_quick_unpin">Unpin</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short). Adds the app to the dock. -->
+    <string name="overlay_quick_dock">Dock</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short). Removes the app from the dock. -->
+    <string name="overlay_quick_undock">Undock</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short). Opens system app info. -->
+    <string name="overlay_quick_info">Info</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short). Hides the app from the launcher. -->
+    <string name="overlay_quick_hide">Hide</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short). Shows a hidden app again. -->
+    <string name="overlay_quick_show">Show</string>
+    <!-- One-word label under an icon in the long-press menu (keep very short). Uninstalls the app. -->
+    <string name="overlay_quick_uninstall">Uninstall</string>
+    <string name="overlay_uninstall">Uninstall…</string>
+    <string name="overlay_uninstall_hint">Android asks for confirmation</string>
+    <string name="overlay_suspended">Currently unavailable (paused or suspended)</string>
+    <!-- %1$s = folder name. -->
+    <string name="overlay_in_folder">In folder “%1$s”</string>
+    <string name="overlay_not_in_any_category">Not in any category</string>
+
+    <!-- Category membership -->
+    <!-- Panel title. -->
+    <string name="overlay_categories_title">Categories</string>
+    <!-- Panel title. %1$s = app name. -->
+    <string name="overlay_categories_title_for">Categories: %1$s</string>
+    <string name="overlay_no_categories">There are no categories yet besides All apps.</string>
+    <string name="overlay_manage_categories">Manage categories…</string>
+    <string name="overlay_all_apps_note">Every app is always in All apps.</string>
+
+    <!-- Move to folder -->
+    <!-- Panel title. -->
+    <string name="overlay_move_title">Move to folder</string>
+    <!-- Panel title. %1$s = app name. -->
+    <string name="overlay_move_title_for">Move to folder: %1$s</string>
+    <string name="overlay_no_folders">No folders yet. Create one below.</string>
+    <string name="overlay_new_folder">New folder…</string>
+    <!-- Dialog title. -->
+    <string name="overlay_new_folder_title">New folder</string>
+    <string name="overlay_folder_name">Folder name</string>
+    <!-- Default name of a newly created folder. -->
+    <string name="overlay_default_folder_name">Folder</string>
+    <!-- Noun: a home-screen widget. -->
+    <string name="overlay_widget">Widget</string>
+    <string name="overlay_widget_options">Widget options</string>
+    <!-- Height of a home-screen widget. -->
+    <plurals name="overlay_widget_rows_tall">
+        <item quantity="one">%1$d row tall</item>
+        <item quantity="other">%1$d rows tall</item>
+    </plurals>
+    <!-- Button: creates a folder. -->
+    <string name="overlay_create">Create</string>
+    <string name="overlay_remove_from_folder">Remove from folder</string>
+    <string name="overlay_current_folder">Current folder</string>
+    <plurals name="overlay_app_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+
+    <!-- Edit home -->
+    <string name="overlay_edit_title">Edit home</string>
+    <string name="overlay_edit_intro">Select an item to move it, remove it or change it. Changes are saved immediately.</string>
+    <string name="overlay_home_section">Home favourites</string>
+    <string name="overlay_home_empty">No favourites yet. Use Add favourite… above.</string>
+    <string name="overlay_add_favourite">Add favourite…</string>
+    <string name="overlay_choose_favourite">Add a favourite</string>
+    <string name="overlay_on_home">Already on home</string>
+    <string name="overlay_app_actions_ellipsis">App actions…</string>
+    <!-- Section header: the row of apps at the bottom of home. -->
+    <string name="overlay_dock_section">Dock</string>
+    <string name="overlay_folders_section">Folder contents</string>
+    <string name="overlay_folder_empty">This folder is empty.</string>
+    <string name="overlay_move_up">Move up</string>
+    <string name="overlay_move_down">Move down</string>
+    <string name="overlay_move_before">Move before…</string>
+    <string name="overlay_move_after">Move after…</string>
+    <string name="overlay_rename_folder">Rename folder</string>
+    <string name="overlay_delete_folder">Delete folder</string>
+    <string name="overlay_delete_folder_text">Apps in this folder go back to the home screen. No apps are uninstalled.</string>
+    <!-- Button: confirms deleting a folder. -->
+    <string name="overlay_delete">Delete</string>
+    <!-- Button: confirms renaming a folder. -->
+    <string name="overlay_rename">Rename</string>
+    <string name="overlay_add_app_to_slot">Add app to this slot…</string>
+    <string name="overlay_replace_app">Replace app…</string>
+    <string name="overlay_choose_app">Choose an app</string>
+    <string name="overlay_no_apps">No apps available.</string>
+    <!-- Button: finishes and closes a panel. -->
+    <string name="overlay_done">Done</string>
+    <string name="overlay_unavailable_app">Unavailable app</string>
+    <!-- A numbered position in the dock. %1$d = slot number starting at 1. -->
+    <string name="overlay_dock_slot">Slot %1$d</string>
+    <!-- A dock position and what is in it. %1$d = slot number, %2$s = app name or “Empty”. -->
+    <string name="overlay_dock_slot_with">Slot %1$d: %2$s</string>
+    <!-- Where an app sits in the dock. %1$d = slot number. -->
+    <string name="overlay_in_dock_slot">Dock · Slot %1$d</string>
+    <!-- An empty dock slot. -->
+    <string name="overlay_empty_slot">Empty</string>
+    <!-- Dialog title. %1$s = item name. -->
+    <string name="overlay_move_before_title">Move “%1$s” before…</string>
+    <!-- Dialog title. %1$s = item name. -->
+    <string name="overlay_move_after_title">Move “%1$s” after…</string>
+    <!-- Dialog title. %1$s = folder name. -->
+    <string name="overlay_delete_folder_title">Delete folder “%1$s”?</string>
+    <!-- %1$s = folder name. -->
+    <string name="overlay_folder_header">Folder: %1$s</string>
+    <!-- Spoken when an item is selected in Edit home. %1$s = item name. -->
+    <string name="overlay_selected_hint">%1$s, selected. Controls follow.</string>
+
+    <!-- Category app picker (shelf picker) -->
+    <!-- Used in the titles below when the category no longer exists. -->
+    <string name="overlay_picker_category_fallback">category</string>
+    <!-- Title. %1$s = category name. -->
+    <string name="overlay_picker_add_title">Add apps to %1$s</string>
+    <!-- Title. %1$s = category name. -->
+    <string name="overlay_picker_title">Apps in %1$s</string>
+    <!-- “A” is the controller's A button. -->
+    <plurals name="overlay_picker_selected">
+        <item quantity="one">%1$d selected · tap or press A to add or remove</item>
+        <item quantity="other">%1$d selected · tap or press A to add or remove</item>
+    </plurals>
+    <!-- Section header: apps suggested for this category. -->
+    <string name="overlay_picker_suggested">Suggested</string>
+    <!-- Section header: every other app. -->
+    <string name="overlay_picker_all_apps">All apps</string>
+    <!-- Screen-reader name of an app tile. %1$s = app name. -->
+    <string name="overlay_picker_in_category">%1$s, in this category</string>
+    <!-- Screen-reader name of an app tile. %1$s = app name. -->
+    <string name="overlay_picker_not_in_category">%1$s, not in this category</string>
+
+    <!-- Widgets -->
+    <!-- Noun: fallback name of a home-screen widget. -->
+    <string name="overlay_widgets_widget">Widget</string>
+    <string name="overlay_widgets_add">Add widget</string>
+    <string name="overlay_widgets_loading">Looking for widgets…</string>
+    <string name="overlay_widgets_none">None of your apps offer widgets.</string>
+    <string name="overlay_widgets_unavailable">This widget isn\'t available</string>
+    <!-- Setting name: a widget's height in rows. -->
+    <string name="overlay_widgets_height">Height</string>
+    <string name="overlay_widgets_remove">Remove widget</string>
+    <string name="overlay_widgets_move_hint">To move it, press and hold the widget, then drag.</string>
+    <plurals name="overlay_widgets_rows">
+        <item quantity="one">%1$d row</item>
+        <item quantity="other">%1$d rows</item>
+    </plurals>
+    <!-- A widget's size in home-screen cells, e.g. “4 × 2”. %1$d = width, %2$d = height. -->
+    <string name="overlay_widgets_cells">%1$d × %2$d</string>
+</resources>

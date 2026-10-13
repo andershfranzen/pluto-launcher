@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.overlay
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import android.content.pm.ApplicationInfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -83,9 +86,9 @@ fun ShelfPickerScreen(categoryId: Long, state: LauncherUiState, vm: LauncherView
     val firstId = (suggested.firstOrNull() ?: others.firstOrNull())?.let { pickerId(it.key) } ?: "picker:close"
     rememberScreenFocus(firstId, refocusKey = suggested.isNotEmpty())
 
-    val name = category?.name ?: "category"
+    val name = category?.name ?: stringResource(R.string.overlay_picker_category_fallback)
     LayerScaffold(
-        title = if (members.isEmpty()) "Add apps to $name" else "Apps in $name",
+        title = stringResource(if (members.isEmpty()) R.string.overlay_picker_add_title else R.string.overlay_picker_title, name),
         idPrefix = "picker",
         onClose = { vm.back() },
         trapFocus = isTop,
@@ -97,7 +100,7 @@ fun ShelfPickerScreen(categoryId: Long, state: LauncherUiState, vm: LauncherView
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                "${members.size} selected · tap or press A to add or remove",
+                pluralStringResource(R.plurals.overlay_picker_selected, members.size, members.size),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
@@ -117,11 +120,11 @@ fun ShelfPickerScreen(categoryId: Long, state: LauncherUiState, vm: LauncherView
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (suggested.isNotEmpty()) {
-                item(key = "h:suggested", span = { GridItemSpan(maxLineSpan) }) { PickerHeader("Suggested") }
+                item(key = "h:suggested", span = { GridItemSpan(maxLineSpan) }) { PickerHeader(stringResource(R.string.overlay_picker_suggested)) }
                 items(suggested, key = { "s:" + it.key.encode() }) { app ->
                     PickerTile(app, app.key in members) { vm.setCategoryMembership(categoryId, app.key, it) }
                 }
-                item(key = "h:others", span = { GridItemSpan(maxLineSpan) }) { PickerHeader("All apps") }
+                item(key = "h:others", span = { GridItemSpan(maxLineSpan) }) { PickerHeader(stringResource(R.string.overlay_picker_all_apps)) }
             }
             items(others, key = { "o:" + it.key.encode() }) { app ->
                 PickerTile(app, app.key in members) { vm.setCategoryMembership(categoryId, app.key, it) }
@@ -154,7 +157,10 @@ private fun PickerTile(app: AppEntry, selected: Boolean, onToggle: (Boolean) -> 
             .controllerFocusable(
                 id = pickerId(app.key),
                 onActivate = { onToggle(!selected) },
-                contentDescription = "${app.label}, ${if (selected) "in this category" else "not in this category"}",
+                contentDescription = stringResource(
+                    if (selected) R.string.overlay_picker_in_category else R.string.overlay_picker_not_in_category,
+                    app.label,
+                ),
                 shape = PickerTileShape,
             )
             .padding(horizontal = 6.dp, vertical = 10.dp),

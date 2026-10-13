@@ -1,6 +1,8 @@
 package dev.pluto.launcher.ui.overlay
 
 import androidx.activity.compose.BackHandler
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -490,7 +492,7 @@ internal fun PlutoButton(
             .controllerFocusable(
                 id = id,
                 onActivate = { if (enabled) onClick() },
-                contentDescription = if (enabled) label else "$label (${KitText.UNAVAILABLE})",
+                contentDescription = if (enabled) label else KitText.unavailableLabel(label),
                 shape = ControlShape,
             )
             .clip(ControlShape)
@@ -522,7 +524,7 @@ internal fun IconAction(id: String, icon: ImageVector, label: String, onClick: (
             .controllerFocusable(
                 id = id,
                 onActivate = { if (enabled) onClick() },
-                contentDescription = if (enabled) label else "$label (${KitText.UNAVAILABLE})",
+                contentDescription = if (enabled) label else KitText.unavailableLabel(label),
                 shape = ControlShape,
             )
             .alpha(if (enabled) 1f else 0.38f),
@@ -779,7 +781,7 @@ private fun <T> SegmentedChoices(idPrefix: String, label: String, options: List<
                     .controllerFocusable(
                         id = "$idPrefix:$value",
                         onActivate = { onSelect(value) },
-                        contentDescription = "$label: $text" + if (isSelected) ", ${KitText.SELECTED}" else "",
+                        contentDescription = KitText.option(label, text, isSelected),
                         shape = SegmentItemShape,
                     )
                     .clip(SegmentItemShape)
@@ -828,7 +830,7 @@ private fun <T> ListChoices(idPrefix: String, label: String, options: List<Pair<
                     .controllerFocusable(
                         id = "$idPrefix:$value",
                         onActivate = { onSelect(value) },
-                        contentDescription = "$label: $text" + if (isSelected) ", ${KitText.SELECTED}" else "",
+                        contentDescription = KitText.option(label, text, isSelected),
                         shape = SegmentShape,
                     )
                     .drawBehind { drawRect(tint.copy(alpha = 0.07f * selection.value)) }
@@ -899,7 +901,7 @@ internal fun StepperRow(
             IconAction(
                 id = "$idPrefix:dec",
                 icon = Icons.Rounded.Remove,
-                label = "${KitText.DECREASE} $label, $valueText",
+                label = KitText.decreaseLabel(label, valueText),
                 onClick = { onDecrease?.invoke() },
                 enabled = onDecrease != null,
             )
@@ -933,7 +935,7 @@ internal fun StepperRow(
             IconAction(
                 id = "$idPrefix:inc",
                 icon = Icons.Rounded.Add,
-                label = "${KitText.INCREASE} $label, $valueText",
+                label = KitText.increaseLabel(label, valueText),
                 onClick = { onIncrease?.invoke() },
                 enabled = onIncrease != null,
             )
@@ -959,7 +961,7 @@ internal fun stepped(value: Int, step: Int, range: IntRange, direction: Int): In
     return if (next == value) null else next
 }
 
-internal fun percent(value: Float): String = "${(value * 100f).roundToInt()}%"
+internal fun percent(value: Float): String = UiText.get(R.string.overlay_kit_percent, (value * 100f).roundToInt())
 
 // --- Text -----------------------------------------------------------------------
 
@@ -1116,15 +1118,20 @@ internal const val MAX_NAME_LENGTH = 40
 
 /** Texts used by the shared building blocks. */
 internal object KitText {
-    const val CLOSE = "Close"
-    const val CANCEL = "Cancel"
-    const val DONE = "Done"
-    const val ON = "on"
-    const val OFF = "off"
-    const val CHECKED = "checked"
-    const val NOT_CHECKED = "not checked"
-    const val SELECTED = "selected"
-    const val UNAVAILABLE = "unavailable"
-    const val DECREASE = "Decrease"
-    const val INCREASE = "Increase"
+    val CLOSE: String get() = UiText.get(R.string.overlay_kit_close)
+    val CANCEL: String get() = UiText.get(R.string.overlay_kit_cancel)
+    val DONE: String get() = UiText.get(R.string.overlay_kit_done)
+    val ON: String get() = UiText.get(R.string.overlay_kit_on)
+    val OFF: String get() = UiText.get(R.string.overlay_kit_off)
+    val CHECKED: String get() = UiText.get(R.string.overlay_kit_checked)
+    val NOT_CHECKED: String get() = UiText.get(R.string.overlay_kit_not_checked)
+    val SELECTED: String get() = UiText.get(R.string.overlay_kit_selected)
+    val UNAVAILABLE: String get() = UiText.get(R.string.overlay_kit_unavailable)
+    val DECREASE: String get() = UiText.get(R.string.overlay_kit_decrease)
+    val INCREASE: String get() = UiText.get(R.string.overlay_kit_increase)
+    fun unavailableLabel(label: String) = UiText.get(R.string.overlay_kit_unavailable_label, label)
+    fun option(label: String, text: String, selected: Boolean) =
+        UiText.get(if (selected) R.string.overlay_kit_option_selected else R.string.overlay_kit_option, label, text)
+    fun decreaseLabel(label: String, value: String) = UiText.get(R.string.overlay_kit_decrease_label, label, value)
+    fun increaseLabel(label: String, value: String) = UiText.get(R.string.overlay_kit_increase_label, label, value)
 }
