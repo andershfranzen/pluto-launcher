@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity() {
         setTheme(R.style.Theme_Pluto)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        dev.pluto.launcher.ui.UiText.attach(this)
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
         window.setBackgroundDrawableResource(android.R.color.transparent)
 
@@ -143,10 +144,20 @@ class MainActivity : ComponentActivity() {
                 LocalWidgetHost provides container.widgets,
                 LocalWidgetBinder provides widgetBinder,
             ) {
-                LauncherRoot(vm, actions)
+                // Locale is a handled config change: rebuild the tree so text read through
+                // UiText (outside composition) is read again in the new language.
+                androidx.compose.runtime.key(androidx.compose.ui.platform.LocalConfiguration.current.locales.toLanguageTags()) {
+                    LauncherRoot(vm, actions)
+                }
             }
         }
         setContentView(view)
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // A per-app language change arrives here rather than recreating the activity.
+        dev.pluto.launcher.ui.UiText.attach(this)
     }
 
     /**

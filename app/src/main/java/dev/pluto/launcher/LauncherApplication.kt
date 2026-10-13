@@ -49,6 +49,7 @@ class LauncherApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        dev.pluto.launcher.ui.UiText.attach(this)
         // Before anything else: a crash while the container is built should still be recorded.
         dev.pluto.launcher.system.CrashLog.install(this)
         container = AppContainer(this)
