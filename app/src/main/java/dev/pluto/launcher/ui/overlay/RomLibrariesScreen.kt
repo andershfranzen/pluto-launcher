@@ -33,8 +33,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import dev.pluto.launcher.R
+import dev.pluto.launcher.domain.RomMetadata
+import dev.pluto.launcher.domain.RomScanSummary
 import dev.pluto.launcher.model.LauncherMode
 import dev.pluto.launcher.model.RomLibrary
 import dev.pluto.launcher.model.RomLaunchMode
@@ -42,6 +47,9 @@ import dev.pluto.launcher.system.RomLauncher
 import dev.pluto.launcher.ui.LauncherUiState
 import dev.pluto.launcher.ui.LauncherViewModel
 import dev.pluto.launcher.ui.console.ShelfId
+import dev.pluto.launcher.ui.console.romAgeText
+import dev.pluto.launcher.ui.console.romExtensionsText
+import dev.pluto.launcher.ui.console.romSystemLabel
 import java.text.DateFormat
 import java.util.Date
 
@@ -120,15 +128,17 @@ fun RomLibrariesScreen(state: LauncherUiState, vm: LauncherViewModel) {
         choosingEmulator = true
         screenFocus.focus("rom:chooser")
     }
+    val defaultTabName = stringResource(R.string.rom_default_tab_name)
+    val folderAccessError = stringResource(R.string.rom_folder_access_failed)
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             try {
                 context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 folder = uri.toString()
-                if (name.isBlank()) name = Uri.decode(uri.lastPathSegment.orEmpty()).substringAfter(':').substringAfterLast('/').trim().take(MAX_NAME_LENGTH).ifBlank { "My games" }
+                if (name.isBlank()) name = Uri.decode(uri.lastPathSegment.orEmpty()).substringAfter(':').substringAfterLast('/').trim().take(MAX_NAME_LENGTH).ifBlank { defaultTabName }
                 folderError = null
             } catch (_: SecurityException) {
-                folderError = "Pluto could not keep access to this folder. Choose a folder on this device."
+                folderError = folderAccessError
             }
         }
         screenFocus.focus("rom:folder")
@@ -136,26 +146,26 @@ fun RomLibrariesScreen(state: LauncherUiState, vm: LauncherViewModel) {
     BackHandler(editing != null && dialog == null) { close() }
     LayerScaffold(
         title = if (choosingEmulator) {
-            if (emulatorGame != null) "Choose this game's emulator" else "Choose default emulator"
-        } else if (editing == 0L) "Add ROM tab" else if (editing != null) "Edit ROM tab" else "ROM tabs",
+            stringResource(if (emulatorGame != null) R.string.rom_title_choose_game_emulator else R.string.rom_title_choose_default_emulator)
+        } else stringResource(if (editing == 0L) R.string.rom_add_tab else if (editing != null) R.string.rom_title_edit else R.string.rom_title),
         idPrefix = "rom", onClose = { close() }, dialogOpen = dialog != null,
         compactHeader = compactSearch,
         contentKey = Pair(editing, choosingEmulator),
         headerContent = {
             if (choosingEmulator) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (compactSearch) 2.dp else 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
-                value = query, onValueChange = { query = it }, label = { Text("Search installed apps") }, singleLine = true,
+                value = query, onValueChange = { query = it }, label = { Text(stringResource(R.string.rom_search_installed_apps)) }, singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
                     modifier = Modifier.weight(1f),
                 )
-                if (compactSearch) IconAction("rom:search:close", Icons.Rounded.Close, "Close search", { close() })
+                if (compactSearch) IconAction("rom:search:close", Icons.Rounded.Close, stringResource(R.string.rom_close_search), { close() })
             }
         },
         footerContent = {
             if (editing != null && !choosingEmulator) Column {
                 HorizontalDivider()
                 ButtonBar(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                    PlutoButton("rom:save", if (saving) "Saving…" else if (editing == 0L) "Create tab" else "Save changes", {
+                    PlutoButton("rom:save", stringResource(if (saving) R.string.rom_saving else if (editing == 0L) R.string.rom_create_tab else R.string.rom_save_changes), {
                         saving = true
                         val isNew = editing == 0L
                         vm.saveRomLibrary(RomLibrary(editing ?: 0L, name, folder, emulator, method), onFailure = { saving = false }) { id ->
@@ -165,31 +175,31 @@ fun RomLibrariesScreen(state: LauncherUiState, vm: LauncherViewModel) {
                             vm.selectShelf(ShelfId.OfRomLibrary(id))
                         }
                     }, style = ButtonStyle.FILLED, enabled = name.isNotBlank() && folder.isNotBlank() && !saving)
-                    PlutoButton("rom:cancel", "Cancel", { close() }, enabled = !saving)
+                    PlutoButton("rom:cancel", stringResource(R.string.rom_cancel), { close() }, enabled = !saving)
                 }
             }
         },
         overlay = {
             AnimatedDialog(dialog) { shown ->
                 when (shown) {
-                    "name" -> TextInputDialog("rom:name-dialog", "Tab name", "Name", name, "Done",
+                    "name" -> TextInputDialog("rom:name-dialog", stringResource(R.string.rom_name_dialog_title), stringResource(R.string.rom_name_dialog_label), name, stringResource(R.string.rom_done),
                         onConfirm = { name = it; dialog = null; keyboard?.hide(); screenFocus.returnFrom("rom:name") },
                         onDismiss = { dialog = null; keyboard?.hide(); screenFocus.returnFrom("rom:name") })
-                    "discard" -> ConfirmDialog("rom:discard-dialog", "Discard changes?", "Your ROM tab has not been saved.", "Discard",
+                    "discard" -> ConfirmDialog("rom:discard-dialog", stringResource(R.string.rom_discard_title), stringResource(R.string.rom_discard_message), stringResource(R.string.rom_discard),
                         onConfirm = { dialog = null; closeEditor() }, onDismiss = { dialog = null })
-                    "delete" -> ConfirmDialog("rom:delete-dialog", "Remove $name?", "Only this tab is removed. Your ROMs and save files stay where they are.", "Remove",
+                    "delete" -> ConfirmDialog("rom:delete-dialog", stringResource(R.string.rom_remove_title, name), stringResource(R.string.rom_remove_message), stringResource(R.string.rom_remove),
                         onConfirm = { editing?.let(vm::deleteRomLibrary); dialog = null; closeEditor() },
                         onDismiss = { dialog = null; screenFocus.returnFrom("rom:delete") }, destructive = true)
-                    "help" -> ModalPanel("Add games and box art", "rom:help", { dialog = null }, interceptBack = true) {
-                        SectionHeader("Adding more games")
-                        BodyText("Copy your games into the folder you chose, including their tracks or discs. Subfolders are included. Pluto checks for changes when you return; Refresh games checks immediately.")
-                        SectionHeader("Box art")
-                        BodyText("Artwork is not downloaded automatically. Put a PNG, JPG or WebP image beside the game with the same filename before the extension. For example: Spyro.cue and Spyro.png.")
-                        BodyText("Pluto also reads the layouts the big front ends write: an image in boxart/, covers/ or images/, RetroArch's Named_Boxarts/ set, or a name-thumb.png variant. Then refresh the tab.")
-                        SectionHeader("gamelist.xml")
-                        BodyText("If your folder came from RetroPie, Batocera or another EmulationStation setup that keeps gamelist.xml beside the games, keep it. Pluto reads each entry's name and artwork, so games appear with the titles and covers you already curated.")
-                        SectionHeader("Emulator setup")
-                        BodyText("Install the emulator you want, open it once and finish its setup. Some systems need a BIOS file. Pluto opens your games in that app; emulator settings and save files are managed there.")
+                    "help" -> ModalPanel(stringResource(R.string.rom_help_title), "rom:help", { dialog = null }, interceptBack = true) {
+                        SectionHeader(stringResource(R.string.rom_help_adding_header))
+                        BodyText(stringResource(R.string.rom_help_adding_body))
+                        SectionHeader(stringResource(R.string.rom_help_art_header))
+                        BodyText(stringResource(R.string.rom_help_art_body))
+                        BodyText(stringResource(R.string.rom_help_art_layouts))
+                        SectionHeader(RomMetadata.GAMELIST) // A file name: not translated
+                        BodyText(stringResource(R.string.rom_help_gamelist_body))
+                        SectionHeader(stringResource(R.string.rom_help_emulator_header))
+                        BodyText(stringResource(R.string.rom_help_emulator_body))
                     }
                 }
             }
@@ -203,28 +213,29 @@ fun RomLibrariesScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 if (shown == "games") {
                     val library = libraries.firstOrNull { it.id == gamesPanel }
                     if (library == null) gamesPanel = null
-                    else ModalPanel("Games · ${library.name}", "rom:games", { gamesPanel = null; gameQuery = "" }, interceptBack = true) {
-                        BodyText("A game opens in this tab's emulator unless you pick another app for it here. The rest of the tab is not affected.")
-                        if (library.games.isEmpty()) BodyText("No games in this folder yet. Add files, then refresh the tab.")
+                    else ModalPanel(stringResource(R.string.rom_games_panel_title, library.name), "rom:games", { gamesPanel = null; gameQuery = "" }, interceptBack = true) {
+                        BodyText(stringResource(R.string.rom_games_panel_intro))
+                        if (library.games.isEmpty()) BodyText(stringResource(R.string.rom_games_panel_empty))
                         // A full set can hold thousands of games: rows are not lazy here, so only a
                         // bounded slice is built, with games that already have their own app first.
                         if (library.games.size > GAMES_PANEL_ROWS) OutlinedTextField(
-                            value = gameQuery, onValueChange = { gameQuery = it }, label = { Text("Find a game") }, singleLine = true,
+                            value = gameQuery, onValueChange = { gameQuery = it }, label = { Text(stringResource(R.string.rom_find_game)) }, singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
                             modifier = Modifier.fillMaxWidth(),
                         )
                         val matches = library.games.filter { gameQuery.isBlank() || it.title.contains(gameQuery.trim(), ignoreCase = true) }
                             .sortedBy { it.uri !in state.settings.romEmulators }
-                        if (matches.size > GAMES_PANEL_ROWS) BodyText("Showing $GAMES_PANEL_ROWS of ${matches.size} games. Type part of a name to find one.")
-                        else if (matches.isEmpty() && library.games.isNotEmpty()) BodyText("No games match “${gameQuery.trim()}”.")
+                        if (matches.size > GAMES_PANEL_ROWS) BodyText(pluralStringResource(R.plurals.rom_games_panel_truncated, matches.size, GAMES_PANEL_ROWS, matches.size))
+                        else if (matches.isEmpty() && library.games.isNotEmpty()) BodyText(stringResource(R.string.rom_games_panel_no_match, gameQuery.trim()))
                         val now = System.currentTimeMillis()
                         matches.take(GAMES_PANEL_ROWS).forEach { game ->
                             val chosen = state.settings.romEmulators[game.uri]
                             val played = state.settings.romLastPlayed[game.uri]
                             ActionRow("rom:game:${game.uri}", game.title, { chooseEmulatorFor(game.uri) },
-                                supporting = buildString {
-                                    append(chosen?.let { "Opens in ${appLabel(it)}" } ?: "Uses this tab's default")
-                                    played?.let { append(" · played ${dev.pluto.launcher.domain.RomScanSummary.age(now, it)}") }
+                                supporting = run {
+                                    val opens = chosen?.let { stringResource(R.string.rom_game_opens_in, appLabel(it)) }
+                                        ?: stringResource(R.string.rom_game_uses_default)
+                                    played?.let { stringResource(R.string.rom_game_played, opens, romAgeText(RomScanSummary.age(now, it))) } ?: opens
                                 })
                         }
                     }
@@ -235,81 +246,85 @@ fun RomLibrariesScreen(state: LauncherUiState, vm: LauncherViewModel) {
         if (choosingEmulator) {
             val forGame = emulatorGame?.let { uri -> libraries.firstNotNullOfOrNull { lib -> lib.games.firstOrNull { it.uri == uri } } }
             val chosen = if (forGame != null) state.settings.romEmulators[forGame.uri] else emulator
-            BodyText(if (forGame != null) "Choose the app that opens “${forGame.title}”. Only that game changes; the tab keeps its own emulator."
-            else "Choose the app games in this tab should open with. You can change it later.")
-            ActionRow("rom:chooser", if (forGame != null) "Use the tab's default" else "Ask each time", { chooseEmulator(null) },
-                supporting = if (forGame != null) "Follow this tab's emulator, or ask, as it is set up" else "Choose an app whenever you open a game",
+            BodyText(if (forGame != null) stringResource(R.string.rom_chooser_game_intro, forGame.title)
+            else stringResource(R.string.rom_chooser_tab_intro))
+            ActionRow("rom:chooser", stringResource(if (forGame != null) R.string.rom_use_tab_default else R.string.rom_ask_each_time), { chooseEmulator(null) },
+                supporting = stringResource(if (forGame != null) R.string.rom_use_tab_default_supporting else R.string.rom_ask_each_time_supporting),
                 selected = chosen == null)
             val previous = libraries.mapNotNull { it.emulatorPackage }.toSet()
             val suggested = installedApps.filter { it.key.packageName in previous || it.key.packageName == chosen || emulatorName.containsMatchIn(it.label + " " + it.key.packageName) }
             val filtered = installedApps.filter { it.label.contains(query.trim(), true) || it.key.packageName.contains(query.trim(), true) }
             val visible = if (query.isNotBlank() || showAllApps) filtered else suggested
-            SectionHeader(if (query.isNotBlank()) "Search results" else if (showAllApps) "Installed apps" else "Suggested emulators")
-            if (visible.isEmpty()) BodyText(if (query.isNotBlank()) "No installed apps match “$query”." else "Search for your emulator or show all installed apps. If it is not installed yet, install it and return here.")
+            SectionHeader(stringResource(if (query.isNotBlank()) R.string.rom_search_results else if (showAllApps) R.string.rom_installed_apps else R.string.rom_suggested_emulators))
+            if (visible.isEmpty()) BodyText(if (query.isNotBlank()) stringResource(R.string.rom_no_apps_match, query) else stringResource(R.string.rom_no_suggestions))
             visible.forEach { app ->
                 ActionRow("rom:emulator:${app.key.packageName}", app.label, { chooseEmulator(app.key.packageName) }, selected = chosen == app.key.packageName)
             }
-            if (query.isBlank()) ActionRow("rom:all-apps", if (showAllApps) "Show suggested emulators" else "Show all installed apps", { showAllApps = !showAllApps }, supporting = "Use any emulator that can open your games")
+            if (query.isBlank()) ActionRow("rom:all-apps", stringResource(if (showAllApps) R.string.rom_show_suggested else R.string.rom_show_all_apps), { showAllApps = !showAllApps }, supporting = stringResource(R.string.rom_show_all_apps_supporting))
         } else if (editing != null) {
-            BodyText(if (editing == 0L) "Turn a folder of games into a console tab. Your files stay where they are." else "Choose where this tab finds its games and which app opens them.")
-            SectionHeader("1 · ROM folder")
-            ActionRow("rom:folder", if (folder.isBlank()) "Choose ROM folder" else "Change ROM folder", { picker.launch(folder.takeIf(String::isNotEmpty)?.let(Uri::parse)) },
-                icon = Icons.Rounded.Folder, supporting = if (folder.isEmpty()) "Select the folder containing your games" else Uri.decode(folder.substringAfterLast('/')).substringAfter(':'))
+            BodyText(stringResource(if (editing == 0L) R.string.rom_editor_intro_new else R.string.rom_editor_intro_edit))
+            SectionHeader(stringResource(R.string.rom_section_folder))
+            ActionRow("rom:folder", stringResource(if (folder.isBlank()) R.string.rom_choose_folder else R.string.rom_change_folder), { picker.launch(folder.takeIf(String::isNotEmpty)?.let(Uri::parse)) },
+                icon = Icons.Rounded.Folder, supporting = if (folder.isEmpty()) stringResource(R.string.rom_choose_folder_supporting) else Uri.decode(folder.substringAfterLast('/')).substringAfter(':'))
             folderError?.let { NoticeCard(it, isError = true) }
-            if (folder.isNotBlank()) BodyText("Games in subfolders are included. New games can be added to this folder later.")
+            if (folder.isNotBlank()) BodyText(stringResource(R.string.rom_folder_subfolders))
             if (folder.isBlank()) {
-                SectionHeader("Where games usually are")
-                BodyText("Pluto cannot look inside a folder until you allow it. These are the folders the installed emulators use; tap one to open the picker there.")
+                SectionHeader(stringResource(R.string.rom_suggestions_header))
+                BodyText(stringResource(R.string.rom_suggestions_intro))
                 suggestions.forEach { suggestion ->
                     ActionRow(
                         "rom:suggest:${suggestion.folder}",
-                        suggestion.packageName?.let { "${appLabel(it)} games" } ?: "“${suggestion.folder}” folder",
+                        suggestion.packageName?.let { stringResource(R.string.rom_suggestion_app, appLabel(it)) } ?: stringResource(R.string.rom_suggestion_folder, suggestion.folder),
                         { picker.launch(sharedStorageFolder(suggestion.folder)) },
-                        supporting = "Look in ${suggestion.folder} on this device",
+                        supporting = stringResource(R.string.rom_suggestion_supporting, suggestion.folder),
                     )
                 }
             }
-            SectionHeader("2 · Default emulator")
-            ActionRow("rom:emulator", if (emulator == null) "Ask each time" else appLabel(emulator), {
+            SectionHeader(stringResource(R.string.rom_section_emulator))
+            ActionRow("rom:emulator", if (emulator == null) stringResource(R.string.rom_ask_each_time) else appLabel(emulator), {
                 query = ""; showAllApps = false; choosingEmulator = true; screenFocus.focus("rom:chooser")
-            }, icon = Icons.Rounded.SportsEsports, supporting = if (emulator == null) "Choose a default to open games with one tap" else "Used for every game in this tab")
-            if (selectedApp != null) ActionRow("rom:setup-emulator", "Open ${selectedApp.label} setup", { vm.launch(selectedApp.key) },
-                supporting = if (emulator == RomLauncher.DUCKSTATION_PACKAGE) "Import your PlayStation BIOS in DuckStation, then return here" else "Finish the emulator’s first-time setup, then return here")
-            else if (emulator != null) NoticeCard("This emulator is no longer installed. Choose another default.", isError = true)
-            SectionHeader("3 · Tab name")
-            ActionRow("rom:name", name.ifBlank { "Name this tab" }, { dialog = "name" }, supporting = "For example, PlayStation 1 or Game Boy. Shown in console mode.")
-            ActionRow("rom:advanced", if (advanced) "Hide advanced options" else "Advanced options", { advanced = !advanced }, supporting = "Only needed if a game does not open correctly")
-            if (advanced) ChoiceGroup("rom:method", "Open games using", buildList {
-                add(RomLaunchMode.AUTOMATIC to "Automatic (recommended)")
-                add(RomLaunchMode.OPEN_WITH to "Ask which app to use")
-                add(RomLaunchMode.VIEW to "Android Open file")
+            }, icon = Icons.Rounded.SportsEsports, supporting = stringResource(if (emulator == null) R.string.rom_emulator_ask_supporting else R.string.rom_emulator_default_supporting))
+            if (selectedApp != null) ActionRow("rom:setup-emulator", stringResource(R.string.rom_open_setup, selectedApp.label), { vm.launch(selectedApp.key) },
+                supporting = stringResource(if (emulator == RomLauncher.DUCKSTATION_PACKAGE) R.string.rom_setup_duckstation else R.string.rom_setup_generic))
+            else if (emulator != null) NoticeCard(stringResource(R.string.rom_emulator_missing), isError = true)
+            SectionHeader(stringResource(R.string.rom_section_name))
+            ActionRow("rom:name", name.ifBlank { stringResource(R.string.rom_name_placeholder) }, { dialog = "name" }, supporting = stringResource(R.string.rom_name_supporting))
+            ActionRow("rom:advanced", stringResource(if (advanced) R.string.rom_hide_advanced else R.string.rom_advanced), { advanced = !advanced }, supporting = stringResource(R.string.rom_advanced_supporting))
+            if (advanced) ChoiceGroup("rom:method", stringResource(R.string.rom_method_title), buildList {
+                add(RomLaunchMode.AUTOMATIC to stringResource(R.string.rom_method_automatic))
+                add(RomLaunchMode.OPEN_WITH to stringResource(R.string.rom_method_open_with))
+                add(RomLaunchMode.VIEW to stringResource(R.string.rom_method_view))
                 val adapter = RomLauncher.directMode(emulator)
-                if (adapter != null) add(adapter to "${appLabel(emulator)} direct launch")
-                else if (emulator == null) add(RomLaunchMode.DUCKSTATION to "DuckStation direct launch")
-            }, method, { method = it }, supporting = "Emulators support different formats and ways of opening games. Direct launch needs the folder on shared storage; try Ask which app to use if the default does not work.")
-            ActionRow("rom:help", "Adding games and box art", { dialog = "help" }, icon = Icons.Rounded.Info)
-            if (editing != 0L) ActionRow("rom:delete", "Remove tab", { dialog = "delete" }, icon = Icons.Rounded.Delete, destructive = true)
+                if (adapter != null) add(adapter to stringResource(R.string.rom_method_direct, appLabel(emulator)))
+                else if (emulator == null) add(RomLaunchMode.DUCKSTATION to stringResource(R.string.rom_method_direct, "DuckStation"))
+            }, method, { method = it }, supporting = stringResource(R.string.rom_method_supporting))
+            ActionRow("rom:help", stringResource(R.string.rom_help_row_editor), { dialog = "help" }, icon = Icons.Rounded.Info)
+            if (editing != 0L) ActionRow("rom:delete", stringResource(R.string.rom_remove_tab), { dialog = "delete" }, icon = Icons.Rounded.Delete, destructive = true)
         } else {
-            addedId?.let { id -> libraries.firstOrNull { it.id == id }?.let { NoticeCard("${it.name} added. Your tab appears in console mode.") } }
-            BodyText("Browse your ROM collections as tabs in console mode. Each tab has its own folder and default emulator.")
-            PlutoButton("rom:add", "Add ROM tab", { edit(null) }, icon = Icons.Rounded.Add, style = ButtonStyle.FILLED)
+            addedId?.let { id -> libraries.firstOrNull { it.id == id }?.let { NoticeCard(stringResource(R.string.rom_added, it.name)) } }
+            BodyText(stringResource(R.string.rom_list_intro))
+            PlutoButton("rom:add", stringResource(R.string.rom_add_tab), { edit(null) }, icon = Icons.Rounded.Add, style = ButtonStyle.FILLED)
             libraries.forEach { library ->
                 SectionHeader(library.name)
                 val busy = library.id in scanning
                 val problem = errors[library.id]
-                BodyText(if (busy) "Finding games…" else "${library.games.size} ${if (library.games.size == 1) "game" else "games"} · " + (library.emulatorPackage?.let(::appLabel) ?: "Ask each time"))
+                BodyText(if (busy) stringResource(R.string.rom_finding_games) else pluralStringResource(R.plurals.rom_library_summary, library.games.size,
+                    library.games.size, library.emulatorPackage?.let(::appLabel) ?: stringResource(R.string.rom_ask_each_time)))
                 problem?.let { NoticeCard(it, isError = true) }
-                if (!busy && problem == null && library.games.isEmpty()) BodyText("No games found. Add ROMs to this folder, then refresh. You can choose another folder in Edit tab.")
-                if (state.mode == LauncherMode.HANDHELD) ActionRow("rom:view:${library.id}", "View tab", { vm.selectShelf(ShelfId.OfRomLibrary(library.id)); vm.closeAllLayers() })
-                ActionRow("rom:edit:${library.id}", "Edit tab", { edit(library) }, supporting = "${library.name} · Folder, default emulator and name")
-                ActionRow("rom:refresh:${library.id}", if (busy) "Finding games…" else "Refresh games", { vm.refreshRomLibrary(library.id) }, icon = Icons.Rounded.Refresh, enabled = !busy)
-                ActionRow("rom:games:${library.id}", "Games and emulators", { gamesPanel = library.id }, icon = Icons.Rounded.SportsEsports,
-                    supporting = "Pick an emulator for one game, and see what has been played")
-                ActionRow("rom:diagnostics:${library.id}", "Diagnostics", { diagnostics = library.id }, icon = Icons.Rounded.Info,
-                    supporting = reports[library.id]?.let { "Last check: ${it.documents} files, ${it.games} games" }
-                        ?: "See what Pluto found in this folder")
+                if (!busy && problem == null && library.games.isEmpty()) BodyText(stringResource(R.string.rom_no_games_found))
+                if (state.mode == LauncherMode.HANDHELD) ActionRow("rom:view:${library.id}", stringResource(R.string.rom_view_tab), { vm.selectShelf(ShelfId.OfRomLibrary(library.id)); vm.closeAllLayers() })
+                ActionRow("rom:edit:${library.id}", stringResource(R.string.rom_edit_tab), { edit(library) }, supporting = stringResource(R.string.rom_edit_tab_supporting, library.name))
+                ActionRow("rom:refresh:${library.id}", stringResource(if (busy) R.string.rom_finding_games else R.string.rom_refresh), { vm.refreshRomLibrary(library.id) }, icon = Icons.Rounded.Refresh, enabled = !busy)
+                ActionRow("rom:games:${library.id}", stringResource(R.string.rom_games_and_emulators), { gamesPanel = library.id }, icon = Icons.Rounded.SportsEsports,
+                    supporting = stringResource(R.string.rom_games_and_emulators_supporting))
+                ActionRow("rom:diagnostics:${library.id}", stringResource(R.string.rom_diagnostics), { diagnostics = library.id }, icon = Icons.Rounded.Info,
+                    supporting = reports[library.id]?.let {
+                        stringResource(R.string.rom_diagnostics_last_check,
+                            pluralStringResource(R.plurals.rom_count_files, it.documents, it.documents),
+                            pluralStringResource(R.plurals.rom_count_games, it.games, it.games))
+                    } ?: stringResource(R.string.rom_diagnostics_supporting))
             }
-            ActionRow("rom:help", "How to add games and box art", { dialog = "help" }, icon = Icons.Rounded.Info)
+            ActionRow("rom:help", stringResource(R.string.rom_help_row), { dialog = "help" }, icon = Icons.Rounded.Info)
         }
     }
 }
@@ -334,44 +349,47 @@ private fun RomDiagnosticsPanel(
     val readAccess = remember(library.treeUri) {
         context.contentResolver.persistedUriPermissions.any { it.uri.toString() == library.treeUri && it.isReadPermission }
     }
-    ModalPanel("Diagnostics · ${library.name}", "rom:diag", onClose, interceptBack = true) {
-        SectionHeader("Folder")
+    ModalPanel(stringResource(R.string.rom_diag_title, library.name), "rom:diag", onClose, interceptBack = true) {
+        SectionHeader(stringResource(R.string.rom_diag_folder))
         BodyText(Uri.decode(library.treeUri))
         BodyText(
-            if (readAccess) "Folder access is granted. Pluto can read this folder."
-            else "Access is missing. Open Edit tab and choose this folder again."
+            stringResource(if (readAccess) R.string.rom_diag_access_granted else R.string.rom_diag_access_missing)
         )
-        if (!readAccess) NoticeCard("Android is no longer letting Pluto read this folder.", isError = true)
-        SectionHeader("Last check")
+        if (!readAccess) NoticeCard(stringResource(R.string.rom_diag_access_lost), isError = true)
+        SectionHeader(stringResource(R.string.rom_diag_last_check))
         if (report == null) {
-            BodyText("No check has run in this session yet. Refresh games reads the folder now.")
+            BodyText(stringResource(R.string.rom_diag_no_check))
         } else {
             BodyText(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(report.at)))
-            BodyText("${report.documents} files checked · ${report.games} games · ${report.gamesWithArt} with box art")
-            report.systems.values.distinct().sorted().takeIf { it.isNotEmpty() }?.let {
-                BodyText("Systems in this folder: ${it.joinToString(", ")}. Each is a filter in the console browse grid.")
+            BodyText(stringResource(R.string.rom_diag_counts,
+                pluralStringResource(R.plurals.rom_diag_files_checked, report.documents, report.documents),
+                pluralStringResource(R.plurals.rom_count_games, report.games, report.games),
+                pluralStringResource(R.plurals.rom_diag_with_art, report.gamesWithArt, report.gamesWithArt)))
+            report.systems.values.distinct().sorted().takeIf { it.isNotEmpty() }?.let { systems ->
+                val names = systems.map { romSystemLabel(it) }.joinToString(stringResource(R.string.console_list_separator))
+                BodyText(stringResource(R.string.rom_diag_systems, names))
             }
             report.saves.size.takeIf { it > 0 }?.let {
-                BodyText("$it ${if (it == 1) "game has" else "games have"} save data beside them (battery saves or savestates).")
+                BodyText(pluralStringResource(R.plurals.rom_diag_saves, it, it))
             }
             BodyText(
-                if (report.gamelistEntries > 0) "gamelist.xml: ${report.gamelistEntries} entries read. Its names and artwork are used."
-                else "No gamelist.xml here. Names come from filenames; artwork from the boxart layout."
+                if (report.gamelistEntries > 0) pluralStringResource(R.plurals.rom_diag_gamelist, report.gamelistEntries, report.gamelistEntries)
+                else stringResource(R.string.rom_diag_no_gamelist)
             )
         }
-        SectionHeader("Not shown as games")
+        SectionHeader(stringResource(R.string.rom_diag_skipped_header))
         BodyText(
             when {
-                report == null -> "Run a check to list what is skipped."
-                report.skipped == 0 -> "Nothing skipped: every file is a game, artwork or a track."
-                else -> "${report.skipped} files are not games: ${report.skippedExtensions}."
+                report == null -> stringResource(R.string.rom_diag_skipped_unchecked)
+                report.skipped == 0 -> stringResource(R.string.rom_diag_skipped_none)
+                else -> pluralStringResource(R.plurals.rom_diag_skipped, report.skipped, report.skipped, romExtensionsText(report.skippedExtensions))
             }
         )
-        report?.takeIf { it.sheets > 0 }?.let { BodyText("${it.sheets} playlists read for their tracks and discs.") }
+        report?.takeIf { it.sheets > 0 }?.let { BodyText(pluralStringResource(R.plurals.rom_diag_sheets, it.sheets, it.sheets)) }
         report?.takeIf { it.missingTracks > 0 }?.let {
-            NoticeCard("${it.missingTracks} tracks or discs named by a playlist are missing from this folder. Copy them beside the playlist; those games cannot open.", isError = true)
+            NoticeCard(pluralStringResource(R.plurals.rom_diag_missing_tracks, it.missingTracks, it.missingTracks), isError = true)
         }
-        if (report != null && report.games == 0) NoticeCard("No games were found in this folder.", isError = true)
+        if (report != null && report.games == 0) NoticeCard(stringResource(R.string.rom_diag_no_games), isError = true)
     }
 }
 

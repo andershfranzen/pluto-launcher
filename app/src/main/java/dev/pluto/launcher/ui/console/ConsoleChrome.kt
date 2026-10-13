@@ -1,6 +1,8 @@
 package dev.pluto.launcher.ui.console
 
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.LifecycleEventObserver
@@ -92,7 +94,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import dev.pluto.launcher.R
 import dev.pluto.launcher.data.prefs.ControllerAction
+import dev.pluto.launcher.ui.UiText
 import dev.pluto.launcher.ui.components.KeyChip
 import dev.pluto.launcher.ui.components.LegendItem
 import dev.pluto.launcher.ui.components.pressScale
@@ -110,32 +114,61 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-/** The console's legend: shoulder buttons switch shelves here. */
-val ConsoleLegend = listOf(
-    LegendItem(ControllerAction.CONFIRM, "Open"),
-    LegendItem(ControllerAction.ACTIONS, "Actions"),
-    LegendItem(ControllerAction.SEARCH, "Search"),
-    LegendItem(ControllerAction.PREV_CATEGORY, "Shelves"),
-    LegendItem(ControllerAction.NEXT_CATEGORY, "Shelves"),
-    LegendItem(ControllerAction.SETTINGS, "Settings"),
+/** The console's three legends: on the cards, on an empty shelf, and on other controls. */
+internal enum class ConsoleLegendKind { CARDS, EMPTY, CONTROLS }
+
+/** The cards' legend, as actions and the string wording each: shoulder buttons switch shelves here. */
+private val CardsLegend = listOf(
+    ControllerAction.CONFIRM to R.string.console_legend_open,
+    ControllerAction.ACTIONS to R.string.console_legend_actions,
+    ControllerAction.SEARCH to R.string.console_legend_search,
+    ControllerAction.PREV_CATEGORY to R.string.console_legend_shelves,
+    ControllerAction.NEXT_CATEGORY to R.string.console_legend_shelves,
+    ControllerAction.SETTINGS to R.string.console_legend_settings,
 )
 
+/**
+ * A legend's actions and the string resource wording each, in order. Pure (no text), so the
+ * rules are unit tested; [consoleLegend] words them.
+ */
+internal fun consoleLegendLabels(kind: ConsoleLegendKind): List<Pair<ControllerAction, Int>> {
+    // An empty shelf has nothing to open or act on.
+    val empty = CardsLegend.filter { it.first != ControllerAction.CONFIRM && it.first != ControllerAction.ACTIONS }
+    return when (kind) {
+        ConsoleLegendKind.CARDS -> CardsLegend
+        ConsoleLegendKind.EMPTY -> empty
+        // Away from the cards (tabs, buttons, an empty shelf's buttons): A selects.
+        ConsoleLegendKind.CONTROLS -> listOf(ControllerAction.CONFIRM to R.string.console_legend_select) + empty
+    }
+}
+
+/** [kind]'s legend in the current language. */
+internal fun consoleLegend(kind: ConsoleLegendKind): List<LegendItem> =
+    consoleLegendLabels(kind).map { (action, label) -> LegendItem(action, UiText.get(label)) }
+
+/** The console's legend: shoulder buttons switch shelves here. */
+val ConsoleLegend: List<LegendItem> get() = consoleLegend(ConsoleLegendKind.CARDS)
+
 /** The legend on an empty shelf: nothing to open or act on. */
-val ConsoleLegendEmpty = ConsoleLegend.filter { it.action != ControllerAction.CONFIRM && it.action != ControllerAction.ACTIONS }
+val ConsoleLegendEmpty: List<LegendItem> get() = consoleLegend(ConsoleLegendKind.EMPTY)
 
 /** The legend away from the cards (tabs, buttons, an empty shelf's buttons): A selects. */
-val ConsoleLegendControls = listOf(LegendItem(ControllerAction.CONFIRM, "Select")) + ConsoleLegendEmpty
+val ConsoleLegendControls: List<LegendItem> get() = consoleLegend(ConsoleLegendKind.CONTROLS)
 
 /**
- * The legend for where controller focus is: a card can be opened and has actions; anything
+ * Which legend fits where controller focus is: a card can be opened and has actions; anything
  * else (a tab, a button) is just selected. Before focus lands, the cards' legend when there
  * are cards.
  */
-internal fun consoleLegendFor(focusedId: String?, hasApps: Boolean): List<LegendItem> = when {
-    focusedId?.startsWith(CARD_ID_PREFIX) == true -> ConsoleLegend
-    focusedId == null -> if (hasApps) ConsoleLegend else ConsoleLegendEmpty
-    else -> ConsoleLegendControls
+internal fun consoleLegendKindFor(focusedId: String?, hasApps: Boolean): ConsoleLegendKind = when {
+    focusedId?.startsWith(CARD_ID_PREFIX) == true -> ConsoleLegendKind.CARDS
+    focusedId == null -> if (hasApps) ConsoleLegendKind.CARDS else ConsoleLegendKind.EMPTY
+    else -> ConsoleLegendKind.CONTROLS
 }
+
+/** The legend for where controller focus is ([consoleLegendKindFor]), in the current language. */
+internal fun consoleLegendFor(focusedId: String?, hasApps: Boolean): List<LegendItem> =
+    consoleLegend(consoleLegendKindFor(focusedId, hasApps))
 
 internal const val TAB_ID_PREFIX = "hh:tab:"
 
@@ -282,7 +315,7 @@ internal fun ShelfTabs(
                     ShelfTab(
                         id = id,
                         title = title,
-                        position = "${index + 1} of ${shelves.size}",
+                        position = stringResource(R.string.console_position, index + 1, shelves.size),
                         isSelected = id == active,
                         onClick = { onSelect(id) },
                         links = links,
@@ -375,7 +408,7 @@ private fun ShelfTab(
             .controllerFocusable(
                 id = shelfTabId(id),
                 onActivate = onClick,
-                contentDescription = "$title shelf, $position",
+                contentDescription = stringResource(R.string.console_shelf_tab_description, title, position),
                 shape = TabShape,
                 interactionSource = press,
                 // Focus is selection along the row (PS5 / Xbox): stepping from one tab to the
@@ -451,7 +484,9 @@ internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier, nu
         r.percent <= 15 -> Icons.Outlined.BatteryAlert
         else -> Icons.Outlined.BatteryStd
     }
-    val spoken = "Controller ${number ?: ""} battery ${r.percent} percent".replace("  ", " ") + if (r.charging) ", charging" else ""
+    val level = if (number != null) pluralStringResource(R.plurals.console_controller_battery_numbered, r.percent, number, r.percent)
+    else pluralStringResource(R.plurals.console_controller_battery, r.percent, r.percent)
+    val spoken = if (r.charging) stringResource(R.string.console_battery_charging, level) else level
     Row(
         modifier.clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
@@ -460,7 +495,7 @@ internal fun ControllerBattery(deviceId: Int?, modifier: Modifier = Modifier, nu
         // With several controllers, each reading says which one it is.
         if (number != null) Text("$number", style = MaterialTheme.typography.labelSmall.overWallpaper(), maxLines = 1)
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
-        Text("${r.percent}%", style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
+        Text(stringResource(R.string.console_battery_percent, r.percent), style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
     }
 }
 
@@ -514,13 +549,14 @@ internal fun PhoneBattery(modifier: Modifier = Modifier) {
         r.percent <= 15 -> Icons.Outlined.BatteryAlert
         else -> Icons.Outlined.BatteryStd
     }
-    val spoken = "Phone battery ${r.percent} percent" + if (r.charging) ", charging" else ""
+    val level = pluralStringResource(R.plurals.console_phone_battery, r.percent, r.percent)
+    val spoken = if (r.charging) stringResource(R.string.console_battery_charging, level) else level
     Row(
         modifier.clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
-        Text("${r.percent}%", style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
+        Text(stringResource(R.string.console_battery_percent, r.percent), style = MaterialTheme.typography.labelLarge.overWallpaper(), maxLines = 1)
     }
 }
 
@@ -609,7 +645,7 @@ internal fun ConsoleTitle(stage: CoverflowState, subtitle: String, modifier: Mod
 internal fun ConsoleCounter(stage: CoverflowState, modifier: Modifier = Modifier) {
     if (stage.selectedEntry == null) return
     Text(
-        "${stage.selectedIndex + 1} of ${stage.count}",
+        stringResource(R.string.console_position, stage.selectedIndex + 1, stage.count),
         // Direction from the words, not the layout: "1 of 2" must not reorder in right-to-left.
         style = MaterialTheme.typography.bodyMedium.overWallpaper().copy(textDirection = TextDirection.Content),
         maxLines = 1,

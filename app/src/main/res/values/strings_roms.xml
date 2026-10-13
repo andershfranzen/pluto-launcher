@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ROM tabs, ROM diagnostics and console mode (Handheld layout, shelves, browse grid).
+    System and emulator names (PlayStation, SNES, DuckStation…) are proper nouns kept in code.
+    MissingTranslation is ignored until the da/de/fr/sv translations of this file land; remove it then.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- ROM tabs screen: titles -->
+    <string name="rom_title">ROM tabs</string>
+    <string name="rom_add_tab">Add ROM tab</string>
+    <string name="rom_title_edit">Edit ROM tab</string>
+    <string name="rom_title_choose_game_emulator">Choose this game\'s emulator</string>
+    <string name="rom_title_choose_default_emulator">Choose default emulator</string>
+
+    <!-- ROM tabs screen: editor -->
+    <!-- Name given to a new tab when the chosen folder has no usable name -->
+    <string name="rom_default_tab_name">My games</string>
+    <string name="rom_folder_access_failed">Pluto could not keep access to this folder. Choose a folder on this device.</string>
+    <string name="rom_search_installed_apps">Search installed apps</string>
+    <!-- Accessibility label of the button closing the emulator search -->
+    <string name="rom_close_search">Close search</string>
+    <string name="rom_saving">Saving…</string>
+    <string name="rom_create_tab">Create tab</string>
+    <string name="rom_save_changes">Save changes</string>
+    <string name="rom_cancel">Cancel</string>
+    <string name="rom_name_dialog_title">Tab name</string>
+    <!-- Text field label in the tab name dialog -->
+    <string name="rom_name_dialog_label">Name</string>
+    <string name="rom_done">Done</string>
+    <string name="rom_discard_title">Discard changes?</string>
+    <string name="rom_discard_message">Your ROM tab has not been saved.</string>
+    <string name="rom_discard">Discard</string>
+    <!-- %1$s: the tab's name -->
+    <string name="rom_remove_title">Remove %1$s?</string>
+    <string name="rom_remove_message">Only this tab is removed. Your ROMs and save files stay where they are.</string>
+    <string name="rom_remove">Remove</string>
+    <string name="rom_editor_intro_new">Turn a folder of games into a console tab. Your files stay where they are.</string>
+    <string name="rom_editor_intro_edit">Choose where this tab finds its games and which app opens them.</string>
+    <!-- Numbered step of the tab editor -->
+    <string name="rom_section_folder">1 · ROM folder</string>
+    <string name="rom_choose_folder">Choose ROM folder</string>
+    <string name="rom_change_folder">Change ROM folder</string>
+    <string name="rom_choose_folder_supporting">Select the folder containing your games</string>
+    <string name="rom_folder_subfolders">Games in subfolders are included. New games can be added to this folder later.</string>
+    <string name="rom_suggestions_header">Where games usually are</string>
+    <string name="rom_suggestions_intro">Pluto cannot look inside a folder until you allow it. These are the folders the installed emulators use; tap one to open the picker there.</string>
+    <!-- Suggested folder of an installed emulator. %1$s: the emulator app's name -->
+    <string name="rom_suggestion_app">%1$s games</string>
+    <!-- Suggested common folder. %1$s: folder name on shared storage, such as ROMs -->
+    <string name="rom_suggestion_folder">“%1$s” folder</string>
+    <!-- %1$s: folder name on shared storage -->
+    <string name="rom_suggestion_supporting">Look in %1$s on this device</string>
+    <!-- Numbered step of the tab editor -->
+    <string name="rom_section_emulator">2 · Default emulator</string>
+    <string name="rom_ask_each_time">Ask each time</string>
+    <string name="rom_emulator_ask_supporting">Choose a default to open games with one tap</string>
+    <string name="rom_emulator_default_supporting">Used for every game in this tab</string>
+    <!-- %1$s: the emulator app's name -->
+    <string name="rom_open_setup">Open %1$s setup</string>
+    <string name="rom_setup_duckstation">Import your PlayStation BIOS in DuckStation, then return here</string>
+    <string name="rom_setup_generic">Finish the emulator’s first-time setup, then return here</string>
+    <string name="rom_emulator_missing">This emulator is no longer installed. Choose another default.</string>
+    <!-- Numbered step of the tab editor -->
+    <string name="rom_section_name">3 · Tab name</string>
+    <string name="rom_name_placeholder">Name this tab</string>
+    <string name="rom_name_supporting">For example, PlayStation 1 or Game Boy. Shown in console mode.</string>
+    <string name="rom_advanced">Advanced options</string>
+    <string name="rom_hide_advanced">Hide advanced options</string>
+    <string name="rom_advanced_supporting">Only needed if a game does not open correctly</string>
+    <string name="rom_method_title">Open games using</string>
+    <string name="rom_method_automatic">Automatic (recommended)</string>
+    <!-- Launch method; also named in rom_method_supporting -->
+    <string name="rom_method_open_with">Ask which app to use</string>
+    <!-- Launch method: Android's standard "Open file" request -->
+    <string name="rom_method_view">Android Open file</string>
+    <!-- Launch method. %1$s: the emulator app's name -->
+    <string name="rom_method_direct">%1$s direct launch</string>
+    <string name="rom_method_supporting">Emulators support different formats and ways of opening games. Direct launch needs the folder on shared storage; try Ask which app to use if the default does not work.</string>
+    <string name="rom_help_row_editor">Adding games and box art</string>
+    <string name="rom_remove_tab">Remove tab</string>
+
+    <!-- ROM tabs screen: emulator chooser -->
+    <!-- %1$s: the game's title -->
+    <string name="rom_chooser_game_intro">Choose the app that opens “%1$s”. Only that game changes; the tab keeps its own emulator.</string>
+    <string name="rom_chooser_tab_intro">Choose the app games in this tab should open with. You can change it later.</string>
+    <string name="rom_use_tab_default">Use the tab\'s default</string>
+    <string name="rom_use_tab_default_supporting">Follow this tab\'s emulator, or ask, as it is set up</string>
+    <string name="rom_ask_each_time_supporting">Choose an app whenever you open a game</string>
+    <string name="rom_search_results">Search results</string>
+    <string name="rom_installed_apps">Installed apps</string>
+    <string name="rom_suggested_emulators">Suggested emulators</string>
+    <!-- %1$s: what the user typed -->
+    <string name="rom_no_apps_match">No installed apps match “%1$s”.</string>
+    <string name="rom_no_suggestions">Search for your emulator or show all installed apps. If it is not installed yet, install it and return here.</string>
+    <string name="rom_show_suggested">Show suggested emulators</string>
+    <string name="rom_show_all_apps">Show all installed apps</string>
+    <string name="rom_show_all_apps_supporting">Use any emulator that can open your games</string>
+
+    <!-- ROM tabs screen: list of tabs -->
+    <!-- %1$s: the new tab's name -->
+    <string name="rom_added">%1$s added. Your tab appears in console mode.</string>
+    <string name="rom_list_intro">Browse your ROM collections as tabs in console mode. Each tab has its own folder and default emulator.</string>
+    <string name="rom_finding_games">Finding games…</string>
+    <!-- %1$d: number of games; %2$s: the default emulator's name, or "Ask each time" -->
+    <plurals name="rom_library_summary">
+        <item quantity="one">%1$d game · %2$s</item>
+        <item quantity="other">%1$d games · %2$s</item>
+    </plurals>
+    <string name="rom_no_games_found">No games found. Add ROMs to this folder, then refresh. You can choose another folder in Edit tab.</string>
+    <string name="rom_view_tab">View tab</string>
+    <!-- Also named in rom_no_games_found and rom_diag_access_missing -->
+    <string name="rom_edit_tab">Edit tab</string>
+    <!-- %1$s: the tab's name -->
+    <string name="rom_edit_tab_supporting">%1$s · Folder, default emulator and name</string>
+    <!-- Also named in rom_help_adding_body and rom_diag_no_check -->
+    <string name="rom_refresh">Refresh games</string>
+    <string name="rom_games_and_emulators">Games and emulators</string>
+    <string name="rom_games_and_emulators_supporting">Pick an emulator for one game, and see what has been played</string>
+    <string name="rom_diagnostics">Diagnostics</string>
+    <!-- %1$s: rom_count_files; %2$s: rom_count_games -->
+    <string name="rom_diagnostics_last_check">Last check: %1$s, %2$s</string>
+    <string name="rom_diagnostics_supporting">See what Pluto found in this folder</string>
+    <string name="rom_help_row">How to add games and box art</string>
+    <plurals name="rom_count_files">
+        <item quantity="one">%d file</item>
+        <item quantity="other">%d files</item>
+    </plurals>
+    <plurals name="rom_count_games">
+        <item quantity="one">%d game</item>
+        <item quantity="other">%d games</item>
+    </plurals>
+
+    <!-- ROM tabs screen: help -->
+    <string name="rom_help_title">Add games and box art</string>
+    <string name="rom_help_adding_header">Adding more games</string>
+    <string name="rom_help_adding_body">Copy your games into the folder you chose, including their tracks or discs. Subfolders are included. Pluto checks for changes when you return; Refresh games checks immediately.</string>
+    <string name="rom_help_art_header">Box art</string>
+    <string name="rom_help_art_body">Artwork is not downloaded automatically. Put a PNG, JPG or WebP image beside the game with the same filename before the extension. For example: Spyro.cue and Spyro.png.</string>
+    <!-- Folder and file names (boxart/, covers/, images/, Named_Boxarts/, name-thumb.png) must stay as they are -->
+    <string name="rom_help_art_layouts">Pluto also reads the layouts the big front ends write: an image in boxart/, covers/ or images/, RetroArch\'s Named_Boxarts/ set, or a name-thumb.png variant. Then refresh the tab.</string>
+    <!-- gamelist.xml is a file name and must stay as it is -->
+    <string name="rom_help_gamelist_body">If your folder came from RetroPie, Batocera or another EmulationStation setup that keeps gamelist.xml beside the games, keep it. Pluto reads each entry\'s name and artwork, so games appear with the titles and covers you already curated.</string>
+    <string name="rom_help_emulator_header">Emulator setup</string>
+    <string name="rom_help_emulator_body">Install the emulator you want, open it once and finish its setup. Some systems need a BIOS file. Pluto opens your games in that app; emulator settings and save files are managed there.</string>
+
+    <!-- ROM tabs screen: per-game emulators panel -->
+    <!-- %1$s: the tab's name -->
+    <string name="rom_games_panel_title">Games · %1$s</string>
+    <string name="rom_games_panel_intro">A game opens in this tab\'s emulator unless you pick another app for it here. The rest of the tab is not affected.</string>
+    <string name="rom_games_panel_empty">No games in this folder yet. Add files, then refresh the tab.</string>
+    <string name="rom_find_game">Find a game</string>
+    <!-- %1$d: games listed; %2$d: games matching (the quantity) -->
+    <plurals name="rom_games_panel_truncated">
+        <item quantity="one">Showing %1$d of %2$d game. Type part of a name to find one.</item>
+        <item quantity="other">Showing %1$d of %2$d games. Type part of a name to find one.</item>
+    </plurals>
+    <!-- %1$s: what the user typed -->
+    <string name="rom_games_panel_no_match">No games match “%1$s”.</string>
+    <!-- %1$s: the emulator app's name -->
+    <string name="rom_game_opens_in">Opens in %1$s</string>
+    <string name="rom_game_uses_default">Uses this tab\'s default</string>
+    <!-- %1$s: rom_game_opens_in or rom_game_uses_default; %2$s: when, such as "3 days ago" (rom_age_*) -->
+    <string name="rom_game_played">%1$s · played %2$s</string>
+
+    <!-- ROM diagnostics -->
+    <!-- %1$s: the tab's name -->
+    <string name="rom_diag_title">Diagnostics · %1$s</string>
+    <string name="rom_diag_folder">Folder</string>
+    <string name="rom_diag_access_granted">Folder access is granted. Pluto can read this folder.</string>
+    <string name="rom_diag_access_missing">Access is missing. Open Edit tab and choose this folder again.</string>
+    <string name="rom_diag_access_lost">Android is no longer letting Pluto read this folder.</string>
+    <string name="rom_diag_last_check">Last check</string>
+    <string name="rom_diag_no_check">No check has run in this session yet. Refresh games reads the folder now.</string>
+    <!-- %1$s: rom_diag_files_checked; %2$s: rom_count_games; %3$s: rom_diag_with_art -->
+    <string name="rom_diag_counts">%1$s · %2$s · %3$s</string>
+    <plurals name="rom_diag_files_checked">
+        <item quantity="one">%d file checked</item>
+        <item quantity="other">%d files checked</item>
+    </plurals>
+    <!-- Games that found box art -->
+    <plurals name="rom_diag_with_art">
+        <item quantity="one">%d with box art</item>
+        <item quantity="other">%d with box art</item>
+    </plurals>
+    <!-- %1$s: list of system names, such as "Game Boy, SNES" -->
+    <string name="rom_diag_systems">Systems in this folder: %1$s. Each is a filter in the console browse grid.</string>
+    <plurals name="rom_diag_saves">
+        <item quantity="one">%d game has save data beside them (battery saves or savestates).</item>
+        <item quantity="other">%d games have save data beside them (battery saves or savestates).</item>
+    </plurals>
+    <!-- gamelist.xml is a file name and must stay as it is -->
+    <plurals name="rom_diag_gamelist">
+        <item quantity="one">gamelist.xml: %d entry read. Its names and artwork are used.</item>
+        <item quantity="other">gamelist.xml: %d entries read. Its names and artwork are used.</item>
+    </plurals>
+    <!-- gamelist.xml is a file name; boxart is a folder name -->
+    <string name="rom_diag_no_gamelist">No gamelist.xml here. Names come from filenames; artwork from the boxart layout.</string>
+    <string name="rom_diag_skipped_header">Not shown as games</string>
+    <string name="rom_diag_skipped_unchecked">Run a check to list what is skipped.</string>
+    <string name="rom_diag_skipped_none">Nothing skipped: every file is a game, artwork or a track.</string>
+    <!-- %1$d: files skipped; %2$s: their types, such as ".sav×12, .txt×3" -->
+    <plurals name="rom_diag_skipped">
+        <item quantity="one">%1$d file is not a game: %2$s.</item>
+        <item quantity="other">%1$d files are not games: %2$s.</item>
+    </plurals>
+    <!-- One file type and its count in a short list, such as ".sav×12". %1$s: the extension, without the dot -->
+    <string name="rom_extension_count">.%1$s×%2$d</string>
+    <!-- Files without an extension and their count, in the same list as rom_extension_count -->
+    <string name="rom_extension_none_count">no extension×%1$d</string>
+    <plurals name="rom_diag_sheets">
+        <item quantity="one">%d playlist read for its tracks and discs.</item>
+        <item quantity="other">%d playlists read for their tracks and discs.</item>
+    </plurals>
+    <plurals name="rom_diag_missing_tracks">
+        <item quantity="one">%d track or disc named by a playlist is missing from this folder. Copy it beside the playlist; that game cannot open.</item>
+        <item quantity="other">%d tracks or discs named by a playlist are missing from this folder. Copy them beside the playlist; those games cannot open.</item>
+    </plurals>
+    <string name="rom_diag_no_games">No games were found in this folder.</string>
+
+    <!-- How long ago: fills "Played %1$s", "Save · %1$s" and similar, so lower case -->
+    <string name="rom_age_today">today</string>
+    <string name="rom_age_yesterday">yesterday</string>
+    <plurals name="rom_age_days">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <string name="rom_age_a_week">a week ago</string>
+    <plurals name="rom_age_weeks">
+        <item quantity="one">%d week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+    <plurals name="rom_age_months">
+        <item quantity="one">%d month ago</item>
+        <item quantity="other">%d months ago</item>
+    </plurals>
+    <string name="rom_age_a_year">a year ago</string>
+
+    <!-- Generic system labels (filter chips in the console browse grid) -->
+    <!-- Games whose system could not be identified -->
+    <string name="rom_system_other">Other</string>
+    <!-- Disc images that several systems share (.iso, .cue, .chd…) -->
+    <string name="rom_system_disc">Disc image</string>
+
+    <!-- Opening a game -->
+    <!-- Title of Android's app chooser. %1$s: the game's title -->
+    <string name="rom_open_chooser">Open %1$s</string>
+    <string name="rom_launch_failed_no_app">This app could not open the game. In ROM tabs, choose another default emulator or try Advanced options.</string>
+    <string name="rom_launch_failed_access">Folder access was lost. In ROM tabs, edit the tab and choose the ROM folder again.</string>
+    <string name="rom_launch_failed_unavailable">This ROM is unavailable. Refresh its shelf or choose the folder again.</string>
+
+    <!-- Reading a ROM folder failed -->
+    <string name="rom_scan_too_many_folders">This folder has too many subfolders. Choose a smaller folder.</string>
+    <string name="rom_scan_folder_unavailable">The ROM folder is unavailable. Choose it again.</string>
+    <string name="rom_scan_too_many_files">This folder has too many files. Choose a smaller folder.</string>
+    <!-- %1$s: a playlist's file name -->
+    <string name="rom_scan_playlist_too_large">A playlist is too large to read: %1$s</string>
+    <!-- %1$s: a playlist's file name -->
+    <string name="rom_scan_playlist_unreadable">Could not read %1$s</string>
+
+    <!-- Console mode: shelves -->
+    <!-- Shelf of recently opened apps -->
+    <string name="console_shelf_recent">Recent launches</string>
+    <string name="console_shelf_favourites">Favourites</string>
+    <!-- Title of the all-apps shelf when its category cannot be found -->
+    <string name="console_all_apps_fallback">All apps</string>
+    <!-- Title of a ROM shelf whose tab cannot be found -->
+    <string name="console_roms_fallback">ROMs</string>
+    <!-- Separator between items of a short list or of a spoken description -->
+    <string name="console_list_separator">", "</string>
+    <!-- Position of the selected item: "3 of 9" -->
+    <string name="console_position">%1$d of %2$d</string>
+    <!-- Spoken label of a shelf tab. %1$s: shelf title; %2$s: console_position -->
+    <string name="console_shelf_tab_description">%1$s shelf, %2$s</string>
+    <!-- Subtitle of a ROM shelf. %1$s: the shelf's name; %2$s: its emulator's name -->
+    <string name="console_subtitle_with_emulator">%1$s · %2$s</string>
+
+    <!-- Console mode: button legend (short verbs beside controller buttons) -->
+    <string name="console_legend_open">Open</string>
+    <string name="console_legend_actions">Actions</string>
+    <string name="console_legend_search">Search</string>
+    <!-- Shoulder buttons switch shelves -->
+    <string name="console_legend_shelves">Shelves</string>
+    <string name="console_legend_settings">Settings</string>
+    <string name="console_legend_select">Select</string>
+    <string name="console_touch_hint">Tap to open · Press and hold for options</string>
+
+    <!-- Console mode: top bar -->
+    <!-- Spoken. %1$d: controller number; %2$d: battery level (the quantity) -->
+    <plurals name="console_controller_battery_numbered">
+        <item quantity="one">Controller %1$d battery %2$d percent</item>
+        <item quantity="other">Controller %1$d battery %2$d percent</item>
+    </plurals>
+    <!-- Spoken. %1$d: battery level -->
+    <plurals name="console_controller_battery">
+        <item quantity="one">Controller battery %1$d percent</item>
+        <item quantity="other">Controller battery %1$d percent</item>
+    </plurals>
+    <!-- Spoken. %1$d: battery level -->
+    <plurals name="console_phone_battery">
+        <item quantity="one">Phone battery %1$d percent</item>
+        <item quantity="other">Phone battery %1$d percent</item>
+    </plurals>
+    <!-- Spoken. %1$s: one of the battery descriptions above -->
+    <string name="console_battery_charging">%1$s, charging</string>
+    <!-- Battery level shown beside the battery icon -->
+    <string name="console_battery_percent">%1$d%%</string>
+    <!-- Accessibility label. %1$s: the shelf's title -->
+    <string name="console_browse_title">Browse %1$s</string>
+    <!-- Accessibility label. %1$s: the shelf's title -->
+    <string name="console_edit_shelf">Edit %1$s</string>
+    <string name="console_search_apps">Search apps</string>
+    <string name="console_all_apps">All apps</string>
+    <string name="console_launcher_settings">Launcher settings</string>
+
+    <!-- Console mode: cards -->
+    <!-- %1$s: the app or game's name -->
+    <string name="console_card_actions">Actions for %1$s</string>
+    <!-- Spoken after a card's name -->
+    <string name="console_card_has_notifications">has notifications</string>
+    <!-- Spoken after a card's name -->
+    <string name="console_card_unavailable">unavailable</string>
+
+    <!-- Console mode: empty shelves -->
+    <string name="console_manage_rom_tab">Manage ROM tab</string>
+    <!-- Button; also named in console_empty_category_detail -->
+    <string name="console_add_apps">Add apps</string>
+    <string name="console_empty_recent_title">No recent launches yet</string>
+    <string name="console_empty_recent_detail">Apps you open from Pluto show up here, most recent first.</string>
+    <string name="console_empty_favourites_title">No favourites yet</string>
+    <!-- %1$s: the controller button that opens an app's actions, such as X. "Pin to home" is an action's name -->
+    <string name="console_empty_favourites_detail_controller">Press %1$s on an app and choose Pin to home to add it here.</string>
+    <!-- "Pin to home" is an action's name -->
+    <string name="console_empty_favourites_detail_touch">Press and hold an app and choose Pin to home to add it here.</string>
+    <!-- %1$s: the ROM tab's name -->
+    <string name="console_empty_rom_title">No games in %1$s yet</string>
+    <string name="console_empty_rom_detail">Add games to this tab’s folder, or choose another folder in ROM tabs.</string>
+    <!-- %1$s: the category's name -->
+    <string name="console_empty_category_title">No apps in %1$s yet</string>
+    <!-- "Add apps" is the button console_add_apps -->
+    <string name="console_empty_category_detail">Choose Add apps to pick what goes here.</string>
+
+    <!-- Console browse grid -->
+    <string name="console_browse_no_match">No games match this filter. Change it above, or refresh games.</string>
+    <string name="console_browse_empty">This shelf is empty.</string>
+    <!-- %1$d: games shown; %2$d: games on the shelf (the quantity) -->
+    <plurals name="console_browse_filtered_games">
+        <item quantity="one">%1$d of %2$d game · Select to return to the carousel</item>
+        <item quantity="other">%1$d of %2$d games · Select to return to the carousel</item>
+    </plurals>
+    <plurals name="console_browse_items">
+        <item quantity="one">%d item · Select to return to the carousel</item>
+        <item quantity="other">%d items · Select to return to the carousel</item>
+    </plurals>
+    <!-- Filter chip: keep short -->
+    <string name="console_chip_all_systems">All systems</string>
+    <!-- Filter chip: favourite games only. Keep short -->
+    <string name="console_chip_favourites">Favourites</string>
+    <!-- Sort chip: by title. Keep short -->
+    <string name="console_sort_title">Title</string>
+    <!-- Sort chip: most recently played first. Keep short -->
+    <string name="console_sort_recent">Recent</string>
+    <!-- Sort chip: by file name. Keep short -->
+    <string name="console_sort_file_name">File name</string>
+    <!-- Spoken label of a selected chip. %1$s: the chip's label -->
+    <string name="console_chip_selected">%1$s, selected</string>
+    <string name="console_add_favourite">Add favourite</string>
+    <string name="console_remove_favourite">Remove favourite</string>
+    <!-- Spoken. %1$s: the app or game's name -->
+    <string name="console_tile_select">%1$s, select in carousel</string>
+    <!-- Spoken after a game's name -->
+    <string name="console_tile_favourite">favourite</string>
+    <!-- Spoken. %1$s: when, such as "3 days ago" (rom_age_*) -->
+    <string name="console_tile_played">played %1$s</string>
+    <!-- Spoken. %1$s: when, such as "3 days ago" (rom_age_*) -->
+    <string name="console_tile_save_data">has save data from %1$s</string>
+    <!-- Small badge over a game: keep short. %1$s: when, such as "today" (rom_age_*) -->
+    <string name="console_badge_played">Played %1$s</string>
+    <!-- Small badge over a game with save data: keep short. %1$s: when, such as "today" (rom_age_*) -->
+    <string name="console_badge_save">Save · %1$s</string>
+</resources>
