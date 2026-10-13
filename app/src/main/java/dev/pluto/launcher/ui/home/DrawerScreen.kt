@@ -221,6 +221,8 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
     val outerInert = LocalFocusInert.current
     val iconSize = state.iconSize()
     val session = state.session
+    // The A–Z rail can be turned off in Settings → Layout; when it is, the grid reclaims its edge.
+    val alphabetRail = state.settings.drawerAlphabetRail
     val currentState by rememberUpdatedState(state)
     val categories = rememberEqual(state.categories)
     val activeCategory = rememberEqual(state.activeCategory)
@@ -484,7 +486,8 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                                 if (library == null || game == null) vm.showMessage("That game is no longer available. Refresh its ROM tab.")
                                 else {
                                     vm.rememberRomSelection(library.id, game.uri)
-                                    RomLauncher.launch(context, library, game)?.let(vm::showMessage)
+                                    val error = RomLauncher.launch(context, library, game, vm.romEmulator(game.uri))
+                                    if (error != null) vm.showMessage(error) else vm.recordRomLaunch(game.uri)
                                 }
                             }
                         }
@@ -523,6 +526,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                     gridState = gridState,
                     iconSize = tileIcon,
                     compact = compact,
+                    alphabetRail = alphabetRail,
                     heavyChange = feed.heavy,
                     itemKey = feed::itemKey,
                     actionsMode = actionsMode,
@@ -531,7 +535,7 @@ private fun DrawerScreenContent(state: LauncherUiState, vm: LauncherViewModel) {
                     onAppActions = onAppActions,
                     onAppFocused = onAppFocused,
                 )
-                if (!searchMode && !compact && apps.size >= RAIL_MIN_APPS) {
+                if (alphabetRail && !searchMode && !compact && apps.size >= RAIL_MIN_APPS) {
                     val sections = remember(apps) { ScrollSections.of(apps.map { it.label }) }
                     if (sections.size >= RAIL_MIN_SECTIONS) FastScrollRail(sections, gridState)
                 }
@@ -697,6 +701,7 @@ private fun DrawerGrid(
     gridState: LazyGridState,
     iconSize: Dp,
     compact: Boolean,
+    alphabetRail: Boolean,
     heavyChange: Boolean,
     itemKey: (AppKey) -> Any,
     actionsMode: Boolean,
@@ -708,11 +713,12 @@ private fun DrawerGrid(
     LazyVerticalGrid(
         columns = AdaptiveCountCells(minCell = iconSize + 36.dp, minCount = 3, maxCount = 10, extra = 24.dp),
         state = gridState,
-        // The end keeps room for the alphabet rail whether or not it is showing, so the
-        // columns never reflow when search starts or ends.
+        // With the rail on, the end keeps room for it whether or not it is showing, so the
+        // columns never reflow when search starts or ends. With the rail off the grid uses
+        // the same padding at both edges.
         contentPadding = PaddingValues(
             start = if (compact) 12.dp else GridStartPadding,
-            end = if (compact) 12.dp else FastScrollRailWidth,
+            end = if (compact) 12.dp else if (alphabetRail) FastScrollRailWidth else GridStartPadding,
             top = if (compact) 4.dp else 8.dp,
             bottom = if (compact) 4.dp else 16.dp,
         ),

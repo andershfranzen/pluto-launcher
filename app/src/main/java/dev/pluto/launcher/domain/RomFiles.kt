@@ -42,6 +42,23 @@ object RomFiles {
     /** Sheets whose referenced track files are hidden from the shelf. */
     val sheets = setOf("cue", "m3u", "gdi")
 
+    /**
+     * Battery saves and emulator files written beside the game. Never listed as games, but
+     * useful: knowing a game has save data explains why it matters which copy you open.
+     */
+    private val saves = setOf(
+        "sav", "srm", "dsv", "psv", "mcr", "mcd", "eep", "fla", "mpk", "nv", "nvs",
+        "state", "sgm", "rst", "frz", "sta", "ppst", "stt", "sta0",
+    )
+
+    /** True for a save file or a numbered emulator state (`.st0`, `.ss3`). */
+    fun isSave(name: String): Boolean {
+        val extension = name.substringAfterLast('.', "").lowercase()
+        if (extension in saves) return true
+        return extension.length == 3 && extension[2].isDigit() &&
+            (extension.startsWith("st") || extension.startsWith("ss"))
+    }
+
     fun supported(name: String): Boolean = name.substringAfterLast('.', "").lowercase() in extensions
     fun title(name: String): String = name.substringBeforeLast('.', name)
         .replace('_', ' ')

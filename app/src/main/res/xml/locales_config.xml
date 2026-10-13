@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Languages Pluto ships text for, shown by Android's per-app language settings
+    (Settings → System → Languages → App languages on Android 13+).
+
+    Every `values-<lang>` folder must be listed here, and every language listed here must
+    have one. See docs/LOCALISATION.md before adding a language.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="da" />
+    <locale android:name="de" />
+    <locale android:name="fr" />
+    <locale android:name="sv" />
+</locale-config>

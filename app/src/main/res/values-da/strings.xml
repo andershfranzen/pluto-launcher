@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app name stays "Pluto"; it is a brand, not a word to translate. -->
+    <string name="screen_lock_service_label">Plutos skærmlås</string>
+    <string name="screen_lock_service_description">Lader Pluto låse skærmen, når du dobbelttrykker på et tomt sted på hjemmeskærmen. Tjenesten udfører kun låsningen: den ser ikke, hvad der står på skærmen, eller hvad du skriver.</string>
+    <string name="notification_dots_service_label">Plutos notifikationsprikker</string>
+</resources>

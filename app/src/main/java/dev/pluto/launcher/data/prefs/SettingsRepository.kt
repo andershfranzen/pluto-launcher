@@ -13,6 +13,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import dev.pluto.launcher.domain.RomSort
 import dev.pluto.launcher.model.HandheldAppearance
 import dev.pluto.launcher.model.RotationPreference
 import dev.pluto.launcher.model.ThemePreference
@@ -80,6 +81,14 @@ class SettingsRepository(context: Context) {
         val HANDHELD = stringPreferencesKey("handheld_appearance")
         val HISTORY = booleanPreferencesKey("history_enabled")
         val CONSOLE_FAVOURITES = booleanPreferencesKey("console_favourites")
+        val DRAWER_ALPHABET_RAIL = booleanPreferencesKey("drawer_alphabet_rail")
+        /** Entries are document URIs of games starred in the console browse grid. */
+        val ROM_FAVOURITES = stringSetPreferencesKey("rom_favourites")
+        val ROM_SORT = stringPreferencesKey("rom_sort")
+        /** Entries are "<document URI>\t<milliseconds>" for games opened from Pluto. */
+        val ROM_LAST_PLAYED = stringSetPreferencesKey("rom_last_played")
+        /** Entries are "<document URI>\t<emulator package>" for per-game emulator choices. */
+        val ROM_EMULATORS = stringSetPreferencesKey("rom_emulators")
         val AUTOMATIC_UPDATES = booleanPreferencesKey("automatic_update_checks")
         val UPDATE_CHOICE = booleanPreferencesKey("update_check_choice_made")
         val SWIPE_DOWN = stringPreferencesKey("swipe_down_action")
@@ -136,6 +145,16 @@ class SettingsRepository(context: Context) {
         private inline fun <reified E : Enum<E>> enumOr(value: String?, fallback: E): E =
             value?.let { v -> enumValues<E>().firstOrNull { it.name == v } } ?: fallback
 
+        /** Pairs written as one "<key>\t<value>" entry each, the shape a string set can hold. */
+        private fun encodePairs(values: Map<String, String>): Set<String> =
+            values.map { (key, value) -> "$key\t$value" }.toSet()
+
+        /** Reads back [encodePairs]; an entry without its separator is dropped, never guessed. */
+        private fun decodePairs(entries: Set<String>): Map<String, String> = entries.mapNotNull { entry ->
+            val separator = entry.indexOf('\t')
+            if (separator <= 0) null else entry.substring(0, separator) to entry.substring(separator + 1)
+        }.toMap()
+
         internal fun fromPreferences(p: Preferences): LauncherSettings {
             val d = LauncherSettings()
             return LauncherSettings(
@@ -155,6 +174,12 @@ class SettingsRepository(context: Context) {
                 handheldAppearance = enumOr<HandheldAppearance>(p[Keys.HANDHELD], d.handheldAppearance),
                 historyEnabled = p[Keys.HISTORY] ?: d.historyEnabled,
                 consoleFavourites = p[Keys.CONSOLE_FAVOURITES] ?: d.consoleFavourites,
+                drawerAlphabetRail = p[Keys.DRAWER_ALPHABET_RAIL] ?: d.drawerAlphabetRail,
+                romFavourites = p[Keys.ROM_FAVOURITES].orEmpty(),
+                romSort = enumOr(p[Keys.ROM_SORT], d.romSort),
+                romLastPlayed = decodePairs(p[Keys.ROM_LAST_PLAYED].orEmpty())
+                    .mapNotNull { (uri, at) -> at.toLongOrNull()?.let { uri to it } }.toMap(),
+                romEmulators = decodePairs(p[Keys.ROM_EMULATORS].orEmpty()),
                 automaticUpdateChecks = p[Keys.AUTOMATIC_UPDATES] ?: d.automaticUpdateChecks,
                 updateCheckChoiceMade = p[Keys.UPDATE_CHOICE] ?: d.updateCheckChoiceMade,
                 swipeDownAction = enumOr<SwipeDownAction>(p[Keys.SWIPE_DOWN], d.swipeDownAction),
@@ -191,6 +216,11 @@ class SettingsRepository(context: Context) {
             p[Keys.HANDHELD] = s.handheldAppearance.name
             p[Keys.HISTORY] = s.historyEnabled
             p[Keys.CONSOLE_FAVOURITES] = s.consoleFavourites
+            p[Keys.DRAWER_ALPHABET_RAIL] = s.drawerAlphabetRail
+            p[Keys.ROM_FAVOURITES] = s.romFavourites
+            p[Keys.ROM_SORT] = s.romSort.name
+            p[Keys.ROM_LAST_PLAYED] = encodePairs(s.romLastPlayed.mapValues { it.value.toString() })
+            p[Keys.ROM_EMULATORS] = encodePairs(s.romEmulators)
             p[Keys.AUTOMATIC_UPDATES] = s.automaticUpdateChecks
             p[Keys.UPDATE_CHOICE] = s.updateCheckChoiceMade
             p[Keys.SWIPE_DOWN] = s.swipeDownAction.name

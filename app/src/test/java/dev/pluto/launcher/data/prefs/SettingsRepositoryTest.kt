@@ -2,6 +2,7 @@ package dev.pluto.launcher.data.prefs
 
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import dev.pluto.launcher.model.ThemePreference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,6 +36,7 @@ class SettingsRepositoryTest {
     fun freshInstallIsNotSeededAndHasNoNotice() {
         val fresh = SettingsRepository.fromPreferences(emptyPreferences())
         assertFalse(fresh.notificationDots)
+        assertTrue(fresh.drawerAlphabetRail)
         assertTrue(fresh.automaticUpdateChecks)
         assertFalse(fresh.updateCheckChoiceMade)
         assertFalse(fresh.layoutSeeded)
@@ -50,6 +52,11 @@ class SettingsRepositoryTest {
             notificationDots = true,
             historyEnabled = false,
             consoleFavourites = false,
+            drawerAlphabetRail = false,
+            romFavourites = setOf("content://rom/Spyro.cue"),
+            romSort = dev.pluto.launcher.domain.RomSort.RECENT,
+            romLastPlayed = mapOf("content://rom/Spyro.cue" to 1_700_000_000_000L),
+            romEmulators = mapOf("content://rom/Zelda.nsp" to "org.dolphinemu.dolphinemu"),
             automaticUpdateChecks = false,
             updateCheckChoiceMade = true,
             layoutSeeded = true,
@@ -58,5 +65,17 @@ class SettingsRepositoryTest {
         )
         SettingsRepository.writeTo(prefs, settings)
         assertEquals(settings.copy(readFailed = false), SettingsRepository.fromPreferences(prefs))
+    }
+
+    @Test
+    fun damagedPerGameEntriesAreDroppedAndTheRestStillRead() {
+        val prefs = mutablePreferencesOf(
+            stringSetPreferencesKey("rom_last_played") to
+                setOf("content://rom/a.sfc\t111", "no-separator", "content://rom/c.sfc\tsoon"),
+            stringSetPreferencesKey("rom_emulators") to setOf("no-separator"),
+        )
+        val read = SettingsRepository.fromPreferences(prefs)
+        assertEquals(mapOf("content://rom/a.sfc" to 111L), read.romLastPlayed)
+        assertEquals(emptyMap<String, String>(), read.romEmulators)
     }
 }

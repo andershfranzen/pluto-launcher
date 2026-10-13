@@ -1,0 +1,61 @@
+name: CI
+
+# Every push and pull request: the JVM tests, both distribution flavours and the Android
+# lint pass. Emulator work (benchmarks, Perfetto traces) lives in performance.yml, because
+# it needs KVM and takes far longer.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Unit tests, flavours, lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests
+        run: ./gradlew --console=plain testDebugUnitTest
+
+      # The play distribution swaps the update source set (and removes the installer from
+      # the manifest); without this step, shared code that only the github sources satisfy
+      # would slip into a release.
+      - name: Play distribution compiles
+        run: ./gradlew --console=plain -PplutoDistribution=play assembleDebug
+
+      - name: Maintenance-script self-tests
+        run: |
+          for test in scripts/test-*.py; do
+            echo "== $test"
+            python3 "$test"
+          done
+
+      - name: Android lint
+        run: ./gradlew --console=plain lintDebug
+
+      - name: Lint report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-debug.html
+          if-no-files-found: ignore

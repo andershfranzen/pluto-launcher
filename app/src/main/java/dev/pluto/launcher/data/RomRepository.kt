@@ -6,7 +6,12 @@ import android.provider.DocumentsContract
 import dev.pluto.launcher.data.db.RomDao
 import dev.pluto.launcher.data.db.RomGameEntity
 import dev.pluto.launcher.data.db.RomLibraryEntity
+import dev.pluto.launcher.domain.RomArtwork
 import dev.pluto.launcher.domain.RomFiles
+import dev.pluto.launcher.domain.RomMetadata
+import dev.pluto.launcher.domain.RomScanReport
+import dev.pluto.launcher.domain.RomScanSummary
+import dev.pluto.launcher.domain.RomSystems
 import dev.pluto.launcher.model.RomLibrary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -38,11 +43,11 @@ class RomRepository(context: Context, private val dao: RomDao) {
     suspend fun delete(id: Long) = dao.deleteLibrary(id)
 
     /** A complete scan replaces the cache atomically. Failed scans keep the last good list. */
-    suspend fun scan(id: Long): Int = scanPermits.withPermit { scanDocuments(id) }
+    suspend fun scan(id: Long): RomScanReport = scanPermits.withPermit { scanDocuments(id) }
 
     /** Bound provider I/O across shelves; a cancelled waiter never begins scanning. */
-    private suspend fun scanDocuments(id: Long): Int = withContext(Dispatchers.IO) {
-        val library = dao.library(id) ?: return@withContext 0
+    private suspend fun scanDocuments(id: Long): RomScanReport = withContext(Dispatchers.IO) {
+        val library = dao.library(id) ?: return@withContext EmptyReport
         val tree = Uri.parse(library.treeUri)
         data class Document(val uri: Uri, val name: String, val path: String, val modified: Long)
         val pending = ArrayDeque<Pair<String, String>>()
@@ -74,8 +79,15 @@ class RomRepository(context: Context, private val dao: RomDao) {
                 }
             }
         }
+
+        // Lookups below are keyed by the same normalized form, so case and "./" never matter.
+        val uriByPath = HashMap<String, String>(files.size)
+        files.forEach { uriByPath[RomMetadata.normalize(it.path)] = it.uri.toString() }
+
+        // Sheets describe the tracks and discs an emulator should open; those files stay hidden.
+        val sheets = files.filter { it.name.substringAfterLast('.').lowercase() in RomFiles.sheets }
         val referenced = HashSet<String>()
-        for (file in files.filter { it.name.substringAfterLast('.').lowercase() in RomFiles.sheets }) {
+        for (file in sheets) {
             coroutineContext.ensureActive()
             val text = resolver.openInputStream(file.uri)?.use { stream ->
                 val bytes = stream.buffered().takeBytes(1_048_577)
@@ -84,18 +96,81 @@ class RomRepository(context: Context, private val dao: RomDao) {
             } ?: error("Could not read ${file.name}")
             val directory = file.path.substringBeforeLast('/', "")
             RomFiles.referencedFiles(file.name, text).forEach { ref ->
-                referenced += (if (directory.isEmpty()) ref else "$directory/$ref").replace('\\', '/').lowercase()
+                referenced += RomMetadata.normalize(if (directory.isEmpty()) ref else "$directory/$ref")
             }
         }
-        val covers = files.filter { it.name.substringAfterLast('.').lowercase() in setOf("png", "jpg", "jpeg", "webp") }
-            .associateBy { it.path.substringBeforeLast('.').lowercase() }
-        val games = files.filter { RomFiles.supported(it.name) && it.path.lowercase() !in referenced }.map { file ->
-            RomGameEntity(id, file.uri.toString(), file.name, RomFiles.title(file.name), file.modified,
-                covers[file.path.substringBeforeLast('.').lowercase()]?.uri?.toString())
+
+        // EmulationStation gamelists kept in the ROM tree (RetroPie, Batocera) supply names
+        // and art paths that the folder layout alone cannot express.
+        var gamelistEntries = 0
+        val metadata = HashMap<String, Pair<RomMetadata.Entry, String>>()
+        for (list in files.filter { it.name.equals(RomMetadata.GAMELIST, ignoreCase = true) }) {
+            coroutineContext.ensureActive()
+            // Optional extras: an unreadable list is skipped like an oversized one, never fatal to the scan.
+            val text = runCatching {
+                resolver.openInputStream(list.uri)?.use { stream ->
+                    val bytes = stream.buffered().takeBytes(GAMELIST_LIMIT + 1)
+                    if (bytes.size > GAMELIST_LIMIT) null else bytes.toString(Charsets.UTF_8)
+                }
+            }.getOrNull() ?: continue
+            val baseDir = list.path.substringBeforeLast('/', "")
+            RomMetadata.gamelist(text).forEach { entry ->
+                metadata.putIfAbsent(RomMetadata.normalize(RomMetadata.resolve(baseDir, entry.path)), entry to baseDir)
+                gamelistEntries++
+            }
+        }
+
+        val artwork = RomArtwork.index(files.map { RomMetadata.normalize(it.path) })
+        // Battery saves and emulator states sit beside the game under the same base name.
+        val savesByBase = HashMap<String, Long>()
+        files.filter { RomFiles.isSave(it.name) }.forEach { file ->
+            savesByBase.merge(file.name.substringBeforeLast('.').lowercase(), file.modified, ::maxOf)
+        }
+        val gameFiles = files.filter { RomFiles.supported(it.name) && RomMetadata.normalize(it.path) !in referenced }
+        val games = gameFiles.map { file ->
+            val key = RomMetadata.normalize(file.path)
+            val entry = metadata[key]
+            val cover = entry?.first?.image
+                ?.let { uriByPath[RomMetadata.normalize(RomMetadata.resolve(entry.second, it))] }
+                ?: artwork.art(key, file.name)?.let { uriByPath[it] }
+            RomGameEntity(id, file.uri.toString(), file.name, entry?.first?.name ?: RomFiles.title(file.name),
+                file.modified, cover)
+        }
+        // A shelf that spans systems (one /ROMs tree) can be browsed a system at a time.
+        val systems = gameFiles.map { RomSystems.ofPath(it.path) }
+        val skipped = files.filter { file ->
+            val key = RomMetadata.normalize(file.path)
+            !RomFiles.supported(file.name) && !RomArtwork.isImage(file.name) && !RomFiles.isSave(file.name) &&
+                file.name.substringAfterLast('.').lowercase() !in RomFiles.sheets &&
+                !file.name.equals(RomMetadata.GAMELIST, ignoreCase = true) && key !in referenced
         }
         coroutineContext.ensureActive()
         dao.replaceGames(id, library.treeUri, games)
-        games.size
+        RomScanReport(
+            documents = documents,
+            games = games.size,
+            gamesWithArt = games.count { it.coverUri != null },
+            skipped = skipped.size,
+            skippedExtensions = RomScanSummary.extensions(skipped.map { it.name }),
+            sheets = sheets.size,
+            missingTracks = referenced.count { it !in uriByPath },
+            gamelistEntries = gamelistEntries,
+            at = System.currentTimeMillis(),
+            saves = gameFiles.mapNotNull { file ->
+                savesByBase[file.name.substringBeforeLast('.').lowercase()]?.let { file.uri.toString() to it }
+            }.toMap(),
+            systems = if (systems.distinct().size > 1) {
+                gameFiles.mapIndexed { index, file -> file.uri.toString() to systems[index] }.toMap()
+            } else {
+                emptyMap()
+            },
+        )
+    }
+
+    private companion object {
+        /** gamelist.xml files are small; anything larger is not a front-end list. */
+        const val GAMELIST_LIMIT = 4 * 1024 * 1024
+        val EmptyReport = RomScanReport(0, 0, 0, 0, null, 0, 0, 0, System.currentTimeMillis())
     }
 }
 

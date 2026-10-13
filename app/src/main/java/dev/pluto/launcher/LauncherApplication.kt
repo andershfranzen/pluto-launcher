@@ -17,6 +17,9 @@ class AppContainer(app: Application) {
     val roms: dev.pluto.launcher.data.RomRepository by lazy { dev.pluto.launcher.data.RomRepository(app, database.romDao()) }
     val updates by lazy { dev.pluto.launcher.updates.UpdateRepository(app) }
     val settings: SettingsRepository by lazy { SettingsRepository(app) }
+    val layoutBackups: dev.pluto.launcher.system.LayoutBackupFiles by lazy {
+        dev.pluto.launcher.system.LayoutBackupFiles(app)
+    }
     val catalog: AppCatalog by lazy { AppCatalog(app) }
     private val iconStore = lazy { IconCache(app) }
     val icons: IconCache by iconStore
@@ -46,6 +49,8 @@ class LauncherApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Before anything else: a crash while the container is built should still be recorded.
+        dev.pluto.launcher.system.CrashLog.install(this)
         container = AppContainer(this)
     }
 }

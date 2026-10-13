@@ -10,7 +10,21 @@ data class RomLibrary(
     val games: List<RomGame> = emptyList(),
 )
 
-enum class RomLaunchMode { AUTOMATIC, OPEN_WITH, VIEW, DUCKSTATION }
+/**
+ * How a tab opens its games. AUTOMATIC picks the adapter Pluto has for the chosen emulator
+ * (see `RomLauncher.automaticMode`) and otherwise uses Android's Open file handling.
+ */
+enum class RomLaunchMode {
+    AUTOMATIC,
+    OPEN_WITH,
+    VIEW,
+    DUCKSTATION,
+    // Unverified direct launches from a pre-release build; kept so stored tabs still decode,
+    // and opened like VIEW (see RomLauncher.intent).
+    RETROARCH,
+    DOLPHIN,
+    PPSSPP,
+}
 
 data class RomGame(
     val uri: String,

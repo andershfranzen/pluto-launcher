@@ -55,14 +55,35 @@ tab name. Pluto leaves your files in place, includes subfolders and refreshes th
 collection when you return. You can open the emulator's setup and come back to your
 unfinished tab, or choose **Ask each time** instead of a default.
 
+**Games and emulators** under a tab lists its games with the app each one opens in, so a
+single stubborn game can be sent to a second emulator without changing the rest of the tab.
+
+Pluto offers the folders games usually already sit in — RetroArch, Dolphin, PSP,
+DuckStation and the common `ROMs` (ES-DE's default) and `Games` folders — and opens the
+picker inside them, rather than leaving you to find them blind. **Diagnostics** under each
+tab reports what a check saw: files walked, games found, how many have box art, what was
+skipped and by extension, playlists read, tracks a playlist names but cannot find, whether
+folder access is still granted, and whether a `gamelist.xml` was read. An empty-looking tab
+says why.
+
 | Set up a ROM tab | Choose your default emulator |
 | :---: | :---: |
 | <img src="docs/screenshots/rom-tab-setup.png" alt="ROM tab setup: folder, DuckStation as the default emulator, PlayStation 1 as the tab name, and a pinned Save changes button" width="250"> | <img src="docs/screenshots/rom-default-emulator.png" alt="Default emulator chooser with search, Ask each time, suggested DuckStation and Show all installed apps" width="250"> |
 
-Game names are cleaned automatically. For box art, place a matching image beside the
-game, such as `Spyro.cue` and `Spyro.png`; artwork is not downloaded automatically.
-DuckStation's direct launch is tested; other emulators need to support Android's Open
-file interface. Configure any required BIOS in the emulator itself.
+Game names and box art also come from the layouts the big front ends already write: an
+EmulationStation `gamelist.xml` kept in the ROM folder (RetroPie, Batocera) supplies names
+and artwork, and images are found beside a game, in `boxart/`, `covers/` or `media/` folders
+inside the ROM folder, or in RetroArch's
+`Named_Boxarts` and `Named_Snaps` sets, including `-thumb`/`-boxart` variants. Nothing is
+downloaded or scraped. ES-DE keeps its gamelists and media outside the ROM folder, so they
+are not read. Direct launch is implemented for DuckStation; other emulators receive an
+Android Open file request. BIOS files and
+the emulator's own per-game settings stay in the emulator itself.
+
+Pluto also notices save data: when a battery save or savestate sits beside a game, the
+game says so, so it is clear which copy holds your progress. It also remembers when it last
+opened each game, so the browse grid's **Recent** order is what you actually played, and
+each tile shows the newer of "Played 3 days ago" and its save data's own date.
 
 <sub>The Spyro example uses the maintainer's own disc dump and BIOS. Games, BIOS files,
 emulators and cover art are not bundled with Pluto.</sub>
@@ -90,7 +111,8 @@ Pluto never forces rotation on the app you are using.
   Press and hold empty space for Search, Add widget, Edit home and Settings.
 - A drawer that follows your finger: swipe up anywhere on home. Search and the category
   chips sit at the bottom, under your thumb. It has accent- and case-insensitive search
-  and an A–Z fast-scroll rail for longer lists. Type to search apps, games from your ROM
+  and an A–Z fast-scroll rail for longer lists (Settings → Layout → Alphabet rail hides it).
+  Type to search apps, games from your ROM
   tabs and Android app shortcuts in labelled sections. Games match titles, filenames and
   tab names; shortcuts match their action or app name. Everything searches across these
   sources; a category searches its apps and shortcuts. Android exposes shortcuts when
@@ -119,6 +141,10 @@ Pluto never forces rotation on the app you are using.
   Reduce motion keeps their size fixed.
 - **Browse shelf** opens an overview grid for apps or ROMs. Touch or controller navigation
   selects an item and returns to its carousel card; Back preserves the previous selection.
+  A ROM shelf can be filtered by system when the folder holds several (one `/ROMs` tree),
+  filtered to favourites, and sorted by title, most recently played (falling back to when the
+  file changed) or file name; long press or X stars a game, and a small badge marks when the
+  game was last played, or that save data sits beside it.
 - Charcoal glass tabs and controls, gentle card tilt, faint reflections and an ambient
   artwork glow keep the selected game prominent. ROM titles show the tab and default emulator.
 - A big title, the position in the shelf, and a button legend that follows focus (Open and
@@ -137,9 +163,11 @@ Pluto never forces rotation on the app you are using.
   same carousel as apps. Cartridge, disc and computer formats are recognised across
   Nintendo (NES to Switch, including NSP/XCI), Sega, PlayStation, PC Engine, Neo Geo
   Pocket, WonderSwan, Atari, MSX, Commodore, ZX Spectrum and Amstrad systems, plus
-  ZIP/7z archives. CUE/M3U/GDI entries group their tracks and discs, and an adjacent
-  PNG/JPG/WebP with the same basename supplies cover art. Automatic launch supports
-  DuckStation directly; other emulators receive an Android Open file request.
+  ZIP/7z archives. CUE/M3U/GDI entries group their tracks and discs, and box art comes from
+  an adjacent image, a `gamelist.xml` in the ROM folder, `boxart/`/`covers/`/`media/`
+  folders or RetroArch's thumbnail folders. Automatic launch supports DuckStation directly;
+  other emulators receive an Android Open file request. Each tab has a Diagnostics view that
+  explains what a folder check found.
   Emulator search includes any installed app, with likely emulators suggested first.
   Open the chosen emulator from setup to configure it, then return without losing
   your draft. Save stays visible; launch-method overrides live under Advanced options.
@@ -171,6 +199,9 @@ Pluto never forces rotation on the app you are using.
   check, release notes and Download and update. Downloads require your action; Android
   asks you to approve installation. APK checksums, package/version and signing keys are
   checked before installation so an incompatible update cannot replace your layout.
+- If Pluto ever crashes, the trace is kept on this device only: Settings → General → Crash
+  reports lists the records and can prefill a GitHub issue for you to review and submit
+  yourself. Nothing is sent without that tap, and Clear deletes the records.
 - No usage, notification or overlay permissions. Internet access is used for GitHub update
   checks and downloads; Android's Install unknown apps permission is requested only when
   installing an update. Uninstall still uses Android's confirmation, and the notification
@@ -181,6 +212,11 @@ Pluto never forces rotation on the app you are using.
   to no events and cannot read what is on screen.
 - Recent launches covers only apps opened from Pluto. It can be cleared or switched off,
   and switching it off deletes what was stored.
+- Your layout is yours to take with you. Settings → General → Back up layout writes your
+  favourites, dock, folders, categories and hidden apps to a file you choose in the system
+  picker — Downloads, a cloud folder, a USB stick — and Restore reads it back, here or on
+  another device. Pluto needs no storage permission for this: the picker hands it the one
+  file. Nothing is uploaded, and the file only moves where you move it.
 
 ## Install
 
@@ -196,7 +232,9 @@ asks you to approve each installation.
 
 Published builds use the maintainer's local development signing key. A build made on
 another machine can have a different key; if Android reports a signing conflict, do
-not uninstall a daily-use Pluto build just to bypass it, as that deletes its data.
+not uninstall a daily-use Pluto build just to bypass it, as that deletes its data —
+back up your layout first (Settings → General → Back up layout) and restore it after
+reinstalling.
 
 Or build it yourself:
 
@@ -280,8 +318,9 @@ Pluto 0.1 is a working prototype, but it isn't finished:
   have not all been measured on the reference hardware (a 144 Hz OnePlus phone with a
   GameSir controller).
 - Work profiles and Private Space are not shown in 0.1. Pluto says so in Settings.
-- Backup/import is planned for a later release. App shortcuts need Pluto to be the default
-  Home app (Android only shares them with that app).
+- Layout backup and restore are in Settings → General; widgets and ROM tabs are not part of
+  a backup yet (a widget id and a folder grant are both device-specific). App shortcuts need
+  Pluto to be the default Home app (Android only shares them with that app).
 
 [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) lists the rest, candidly.
 

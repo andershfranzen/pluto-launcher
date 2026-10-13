@@ -34,4 +34,22 @@ class RomLauncherTest {
         assertNull(open.component)
         assertEquals(game.uri, open.data.toString())
     }
+    @Test fun aGamesOwnEmulatorWinsOverTheTabEvenWhenTheTabAsks() {
+        val intent = RomLauncher.intent(library.copy(launchMode = RomLaunchMode.OPEN_WITH), game, "org.other.emulator")
+        assertEquals(Intent.ACTION_VIEW, intent.action)
+        assertEquals("org.other.emulator", intent.`package`)
+        val duck = RomLauncher.intent(library, game, RomLauncher.DUCKSTATION_PACKAGE)
+        assertEquals("com.github.stenzek.duckstation.EmulationActivity", duck.component!!.className)
+    }
+    @Test fun unverifiedDirectLaunchesFromAPreReleaseOpenTheFileInstead() {
+        listOf(RomLaunchMode.RETROARCH, RomLaunchMode.DOLPHIN, RomLaunchMode.PPSSPP).forEach { mode ->
+            val intent = RomLauncher.intent(library.copy(emulatorPackage = "com.retroarch.aarch64", launchMode = mode), game)
+            assertEquals(Intent.ACTION_VIEW, intent.action)
+            assertEquals("com.retroarch.aarch64", intent.`package`)
+            assertNull(intent.component)
+            assertEquals(game.uri, intent.data.toString())
+        }
+        // Automatic never picks an adapter for those emulators either.
+        assertNull(RomLauncher.intent(library.copy(emulatorPackage = "org.dolphinemu.dolphinemu"), game).component)
+    }
 }

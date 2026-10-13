@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app name stays "Pluto"; it is a brand, not a word to translate. -->
+    <string name="screen_lock_service_label">Verrouillage d\'écran Pluto</string>
+    <string name="screen_lock_service_description">Permet à Pluto d\'éteindre l\'écran lorsque vous appuyez deux fois sur un espace vide de l\'écran d\'accueil. Le service se contente de verrouiller : il ne voit ni l\'écran ni ce que vous saisissez.</string>
+    <string name="notification_dots_service_label">Points de notification Pluto</string>
+</resources>

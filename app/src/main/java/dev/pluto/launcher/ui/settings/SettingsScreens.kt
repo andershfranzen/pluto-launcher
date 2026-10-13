@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import dev.pluto.launcher.system.LayoutBackupFiles
 import dev.pluto.launcher.system.ScreenLockService
 import dev.pluto.launcher.data.prefs.SwipeDownAction
 import dev.pluto.launcher.ui.focus.controllerFocusable
@@ -41,6 +44,9 @@ import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.DriveFileRenameOutline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.SaveAlt
+import androidx.compose.material.icons.rounded.SettingsBackupRestore
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.SettingsApplications
 import androidx.compose.material.icons.rounded.SportsEsports
@@ -56,6 +62,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -94,11 +101,14 @@ import dev.pluto.launcher.ui.overlay.percent
 import dev.pluto.launcher.ui.overlay.rememberScreenFocus
 import dev.pluto.launcher.ui.overlay.stepped
 
+/** Text is the honest type; some providers report a .txt as a binary stream, so it is offered too. */
+private val BACKUP_MIME_TYPES = arrayOf("text/plain", "application/octet-stream")
+
 private const val SCRIM_STEP = 0.05f
 private const val ICON_STEP = 0.1f
 private const val TEXT_STEP = 0.05f
 
-private enum class SettingsDialog { DISABLE_HISTORY, CLEAR_HISTORY, ICON_PACK }
+private enum class SettingsDialog { DISABLE_HISTORY, CLEAR_HISTORY, ICON_PACK, CRASH_REPORTS, RESTORE_LAYOUT }
 
 /** Appearance, layout & rotation, history, organisation links, controller, default launcher, about/limitations. */
 @Composable
@@ -106,9 +116,24 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val settings = state.settings
     var page by rememberSaveable { mutableStateOf(SettingsPage.APPEARANCE) }
     var dialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
+    // Crash records are read when Settings opens, and dropped when the user clears them.
+    val crashContext = LocalContext.current
+    var crashes by remember { mutableStateOf(emptyList<java.io.File>()) }
+    LaunchedEffect(Unit) { crashes = dev.pluto.launcher.system.CrashLog.records(crashContext) }
     var dialogOpener by rememberSaveable { mutableStateOf<String?>(null) }
     val screenFocus = rememberScreenFocus("settings:page:${page.name}")
     val requestHomeRole = rememberHomeRoleRequest(onDeclined = { vm.showMessage(SettingsText.HOME_ROLE_DECLINED) })
+    // The system picker is the only storage Pluto touches: no permission, and the user keeps the file.
+    val saveLayout = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) vm.exportLayout(uri)
+    }
+    val loadLayout = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) vm.importLayout(uri)
+    }
+    // Some handhelds and TV builds ship without a document picker; Home must not crash for it.
+    fun pickFile(launch: () -> Unit) = try { launch() } catch (_: android.content.ActivityNotFoundException) {
+        vm.showMessage(SettingsText.NO_FILE_PICKER)
+    }
     val versionName = rememberVersionName()
     val isTop = state.session.topLayer == Layer.Settings
     val iconPacks = rememberIconPacks()
@@ -155,6 +180,19 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                         onPick = { pack ->
                             update { it.copy(iconPack = pack) }
                             close()
+                        },
+                        onDismiss = ::close,
+                    )
+                    SettingsDialog.CRASH_REPORTS -> CrashReportsDialog(crashes, { crashes = emptyList() }, onDismiss = ::close)
+                    SettingsDialog.RESTORE_LAYOUT -> ConfirmDialog(
+                        idPrefix = "settings:layout:restore",
+                        title = SettingsText.RESTORE_LAYOUT_TITLE,
+                        text = SettingsText.RESTORE_LAYOUT_TEXT,
+                        confirmLabel = SettingsText.RESTORE,
+                        destructive = true,
+                        onConfirm = {
+                            close()
+                            pickFile { loadLayout.launch(BACKUP_MIME_TYPES) }
                         },
                         onDismiss = ::close,
                     )
@@ -325,6 +363,13 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     checked = settings.consoleFavourites,
                     onCheckedChange = { on -> update { it.copy(consoleFavourites = on) } },
                 )
+                SwitchRow(
+                    id = "settings:alphabetrail",
+                    label = SettingsText.ALPHABET_RAIL,
+                    supporting = SettingsText.ALPHABET_RAIL_HELP,
+                    checked = settings.drawerAlphabetRail,
+                    onCheckedChange = { on -> update { it.copy(drawerAlphabetRail = on) } },
+                )
 
             }
             SettingsSection(SettingsText.GESTURES) {
@@ -463,6 +508,34 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }
 
             UpdateSettings(settings, vm)
+
+            SettingsSection(SettingsText.TROUBLESHOOTING) {
+                ActionRow(
+                    id = "settings:crashes",
+                    label = SettingsText.CRASH_REPORTS,
+                    supporting = when (crashes.size) {
+                        0 -> "None recorded. A crash is kept here, on this device only."
+                        1 -> "1 crash recorded. It stays on this device until you report it."
+                        else -> "${crashes.size} crashes recorded. They stay on this device until you report them."
+                    },
+                    icon = Icons.Rounded.BugReport,
+                    onClick = { open(SettingsDialog.CRASH_REPORTS, "settings:crashes") },
+                )
+                ActionRow(
+                    id = "settings:layout:save",
+                    label = SettingsText.BACKUP_LAYOUT,
+                    supporting = SettingsText.BACKUP_LAYOUT_HELP,
+                    icon = Icons.Rounded.SaveAlt,
+                    onClick = { pickFile { saveLayout.launch(LayoutBackupFiles.FILE_NAME) } },
+                )
+                ActionRow(
+                    id = "settings:layout:restore",
+                    label = SettingsText.RESTORE_LAYOUT,
+                    supporting = SettingsText.RESTORE_LAYOUT_HELP,
+                    icon = Icons.Rounded.SettingsBackupRestore,
+                    onClick = { open(SettingsDialog.RESTORE_LAYOUT, "settings:layout:restore") },
+                )
+            }
 
             SettingsSection(SettingsText.ABOUT) {
                 BodyText(SettingsText.version(versionName))

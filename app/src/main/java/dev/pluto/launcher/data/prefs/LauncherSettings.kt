@@ -1,5 +1,6 @@
 package dev.pluto.launcher.data.prefs
 
+import dev.pluto.launcher.domain.RomSort
 import dev.pluto.launcher.model.HandheldAppearance
 import dev.pluto.launcher.model.RotationPreference
 import dev.pluto.launcher.model.ThemePreference
@@ -193,6 +194,19 @@ data class LauncherSettings(
     val historyEnabled: Boolean = true,
     /** Show the Favourites shelf in console mode; off leaves Recent launches, categories and ROM tabs. */
     val consoleFavourites: Boolean = true,
+    /** Show the alphabet fast-scroll rail in the app drawer. */
+    val drawerAlphabetRail: Boolean = true,
+    /** Games starred in the console browse grid, by document URI. */
+    val romFavourites: Set<String> = emptySet(),
+    /** How the console browse grid orders a ROM shelf. */
+    val romSort: RomSort = RomSort.TITLE,
+    /**
+     * When each game was last opened from Pluto, by document URI, newest first. The Recent
+     * order uses it; a game never opened here falls back to when its file changed.
+     */
+    val romLastPlayed: Map<String, Long> = emptyMap(),
+    /** Per-game emulator choice, by document URI. A game absent here uses its tab's default. */
+    val romEmulators: Map<String, String> = emptyMap(),
     /** Optional GitHub checks on launcher resume; no downloads without a user action. */
     val automaticUpdateChecks: Boolean = true,
     /** Network checks are gated until the first-launch question has been answered. */

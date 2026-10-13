@@ -11,6 +11,9 @@ import dev.pluto.launcher.model.HomeWidget
 import dev.pluto.launcher.data.db.HomeWidgetEntity
 import dev.pluto.launcher.data.db.LauncherDao
 import dev.pluto.launcher.data.db.RecentLaunchEntity
+import dev.pluto.launcher.domain.LayoutBackup
+import dev.pluto.launcher.domain.LayoutCategory
+import dev.pluto.launcher.domain.LayoutFolder
 import dev.pluto.launcher.domain.RecentHistory
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.model.BuiltInCategory
@@ -260,6 +263,88 @@ class OrganizationRepository(private val dao: LauncherDao) {
 
     suspend fun clearRecents(): Unit = writeLock.withLock {
         dao.clearRecents()
+    }
+
+    /**
+     * Reads the whole layout back as a device-independent copy. Grid rows for widgets are left
+     * out: a widget id means nothing on another device. [importBackup] keeps the widgets already
+     * on this one, so a restore never takes them off the grid.
+     *
+     * Anything the tables do not order is sorted here, so the same layout always writes the same
+     * file: the user can tell two backups apart, and a re-export after a restore is unchanged.
+     */
+    suspend fun exportBackup(): LayoutBackup = writeLock.withLock {
+        val dockRows = dao.dock()
+        val folderApps = dao.allFolderApps().groupBy { it.folderId }
+        val categoryApps = dao.allCategoryApps().groupBy { it.categoryId }
+        LayoutBackup(
+            homeItems = dao.homeItems().map { it.itemId }.filterNot { it.startsWith(HomeItem.WIDGET_PREFIX) },
+            dock = List(Organization.DOCK_SLOTS) { slot -> dockRows.firstOrNull { it.slot == slot }?.appKey },
+            folders = dao.folders().sortedBy { it.id }.map { folder ->
+                LayoutFolder(folder.id, folder.name, folderApps[folder.id].orEmpty().map { it.appKey })
+            },
+            categories = dao.categories().map { category ->
+                LayoutCategory(
+                    id = category.id,
+                    name = category.name,
+                    builtIn = category.builtIn,
+                    position = category.position,
+                    apps = categoryApps[category.id].orEmpty().map { it.appKey }.sorted(),
+                )
+            },
+            hidden = dao.hidden().map { it.appKey }.sorted(),
+        )
+    }
+
+    /**
+     * Replaces the layout with [backup] in one transaction. Folder and category ids are kept so
+     * the grid's folder references survive; "All apps" is put back if the file had none, since
+     * the launcher needs it. Widget rows for widgets already on this device are appended to the
+     * grid: a restore should not make them disappear.
+     */
+    suspend fun importBackup(backup: LayoutBackup): Unit = writeLock.withLock {
+        val preservedWidgets = dao.homeItems().map { it.itemId }.filter { it.startsWith(HomeItem.WIDGET_PREFIX) }
+        val hidden = backup.hidden.mapNotNull { AppKey.decode(it)?.encode() }.distinct()
+
+        val folders = backup.folders.distinctBy { it.id }.sortedBy { it.id }
+        val folderApps = folders.flatMap { folder ->
+            folder.apps.mapNotNull { AppKey.decode(it) }
+                .distinct()
+                .mapIndexed { index, key -> FolderAppEntity(key.encode(), folder.id, index) }
+        }
+
+        // One row per built-in name is what the table allows; a file naming one twice keeps the first.
+        val seenBuiltIns = HashSet<String>()
+        val categories = backup.categories.distinctBy { it.id }
+            .sortedWith(compareBy({ it.position }, { it.id }))
+            .map { category ->
+                val builtIn = category.builtIn?.takeIf { seenBuiltIns.add(it) }
+                category.copy(builtIn = builtIn)
+            }
+            .let { list ->
+                if (list.any { it.builtIn == BuiltInCategory.ALL.name }) list
+                // An explicit id past the file's own: an autoincrement id could collide with one of them.
+                else listOf(LayoutCategory((list.maxOfOrNull { it.id } ?: 0) + 1, DEFAULT_NAMES.getValue(BuiltInCategory.ALL),
+                    BuiltInCategory.ALL.name, 0, emptyList())) + list
+            }
+            .mapIndexed { index, category -> CategoryEntity(category.id, category.name, category.builtIn, index) }
+        val categoryApps = backup.categories.distinctBy { it.id }
+            .flatMap { category ->
+                category.apps.mapNotNull { AppKey.decode(it)?.encode() }.distinct()
+                    .map { CategoryAppEntity(category.id, it) }
+            }
+
+        dao.restoreLayout(
+            dock = List(Organization.DOCK_SLOTS) { slot ->
+                backup.dock.getOrNull(slot)?.let { AppKey.decode(it)?.encode() }
+            },
+            homeIds = (backup.homeItems.filter { HomeItem.decode(it) != null } + preservedWidgets).distinct(),
+            folders = folders.map { FolderEntity(it.id, it.name) },
+            folderApps = folderApps,
+            categories = categories,
+            categoryApps = categoryApps,
+            hidden = hidden.map { HiddenAppEntity(it) },
+        )
     }
 
     /** Drops every reference to [key] (package fully uninstalled). */

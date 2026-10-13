@@ -201,6 +201,71 @@ interface LauncherDao {
     @Query("DELETE FROM recent_launch")
     suspend fun clearRecents()
 
+    // --- Layout backup ------------------------------------------------------
+
+    @Query("SELECT * FROM folder")
+    suspend fun folders(): List<FolderEntity>
+
+    @Query("SELECT * FROM folder_app ORDER BY folderId, position")
+    suspend fun allFolderApps(): List<FolderAppEntity>
+
+    @Query("SELECT * FROM category_app")
+    suspend fun allCategoryApps(): List<CategoryAppEntity>
+
+    @Query("SELECT * FROM hidden_app")
+    suspend fun hidden(): List<HiddenAppEntity>
+
+    @Insert
+    suspend fun insertFolders(folders: List<FolderEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun restoreCategoryApps(apps: List<CategoryAppEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun restoreHidden(apps: List<HiddenAppEntity>)
+
+    @Query("DELETE FROM folder")
+    suspend fun clearFolders()
+
+    @Query("DELETE FROM category")
+    suspend fun clearCategories()
+
+    @Query("DELETE FROM hidden_app")
+    suspend fun clearHidden()
+
+    /**
+     * Replaces the whole layout in one transaction, so a restore either lands or leaves what was
+     * there. Folder and category ids are written as they come — Room keeps a non-zero id — which
+     * is what lets `folder:<id>` entries in [homeIds] keep pointing at the right folder.
+     *
+     * Widgets are left alone: a backup has no widget ids, so rows for the widgets already on this
+     * device are the caller's to carry over into [homeIds].
+     */
+    @Transaction
+    suspend fun restoreLayout(
+        dock: List<String?>,
+        homeIds: List<String>,
+        folders: List<FolderEntity>,
+        folderApps: List<FolderAppEntity>,
+        categories: List<CategoryEntity>,
+        categoryApps: List<CategoryAppEntity>,
+        hidden: List<HiddenAppEntity>,
+    ) {
+        clearHomeItems()
+        clearDock()
+        // Cascades remove folder_app and category_app rows with them.
+        clearFolders()
+        clearCategories()
+        clearHidden()
+        replaceDock(dock)
+        replaceHomeItems(homeIds)
+        insertFolders(folders)
+        insertFolderApps(folderApps)
+        insertCategories(categories)
+        restoreCategoryApps(categoryApps)
+        restoreHidden(hidden)
+    }
+
     // --- Uninstall cleanup --------------------------------------------------
 
     @Query("DELETE FROM home_item WHERE itemId = :homeItemId")

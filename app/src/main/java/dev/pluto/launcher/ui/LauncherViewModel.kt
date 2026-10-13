@@ -17,7 +17,10 @@ import dev.pluto.launcher.apps.AppShortcut
 import dev.pluto.launcher.apps.LaunchResult
 import dev.pluto.launcher.apps.PackageEvent
 import dev.pluto.launcher.data.prefs.LauncherSettings
+import dev.pluto.launcher.domain.LayoutBackupCodec
+import dev.pluto.launcher.domain.LayoutBackupRead
 import dev.pluto.launcher.domain.SearchShortcut
+import dev.pluto.launcher.domain.RomHistory
 import dev.pluto.launcher.domain.FocusAnchor
 import dev.pluto.launcher.domain.Reorder
 import dev.pluto.launcher.model.AppEntry
@@ -118,6 +121,9 @@ class LauncherViewModel(
     val romScanning = _romScanning.asStateFlow()
     private val _romErrors = MutableStateFlow<Map<Long, String>>(emptyMap())
     val romErrors = _romErrors.asStateFlow()
+    private val _romReports = MutableStateFlow<Map<Long, dev.pluto.launcher.domain.RomScanReport>>(emptyMap())
+    /** The last scan of each ROM shelf, for the diagnostics view. In memory only. */
+    val romReports = _romReports.asStateFlow()
     private val romScanJobs = HashMap<Long, kotlinx.coroutines.Job>()
     private val romSelections = HashMap<Long, String>()
     private val romLastScans = HashMap<Long, Long>()
@@ -145,6 +151,7 @@ class LauncherViewModel(
         romLastScans.remove(id)
         romSelections.remove(id)
         _romErrors.update { it - id }
+        _romReports.update { it - id }
         viewModelScope.launch {
             try { container.roms.delete(id)
             } catch (e: CancellationException) { throw e
@@ -158,7 +165,7 @@ class LauncherViewModel(
         romScanJobs[id] = viewModelScope.launch {
             _romScanning.update { it + id }
             _romErrors.update { it - id }
-            try { container.roms.scan(id)
+            try { _romReports.update { it + (id to container.roms.scan(id)) }
             } catch (e: CancellationException) { throw e
             } catch (e: Exception) {
                 val error = if (e is SecurityException) "Folder access was lost. Choose the ROM folder again." else e.message ?: "Could not read this ROM folder. Choose it again."
@@ -166,6 +173,28 @@ class LauncherViewModel(
             } finally { _romScanning.update { it - id } }
         }
     }
+
+    /** The console browse grid's order for ROM shelves; persisted so it survives leaving it. */
+    fun setRomSort(sort: dev.pluto.launcher.domain.RomSort) = updateSettings { it.copy(romSort = sort) }
+
+    /** Stars or unstars one game in the console browse grid. */
+    fun toggleRomFavourite(uri: String) = updateSettings {
+        it.copy(romFavourites = if (uri in it.romFavourites) it.romFavourites - uri else it.romFavourites + uri)
+    }
+
+    /** Notes that a game was opened from Pluto, so the Recent order and its tile stay true. */
+    fun recordRomLaunch(uri: String, at: Long = System.currentTimeMillis()) = updateSettings {
+        it.copy(romLastPlayed = RomHistory.record(it.romLastPlayed, uri, at))
+    }
+
+    /** Sets the emulator for one game; null returns the game to its tab's default emulator. */
+    fun setRomEmulator(uri: String, emulatorPackage: String?) = updateSettings {
+        it.copy(romEmulators = if (emulatorPackage == null) it.romEmulators - uri
+        else it.romEmulators + (uri to emulatorPackage))
+    }
+
+    /** The per-game emulator for [uri], read as the game opens; null uses the tab's default. */
+    fun romEmulator(uri: String): String? = settingsState.value?.romEmulators?.get(uri)
 
     fun romSelection(id: Long): String? = romSelections[id] ?: savedState.get<String>("rom.selected.$id")
     fun rememberRomSelection(id: Long, uri: String) {
@@ -628,6 +657,46 @@ class LauncherViewModel(
 
     fun openAppInfo(key: AppKey) = systemAction("open app info") { container.catalog.openAppInfo(key) }
     fun requestUninstall(key: AppKey) = systemAction("request uninstall") { container.catalog.requestUninstall(key) }
+
+    // --- Layout backup and restore ------------------------------------------
+
+    /** Writes the whole layout to a document the user chose in the file picker. */
+    fun exportLayout(uri: android.net.Uri) {
+        viewModelScope.launch {
+            try {
+                val text = LayoutBackupCodec.encode(container.organization.exportBackup())
+                withContext(Dispatchers.IO) { container.layoutBackups.write(uri, text) }
+                showMessage("Layout saved to the file you chose.")
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) { showMessage("Could not write that file. Try another location.") }
+        }
+    }
+
+    /**
+     * Reads a chosen file and replaces the layout with it. Nothing is written until the file has
+     * been read and understood, so picking the wrong document cannot cost the user their layout.
+     */
+    fun importLayout(uri: android.net.Uri) {
+        viewModelScope.launch {
+            try {
+                val text = withContext(Dispatchers.IO) { container.layoutBackups.read(uri) }
+                when (val read = LayoutBackupCodec.decode(text)) {
+                    is LayoutBackupRead.Ok -> {
+                        // The file was fine; a failure now is the database's, and it rolled back.
+                        val restored = try { container.organization.importBackup(read.backup); true
+                        } catch (e: CancellationException) { throw e
+                        } catch (e: Exception) { false }
+                        showMessage(if (restored) "Layout restored." else "Could not restore that layout. Your current layout is unchanged.")
+                    }
+                    is LayoutBackupRead.TooNew ->
+                        showMessage("That backup was written by a newer Pluto. Update Pluto, then restore it.")
+                    LayoutBackupRead.Unreadable ->
+                        showMessage("That file is not a Pluto layout backup.")
+                }
+            } catch (e: CancellationException) { throw e
+            } catch (e: Exception) { showMessage("Could not read that file.") }
+        }
+    }
 
     /** Shows a short, readable message (e.g. guidance after a declined system dialog). */
     fun showMessage(text: String) = postMessage(text)

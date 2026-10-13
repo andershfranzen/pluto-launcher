@@ -81,6 +81,16 @@ internal object SettingsText {
 
     const val PROFILES_NOTICE = "Work profile and Private Space apps are not shown in this version."
 
+    const val TROUBLESHOOTING = "Troubleshooting"
+    const val CRASH_REPORTS = "Crash reports"
+    const val NO_FILE_PICKER = "This device has no file picker, so Pluto cannot choose a file here."
+    const val BACKUP_LAYOUT = "Back up layout"
+    const val BACKUP_LAYOUT_HELP = "Saves favourites, dock, folders, categories and hidden apps to a file you choose."
+    const val RESTORE_LAYOUT = "Restore layout"
+    const val RESTORE_LAYOUT_HELP = "Reads a Pluto layout file back onto this device."
+    const val RESTORE_LAYOUT_TITLE = "Replace this device's layout?"
+    const val RESTORE_LAYOUT_TEXT = "The home grid, dock, folders, categories and hidden apps all come from the file. " +
+        "Widgets stay where they are, and an app you no longer have stays hidden until you install it again."
     const val ABOUT = "About"
     const val SUPPORT = "Support Pluto"
     const val ICONS = "Icons"
@@ -88,6 +98,8 @@ internal object SettingsText {
     const val CAROUSEL_HELP = "How games and apps are laid out in console mode."
     const val CONSOLE_FAVOURITES = "Favourites shelf"
     const val CONSOLE_FAVOURITES_HELP = "Show your home favourites as a shelf in console mode."
+    const val ALPHABET_RAIL = "Alphabet rail"
+    const val ALPHABET_RAIL_HELP = "Show the A–Z strip along the edge of the app drawer; drag it to jump between letters."
     const val ICON_PACK = "Icon pack"
     const val SYSTEM_ICONS = "System icons"
     const val SYSTEM_ICONS_HELP = "Each app's own icon"

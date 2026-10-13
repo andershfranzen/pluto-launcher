@@ -301,7 +301,8 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                 launcher.launch(entry.entry.key, id)
             }
             is ConsoleEntry.Rom -> libraries.firstOrNull { it.id == entry.libraryId }?.let { lib ->
-                RomLauncher.launch(context, lib, entry.game)?.let(vm::showMessage)
+                val error = RomLauncher.launch(context, lib, entry.game, vm.romEmulator(entry.game.uri))
+                if (error != null) vm.showMessage(error) else vm.recordRomLaunch(entry.game.uri)
             }
         }
     }

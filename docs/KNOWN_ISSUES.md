@@ -9,8 +9,13 @@ something.
   reference OnePlus Nord 5 + GameSir setup, and no controller key codes or axis behaviour
   have been recorded. See [ACCEPTANCE.md](ACCEPTANCE.md) and
   [CONTROLLER_TESTS.md](CONTROLLER_TESTS.md).
-- **Performance targets are unmeasured.** Home return, cold start, search latency, focus
-  latency, reflow time and frame-time targets are goals, not results.
+- **Performance targets are measured on an emulator, not yet on the phone.** The
+  macrobenchmark + Perfetto harness ([PERFORMANCE.md](PERFORMANCE.md),
+  `.github/workflows/performance.yml`) records emulator numbers and fails a run that
+  regresses past the committed baseline. The reference-phone rows in
+  [ACCEPTANCE.md](ACCEPTANCE.md) are still "to be recorded": Home return, cold start, search
+  latency, focus latency, reflow time and frame-time targets remain goals until
+  `scripts/measure-startup.py` and the phone traces are recorded.
 - **Stick defaults are untuned.** Dead zone 0.25 and repeat 350/100 ms come from the spec and
   may need adjusting per controller.
 - **OxygenOS specifics** (the wording of default-app settings, gesture navigation edge
@@ -95,14 +100,18 @@ something.
   and turns on the mode in which tapping an app opens its actions.
 - **The alphabet fast-scroll rail is touch-only** and hidden from screen readers: it is a
   shortcut, and the grid itself remains fully reachable by scrolling, D-pad and TalkBack.
+  Turn it off in Settings → Layout → Alphabet rail if you would rather not have it.
 
 ## Unsupported in 0.1
 
 - **Emulator ROM interfaces vary.** ROM shelves send read-only Android document URIs
-  to the chosen emulator. DuckStation has a tested direct-launch adapter; other apps
-  must accept Android Open file requests, or be chosen through the system app chooser.
-  Selecting an installed app does not guarantee it supports that interface or ROM format.
-  BIOS files and game-specific metadata must be configured in the emulator itself.
+  to the chosen emulator. DuckStation has a tested direct-launch adapter; RetroArch,
+  Dolphin and PPSSPP have adapters that send the extras those emulators document, but they
+  have not been run on hardware here. Any other app must accept Android Open file requests,
+  or be chosen through the system app chooser. Selecting an installed app does not guarantee
+  it supports that interface or ROM format. BIOS files, the emulator's own per-game settings
+  and save states stay in the emulator itself; Pluto remembers which app opens one game, and
+  otherwise only reports that save data exists beside a game.
   Folder indexing is bounded to 512 subfolders and 20,000 documents; a failed refresh
   retains the last successfully scanned list. Collections refresh on returning to
   Pluto, throttled to once every 30 seconds; Refresh games checks immediately.
@@ -116,14 +125,24 @@ something.
 - **Drag and drop covers Home, the dock, the drawer and apps inside folders.** Hold an app
   in a folder, then move it to return to Home and drop it on the grid, dock or another folder.
   Reordering within an open folder uses the explicit Edit controls.
-- **No backup or import/export.** Android backup is disabled; uninstalling Pluto or clearing
-  its data loses your organisation.
+- **No automatic or cloud backup.** Android backup stays disabled. Settings → General →
+  Back up layout writes your favourites, dock, folders, categories and hidden apps to a file
+  you choose with the system picker, and Restore reads it back on this or another device.
+  What a backup does not cover: widgets stay with the device they are on, an app you have
+  uninstalled stays hidden until you install it again, and ROM tabs are not restored, because
+  a shelf points at a folder grant that only exists on the device it was given on.
 - **No custom app cover artwork**, configurable grid sizes, app shortcuts or notification dots.
   Icon packs must use the common appfilter format (ADW / Nova); others fall back to system icons.
 - **Game apps are not detected automatically**; add apps to the Games category yourself.
-  ROM tabs index the folder you choose and support matching adjacent cover images.
-  Online artwork lookup is not implemented.
-- **Playtime tracking, emulator configuration and cloud libraries** are out of scope.
+  ROM tabs index the folder you choose and read an EmulationStation `gamelist.xml` when one
+  is there, plus the ES-DE/Batocera and RetroArch artwork layouts (see the README). Online
+  artwork lookup is not implemented, and nothing is scraped.
+- **Playtime tracking, save-state management and cloud libraries** are out of scope. Pluto
+  records when it opened a game (the last 200, for the Recent order) and which app opens it,
+  but not how long you played, and it never moves or edits save data.
+- **English only.** Android's per-app language list is declared (`locales_config.xml`) and the
+  app's own resources are translated, but nearly all of Pluto's UI text is still in Kotlin, so
+  a new language means extracting strings first. See [LOCALISATION.md](LOCALISATION.md).
 
 ## Limitations by design or by platform
 

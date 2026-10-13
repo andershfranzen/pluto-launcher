@@ -5,6 +5,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.pluto.launcher.data.db.LauncherDatabase
+import dev.pluto.launcher.domain.LayoutBackup
+import dev.pluto.launcher.domain.LayoutCategory
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.model.BuiltInCategory
 import dev.pluto.launcher.model.HomeItem
@@ -288,5 +290,83 @@ class OrganizationRepositoryTest {
         repo.pin(work)
         repo.forgetApp(work)
         assertEquals(listOf(personal), homeApps(org()))
+    }
+
+    private fun emptyBackup() =
+        LayoutBackup(emptyList(), List(Organization.DOCK_SLOTS) { null }, emptyList(), emptyList(), emptyList())
+
+    @Test
+    fun aBackupCarriesTheWholeLayoutOntoAnotherDevice() = runTest {
+        repo.ensureDefaults()
+        val folder = repo.createFolder("Games", listOf(a, b))
+        repo.pin(c)
+        repo.setDock(listOf(c, a, null, null, null))
+        repo.hide(c)
+        val work = repo.addCategory("Work")
+        repo.setCategoryMembership(work, b, true)
+        val original = repo.exportBackup()
+
+        // A device that has never been organised: the restore starts from nothing.
+        repo.importBackup(emptyBackup())
+        assertTrue(org().folders.isEmpty())
+        assertTrue(homeApps(org()).isEmpty())
+        assertTrue(org().dock.all { it == null })
+
+        repo.importBackup(original)
+        val restored = org()
+        assertEquals(original.homeItems, restored.homeItems.map { it.id })
+        assertEquals(original.dock, restored.dock.map { it?.encode() })
+        assertEquals(listOf(folder), restored.folders.keys.toList())
+        assertEquals(listOf(a, b), restored.folders.getValue(folder).apps)
+        assertEquals(listOf("All apps", "Games", "Work"), restored.categories.map { it.name })
+        assertEquals(setOf(b), restored.categoryMembers.getValue(work))
+        assertEquals(setOf(c), restored.hidden)
+    }
+
+    @Test
+    fun exportingWhatWasJustRestoredWritesTheSameFileAgain() = runTest {
+        repo.ensureDefaults()
+        repo.createFolder("Games", listOf(a, b))
+        repo.setDock(listOf(c, null, null, null, null))
+        repo.hide(a)
+        repo.addCategory("Work")
+        val original = repo.exportBackup()
+
+        repo.importBackup(emptyBackup())
+        repo.importBackup(original)
+        assertEquals(original, repo.exportBackup())
+    }
+
+    @Test
+    fun restoringKeepsTheWidgetsAlreadyOnThisDevice() = runTest {
+        repo.ensureDefaults()
+        repo.pin(a)
+        repo.addWidget(41, "com.example/.Widget", rows = 2)
+        val backup = repo.exportBackup()
+        assertTrue("widget:41" !in backup.homeItems)
+
+        repo.importBackup(backup)
+        val restored = org()
+        assertEquals(listOf(a), homeApps(restored))
+        assertTrue(HomeItem.Widget(41) in restored.homeItems)
+        assertEquals(2, restored.widgets.getValue(41).rows)
+    }
+
+    @Test
+    fun aBackupWithoutAllAppsStillLeavesTheLauncherUsable() = runTest {
+        repo.importBackup(
+            LayoutBackup(
+                homeItems = listOf(HomeItem.App(a).id),
+                dock = List(Organization.DOCK_SLOTS) { null },
+                folders = emptyList(),
+                categories = listOf(LayoutCategory(3, "Work", null, 0, listOf(b.encode()))),
+                hidden = emptyList(),
+            ),
+        )
+        val restored = org()
+        assertEquals(listOf("All apps", "Work"), restored.categories.map { it.name })
+        assertEquals(listOf(BuiltInCategory.ALL, null), restored.categories.map { it.builtIn })
+        assertEquals(listOf(a), homeApps(restored))
+        assertEquals(setOf(b), restored.categoryMembers.getValue(3L))
     }
 }
