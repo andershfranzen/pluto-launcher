@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.components
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import android.view.KeyEvent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -39,34 +42,34 @@ import dev.pluto.launcher.ui.motion.PlutoMotion
 /** One legend entry: a launcher action and the word describing what it does here. */
 data class LegendItem(val action: ControllerAction, val label: String)
 
-/** Common legend sets, so every screen words its actions the same way. */
+/** Common legend sets, so every screen words its actions the same way (read in the current language). */
 object Legends {
-    val Home = listOf(
-        LegendItem(ControllerAction.CONFIRM, "Open"),
-        LegendItem(ControllerAction.ACTIONS, "Actions"),
-        LegendItem(ControllerAction.SEARCH, "Search"),
-        LegendItem(ControllerAction.SETTINGS, "Settings"),
+    val Home: List<LegendItem> get() = listOf(
+        LegendItem(ControllerAction.CONFIRM, UiText.get(R.string.common_legend_open)),
+        LegendItem(ControllerAction.ACTIONS, UiText.get(R.string.common_legend_actions)),
+        LegendItem(ControllerAction.SEARCH, UiText.get(R.string.common_legend_search)),
+        LegendItem(ControllerAction.SETTINGS, UiText.get(R.string.common_legend_settings)),
     )
-    val Handheld = listOf(
-        LegendItem(ControllerAction.CONFIRM, "Open"),
-        LegendItem(ControllerAction.ACTIONS, "Actions"),
-        LegendItem(ControllerAction.SEARCH, "Search"),
-        LegendItem(ControllerAction.PREV_CATEGORY, "Category"),
-        LegendItem(ControllerAction.NEXT_CATEGORY, "Category"),
-        LegendItem(ControllerAction.SETTINGS, "Settings"),
+    val Handheld: List<LegendItem> get() = listOf(
+        LegendItem(ControllerAction.CONFIRM, UiText.get(R.string.common_legend_open)),
+        LegendItem(ControllerAction.ACTIONS, UiText.get(R.string.common_legend_actions)),
+        LegendItem(ControllerAction.SEARCH, UiText.get(R.string.common_legend_search)),
+        LegendItem(ControllerAction.PREV_CATEGORY, UiText.get(R.string.common_legend_category)),
+        LegendItem(ControllerAction.NEXT_CATEGORY, UiText.get(R.string.common_legend_category)),
+        LegendItem(ControllerAction.SETTINGS, UiText.get(R.string.common_legend_settings)),
     )
-    val Drawer = listOf(
-        LegendItem(ControllerAction.CONFIRM, "Open"),
-        LegendItem(ControllerAction.ACTIONS, "Actions"),
-        LegendItem(ControllerAction.SEARCH, "Search"),
-        LegendItem(ControllerAction.PREV_CATEGORY, "Category"),
-        LegendItem(ControllerAction.NEXT_CATEGORY, "Category"),
-        LegendItem(ControllerAction.BACK, "Back"),
+    val Drawer: List<LegendItem> get() = listOf(
+        LegendItem(ControllerAction.CONFIRM, UiText.get(R.string.common_legend_open)),
+        LegendItem(ControllerAction.ACTIONS, UiText.get(R.string.common_legend_actions)),
+        LegendItem(ControllerAction.SEARCH, UiText.get(R.string.common_legend_search)),
+        LegendItem(ControllerAction.PREV_CATEGORY, UiText.get(R.string.common_legend_category)),
+        LegendItem(ControllerAction.NEXT_CATEGORY, UiText.get(R.string.common_legend_category)),
+        LegendItem(ControllerAction.BACK, UiText.get(R.string.common_legend_back)),
     )
-    val Folder = listOf(
-        LegendItem(ControllerAction.CONFIRM, "Open"),
-        LegendItem(ControllerAction.ACTIONS, "Actions"),
-        LegendItem(ControllerAction.BACK, "Close"),
+    val Folder: List<LegendItem> get() = listOf(
+        LegendItem(ControllerAction.CONFIRM, UiText.get(R.string.common_legend_open)),
+        LegendItem(ControllerAction.ACTIONS, UiText.get(R.string.common_legend_actions)),
+        LegendItem(ControllerAction.BACK, UiText.get(R.string.common_legend_close)),
     )
 }
 
@@ -136,9 +139,14 @@ fun ButtonLegend(
         enter = slideInVertically(PlutoMotion.slideSpring) { it / 2 } + fadeIn(PlutoMotion.fadeIn()),
         exit = slideOutVertically(PlutoMotion.slideSpring) { it / 2 } + fadeOut(PlutoMotion.fadeOut()),
     ) {
-        val spoken = shown.joinToString(", ") { (keys, label) -> keys.joinToString(" or ") + " " + label }
+        val spoken = stringResource(
+            R.string.common_legend_spoken,
+            shown.joinToString(", ") { (keys, label) ->
+                UiText.get(R.string.common_legend_spoken_entry, keys.reduce { a, b -> UiText.get(R.string.common_legend_spoken_or, a, b) }, label)
+            },
+        )
         Surface(
-            modifier = Modifier.clearAndSetSemantics { contentDescription = "Controller buttons: $spoken" }
+            modifier = Modifier.clearAndSetSemantics { contentDescription = spoken }
                 .then(if (quiet) Modifier.background(Color(0xFF17191D).copy(alpha = 0.45f), RoundedCornerShape(16.dp))
                     .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp)) else Modifier),
             shape = RoundedCornerShape(16.dp),

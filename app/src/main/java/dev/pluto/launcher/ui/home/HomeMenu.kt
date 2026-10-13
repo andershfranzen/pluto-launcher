@@ -1,6 +1,9 @@
 package dev.pluto.launcher.ui.home
 
 import androidx.compose.ui.semantics.contentDescription
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Lifecycle
@@ -92,15 +95,15 @@ internal class HomeMenuState {
 }
 
 /** Spoken for the home surface; its actions are the home menu's entries. */
-private const val HOME_SURFACE_LABEL = "Home screen. Actions: search, add widget, edit home, settings"
+private val HOME_SURFACE_LABEL = R.string.home_surface_label
 
-private class HomeMenuEntry(val label: String, val icon: ImageVector, val run: (LauncherViewModel) -> Unit)
+private class HomeMenuEntry(@StringRes val label: Int, val icon: ImageVector, val run: (LauncherViewModel) -> Unit)
 
 private val HomeMenuEntries = listOf(
-    HomeMenuEntry("Search apps", Icons.Outlined.Search) { it.openDrawer(withSearch = true) },
-    HomeMenuEntry("Add widget", Icons.Outlined.Widgets) { it.openLayer(Layer.WidgetPicker) },
-    HomeMenuEntry("Edit home", Icons.Outlined.Edit) { it.openLayer(Layer.Edit) },
-    HomeMenuEntry("Launcher settings", Icons.Outlined.Settings) { it.openLayer(Layer.Settings) },
+    HomeMenuEntry(R.string.home_menu_search_apps, Icons.Outlined.Search) { it.openDrawer(withSearch = true) },
+    HomeMenuEntry(R.string.home_menu_add_widget, Icons.Outlined.Widgets) { it.openLayer(Layer.WidgetPicker) },
+    HomeMenuEntry(R.string.home_menu_edit_home, Icons.Outlined.Edit) { it.openLayer(Layer.Edit) },
+    HomeMenuEntry(R.string.home_menu_launcher_settings, Icons.Outlined.Settings) { it.openLayer(Layer.Settings) },
 )
 
 /**
@@ -111,11 +114,13 @@ private val HomeMenuEntries = listOf(
 @Composable
 internal fun Modifier.homeMenuOnLongPress(menu: HomeMenuState, vm: LauncherViewModel): Modifier {
     val haptics = LocalHapticFeedback.current
+    val surfaceLabel = stringResource(HOME_SURFACE_LABEL)
+    val entryLabels = HomeMenuEntries.map { stringResource(it.label) }
     return this
         .semantics {
             // A described node, so screen readers focus it and offer the menu as its actions.
-            contentDescription = HOME_SURFACE_LABEL
-            customActions = HomeMenuEntries.map { entry -> CustomAccessibilityAction(entry.label) { entry.run(vm); true } }
+            contentDescription = surfaceLabel
+            customActions = HomeMenuEntries.mapIndexed { i, entry -> CustomAccessibilityAction(entryLabels[i]) { entry.run(vm); true } }
         }
         .onPlaced { menu.origin = it.positionInWindow() }
         .pointerInput(menu) {
@@ -190,7 +195,7 @@ internal fun HomeMenu(menu: HomeMenuState, vm: LauncherViewModel) {
                                 .padding(horizontal = 18.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(entry.label, style = MaterialTheme.typography.bodyLarge, color = scheme.onSurface, modifier = Modifier.weight(1f))
+                            Text(stringResource(entry.label), style = MaterialTheme.typography.bodyLarge, color = scheme.onSurface, modifier = Modifier.weight(1f))
                             Spacer(Modifier.width(12.dp))
                             Icon(entry.icon, contentDescription = null, tint = scheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
                         }

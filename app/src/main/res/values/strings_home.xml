@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home screens, app drawer, shared components and launcher messages. -->
+<!-- MissingTranslation is ignored until the da/de/fr/sv translations of this file land; remove it then. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- Home menu (press and hold empty space on Home) -->
+    <!-- Screen-reader description of the home surface; the listed actions are the home menu entries. -->
+    <string name="home_surface_label">Home screen. Actions: search, add widget, edit home, settings</string>
+    <string name="home_menu_search_apps">Search apps</string>
+    <string name="home_menu_add_widget">Add widget</string>
+    <string name="home_menu_edit_home">Edit home</string>
+    <string name="home_menu_launcher_settings">Launcher settings</string>
+
+    <!-- Built-in category names, shown while the user has not renamed the category. -->
+    <!-- Category tab that lists every app. -->
+    <string name="home_category_all">All apps</string>
+    <string name="home_category_games">Games</string>
+    <!-- Category for utility apps (calculator, clock, files…). -->
+    <string name="home_category_tools">Tools</string>
+
+    <!-- App drawer -->
+    <!-- Name of the "All apps" category tab while search also covers games and shortcuts. -->
+    <string name="home_drawer_category_everything">Everything</string>
+    <string name="home_drawer_game_unavailable">That game is no longer available. Refresh its ROM tab.</string>
+    <!-- Shown while search results are being computed. -->
+    <string name="home_drawer_searching">Searching…</string>
+    <!-- Content description of the drawer search field. -->
+    <string name="home_drawer_search_label">Search apps</string>
+    <!-- Screen-reader state of the search field. %1$s: category name. -->
+    <string name="home_drawer_search_scope_category">Searching apps and shortcuts in %1$s</string>
+    <string name="home_drawer_search_scope_all">Searching all apps, games and shortcuts</string>
+    <!-- %1$s: one of the "Searching…" scope descriptions above. -->
+    <string name="home_drawer_search_scope_actions">%1$s. Tap an app for actions.</string>
+    <!-- Content description of the icon shown while tapping an app opens its actions. -->
+    <string name="home_drawer_actions_mode">App actions mode</string>
+    <!-- Search field placeholder. %1$s: category name. -->
+    <string name="home_drawer_search_hint_category">Search %1$s</string>
+    <string name="home_drawer_search_hint_all">Search apps, games and shortcuts</string>
+    <string name="home_drawer_clear_search">Clear search</string>
+    <string name="home_drawer_close_search">Close search</string>
+    <!-- Button that leaves app actions mode. -->
+    <string name="home_drawer_done">Done</string>
+    <string name="home_drawer_actions">Choose an app to see its actions</string>
+    <string name="home_drawer_actions_done">Done choosing apps</string>
+    <string name="home_drawer_manage_categories">Add or edit categories</string>
+    <string name="home_drawer_actions_hint">Tap an app for actions</string>
+    <!-- %1$s: the search text. -->
+    <string name="home_drawer_no_results">No results for “%1$s”</string>
+    <!-- %1$s: the search text. -->
+    <string name="home_drawer_no_match">No apps match “%1$s”</string>
+    <!-- %1$s: category name. -->
+    <string name="home_drawer_empty_category">No apps in %1$s yet</string>
+    <string name="home_drawer_empty_all">No apps to show</string>
+    <!-- Button that widens the search to every category (search also covers games and shortcuts). -->
+    <string name="home_drawer_search_everything">Search everything</string>
+    <!-- Button that widens the search to every category. -->
+    <string name="home_drawer_search_all_apps">Search all apps</string>
+    <!-- %1$s: category name. "Everything" is the name of the all-apps tab while searching. -->
+    <string name="home_drawer_no_match_category_detail">Searching in %1$s. Try Everything or a shorter name.</string>
+    <string name="home_drawer_no_match_detail_rich">Search looks at apps, ROM titles and app shortcuts.</string>
+    <string name="home_drawer_no_match_detail">Search looks at app names and package names.</string>
+    <string name="home_drawer_empty_category_detail">Choose which apps belong here.</string>
+    <string name="home_drawer_add_apps">Add apps</string>
+    <string name="home_drawer_show_all_apps">Show all apps</string>
+    <string name="home_drawer_empty_all_detail">Hidden apps can be restored from Settings → Apps → Hidden apps.</string>
+    <string name="home_drawer_hidden_apps">Hidden apps</string>
+
+    <!-- Home -->
+    <string name="home_lock_needs_service">To lock with a double tap, turn on “Pluto screen lock” in Accessibility settings.</string>
+    <string name="home_empty_favourites">No favourites yet</string>
+    <!-- "Add favourite" refers to the button home_add_favourite. -->
+    <string name="home_empty_favourites_detail">Swipe up to find apps, then pin favourites. Pressing and holding an app opens its actions; Add favourite works without gestures.</string>
+    <string name="home_add_favourite">Add favourite</string>
+    <!-- Label of the drop bar that takes a dragged app off Home or out of the dock. -->
+    <string name="home_drop_remove">Remove</string>
+    <!-- Content description of an empty dock slot. %1$d: slot number, from 1. -->
+    <string name="home_dock_empty_slot">Empty dock slot %1$d. Opens Edit to choose an app</string>
+
+    <!-- Open folder -->
+    <!-- Label of the folder name text field. -->
+    <string name="home_folder_name">Folder name</string>
+    <!-- Content description of the button that saves the folder's new name. -->
+    <string name="home_folder_save_name">Save name</string>
+    <string name="home_folder_cancel_rename">Cancel rename</string>
+    <string name="home_folder_close">Close folder</string>
+    <!-- Button: rename the folder. -->
+    <string name="home_folder_rename">Rename</string>
+    <!-- Button: open Edit mode with this folder selected. -->
+    <string name="home_folder_edit">Edit</string>
+    <!-- "More…" and "Move to folder…" are app menu entries; keep them consistent with their translations. -->
+    <string name="home_folder_empty">This folder is empty. Drag an app onto it, or press and hold an app, choose More… and then Move to folder….</string>
+
+    <!-- Search results (apps, ROM games and app shortcuts) -->
+    <!-- Section heading in search results. -->
+    <string name="home_search_section_apps">Apps</string>
+    <!-- Section heading in search results: games from the user's ROM folders. -->
+    <string name="home_search_section_games">Games</string>
+    <!-- Section heading in search results: app shortcuts (e.g. "New message"). -->
+    <string name="home_search_section_shortcuts">Shortcuts</string>
+    <!-- Accessibility label of a result's secondary action. %1$s: result name. -->
+    <string name="home_search_result_options">Options for %1$s</string>
+    <!-- Second line under an app search result. -->
+    <string name="home_search_result_app_detail">App</string>
+    <!-- Second line under a shortcut search result. %1$s: name of the app the shortcut belongs to. -->
+    <string name="home_search_result_shortcut_detail">%1$s · Shortcut</string>
+    <!-- Content description. %1$s: app name. -->
+    <string name="home_search_result_app">%1$s, app</string>
+    <!-- Content description. %1$s: game title; %2$s: name of the ROM tab it is in. -->
+    <string name="home_search_result_game">%1$s, game in %2$s</string>
+    <!-- Content description. %1$s: shortcut name; %2$s: name of the app it belongs to. -->
+    <string name="home_search_result_shortcut">%1$s, %2$s shortcut</string>
+
+    <!-- Startup and storage error screens -->
+    <!-- Content description of the splash screen. -->
+    <string name="home_startup_starting">Pluto is starting</string>
+    <!-- Content description of the startup progress bar. -->
+    <string name="home_startup_loading_apps">Loading apps</string>
+    <string name="home_storage_error_title">Pluto can\'t open its saved layout</string>
+    <string name="home_storage_error_detail">Your favourites, dock, folders and settings have not been changed or deleted. Try again, or choose another Home app in Android Settings while this is sorted out. Installing the newer Pluto build you used before usually fixes this.</string>
+    <!-- %1$s: technical error details (not translated). -->
+    <string name="home_storage_error_technical">Details: %1$s</string>
+    <string name="home_storage_error_retry">Try again</string>
+    <!-- Button that opens Android's default apps settings to pick another launcher. -->
+    <string name="home_storage_error_choose_home">Choose Home app</string>
+
+    <!-- Shared components -->
+    <!-- Content description of a category tab. %1$s: category name. -->
+    <string name="common_category_tab">%1$s category</string>
+    <!-- Content description of the button that dismisses a snackbar message. -->
+    <string name="common_message_dismiss_label">Dismiss message</string>
+    <!-- Button on a snackbar message. -->
+    <string name="common_message_dismiss">Dismiss</string>
+    <!-- Spoken clock. %1$s: time; %2$s: date (e.g. "Monday, October 13"). -->
+    <string name="common_clock_description">%1$s, %2$s</string>
+    <!-- Screen-reader label of an app that cannot be opened right now. %1$s: app name. -->
+    <string name="common_app_unavailable">%1$s (unavailable)</string>
+    <!-- Accessibility action on an app tile that opens its actions menu. -->
+    <string name="common_app_actions">App actions</string>
+    <!-- Content description of an app while tapping opens its actions. %1$s: app name. -->
+    <string name="common_app_opens_actions">%1$s, opens app actions</string>
+    <!-- Content description of an empty folder. %1$s: folder name. -->
+    <string name="common_folder_empty">Folder %1$s, empty</string>
+    <!-- Content description of a folder. %1$s: folder name; %2$d: number of apps in it. -->
+    <plurals name="common_folder_apps">
+        <item quantity="one">Folder %1$s, %2$d app</item>
+        <item quantity="other">Folder %1$s, %2$d apps</item>
+    </plurals>
+    <!-- Accessibility action on a folder that opens it in Edit mode. -->
+    <string name="common_folder_edit">Edit folder</string>
+
+    <!-- Controller button legend: a word after a button name (e.g. "A Open"), keep it short. -->
+    <string name="common_legend_open">Open</string>
+    <!-- Controller legend: opens the focused item's actions menu. -->
+    <string name="common_legend_actions">Actions</string>
+    <!-- Controller legend: opens search. -->
+    <string name="common_legend_search">Search</string>
+    <!-- Controller legend: opens launcher settings. -->
+    <string name="common_legend_settings">Settings</string>
+    <!-- Controller legend: previous/next category (e.g. "L1 / R1 Category"). -->
+    <string name="common_legend_category">Category</string>
+    <!-- Controller legend: go back. -->
+    <string name="common_legend_back">Back</string>
+    <!-- Controller legend: close the open folder. -->
+    <string name="common_legend_close">Close</string>
+    <!-- Spoken controller legend. %1$s: comma-separated entries, each common_legend_spoken_entry. -->
+    <string name="common_legend_spoken">Controller buttons: %1$s</string>
+    <!-- One spoken legend entry. %1$s: button name(s); %2$s: what it does (e.g. "A Open"). -->
+    <string name="common_legend_spoken_entry">%1$s %2$s</string>
+    <!-- Two buttons bound to the same action. %1$s, %2$s: button names (e.g. "L1 or R1"). -->
+    <string name="common_legend_spoken_or">%1$s or %2$s</string>
+    <!-- Screen-reader state of an app icon with a notification dot. -->
+    <string name="common_has_notifications">Has notifications</string>
+    <!-- Default accessibility action that opens a control's secondary actions. -->
+    <string name="common_more_actions">More actions</string>
+
+    <!-- App launch and system action messages. %1$s: app name. -->
+    <string name="common_app_not_installed">%1$s is no longer installed.</string>
+    <!-- The app is suspended (e.g. by Digital Wellbeing). %1$s: app name. -->
+    <string name="common_app_paused">%1$s is paused right now.</string>
+    <string name="common_app_open_failed">%1$s couldn\'t be opened.</string>
+    <string name="common_app_info_unavailable">App info isn\'t available for %1$s.</string>
+    <string name="common_app_info_failed">App info for %1$s couldn\'t be opened.</string>
+    <string name="common_uninstall_not_here">%1$s can\'t be uninstalled from here.</string>
+    <string name="common_uninstall_unavailable">Uninstall isn\'t available on this device.</string>
+    <string name="common_uninstall_failed">%1$s couldn\'t be uninstalled.</string>
+    <!-- %1$s: name of an app shortcut. -->
+    <string name="common_shortcut_open_failed">“%1$s” couldn\'t be opened.</string>
+
+    <!-- Launcher messages (snackbar) -->
+    <!-- %1$s: version name, e.g. 0.1.9. "Settings → General" is the settings page path. -->
+    <string name="home_update_available">Pluto %1$s is available. Open Settings → General to update.</string>
+    <!-- A ROM shelf is a console tab listing games from a folder of ROM files. -->
+    <string name="home_rom_shelves_load_failed">Could not load ROM shelves. Restart Pluto to try again.</string>
+    <string name="home_rom_shelf_save_failed">Could not save this ROM shelf.</string>
+    <string name="home_rom_shelf_remove_failed">Could not remove this ROM shelf.</string>
+    <string name="home_rom_shelf_missing">This ROM shelf no longer exists</string>
+    <string name="home_rom_folder_access_lost">Folder access was lost. Choose the ROM folder again.</string>
+    <string name="home_rom_folder_read_failed">Could not read this ROM folder. Choose it again.</string>
+    <string name="home_app_open_failed">That app couldn\'t be opened.</string>
+    <string name="home_shortcut_unavailable">That shortcut is no longer available.</string>
+    <string name="home_shortcut_open_failed">That shortcut couldn\'t be opened.</string>
+    <string name="home_system_app_info_failed">Android couldn\'t open app info right now.</string>
+    <string name="home_system_uninstall_failed">Android couldn\'t request uninstall right now.</string>
+    <string name="home_layout_saved">Layout saved to the file you chose.</string>
+    <string name="home_layout_write_failed">Could not write that file. Try another location.</string>
+    <string name="home_layout_restored">Layout restored.</string>
+    <string name="home_layout_restore_failed">Could not restore that layout. Your current layout is unchanged.</string>
+    <string name="home_layout_too_new">That backup was written by a newer Pluto. Update Pluto, then restore it.</string>
+    <string name="home_layout_not_backup">That file is not a Pluto layout backup.</string>
+    <string name="home_layout_read_failed">Could not read that file.</string>
+    <string name="home_save_failed">Couldn\'t save that change. Please try again.</string>
+    <!-- Name given to a new folder. Stored: the user can rename it. -->
+    <string name="home_default_folder_name">Folder</string>
+    <!-- Name given to a new category the user left unnamed. Stored: the user can rename it. -->
+    <string name="home_default_category_name">New category</string>
+    <string name="home_dock_full">Dock is full. Remove an app from the dock first.</string>
+    <!-- "Recent launches" is the name of a setting. -->
+    <string name="home_settings_reset">Pluto\'s settings file was damaged and has been reset. Recent launches is off until you turn it on again.</string>
+    <!-- "Recent launches" is the name of a setting. -->
+    <string name="home_settings_unreadable">Pluto can\'t read its settings right now, so defaults are in use and Recent launches is paused.</string>
+</resources>

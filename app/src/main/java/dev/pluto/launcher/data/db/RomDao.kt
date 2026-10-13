@@ -1,6 +1,8 @@
 package dev.pluto.launcher.data.db
 
 import androidx.room.*
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "rom_library")
@@ -46,7 +48,7 @@ abstract class RomDao {
     @Transaction
     open suspend fun saveLibrary(row: RomLibraryEntity): Long {
         if (row.id == 0L) return insertLibrary(row)
-        val old = library(row.id) ?: error("This ROM shelf no longer exists")
+        val old = library(row.id) ?: error(UiText.get(R.string.home_rom_shelf_missing))
         updateLibrary(row)
         if (old.treeUri != row.treeUri) clearGames(row.id)
         return row.id

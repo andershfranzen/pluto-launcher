@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.components
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Brush
@@ -427,7 +429,7 @@ private fun CategoryTab(
             .controllerFocusable(
                 id = id,
                 onActivate = onClick,
-                contentDescription = "${category.name} category",
+                contentDescription = stringResource(R.string.common_category_tab, category.displayName),
                 shape = shape,
                 onFocused = onFocused,
                 interactionSource = press,
@@ -439,7 +441,7 @@ private fun CategoryTab(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            category.name,
+            category.displayName,
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             ),
@@ -532,7 +534,7 @@ private fun MessageBarContent(message: UserMessage, onDismiss: () -> Unit) {
                 .controllerFocusable(
                     id = "message:dismiss",
                     onActivate = onDismiss,
-                    contentDescription = "Dismiss message",
+                    contentDescription = stringResource(R.string.common_message_dismiss_label),
                     shape = shape,
                     interactionSource = press,
                 )
@@ -540,7 +542,7 @@ private fun MessageBarContent(message: UserMessage, onDismiss: () -> Unit) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                "Dismiss",
+                stringResource(R.string.common_message_dismiss),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.inversePrimary,
                 modifier = Modifier.clearAndSetSemantics { },

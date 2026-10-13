@@ -1,5 +1,9 @@
 package dev.pluto.launcher.model
 
+import androidx.annotation.StringRes
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
+
 /**
  * Stable identity of a launchable activity: flattened component name plus the
  * owning user profile's serial number. Two activities in one package, or one
@@ -59,16 +63,33 @@ enum class HandheldAppearance {
     EVERYWHERE,
 }
 
-/** Built-in categories. ALL is virtual (every visible app); others hold explicit members. */
-enum class BuiltInCategory { ALL, GAMES, TOOLS }
+/**
+ * Built-in categories. ALL is virtual (every visible app); others hold explicit members.
+ * [defaultName] is the English name stored for a new category (the user may rename it);
+ * [label] is its translation, shown while the stored name is still the default.
+ */
+enum class BuiltInCategory(val defaultName: String, @StringRes val label: Int) {
+    ALL("All apps", R.string.home_category_all),
+    GAMES("Games", R.string.home_category_games),
+    TOOLS("Tools", R.string.home_category_tools),
+}
 
 data class Category(
     val id: Long,
+    /** The stored, user-editable name. Show [displayName] instead. */
     val name: String,
     val builtIn: BuiltInCategory?,
     val position: Int,
 ) {
     val isAll: Boolean get() = builtIn == BuiltInCategory.ALL
+
+    /**
+     * The name to show: the translated built-in name while the user has not renamed a
+     * built-in category (its stored name is still the English default), else [name].
+     * Reads [UiText], so it needs Android resources (not for JVM unit tests).
+     */
+    val displayName: String
+        get() = builtIn?.takeIf { name == it.defaultName }?.let { UiText.get(it.label) } ?: name
 }
 
 data class Folder(

@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -56,18 +58,16 @@ fun StorageErrorScreen(detail: String, onRetry: () -> Unit) {
         PlutoPanel(Modifier.widthIn(max = 560.dp)) {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "Pluto can't open its saved layout",
+                    stringResource(R.string.home_storage_error_title),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.semantics { heading() },
                 )
                 Text(
-                    "Your favourites, dock, folders and settings have not been changed or deleted. " +
-                        "Try again, or choose another Home app in Android Settings while this is sorted out. " +
-                        "Installing the newer Pluto build you used before usually fixes this.",
+                    stringResource(R.string.home_storage_error_detail),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    "Details: $detail",
+                    stringResource(R.string.home_storage_error_technical, detail),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -75,10 +75,10 @@ fun StorageErrorScreen(detail: String, onRetry: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    PlutoTextButton(id = ID_RETRY, text = "Try again", icon = Icons.Rounded.Refresh, onClick = onRetry, emphasized = true)
+                    PlutoTextButton(id = ID_RETRY, text = stringResource(R.string.home_storage_error_retry), icon = Icons.Rounded.Refresh, onClick = onRetry, emphasized = true)
                     PlutoTextButton(
                         id = ID_HOME_APPS,
-                        text = "Choose Home app",
+                        text = stringResource(R.string.home_storage_error_choose_home),
                         icon = Icons.Rounded.Home,
                         onClick = { openDefaultAppsSettings(context) },
                     )

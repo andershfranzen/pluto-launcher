@@ -42,7 +42,7 @@ class RicherSearchTest {
             SearchShortcut(browser, "new", "New tab"))
         val results = RicherSearch.results(listOf(browser), emptyList(), actions, "browser")
         assertEquals(listOf("Browser", "Browser settings", "New tab"), results.map { it.label })
-        assertEquals(listOf("Apps", "Shortcuts", "Shortcuts"), results.map { it.section })
+        assertEquals(listOf(SearchSection.APPS, SearchSection.SHORTCUTS, SearchSection.SHORTCUTS), results.map { it.section })
     }
 
     @Test fun appPackageMatchingIsPreserved() {

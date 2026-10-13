@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -452,7 +454,7 @@ private fun RemoveBar(drag: HomeDragController, modifier: Modifier) {
         Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Outlined.RemoveCircleOutline, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text(HomeText.REMOVE, style = MaterialTheme.typography.labelLarge, color = Color.White)
+            Text(stringResource(R.string.home_drop_remove), style = MaterialTheme.typography.labelLarge, color = Color.White)
         }
     }
 }

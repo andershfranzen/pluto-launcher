@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.graphicsLayer
@@ -222,12 +224,12 @@ internal const val ID_EMPTY_EDIT = "home:empty:edit"
 @Composable
 internal fun EmptyFavourites(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     EmptyState(
-        title = "No favourites yet",
-        detail = HomeText.EMPTY_FAVOURITES,
+        title = stringResource(R.string.home_empty_favourites),
+        detail = stringResource(R.string.home_empty_favourites_detail),
         onWallpaper = true,
         icon = Icons.Outlined.Star,
         modifier = modifier,
     ) {
-        PlutoTextButton(id = ID_EMPTY_EDIT, text = "Add favourite", onClick = { vm.openLayer(Layer.Edit) }, emphasized = true)
+        PlutoTextButton(id = ID_EMPTY_EDIT, text = stringResource(R.string.home_add_favourite), onClick = { vm.openLayer(Layer.Edit) }, emphasized = true)
     }
 }

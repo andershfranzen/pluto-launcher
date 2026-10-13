@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.focus
 
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import android.annotation.SuppressLint
 
 import androidx.compose.foundation.combinedClickable
@@ -620,7 +622,7 @@ private val DisableFocus: FocusProperties.() -> Unit = { canFocus = false }
 /** The theme's accent for focus tint, selection mark and glow, provided by [ProvideControllerFocus]. */
 internal val LocalFocusAccent = staticCompositionLocalOf { Color(0xFF6750A4) }
 
-private const val DEFAULT_SECONDARY_LABEL = "More actions"
+private val DEFAULT_SECONDARY_LABEL: String get() = UiText.get(R.string.common_more_actions)
 
 /**
  * The per-call callbacks of one control, shared by its focus node and its clickable. The
