@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -54,19 +55,19 @@ import java.util.Date
 internal fun UpdateSettings(settings: LauncherSettings, vm: LauncherViewModel) {
     val update by vm.updateState.collectAsState()
     val context = LocalContext.current
-    SettingsSection("Updates") {
-        SwitchRow("settings:updates:auto", "Check automatically", settings.automaticUpdateChecks,
+    SettingsSection(stringResource(R.string.settings_updates)) {
+        SwitchRow("settings:updates:auto", stringResource(R.string.settings_updates_auto), settings.automaticUpdateChecks,
             { enabled -> vm.chooseAutomaticUpdates(enabled) },
-            supporting = "Check GitHub once a day when you open Pluto. Downloads always need your approval.")
+            supporting = stringResource(R.string.settings_updates_auto_help))
         BodyText(when (update.task) {
-            UpdateTask.CHECKING -> "Checking GitHub…"
-            UpdateTask.DOWNLOADING -> "Downloading Pluto ${update.release?.versionName}…"
-            UpdateTask.VERIFYING -> "Verifying update…"
+            UpdateTask.CHECKING -> stringResource(R.string.settings_updates_checking)
+            UpdateTask.DOWNLOADING -> stringResource(R.string.settings_updates_downloading, "${update.release?.versionName}")
+            UpdateTask.VERIFYING -> stringResource(R.string.settings_updates_verifying)
             UpdateTask.NONE -> when {
-                update.readyToInstall -> "Your update is ready. Android will ask you to approve installation."
-                update.release != null -> "Pluto ${update.release!!.versionName} is available."
-                update.lastChecked > 0 -> "You’re up to date."
-                else -> "Check for the latest stable Pluto release."
+                update.readyToInstall -> stringResource(R.string.settings_updates_ready)
+                update.release != null -> stringResource(R.string.settings_updates_available, update.release!!.versionName)
+                update.lastChecked > 0 -> stringResource(R.string.settings_updates_up_to_date)
+                else -> stringResource(R.string.settings_updates_idle)
             }
         })
         if (update.task == UpdateTask.DOWNLOADING) {
@@ -76,18 +77,18 @@ internal fun UpdateSettings(settings: LauncherSettings, vm: LauncherViewModel) {
             )
         }
         update.error?.let { NoticeCard(it, isError = true) }
-        if (update.lastChecked > 0) BodyText("Last checked: " + DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(update.lastChecked)))
+        if (update.lastChecked > 0) BodyText(stringResource(R.string.settings_updates_last_checked, DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(update.lastChecked))))
         ButtonBar(Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
-            PlutoButton("settings:updates:check", "Check for updates", { vm.checkForUpdates() }, enabled = !update.busy)
-            if (update.task == UpdateTask.DOWNLOADING) PlutoButton("settings:updates:cancel", "Cancel download", { vm.cancelUpdateDownload() })
+            PlutoButton("settings:updates:check", stringResource(R.string.settings_updates_check), { vm.checkForUpdates() }, enabled = !update.busy)
+            if (update.task == UpdateTask.DOWNLOADING) PlutoButton("settings:updates:cancel", stringResource(R.string.settings_updates_cancel), { vm.cancelUpdateDownload() })
             else if (update.release != null) PlutoButton("settings:updates:download",
-                if (update.readyToInstall) "Install update" else "Download and update",
+                stringResource(if (update.readyToInstall) R.string.settings_updates_install else R.string.settings_updates_download),
                 { if (update.readyToInstall) vm.installUpdate() else vm.downloadUpdate() },
                 style = ButtonStyle.FILLED, enabled = !update.busy)
         }
-        if (update.release != null) PlutoButton("settings:updates:notes", "View release notes",
+        if (update.release != null) PlutoButton("settings:updates:notes", stringResource(R.string.settings_updates_notes),
             { openLink(context, update.release!!.pageUrl) }, modifier = Modifier.padding(horizontal = 8.dp))
-        BodyText("Update checks contact GitHub. No launcher activity or personal data is sent. Your layout stays in place.")
+        BodyText(stringResource(R.string.settings_updates_disclosure))
     }
 }
 
@@ -99,12 +100,12 @@ internal fun UpdateCheckConsent(vm: LauncherViewModel) {
     val landscape = window.width > window.height
     val colors = MaterialTheme.colorScheme
     ModalPanel(
-        title = "Keep Pluto up to date?", idPrefix = "updates:consent",
+        title = stringResource(R.string.settings_updates_consent_title), idPrefix = "updates:consent",
         onDismiss = { vm.chooseAutomaticUpdates(false) }, interceptBack = true,
         maxWidth = 440.dp, compact = true,
         actions = {
-            PlutoButton("updates:decline", "No thanks", { vm.chooseAutomaticUpdates(false) }, style = ButtonStyle.TEXT)
-            PlutoButton("updates:allow", "Allow automatic checks", { vm.chooseAutomaticUpdates(true) }, style = ButtonStyle.FILLED)
+            PlutoButton("updates:decline", stringResource(R.string.settings_updates_consent_decline), { vm.chooseAutomaticUpdates(false) }, style = ButtonStyle.TEXT)
+            PlutoButton("updates:allow", stringResource(R.string.settings_updates_consent_allow), { vm.chooseAutomaticUpdates(true) }, style = ButtonStyle.FILLED)
         },
     ) {
         Column(
@@ -120,23 +121,23 @@ internal fun UpdateCheckConsent(vm: LauncherViewModel) {
                     UpdatePlutoLogo(88.dp)
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         UpdateConsentTitle(TextAlign.Start)
-                        Text("Automatically check GitHub for new releases?", style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+                        Text(stringResource(R.string.settings_updates_consent_question), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
                     }
                 }
             } else {
                 UpdatePlutoLogo(104.dp)
                 UpdateConsentTitle(TextAlign.Center)
-                Text("Automatically check GitHub for new releases?", style = MaterialTheme.typography.bodyLarge,
+                Text(stringResource(R.string.settings_updates_consent_question), style = MaterialTheme.typography.bodyLarge,
                     color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
             }
             Column(
                 Modifier.fillMaxWidth().background(colors.onSurface.copy(alpha = 0.045f), RoundedCornerShape(16.dp)).padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                UpdateConsentFact(Icons.Rounded.Refresh, "Once a day, when you open Pluto")
-                UpdateConsentFact(Icons.Rounded.Download, "You approve downloads and installation")
+                UpdateConsentFact(Icons.Rounded.Refresh, stringResource(R.string.settings_updates_consent_daily))
+                UpdateConsentFact(Icons.Rounded.Download, stringResource(R.string.settings_updates_consent_approval))
             }
-            Text("No usage data is shared. Change this anytime in Settings.",
+            Text(stringResource(R.string.settings_updates_consent_footer),
                 style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center)
         }
@@ -145,7 +146,7 @@ internal fun UpdateCheckConsent(vm: LauncherViewModel) {
 
 @Composable
 private fun UpdateConsentTitle(alignment: TextAlign) {
-    Text("Keep Pluto up to date?", style = MaterialTheme.typography.headlineSmall,
+    Text(stringResource(R.string.settings_updates_consent_title), style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.onSurface, textAlign = alignment,
         modifier = Modifier.semantics { heading() })
 }
@@ -159,7 +160,7 @@ private fun UpdatePlutoLogo(size: Dp) {
         contentAlignment = Alignment.Center,
     ) {
         Image(painterResource(R.drawable.ic_launcher_foreground),
-            contentDescription = "Pluto logo", modifier = Modifier.size(size).graphicsLayer { scaleX = 1.65f; scaleY = 1.65f })
+            contentDescription = stringResource(R.string.settings_updates_logo), modifier = Modifier.size(size).graphicsLayer { scaleX = 1.65f; scaleY = 1.65f })
     }
 }
 

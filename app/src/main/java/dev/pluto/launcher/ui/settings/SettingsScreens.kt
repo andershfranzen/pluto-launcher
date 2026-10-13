@@ -1,6 +1,9 @@
 package dev.pluto.launcher.ui.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.activity.result.contract.ActivityResultContracts
 import dev.pluto.launcher.system.LayoutBackupFiles
 import dev.pluto.launcher.system.ScreenLockService
@@ -213,7 +216,7 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         },
     ) {
         if (page == SettingsPage.APPEARANCE) {
-            SettingsSection("Theme & background") {
+            SettingsSection(stringResource(R.string.settings_theme_and_background)) {
                 ChoiceGroup(
                     idPrefix = "settings:theme",
                     label = SettingsText.THEME,
@@ -227,15 +230,15 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 )
                 BackgroundChoiceGroup(
                     idPrefix = "settings:background",
-                    label = "Background",
-                    supporting = "Home, folders and the app drawer in normal mode.",
+                    label = stringResource(R.string.settings_background),
+                    supporting = stringResource(R.string.settings_background_help),
                     selected = settings.normalBackground,
                     onSelect = { choice -> update { it.copy(normalBackground = choice) } },
                 )
                 BackgroundChoiceGroup(
                     idPrefix = "settings:consolebackground",
-                    label = "Console background",
-                    supporting = "Behind console mode.",
+                    label = stringResource(R.string.settings_console_background),
+                    supporting = stringResource(R.string.settings_console_background_help),
                     selected = settings.consoleBackground,
                     onSelect = { choice -> update { it.copy(consoleBackground = choice) } },
                 )
@@ -245,11 +248,11 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 ExpandingSection(visible = settings.normalBackground == BackgroundChoice.PLUTO || settings.consoleBackground == BackgroundChoice.PLUTO) {
                     ChoiceGroup(
                         idPrefix = "settings:backgroundfps",
-                        label = "Background animation",
-                        supporting = "Smooth looks fluid; Battery saver redraws half as often.",
+                        label = stringResource(R.string.settings_background_animation),
+                        supporting = stringResource(R.string.settings_background_animation_help),
                         options = listOf(
-                            BackgroundFrameRate.SMOOTH to "Smooth",
-                            BackgroundFrameRate.BATTERY_SAVER to "Battery saver",
+                            BackgroundFrameRate.SMOOTH to stringResource(R.string.settings_background_smooth),
+                            BackgroundFrameRate.BATTERY_SAVER to stringResource(R.string.settings_background_battery_saver),
                         ),
                         selected = settings.backgroundFrameRate,
                         onSelect = { rate -> update { it.copy(backgroundFrameRate = rate) } },
@@ -279,7 +282,7 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     onClick = { open(SettingsDialog.ICON_PACK, "settings:iconpack:open") },
                 )
             }
-            SettingsSection("Size & motion") {
+            SettingsSection(stringResource(R.string.settings_size_and_motion)) {
                 StepperRow(
                     idPrefix = "settings:icons",
                     label = SettingsText.ICON_SIZE,
@@ -347,11 +350,11 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     label = SettingsText.CAROUSEL,
                     supporting = SettingsText.CAROUSEL_HELP,
                     options = listOf(
-                        CarouselStyle.COVERFLOW to "Coverflow",
-                        CarouselStyle.SHOWCASE to "Showcase: a flat row",
-                        CarouselStyle.ARC to "Arc",
-                        CarouselStyle.RING to "Ring: a turning drum",
-                        CarouselStyle.DECK to "Deck: next games stacked",
+                        CarouselStyle.COVERFLOW to stringResource(R.string.settings_carousel_coverflow),
+                        CarouselStyle.SHOWCASE to stringResource(R.string.settings_carousel_showcase),
+                        CarouselStyle.ARC to stringResource(R.string.settings_carousel_arc),
+                        CarouselStyle.RING to stringResource(R.string.settings_carousel_ring),
+                        CarouselStyle.DECK to stringResource(R.string.settings_carousel_deck),
                     ),
                     selected = settings.carouselStyle,
                     onSelect = { style -> update { it.copy(carouselStyle = style) } },
@@ -378,9 +381,9 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     label = SettingsText.SWIPE_DOWN,
                     supporting = SettingsText.SWIPE_DOWN_HELP,
                     options = listOf(
-                        SwipeDownAction.NOTIFICATIONS to "Notifications",
-                        SwipeDownAction.SEARCH to "Search apps",
-                        SwipeDownAction.NOTHING to "Nothing",
+                        SwipeDownAction.NOTIFICATIONS to stringResource(R.string.settings_swipe_down_notifications),
+                        SwipeDownAction.SEARCH to stringResource(R.string.settings_swipe_down_search),
+                        SwipeDownAction.NOTHING to stringResource(R.string.settings_swipe_down_nothing),
                     ),
                     selected = settings.swipeDownAction,
                     onSelect = { action -> update { it.copy(swipeDownAction = action) } },
@@ -406,17 +409,21 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         if (page == SettingsPage.APPS) {
             val context = LocalContext.current
             val dotAccess by dev.pluto.launcher.system.NotificationDots.access.collectAsState()
-            SettingsSection("Notifications") {
-                SwitchRow(id = "settings:notificationdots", label = "Notification dots",
-                    supporting = if (dotAccess) "Small red dots for active notifications" else "Requires Android notification access",
+            SettingsSection(stringResource(R.string.settings_notifications)) {
+                SwitchRow(id = "settings:notificationdots", label = stringResource(R.string.settings_notification_dots),
+                    supporting = stringResource(
+                        if (dotAccess) R.string.settings_notification_dots_on else R.string.settings_notification_dots_needs_access,
+                    ),
                     checked = settings.notificationDots,
                     onCheckedChange = { on ->
                         if (on) vm.openLayer(Layer.NotificationPermission)
                         else update { it.copy(notificationDots = false) }
                     })
                 if (settings.notificationDots) ActionRow(id = "settings:notificationaccess",
-                    label = "Notification access", icon = Icons.Rounded.SettingsApplications,
-                    supporting = if (dotAccess) "Allowed · ongoing notifications do not show dots" else "Allow Pluto to show notification dots",
+                    label = stringResource(R.string.settings_notification_access), icon = Icons.Rounded.SettingsApplications,
+                    supporting = stringResource(
+                        if (dotAccess) R.string.settings_notification_access_allowed else R.string.settings_notification_access_needed,
+                    ),
                     onClick = { vm.openLayer(Layer.NotificationPermission) })
             }
 
@@ -429,8 +436,8 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                     onClick = { vm.openLayer(Layer.Categories) },
                 )
                 ActionRow(
-                    id = "settings:roms", label = "ROM tabs", icon = Icons.Rounded.VideogameAsset,
-                    supporting = "Add games and choose their default emulators",
+                    id = "settings:roms", label = stringResource(R.string.settings_rom_tabs), icon = Icons.Rounded.VideogameAsset,
+                    supporting = stringResource(R.string.settings_rom_tabs_help),
                     onClick = { vm.openLayer(Layer.RomLibraries) },
                 )
                 ActionRow(
@@ -513,10 +520,10 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 ActionRow(
                     id = "settings:crashes",
                     label = SettingsText.CRASH_REPORTS,
-                    supporting = when (crashes.size) {
-                        0 -> "None recorded. A crash is kept here, on this device only."
-                        1 -> "1 crash recorded. It stays on this device until you report it."
-                        else -> "${crashes.size} crashes recorded. They stay on this device until you report them."
+                    supporting = if (crashes.isEmpty()) {
+                        stringResource(R.string.settings_crashes_none)
+                    } else {
+                        pluralStringResource(R.plurals.settings_crashes_recorded, crashes.size, crashes.size)
                     },
                     icon = Icons.Rounded.BugReport,
                     onClick = { open(SettingsDialog.CRASH_REPORTS, "settings:crashes") },
@@ -541,8 +548,8 @@ fun SettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 BodyText(SettingsText.version(versionName))
                 BodyText(SettingsText.LICENSE)
                 BodyText(if (dev.pluto.launcher.BuildConfig.GITHUB_UPDATES) SettingsText.PRIVACY
-                    else "No account, ads or analytics. Your layout and launcher history stay on this device.")
-                ActionRow(id = "settings:privacy", label = "Privacy policy", icon = Icons.Rounded.Visibility,
+                    else stringResource(R.string.settings_privacy_play))
+                ActionRow(id = "settings:privacy", label = stringResource(R.string.settings_privacy_policy), icon = Icons.Rounded.Visibility,
                     onClick = { vm.openLayer(Layer.PrivacyPolicy) })
                 BodyText(SettingsText.LIMITATIONS)
             }
@@ -795,9 +802,10 @@ private fun BackgroundChoiceGroup(
         label = label,
         supporting = supporting,
         options = listOf(
-            BackgroundChoice.WALLPAPER to "Wallpaper",
+            BackgroundChoice.WALLPAPER to stringResource(R.string.settings_background_wallpaper),
+            // Brand name: not translated.
             BackgroundChoice.PLUTO to "Pluto",
-            BackgroundChoice.XMB to "XMB waves",
+            BackgroundChoice.XMB to stringResource(R.string.settings_background_xmb),
         ),
         selected = selected,
         onSelect = onSelect,
@@ -809,9 +817,9 @@ private fun BackgroundChoiceGroup(
 @Composable
 private fun XmbColorRow(selected: XmbColor, onSelect: (XmbColor) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val name = if (selected == XmbColor.AUTO) "Auto (changes every month)" else selected.name.lowercase().replaceFirstChar { it.uppercase() }
+    val name = stringResource(xmbColorName(selected))
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Text("XMB colour", style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+        Text(stringResource(R.string.settings_xmb_colour), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
         Text(name, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         FlowRow(
             Modifier.padding(top = 8.dp),
@@ -821,6 +829,8 @@ private fun XmbColorRow(selected: XmbColor, onSelect: (XmbColor) -> Unit) {
         ) {
             XmbColor.entries.forEach { c ->
                 val isSelected = c == selected
+                val swatch = stringResource(xmbSwatchDescription(c))
+                val swatchDescription = if (isSelected) stringResource(R.string.settings_xmb_swatch_selected, swatch) else swatch
                 val fill: Brush = if (c == XmbColor.AUTO) {
                     Brush.sweepGradient(XmbColor.entries.filter { it != XmbColor.AUTO && it != XmbColor.BLACK }.map { Color(it.argb) } + Color(XmbColor.BLUE.argb))
                 } else {
@@ -832,8 +842,7 @@ private fun XmbColorRow(selected: XmbColor, onSelect: (XmbColor) -> Unit) {
                         .controllerFocusable(
                             id = "settings:xmb:${c.name}",
                             onActivate = { onSelect(c) },
-                            contentDescription = (if (c == XmbColor.AUTO) "Auto colour" else "${c.name.lowercase()} colour") +
-                                if (isSelected) ", selected" else "",
+                            contentDescription = swatchDescription,
                             shape = CircleShape,
                         )
                         .padding(4.dp)
@@ -846,4 +855,34 @@ private fun XmbColorRow(selected: XmbColor, onSelect: (XmbColor) -> Unit) {
             }
         }
     }
+}
+
+/** Name shown under the XMB colour picker for the chosen colour. */
+private fun xmbColorName(c: XmbColor): Int = when (c) {
+    XmbColor.AUTO -> R.string.settings_xmb_colour_auto
+    XmbColor.BLUE -> R.string.settings_xmb_colour_blue
+    XmbColor.PURPLE -> R.string.settings_xmb_colour_purple
+    XmbColor.PINK -> R.string.settings_xmb_colour_pink
+    XmbColor.RED -> R.string.settings_xmb_colour_red
+    XmbColor.ORANGE -> R.string.settings_xmb_colour_orange
+    XmbColor.GOLD -> R.string.settings_xmb_colour_gold
+    XmbColor.GREEN -> R.string.settings_xmb_colour_green
+    XmbColor.TEAL -> R.string.settings_xmb_colour_teal
+    XmbColor.SILVER -> R.string.settings_xmb_colour_silver
+    XmbColor.BLACK -> R.string.settings_xmb_colour_black
+}
+
+/** Screen reader label for one XMB colour swatch. */
+private fun xmbSwatchDescription(c: XmbColor): Int = when (c) {
+    XmbColor.AUTO -> R.string.settings_xmb_swatch_auto
+    XmbColor.BLUE -> R.string.settings_xmb_swatch_blue
+    XmbColor.PURPLE -> R.string.settings_xmb_swatch_purple
+    XmbColor.PINK -> R.string.settings_xmb_swatch_pink
+    XmbColor.RED -> R.string.settings_xmb_swatch_red
+    XmbColor.ORANGE -> R.string.settings_xmb_swatch_orange
+    XmbColor.GOLD -> R.string.settings_xmb_swatch_gold
+    XmbColor.GREEN -> R.string.settings_xmb_swatch_green
+    XmbColor.TEAL -> R.string.settings_xmb_swatch_teal
+    XmbColor.SILVER -> R.string.settings_xmb_swatch_silver
+    XmbColor.BLACK -> R.string.settings_xmb_swatch_black
 }

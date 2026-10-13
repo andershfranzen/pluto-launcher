@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import dev.pluto.launcher.domain.CrashReport
 import dev.pluto.launcher.system.CrashLog
 import dev.pluto.launcher.ui.overlay.ActionRow
@@ -50,12 +52,12 @@ internal fun CrashReportsDialog(records: List<File>, onCleared: () -> Unit, onDi
     val record = selected?.let { CrashLog.text(context, it) }.orEmpty()
     rememberScreenFocus(selected?.let { "crash:record:${it.name}" } ?: "settings:crashes:close")
 
-    ModalPanel("Crash reports", "settings:crashes", onDismiss, interceptBack = true, maxWidth = 640.dp) {
+    ModalPanel(stringResource(R.string.settings_crash_reports), "settings:crashes", onDismiss, interceptBack = true, maxWidth = 640.dp) {
         if (records.isEmpty()) {
-            BodyText("No crashes recorded. If Pluto ever crashes, the trace is kept here — on this device only — so you can decide whether to report it.")
+            BodyText(stringResource(R.string.settings_crashes_empty))
             return@ModalPanel
         }
-        BodyText("Kept on this device only. Nothing is sent until you open the report on GitHub and submit it yourself.")
+        BodyText(stringResource(R.string.settings_crashes_kept_locally))
         records.forEach { file ->
             ActionRow(
                 id = "crash:record:${file.name}",
@@ -72,14 +74,14 @@ internal fun CrashReportsDialog(records: List<File>, onCleared: () -> Unit, onDi
         ButtonBar(Modifier.padding(horizontal = 8.dp), arrangement = Arrangement.spacedBy(8.dp)) {
             PlutoButton(
                 "crash:report",
-                "Report on GitHub",
+                stringResource(R.string.settings_crash_report_on_github),
                 { openLink(context, CrashReport.issueUrl(CrashReport.issueTitle(versionName, record), record)) },
                 icon = Icons.AutoMirrored.Rounded.OpenInNew,
                 style = ButtonStyle.FILLED,
             )
             PlutoButton(
                 "crash:clear",
-                "Clear all",
+                stringResource(R.string.settings_crash_clear_all),
                 {
                     CrashLog.clear(context)
                     onCleared()
@@ -106,7 +108,7 @@ private fun Trace(record: String) {
         )
         if (truncated) {
             Text(
-                "… the full trace is in the report.",
+                stringResource(R.string.settings_crash_trace_truncated),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),

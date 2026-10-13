@@ -1,226 +1,222 @@
 package dev.pluto.launcher.ui.settings
 
+import dev.pluto.launcher.R
 import dev.pluto.launcher.data.prefs.ControllerAction
+import dev.pluto.launcher.ui.UiText
 
-/** Plain-English texts for settings, management screens and onboarding (inline for 0.1). */
+/**
+ * Texts for settings, management screens and onboarding, read from strings_settings.xml in the
+ * current language (see [UiText]). Composables re-read them when the locale changes.
+ */
 internal object SettingsText {
-    const val GESTURES = "Gestures"
-    const val SWIPE_DOWN = "Swipe down on Home"
-    const val SWIPE_DOWN_HELP = "What a downward swipe over Home opens."
-    const val DOUBLE_TAP_LOCK = "Double-tap to lock"
-    const val DOUBLE_TAP_LOCK_HELP = "Double-tap empty space on Home to turn the screen off. Needs Pluto's screen-lock service."
-    const val DOUBLE_TAP_LOCK_READY = "On. Double-tap empty space on Home to lock."
-    const val DOUBLE_TAP_LOCK_NEEDS_SERVICE = "Turn on “Pluto screen lock” in Accessibility settings. It only performs the lock; it can't see the screen."
+    val GESTURES: String get() = UiText.get(R.string.settings_gestures)
+    val SWIPE_DOWN: String get() = UiText.get(R.string.settings_swipe_down)
+    val SWIPE_DOWN_HELP: String get() = UiText.get(R.string.settings_swipe_down_help)
+    val DOUBLE_TAP_LOCK: String get() = UiText.get(R.string.settings_double_tap_lock)
+    val DOUBLE_TAP_LOCK_HELP: String get() = UiText.get(R.string.settings_double_tap_lock_help)
+    val DOUBLE_TAP_LOCK_READY: String get() = UiText.get(R.string.settings_double_tap_lock_ready)
+    val DOUBLE_TAP_LOCK_NEEDS_SERVICE: String get() = UiText.get(R.string.settings_double_tap_lock_needs_service)
 
     // Settings
-    const val SETTINGS = "Settings"
-    const val APPEARANCE = "Appearance"
-    const val THEME = "Theme"
-    const val THEME_SYSTEM = "System"
-    const val THEME_LIGHT = "Light"
-    const val THEME_DARK = "Dark"
-    const val SCRIM = "Wallpaper contrast"
-    const val SCRIM_HELP = "Darkens (or lightens) the wallpaper so labels stay readable."
-    const val ICON_SIZE = "Icon size"
-    const val TEXT_SIZE = "Text size"
-    const val TEXT_SIZE_HELP = "Applied on top of the Android font size."
-    const val REDUCE_MOTION = "Reduce motion"
-    const val REDUCE_MOTION_HELP = "Skip non-essential animations."
+    val SETTINGS: String get() = UiText.get(R.string.settings_title)
+    val APPEARANCE: String get() = UiText.get(R.string.settings_appearance)
+    val THEME: String get() = UiText.get(R.string.settings_theme)
+    val THEME_SYSTEM: String get() = UiText.get(R.string.settings_theme_system)
+    val THEME_LIGHT: String get() = UiText.get(R.string.settings_theme_light)
+    val THEME_DARK: String get() = UiText.get(R.string.settings_theme_dark)
+    val SCRIM: String get() = UiText.get(R.string.settings_scrim)
+    val SCRIM_HELP: String get() = UiText.get(R.string.settings_scrim_help)
+    val ICON_SIZE: String get() = UiText.get(R.string.settings_icon_size)
+    val TEXT_SIZE: String get() = UiText.get(R.string.settings_text_size)
+    val TEXT_SIZE_HELP: String get() = UiText.get(R.string.settings_text_size_help)
+    val REDUCE_MOTION: String get() = UiText.get(R.string.settings_reduce_motion)
+    val REDUCE_MOTION_HELP: String get() = UiText.get(R.string.settings_reduce_motion_help)
 
-    const val LAYOUT = "Layout & rotation"
-    const val ROTATION = "Rotation"
-    const val ROTATION_HELP = "Applies to the launcher only. Apps you open keep their own orientation."
-    const val ROTATION_HELD_BY_CONSOLE = "Console mode is set to Always, so the launcher stays in landscape."
-    const val ROTATION_FOLLOW = "Follow system"
-    const val ROTATION_PORTRAIT = "Portrait"
-    const val ROTATION_LANDSCAPE = "Landscape"
-    const val ROTATION_CONTROLLER = "Landscape when controller connected"
-    const val HANDHELD = "Console mode"
-    const val HANDHELD_HELP = "Console mode is a controller-friendly carousel with shelves and button hints. Automatic " +
-        "uses it in landscape while a controller is connected. Always keeps Pluto in console mode and in landscape, " +
-        "for an Android console or a handheld."
-    const val HANDHELD_AUTO = "Automatic"
-    const val HANDHELD_ALWAYS = "Always in landscape"
-    const val HANDHELD_NEVER = "Never"
-    const val HANDHELD_EVERYWHERE = "Always (launcher stays in landscape)"
+    val LAYOUT: String get() = UiText.get(R.string.settings_layout)
+    val ROTATION: String get() = UiText.get(R.string.settings_rotation)
+    val ROTATION_HELP: String get() = UiText.get(R.string.settings_rotation_help)
+    val ROTATION_HELD_BY_CONSOLE: String get() = UiText.get(R.string.settings_rotation_held_by_console)
+    val ROTATION_FOLLOW: String get() = UiText.get(R.string.settings_rotation_follow)
+    val ROTATION_PORTRAIT: String get() = UiText.get(R.string.settings_rotation_portrait)
+    val ROTATION_LANDSCAPE: String get() = UiText.get(R.string.settings_rotation_landscape)
+    val ROTATION_CONTROLLER: String get() = UiText.get(R.string.settings_rotation_controller)
+    val HANDHELD: String get() = UiText.get(R.string.settings_handheld)
+    val HANDHELD_HELP: String get() = UiText.get(R.string.settings_handheld_help)
+    val HANDHELD_AUTO: String get() = UiText.get(R.string.settings_handheld_auto)
+    val HANDHELD_ALWAYS: String get() = UiText.get(R.string.settings_handheld_always)
+    val HANDHELD_NEVER: String get() = UiText.get(R.string.settings_handheld_never)
+    val HANDHELD_EVERYWHERE: String get() = UiText.get(R.string.settings_handheld_everywhere)
 
-    const val ORGANISATION = "Organisation"
-    const val CATEGORIES = "Categories…"
-    const val HIDDEN_APPS = "Hidden apps…"
-    const val EDIT_HOME = "Edit home…"
-    const val EDIT_HOME_HELP = "Reorder favourites, dock and folders"
-    fun hiddenCount(n: Int) = if (n == 0) "None hidden" else if (n == 1) "1 app hidden" else "$n apps hidden"
-    fun categoryCount(n: Int) = if (n == 1) "1 category" else "$n categories"
+    val ORGANISATION: String get() = UiText.get(R.string.settings_organisation)
+    val CATEGORIES: String get() = UiText.get(R.string.settings_categories)
+    val HIDDEN_APPS: String get() = UiText.get(R.string.settings_hidden_apps)
+    val EDIT_HOME: String get() = UiText.get(R.string.settings_edit_home)
+    val EDIT_HOME_HELP: String get() = UiText.get(R.string.settings_edit_home_help)
+    fun hiddenCount(n: Int) = if (n == 0) UiText.get(R.string.settings_none_hidden) else UiText.plural(R.plurals.settings_hidden_count, n, n)
+    fun categoryCount(n: Int) = UiText.plural(R.plurals.settings_category_count, n, n)
 
-    const val HISTORY = "Recent launches"
-    const val KEEP_HISTORY = "Keep history"
-    const val KEEP_HISTORY_ON = "Remembers the last 12 apps opened from Pluto. Stored only on this device."
-    const val KEEP_HISTORY_OFF = "Off. Nothing is recorded."
-    const val DISABLE_HISTORY_TITLE = "Turn off history?"
-    const val DISABLE_HISTORY_TEXT = "Stored history will be deleted and new launches will not be recorded."
-    const val TURN_OFF = "Turn off"
-    const val CLEAR_HISTORY = "Clear history"
-    const val CLEAR_HISTORY_TITLE = "Clear recent launches?"
-    const val CLEAR_HISTORY_TEXT = "The Recent launches row will be emptied. Apps are not affected."
-    const val CLEAR = "Clear"
-    fun historyCount(n: Int) = if (n == 0) "Empty" else if (n == 1) "1 app" else "$n apps"
+    val HISTORY: String get() = UiText.get(R.string.settings_history)
+    val KEEP_HISTORY: String get() = UiText.get(R.string.settings_keep_history)
+    val KEEP_HISTORY_ON: String get() = UiText.get(R.string.settings_keep_history_on)
+    val KEEP_HISTORY_OFF: String get() = UiText.get(R.string.settings_keep_history_off)
+    val DISABLE_HISTORY_TITLE: String get() = UiText.get(R.string.settings_disable_history_title)
+    val DISABLE_HISTORY_TEXT: String get() = UiText.get(R.string.settings_disable_history_text)
+    val TURN_OFF: String get() = UiText.get(R.string.settings_turn_off)
+    val CLEAR_HISTORY: String get() = UiText.get(R.string.settings_clear_history)
+    val CLEAR_HISTORY_TITLE: String get() = UiText.get(R.string.settings_clear_history_title)
+    val CLEAR_HISTORY_TEXT: String get() = UiText.get(R.string.settings_clear_history_text)
+    val CLEAR: String get() = UiText.get(R.string.settings_clear)
+    fun historyCount(n: Int) = if (n == 0) UiText.get(R.string.settings_history_empty) else UiText.plural(R.plurals.settings_history_count, n, n)
 
-    const val CONTROLLER = "Controller…"
-    const val CONTROLLER_HELP_NONE = "No controller connected · mapping, stick tuning, diagnostics"
-    fun controllerConnected(n: Int) = if (n == 1) "1 controller connected" else "$n controllers connected"
+    val CONTROLLER: String get() = UiText.get(R.string.settings_controller)
+    val CONTROLLER_HELP_NONE: String get() = UiText.get(R.string.settings_controller_help_none)
+    fun controllerConnected(n: Int) = UiText.plural(R.plurals.settings_controllers_connected, n, n)
 
-    const val DEFAULT_LAUNCHER = "Default launcher"
-    const val IS_DEFAULT = "Pluto is your Home app."
-    const val NOT_DEFAULT = "Pluto is not your Home app yet."
-    const val SET_DEFAULT = "Set Pluto as Home app"
-    const val HOW_TO_SWITCH_BACK = "How to switch back: open Android Settings ▸ Apps ▸ Default apps ▸ Home app " +
-        "and choose your previous launcher."
-    const val OPEN_DEFAULT_APPS = "Open Default apps settings"
-    const val HOME_ROLE_DECLINED = "Pluto is not your Home app yet. You can choose it any time under " +
-        "Android Settings ▸ Apps ▸ Default apps ▸ Home app."
+    val DEFAULT_LAUNCHER: String get() = UiText.get(R.string.settings_default_launcher)
+    val IS_DEFAULT: String get() = UiText.get(R.string.settings_is_default)
+    val NOT_DEFAULT: String get() = UiText.get(R.string.settings_not_default)
+    val SET_DEFAULT: String get() = UiText.get(R.string.settings_set_default)
+    val HOW_TO_SWITCH_BACK: String get() = UiText.get(R.string.settings_how_to_switch_back)
+    val OPEN_DEFAULT_APPS: String get() = UiText.get(R.string.settings_open_default_apps)
+    val HOME_ROLE_DECLINED: String get() = UiText.get(R.string.settings_home_role_declined)
 
-    const val PROFILES_NOTICE = "Work profile and Private Space apps are not shown in this version."
+    val PROFILES_NOTICE: String get() = UiText.get(R.string.settings_profiles_notice)
 
-    const val TROUBLESHOOTING = "Troubleshooting"
-    const val CRASH_REPORTS = "Crash reports"
-    const val NO_FILE_PICKER = "This device has no file picker, so Pluto cannot choose a file here."
-    const val BACKUP_LAYOUT = "Back up layout"
-    const val BACKUP_LAYOUT_HELP = "Saves favourites, dock, folders, categories and hidden apps to a file you choose."
-    const val RESTORE_LAYOUT = "Restore layout"
-    const val RESTORE_LAYOUT_HELP = "Reads a Pluto layout file back onto this device."
-    const val RESTORE_LAYOUT_TITLE = "Replace this device's layout?"
-    const val RESTORE_LAYOUT_TEXT = "The home grid, dock, folders, categories and hidden apps all come from the file. " +
-        "Widgets stay where they are, and an app you no longer have stays hidden until you install it again."
-    const val ABOUT = "About"
-    const val SUPPORT = "Support Pluto"
-    const val ICONS = "Icons"
-    const val CAROUSEL = "Console carousel"
-    const val CAROUSEL_HELP = "How games and apps are laid out in console mode."
-    const val CONSOLE_FAVOURITES = "Favourites shelf"
-    const val CONSOLE_FAVOURITES_HELP = "Show your home favourites as a shelf in console mode."
-    const val ALPHABET_RAIL = "Alphabet rail"
-    const val ALPHABET_RAIL_HELP = "Show the A–Z strip along the edge of the app drawer; drag it to jump between letters."
-    const val ICON_PACK = "Icon pack"
-    const val SYSTEM_ICONS = "System icons"
-    const val SYSTEM_ICONS_HELP = "Each app's own icon"
-    const val ICON_PACKS_LOADING = "Looking for icon packs…"
-    const val NO_ICON_PACKS = "No icon packs installed. Install one from your app store (most support Nova or ADW launchers), then choose it here."
-    const val ICON_PACK_MISSING = "Icon pack not installed: using system icons"
-    const val KOFI = "Buy me a coffee on Ko-fi"
+    val TROUBLESHOOTING: String get() = UiText.get(R.string.settings_troubleshooting)
+    val CRASH_REPORTS: String get() = UiText.get(R.string.settings_crash_reports)
+    val NO_FILE_PICKER: String get() = UiText.get(R.string.settings_no_file_picker)
+    val BACKUP_LAYOUT: String get() = UiText.get(R.string.settings_backup_layout)
+    val BACKUP_LAYOUT_HELP: String get() = UiText.get(R.string.settings_backup_layout_help)
+    val RESTORE_LAYOUT: String get() = UiText.get(R.string.settings_restore_layout)
+    val RESTORE_LAYOUT_HELP: String get() = UiText.get(R.string.settings_restore_layout_help)
+    val RESTORE_LAYOUT_TITLE: String get() = UiText.get(R.string.settings_restore_layout_title)
+    val RESTORE_LAYOUT_TEXT: String get() = UiText.get(R.string.settings_restore_layout_text)
+    val ABOUT: String get() = UiText.get(R.string.settings_about)
+    val SUPPORT: String get() = UiText.get(R.string.settings_support)
+    val ICONS: String get() = UiText.get(R.string.settings_icons)
+    val CAROUSEL: String get() = UiText.get(R.string.settings_carousel)
+    val CAROUSEL_HELP: String get() = UiText.get(R.string.settings_carousel_help)
+    val CONSOLE_FAVOURITES: String get() = UiText.get(R.string.settings_console_favourites)
+    val CONSOLE_FAVOURITES_HELP: String get() = UiText.get(R.string.settings_console_favourites_help)
+    val ALPHABET_RAIL: String get() = UiText.get(R.string.settings_alphabet_rail)
+    val ALPHABET_RAIL_HELP: String get() = UiText.get(R.string.settings_alphabet_rail_help)
+    val ICON_PACK: String get() = UiText.get(R.string.settings_icon_pack)
+    val SYSTEM_ICONS: String get() = UiText.get(R.string.settings_system_icons)
+    val SYSTEM_ICONS_HELP: String get() = UiText.get(R.string.settings_system_icons_help)
+    val ICON_PACKS_LOADING: String get() = UiText.get(R.string.settings_icon_packs_loading)
+    val NO_ICON_PACKS: String get() = UiText.get(R.string.settings_no_icon_packs)
+    val ICON_PACK_MISSING: String get() = UiText.get(R.string.settings_icon_pack_missing)
+    val KOFI: String get() = UiText.get(R.string.settings_kofi)
     const val KOFI_URL = "ko-fi.com/anderslc"
+    // Brand name and version number only: nothing to translate.
     fun version(name: String) = if (name.isBlank()) "Pluto" else "Pluto $name"
-    const val LICENSE = "Open source under the MIT licence."
-    const val PRIVACY = "No account, ads or analytics. GitHub is contacted only for optional update checks and downloads."
-    const val LIMITATIONS = "Known limitations: work profile and Private Space apps are not supported yet; " +
-        "widgets always take a full row of the home grid."
+    val LICENSE: String get() = UiText.get(R.string.settings_license)
+    val PRIVACY: String get() = UiText.get(R.string.settings_privacy)
+    val LIMITATIONS: String get() = UiText.get(R.string.settings_limitations)
 
     // Hidden apps
-    const val HIDDEN_TITLE = "Hidden apps"
-    const val HIDDEN_EXPLANATION = "Hiding only removes apps from Pluto's lists. It is not a security or privacy feature; " +
-        "hidden apps can still be opened from Settings or other apps."
-    const val HIDDEN_EMPTY = "No hidden apps. To hide one, press and hold it on Home or in All apps and choose Hide " +
-        "(or press X on it with a controller)."
-    const val RESTORE = "Restore"
-    const val RESTORE_ALL = "Restore all"
+    val HIDDEN_TITLE: String get() = UiText.get(R.string.settings_hidden_title)
+    val HIDDEN_EXPLANATION: String get() = UiText.get(R.string.settings_hidden_explanation)
+    val HIDDEN_EMPTY: String get() = UiText.get(R.string.settings_hidden_empty)
+    val RESTORE: String get() = UiText.get(R.string.settings_restore)
+    val RESTORE_ALL: String get() = UiText.get(R.string.settings_restore_all)
 
     // Categories
-    const val CATEGORIES_TITLE = "Categories"
-    const val CATEGORIES_HELP = "Categories organise apps for browsing. They never limit access: every app is always in All apps."
-    const val ADD_CATEGORY = "Add category"
-    const val NEW_CATEGORY = "New category"
-    const val CATEGORY_NAME = "Category name"
-    const val RENAME = "Rename"
-    const val RENAME_CATEGORY = "Rename category"
-    const val MOVE_UP = "Move up"
-    const val MOVE_DOWN = "Move down"
-    const val DELETE = "Delete"
-    const val SAVE = "Save"
-    const val ADD = "Add"
-    const val ALL_CATEGORY_NOTE = "Built in · always contains every app"
-    fun deleteCategoryTitle(name: String) = "Delete category “$name”?"
-    const val DELETE_CATEGORY_TEXT = "Apps in this category are not affected or uninstalled."
-    fun memberCount(n: Int) = if (n == 1) "1 app" else "$n apps"
+    val CATEGORIES_TITLE: String get() = UiText.get(R.string.settings_categories_title)
+    val CATEGORIES_HELP: String get() = UiText.get(R.string.settings_categories_help)
+    val ADD_CATEGORY: String get() = UiText.get(R.string.settings_add_category)
+    val NEW_CATEGORY: String get() = UiText.get(R.string.settings_new_category)
+    val CATEGORY_NAME: String get() = UiText.get(R.string.settings_category_name)
+    val RENAME: String get() = UiText.get(R.string.settings_rename)
+    val RENAME_CATEGORY: String get() = UiText.get(R.string.settings_rename_category)
+    val MOVE_UP: String get() = UiText.get(R.string.settings_move_up)
+    val MOVE_DOWN: String get() = UiText.get(R.string.settings_move_down)
+    val DELETE: String get() = UiText.get(R.string.settings_delete)
+    val SAVE: String get() = UiText.get(R.string.settings_save)
+    val ADD: String get() = UiText.get(R.string.settings_add)
+    val ALL_CATEGORY_NOTE: String get() = UiText.get(R.string.settings_all_category_note)
+    fun deleteCategoryTitle(name: String) = UiText.get(R.string.settings_delete_category_title, name)
+    val DELETE_CATEGORY_TEXT: String get() = UiText.get(R.string.settings_delete_category_text)
+    fun memberCount(n: Int) = UiText.plural(R.plurals.settings_member_count, n, n)
 
     // Controller
-    const val CONTROLLER_TITLE = "Controller"
-    const val CONNECTED = "Connected controllers"
-    const val NO_CONTROLLER = "No controller connected. You can connect one over USB or Bluetooth at any time."
-    fun ids(vendor: Int, product: Int) = "Vendor %04X · Product %04X".format(vendor, product)
-    fun descriptor(short: String) = "ID $short"
-    const val DIAGNOSTICS = "Live input"
-    const val DIAGNOSTICS_HELP = "Press buttons or move the sticks on the controller to check what Android reports."
-    const val DIAGNOSTICS_UNAVAILABLE = "Live input is unavailable right now."
-    const val LAST_KEY = "Last button"
-    const val NO_KEY_YET = "None yet"
-    const val AXES = "Sticks and D-pad"
-    const val NO_MOTION_YET = "No movement yet"
-    const val MAPPING = "Button mapping"
-    const val MAPPING_HELP = "Prompts use the names Android reports, because button letters differ between controllers. " +
-        "Movement (D-pad and left stick), Home and Recents cannot be remapped."
-    const val APPLY_TO = "Apply changes to"
-    const val THIS_CONTROLLER = "This controller"
-    const val ALL_CONTROLLERS = "All controllers"
-    const val USING_OVERRIDE = "This controller uses its own mapping."
-    const val USING_DEFAULT = "This controller uses the mapping for all controllers."
-    const val REMAP = "Remap"
-    const val NOT_ASSIGNED = "Not assigned"
-    const val PRESS_A_BUTTON = "Press a button on the controller…"
-    fun captureFor(action: String, seconds: Int) = "Remapping “$action”. Press a button… (cancels in $seconds s)"
-    const val CAPTURE_REFUSED = "That button is reserved for movement or the system. Press a different button."
-    const val CAPTURE_TIMEOUT = "No button pressed. Remap cancelled."
-    const val CAPTURE_CANCELLED = "Remap cancelled."
+    val CONTROLLER_TITLE: String get() = UiText.get(R.string.settings_controller_title)
+    val CONNECTED: String get() = UiText.get(R.string.settings_connected)
+    val NO_CONTROLLER: String get() = UiText.get(R.string.settings_no_controller)
+    fun ids(vendor: Int, product: Int) = UiText.get(R.string.settings_controller_ids, vendor, product)
+    fun descriptor(short: String) = UiText.get(R.string.settings_controller_descriptor, short)
+    fun controllerDetails(vendor: Int, product: Int, short: String) =
+        UiText.get(R.string.settings_controller_details, vendor, product, short)
+    val DIAGNOSTICS: String get() = UiText.get(R.string.settings_diagnostics)
+    val DIAGNOSTICS_HELP: String get() = UiText.get(R.string.settings_diagnostics_help)
+    val DIAGNOSTICS_UNAVAILABLE: String get() = UiText.get(R.string.settings_diagnostics_unavailable)
+    val LAST_KEY: String get() = UiText.get(R.string.settings_last_key)
+    val NO_KEY_YET: String get() = UiText.get(R.string.settings_no_key_yet)
+    val AXES: String get() = UiText.get(R.string.settings_axes)
+    val NO_MOTION_YET: String get() = UiText.get(R.string.settings_no_motion_yet)
+    val MAPPING: String get() = UiText.get(R.string.settings_mapping)
+    val MAPPING_HELP: String get() = UiText.get(R.string.settings_mapping_help)
+    val APPLY_TO: String get() = UiText.get(R.string.settings_apply_to)
+    val THIS_CONTROLLER: String get() = UiText.get(R.string.settings_this_controller)
+    val ALL_CONTROLLERS: String get() = UiText.get(R.string.settings_all_controllers)
+    val USING_OVERRIDE: String get() = UiText.get(R.string.settings_using_override)
+    val USING_DEFAULT: String get() = UiText.get(R.string.settings_using_default)
+    val REMAP: String get() = UiText.get(R.string.settings_remap)
+    val NOT_ASSIGNED: String get() = UiText.get(R.string.settings_not_assigned)
+    val PRESS_A_BUTTON: String get() = UiText.get(R.string.settings_press_a_button)
+    fun captureFor(action: String, seconds: Int) = UiText.plural(R.plurals.settings_capture_for, seconds, action, seconds)
+    val CAPTURE_REFUSED: String get() = UiText.get(R.string.settings_capture_refused)
+    val CAPTURE_TIMEOUT: String get() = UiText.get(R.string.settings_capture_timeout)
+    val CAPTURE_CANCELLED: String get() = UiText.get(R.string.settings_capture_cancelled)
     fun captured(key: String, action: String, previous: String?) =
-        "“$key” now does “$action”." + (previous?.let { " It no longer does “$it”." } ?: "")
-    const val RESET = "Reset to defaults"
-    const val RESET_DONE = "Mapping reset to defaults."
-    const val STICK = "Stick tuning"
-    const val DEAD_ZONE = "Dead zone"
-    const val DEAD_ZONE_HELP = "Stick movement smaller than this is ignored."
-    const val REPEAT_DELAY = "Repeat delay"
-    const val REPEAT_DELAY_HELP = "How long to hold before movement repeats."
-    const val REPEAT_INTERVAL = "Repeat interval"
-    const val REPEAT_INTERVAL_HELP = "Time between repeated moves while holding."
-    const val MOVE = "Move"
-    const val MOVE_KEYS = "D-pad or left stick"
-    fun ms(value: Int) = "$value ms"
+        if (previous == null) UiText.get(R.string.settings_captured, key, action)
+        else UiText.get(R.string.settings_captured_replacing, key, action, previous)
+    val RESET: String get() = UiText.get(R.string.settings_reset)
+    val RESET_DONE: String get() = UiText.get(R.string.settings_reset_done)
+    val STICK: String get() = UiText.get(R.string.settings_stick)
+    val DEAD_ZONE: String get() = UiText.get(R.string.settings_dead_zone)
+    val DEAD_ZONE_HELP: String get() = UiText.get(R.string.settings_dead_zone_help)
+    val REPEAT_DELAY: String get() = UiText.get(R.string.settings_repeat_delay)
+    val REPEAT_DELAY_HELP: String get() = UiText.get(R.string.settings_repeat_delay_help)
+    val REPEAT_INTERVAL: String get() = UiText.get(R.string.settings_repeat_interval)
+    val REPEAT_INTERVAL_HELP: String get() = UiText.get(R.string.settings_repeat_interval_help)
+    val MOVE: String get() = UiText.get(R.string.settings_move)
+    val MOVE_KEYS: String get() = UiText.get(R.string.settings_move_keys)
+    fun ms(value: Int) = UiText.get(R.string.settings_ms, value)
 
     fun actionLabel(action: ControllerAction): String = when (action) {
-        ControllerAction.CONFIRM -> "Open / confirm"
-        ControllerAction.BACK -> "Back / close"
-        ControllerAction.ACTIONS -> "App actions"
-        ControllerAction.SEARCH -> "Search"
-        ControllerAction.SETTINGS -> "Settings"
-        ControllerAction.PREV_CATEGORY -> "Previous category"
-        ControllerAction.NEXT_CATEGORY -> "Next category"
+        ControllerAction.CONFIRM -> UiText.get(R.string.settings_action_confirm)
+        ControllerAction.BACK -> UiText.get(R.string.settings_action_back)
+        ControllerAction.ACTIONS -> UiText.get(R.string.settings_action_actions)
+        ControllerAction.SEARCH -> UiText.get(R.string.settings_action_search)
+        ControllerAction.SETTINGS -> UiText.get(R.string.settings_action_settings)
+        ControllerAction.PREV_CATEGORY -> UiText.get(R.string.settings_action_prev_category)
+        ControllerAction.NEXT_CATEGORY -> UiText.get(R.string.settings_action_next_category)
     }
 
     // Onboarding
-    const val ONBOARDING_TITLE = "Set up Pluto"
-    const val WELCOME_TITLE = "Welcome to Pluto"
-    const val WELCOME_TEXT = "Pluto is a home screen for everyday phone use and for gaming with a controller. " +
-        "It adapts when you rotate the phone or connect a controller, and keeps your favourites, folders and categories the same everywhere."
-    const val WELCOME_READY = "Pluto is ready to use with a default layout. Everything here is optional and can be changed later in Settings."
-    fun appsFound(n: Int) = if (n == 1) "1 app found." else "$n apps found."
-    const val LOADING_APPS = "Looking for apps…"
-    const val NO_APPS_PROBLEM = "Pluto could not find any apps to show. Check that apps are installed and not restricted, " +
-        "then reopen Pluto. Until apps appear, keep your current Home app."
-    const val STEP_GAMES_TITLE = "Pick your games (optional)"
-    const val STEP_GAMES_TEXT = "Apps you tick go into the Games category, which console mode shows as its own shelf. " +
-        "You can change this any time: press and hold an app, choose More… and then Categories."
-    const val NO_GAMES_CATEGORY = "The Games category is not available. You can create categories later in Settings."
-    fun gamesSelected(n: Int) = if (n == 1) "1 app in Games" else "$n apps in Games"
-    const val STEP_CONTROLLER_TITLE = "Controller controls"
-    const val STEP_CONTROLLER_TEXT = "Everything in Pluto works with touch or a game controller. Connect a controller at any time; " +
-        "in landscape Pluto then switches to console mode."
-    const val CONTROLLER_NOW = "A controller is connected. Try moving around this screen with it."
-    const val STEP_HOME_TITLE = "Set Pluto as your Home app"
-    const val STEP_HOME_TEXT = "Make Pluto open when you press Home. Android asks you to confirm."
-    const val STEP_HOME_DONE = "Pluto is now your Home app."
-    const val NOT_NOW = "Not now"
-    const val NEXT = "Next"
-    const val BACK = "Back"
-    const val SKIP = "Skip"
-    const val FINISH = "Finish"
-    const val START = "Start using Pluto"
-    fun stepOf(step: Int, total: Int) = "Step $step of $total"
+    val ONBOARDING_TITLE: String get() = UiText.get(R.string.settings_onboarding_title)
+    val WELCOME_TITLE: String get() = UiText.get(R.string.settings_welcome_title)
+    val WELCOME_TEXT: String get() = UiText.get(R.string.settings_welcome_text)
+    val WELCOME_READY: String get() = UiText.get(R.string.settings_welcome_ready)
+    fun appsFound(n: Int) = UiText.plural(R.plurals.settings_apps_found, n, n)
+    val LOADING_APPS: String get() = UiText.get(R.string.settings_loading_apps)
+    val NO_APPS_PROBLEM: String get() = UiText.get(R.string.settings_no_apps_problem)
+    val STEP_GAMES_TITLE: String get() = UiText.get(R.string.settings_step_games_title)
+    val STEP_GAMES_TEXT: String get() = UiText.get(R.string.settings_step_games_text)
+    val NO_GAMES_CATEGORY: String get() = UiText.get(R.string.settings_no_games_category)
+    fun gamesSelected(n: Int) = UiText.plural(R.plurals.settings_games_selected, n, n)
+    val STEP_CONTROLLER_TITLE: String get() = UiText.get(R.string.settings_step_controller_title)
+    val STEP_CONTROLLER_TEXT: String get() = UiText.get(R.string.settings_step_controller_text)
+    val CONTROLLER_NOW: String get() = UiText.get(R.string.settings_controller_now)
+    val STEP_HOME_TITLE: String get() = UiText.get(R.string.settings_step_home_title)
+    val STEP_HOME_TEXT: String get() = UiText.get(R.string.settings_step_home_text)
+    val STEP_HOME_DONE: String get() = UiText.get(R.string.settings_step_home_done)
+    val NOT_NOW: String get() = UiText.get(R.string.settings_not_now)
+    val NEXT: String get() = UiText.get(R.string.settings_next)
+    val BACK: String get() = UiText.get(R.string.settings_back)
+    val SKIP: String get() = UiText.get(R.string.settings_skip)
+    val FINISH: String get() = UiText.get(R.string.settings_finish)
+    val START: String get() = UiText.get(R.string.settings_start)
+    fun stepOf(step: Int, total: Int) = UiText.get(R.string.settings_step_of, step, total)
 }

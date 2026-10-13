@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Settings, onboarding, privacy and update text. MissingTranslation is ignored here only until
+    the de/sv/fr/da translations of this file land; remove the tools:ignore then.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- ==================== Settings pages ==================== -->
+    <string name="settings_title">Settings</string>
+    <!-- Settings page tab; short, shown in a four-way segmented bar -->
+    <string name="settings_page_appearance">Appearance</string>
+    <!-- Settings page tab; short, shown in a four-way segmented bar -->
+    <string name="settings_page_layout">Layout</string>
+    <!-- Settings page tab; short, shown in a four-way segmented bar -->
+    <string name="settings_page_apps">Apps</string>
+    <!-- Settings page tab; short, shown in a four-way segmented bar -->
+    <string name="settings_page_general">General</string>
+    <!-- Screen reader label for the Appearance tab -->
+    <string name="settings_page_appearance_description">Appearance settings</string>
+    <!-- Screen reader label for the Layout tab -->
+    <string name="settings_page_layout_description">Layout settings</string>
+    <!-- Screen reader label for the Apps tab -->
+    <string name="settings_page_apps_description">Apps settings</string>
+    <!-- Screen reader label for the General tab -->
+    <string name="settings_page_general_description">General settings</string>
+
+    <!-- Appearance -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_appearance">Appearance</string>
+    <!-- Section header (shown upper case) -->
+    <string name="settings_theme_and_background">Theme &amp; background</string>
+    <string name="settings_theme">Theme</string>
+    <!-- Theme option: follow the system light/dark setting -->
+    <string name="settings_theme_system">System</string>
+    <!-- Theme option -->
+    <string name="settings_theme_light">Light</string>
+    <!-- Theme option -->
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_background">Background</string>
+    <string name="settings_background_help">Home, folders and the app drawer in normal mode.</string>
+    <string name="settings_console_background">Console background</string>
+    <string name="settings_console_background_help">Behind console mode.</string>
+    <!-- Background option: the device wallpaper -->
+    <string name="settings_background_wallpaper">Wallpaper</string>
+    <!-- Background option: animated waves in the style of the XMB console menu -->
+    <string name="settings_background_xmb">XMB waves</string>
+    <string name="settings_background_animation">Background animation</string>
+    <string name="settings_background_animation_help">Smooth looks fluid; Battery saver redraws half as often.</string>
+    <!-- Background animation option -->
+    <string name="settings_background_smooth">Smooth</string>
+    <!-- Background animation option -->
+    <string name="settings_background_battery_saver">Battery saver</string>
+    <string name="settings_scrim">Wallpaper contrast</string>
+    <string name="settings_scrim_help">Darkens (or lightens) the wallpaper so labels stay readable.</string>
+    <!-- Section header (shown upper case) -->
+    <string name="settings_icons">Icons</string>
+    <string name="settings_icon_pack">Icon pack</string>
+    <string name="settings_system_icons">System icons</string>
+    <string name="settings_system_icons_help">Each app\'s own icon</string>
+    <string name="settings_icon_packs_loading">Looking for icon packs…</string>
+    <string name="settings_no_icon_packs">No icon packs installed. Install one from your app store (most support Nova or ADW launchers), then choose it here.</string>
+    <string name="settings_icon_pack_missing">Icon pack not installed: using system icons</string>
+    <!-- Section header (shown upper case) -->
+    <string name="settings_size_and_motion">Size &amp; motion</string>
+    <string name="settings_icon_size">Icon size</string>
+    <string name="settings_text_size">Text size</string>
+    <string name="settings_text_size_help">Applied on top of the Android font size.</string>
+    <string name="settings_reduce_motion">Reduce motion</string>
+    <string name="settings_reduce_motion_help">Skip non-essential animations.</string>
+
+    <!-- XMB colour picker -->
+    <string name="settings_xmb_colour">XMB colour</string>
+    <string name="settings_xmb_colour_auto">Auto (changes every month)</string>
+    <string name="settings_xmb_colour_blue">Blue</string>
+    <string name="settings_xmb_colour_purple">Purple</string>
+    <string name="settings_xmb_colour_pink">Pink</string>
+    <string name="settings_xmb_colour_red">Red</string>
+    <string name="settings_xmb_colour_orange">Orange</string>
+    <string name="settings_xmb_colour_gold">Gold</string>
+    <string name="settings_xmb_colour_green">Green</string>
+    <string name="settings_xmb_colour_teal">Teal</string>
+    <string name="settings_xmb_colour_silver">Silver</string>
+    <string name="settings_xmb_colour_black">Black</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_auto">Auto colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_blue">blue colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_purple">purple colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_pink">pink colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_red">red colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_orange">orange colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_gold">gold colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_green">green colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_teal">teal colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_silver">silver colour</string>
+    <!-- Screen reader label for a colour swatch -->
+    <string name="settings_xmb_swatch_black">black colour</string>
+    <!-- Screen reader label for the selected colour swatch; %1$s is the swatch label, e.g. "blue colour" -->
+    <string name="settings_xmb_swatch_selected">%1$s, selected</string>
+
+    <!-- Layout & rotation -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_layout">Layout &amp; rotation</string>
+    <string name="settings_rotation">Rotation</string>
+    <string name="settings_rotation_help">Applies to the launcher only. Apps you open keep their own orientation.</string>
+    <string name="settings_rotation_held_by_console">Console mode is set to Always, so the launcher stays in landscape.</string>
+    <!-- Rotation option -->
+    <string name="settings_rotation_follow">Follow system</string>
+    <!-- Rotation option -->
+    <string name="settings_rotation_portrait">Portrait</string>
+    <!-- Rotation option -->
+    <string name="settings_rotation_landscape">Landscape</string>
+    <!-- Rotation option -->
+    <string name="settings_rotation_controller">Landscape when controller connected</string>
+    <string name="settings_handheld">Console mode</string>
+    <string name="settings_handheld_help">Console mode is a controller-friendly carousel with shelves and button hints. Automatic uses it in landscape while a controller is connected. Always keeps Pluto in console mode and in landscape, for an Android console or a handheld.</string>
+    <!-- Console mode option -->
+    <string name="settings_handheld_auto">Automatic</string>
+    <!-- Console mode option -->
+    <string name="settings_handheld_always">Always in landscape</string>
+    <!-- Console mode option -->
+    <string name="settings_handheld_never">Never</string>
+    <!-- Console mode option -->
+    <string name="settings_handheld_everywhere">Always (launcher stays in landscape)</string>
+    <string name="settings_carousel">Console carousel</string>
+    <string name="settings_carousel_help">How games and apps are laid out in console mode.</string>
+    <!-- Carousel style name: covers turned to the side, like a record shelf -->
+    <string name="settings_carousel_coverflow">Coverflow</string>
+    <!-- Carousel style -->
+    <string name="settings_carousel_showcase">Showcase: a flat row</string>
+    <!-- Carousel style: items placed along a curved arc -->
+    <string name="settings_carousel_arc">Arc</string>
+    <!-- Carousel style -->
+    <string name="settings_carousel_ring">Ring: a turning drum</string>
+    <!-- Carousel style -->
+    <string name="settings_carousel_deck">Deck: next games stacked</string>
+    <string name="settings_console_favourites">Favourites shelf</string>
+    <string name="settings_console_favourites_help">Show your home favourites as a shelf in console mode.</string>
+    <string name="settings_alphabet_rail">Alphabet rail</string>
+    <string name="settings_alphabet_rail_help">Show the A–Z strip along the edge of the app drawer; drag it to jump between letters.</string>
+
+    <!-- Gestures -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_gestures">Gestures</string>
+    <string name="settings_swipe_down">Swipe down on Home</string>
+    <string name="settings_swipe_down_help">What a downward swipe over Home opens.</string>
+    <!-- Swipe-down option: open the notification shade -->
+    <string name="settings_swipe_down_notifications">Notifications</string>
+    <!-- Swipe-down option -->
+    <string name="settings_swipe_down_search">Search apps</string>
+    <!-- Swipe-down option: the swipe does nothing -->
+    <string name="settings_swipe_down_nothing">Nothing</string>
+    <string name="settings_double_tap_lock">Double-tap to lock</string>
+    <string name="settings_double_tap_lock_help">Double-tap empty space on Home to turn the screen off. Needs Pluto\'s screen-lock service.</string>
+    <string name="settings_double_tap_lock_ready">On. Double-tap empty space on Home to lock.</string>
+    <string name="settings_double_tap_lock_needs_service">Turn on “Pluto screen lock” in Accessibility settings. It only performs the lock; it can\'t see the screen.</string>
+
+    <!-- Notifications -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notification_dots">Notification dots</string>
+    <string name="settings_notification_dots_on">Small red dots for active notifications</string>
+    <string name="settings_notification_dots_needs_access">Requires Android notification access</string>
+    <string name="settings_notification_access">Notification access</string>
+    <string name="settings_notification_access_allowed">Allowed · ongoing notifications do not show dots</string>
+    <string name="settings_notification_access_needed">Allow Pluto to show notification dots</string>
+
+    <!-- Organisation -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_organisation">Organisation</string>
+    <string name="settings_categories">Categories…</string>
+    <string name="settings_hidden_apps">Hidden apps…</string>
+    <string name="settings_edit_home">Edit home…</string>
+    <string name="settings_edit_home_help">Reorder favourites, dock and folders</string>
+    <!-- Row that opens the ROM library manager; a tab is one shelf of games -->
+    <string name="settings_rom_tabs">ROM tabs</string>
+    <string name="settings_rom_tabs_help">Add games and choose their default emulators</string>
+    <string name="settings_none_hidden">None hidden</string>
+    <plurals name="settings_hidden_count">
+        <item quantity="one">%1$d app hidden</item>
+        <item quantity="other">%1$d apps hidden</item>
+    </plurals>
+    <plurals name="settings_category_count">
+        <item quantity="one">%1$d category</item>
+        <item quantity="other">%1$d categories</item>
+    </plurals>
+
+    <!-- History -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_history">Recent launches</string>
+    <string name="settings_keep_history">Keep history</string>
+    <string name="settings_keep_history_on">Remembers the last 12 apps opened from Pluto. Stored only on this device.</string>
+    <string name="settings_keep_history_off">Off. Nothing is recorded.</string>
+    <string name="settings_disable_history_title">Turn off history?</string>
+    <string name="settings_disable_history_text">Stored history will be deleted and new launches will not be recorded.</string>
+    <!-- Dialog button that turns history off -->
+    <string name="settings_turn_off">Turn off</string>
+    <string name="settings_clear_history">Clear history</string>
+    <string name="settings_clear_history_title">Clear recent launches?</string>
+    <string name="settings_clear_history_text">The Recent launches row will be emptied. Apps are not affected.</string>
+    <!-- Dialog button that empties the history -->
+    <string name="settings_clear">Clear</string>
+    <!-- History is empty -->
+    <string name="settings_history_empty">Empty</string>
+    <plurals name="settings_history_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+
+    <!-- Controller row -->
+    <string name="settings_controller">Controller…</string>
+    <string name="settings_controller_help_none">No controller connected · mapping, stick tuning, diagnostics</string>
+    <plurals name="settings_controllers_connected">
+        <item quantity="one">%1$d controller connected</item>
+        <item quantity="other">%1$d controllers connected</item>
+    </plurals>
+
+    <!-- Default launcher -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_default_launcher">Default launcher</string>
+    <string name="settings_is_default">Pluto is your Home app.</string>
+    <string name="settings_not_default">Pluto is not your Home app yet.</string>
+    <string name="settings_set_default">Set Pluto as Home app</string>
+    <!-- ▸ separates steps of a path through Android Settings; use the names Android shows in your language -->
+    <string name="settings_how_to_switch_back">How to switch back: open Android Settings ▸ Apps ▸ Default apps ▸ Home app and choose your previous launcher.</string>
+    <string name="settings_open_default_apps">Open Default apps settings</string>
+    <string name="settings_home_role_declined">Pluto is not your Home app yet. You can choose it any time under Android Settings ▸ Apps ▸ Default apps ▸ Home app.</string>
+    <string name="settings_profiles_notice">Work profile and Private Space apps are not shown in this version.</string>
+
+    <!-- Troubleshooting -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_troubleshooting">Troubleshooting</string>
+    <string name="settings_crash_reports">Crash reports</string>
+    <string name="settings_crashes_none">None recorded. A crash is kept here, on this device only.</string>
+    <plurals name="settings_crashes_recorded">
+        <item quantity="one">%1$d crash recorded. It stays on this device until you report it.</item>
+        <item quantity="other">%1$d crashes recorded. They stay on this device until you report them.</item>
+    </plurals>
+    <string name="settings_no_file_picker">This device has no file picker, so Pluto cannot choose a file here.</string>
+    <string name="settings_backup_layout">Back up layout</string>
+    <string name="settings_backup_layout_help">Saves favourites, dock, folders, categories and hidden apps to a file you choose.</string>
+    <string name="settings_restore_layout">Restore layout</string>
+    <string name="settings_restore_layout_help">Reads a Pluto layout file back onto this device.</string>
+    <string name="settings_restore_layout_title">Replace this device\'s layout?</string>
+    <string name="settings_restore_layout_text">The home grid, dock, folders, categories and hidden apps all come from the file. Widgets stay where they are, and an app you no longer have stays hidden until you install it again.</string>
+
+    <!-- About -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_about">About</string>
+    <string name="settings_license">Open source under the MIT licence.</string>
+    <string name="settings_privacy">No account, ads or analytics. GitHub is contacted only for optional update checks and downloads.</string>
+    <string name="settings_privacy_play">No account, ads or analytics. Your layout and launcher history stay on this device.</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_limitations">Known limitations: work profile and Private Space apps are not supported yet; widgets always take a full row of the home grid.</string>
+    <!-- Section header (shown upper case) -->
+    <string name="settings_support">Support Pluto</string>
+    <string name="settings_kofi">Buy me a coffee on Ko-fi</string>
+
+    <!-- Hidden apps -->
+    <string name="settings_hidden_title">Hidden apps</string>
+    <string name="settings_hidden_explanation">Hiding only removes apps from Pluto\'s lists. It is not a security or privacy feature; hidden apps can still be opened from Settings or other apps.</string>
+    <string name="settings_hidden_empty">No hidden apps. To hide one, press and hold it on Home or in All apps and choose Hide (or press X on it with a controller).</string>
+    <!-- Button: unhide one app, or confirm restoring a layout backup -->
+    <string name="settings_restore">Restore</string>
+    <!-- Button: unhide every hidden app -->
+    <string name="settings_restore_all">Restore all</string>
+
+    <!-- Categories -->
+    <string name="settings_categories_title">Categories</string>
+    <string name="settings_categories_help">Categories organise apps for browsing. They never limit access: every app is always in All apps.</string>
+    <string name="settings_add_category">Add category</string>
+    <string name="settings_new_category">New category</string>
+    <string name="settings_category_name">Category name</string>
+    <!-- Button -->
+    <string name="settings_rename">Rename</string>
+    <string name="settings_rename_category">Rename category</string>
+    <!-- Button: move the category one place up in the list -->
+    <string name="settings_move_up">Move up</string>
+    <!-- Button: move the category one place down in the list -->
+    <string name="settings_move_down">Move down</string>
+    <!-- Button -->
+    <string name="settings_delete">Delete</string>
+    <!-- Button -->
+    <string name="settings_save">Save</string>
+    <!-- Button: create the new category -->
+    <string name="settings_add">Add</string>
+    <string name="settings_all_category_note">Built in · always contains every app</string>
+    <!-- %1$s is the category name -->
+    <string name="settings_delete_category_title">Delete category “%1$s”?</string>
+    <string name="settings_delete_category_text">Apps in this category are not affected or uninstalled.</string>
+    <plurals name="settings_member_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+
+    <!-- Controller settings -->
+    <string name="settings_controller_title">Controller</string>
+    <string name="settings_connected">Connected controllers</string>
+    <string name="settings_no_controller">No controller connected. You can connect one over USB or Bluetooth at any time.</string>
+    <!-- USB/Bluetooth hardware ids in hexadecimal -->
+    <string name="settings_controller_ids">Vendor %1$04X · Product %2$04X</string>
+    <!-- %1$s is the start of the controller's unique descriptor -->
+    <string name="settings_controller_descriptor">ID %1$s</string>
+    <!-- Controller row details: vendor and product ids in hexadecimal, then the start of its unique descriptor -->
+    <string name="settings_controller_details">Vendor %1$04X · Product %2$04X · ID %3$s</string>
+    <!-- Section header: live readout of controller input -->
+    <string name="settings_diagnostics">Live input</string>
+    <string name="settings_diagnostics_help">Press buttons or move the sticks on the controller to check what Android reports.</string>
+    <string name="settings_diagnostics_unavailable">Live input is unavailable right now.</string>
+    <!-- Label for the last controller button pressed -->
+    <string name="settings_last_key">Last button</string>
+    <!-- No button pressed yet -->
+    <string name="settings_no_key_yet">None yet</string>
+    <string name="settings_axes">Sticks and D-pad</string>
+    <string name="settings_no_motion_yet">No movement yet</string>
+    <!-- Last button readout: %1$s readable key name, %2$s Android key code (e.g. KEYCODE_BUTTON_A) -->
+    <string name="settings_last_key_value">%1$s (%2$s)</string>
+    <!-- Last button readout: %1$s readable key name, %2$s Android key code, %3$s controller name -->
+    <string name="settings_last_key_value_device">%1$s (%2$s) · %3$s</string>
+    <!-- Name for a numbered key without its own name, e.g. "Key 5" -->
+    <string name="settings_key_number">Key %1$s</string>
+    <!-- Screen reader summary of both sticks; %1$s and %2$s are directions such as "up-left" -->
+    <string name="settings_stick_summary">Left stick %1$s, right stick %2$s</string>
+    <!-- Raw stick values; keep the line breaks and number formats -->
+    <string name="settings_axes_values">Left stick %1$+.2f, %2$+.2f\nRight stick %3$+.2f, %4$+.2f\nD-pad (hat) %5$+.0f, %6$+.0f</string>
+    <!-- Raw stick values while the left stick is inside the dead zone; keep the line breaks and number formats -->
+    <string name="settings_axes_values_dead_zone">Left stick %1$+.2f, %2$+.2f (dead zone)\nRight stick %3$+.2f, %4$+.2f\nD-pad (hat) %5$+.0f, %6$+.0f</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_centred">centred</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_up">up</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_down">down</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_left">left</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_right">right</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_up_left">up-left</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_up_right">up-right</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_down_left">down-left</string>
+    <!-- Stick direction -->
+    <string name="settings_stick_down_right">down-right</string>
+    <string name="settings_mapping">Button mapping</string>
+    <string name="settings_mapping_help">Prompts use the names Android reports, because button letters differ between controllers. Movement (D-pad and left stick), Home and Recents cannot be remapped.</string>
+    <string name="settings_apply_to">Apply changes to</string>
+    <string name="settings_this_controller">This controller</string>
+    <string name="settings_all_controllers">All controllers</string>
+    <string name="settings_using_override">This controller uses its own mapping.</string>
+    <string name="settings_using_default">This controller uses the mapping for all controllers.</string>
+    <!-- Button: assign a different controller button to this action -->
+    <string name="settings_remap">Remap</string>
+    <string name="settings_not_assigned">Not assigned</string>
+    <string name="settings_press_a_button">Press a button on the controller…</string>
+    <!-- %1$s is the action being remapped, %2$d the seconds left before it cancels -->
+    <plurals name="settings_capture_for">
+        <item quantity="one">Remapping “%1$s”. Press a button… (cancels in %2$d s)</item>
+        <item quantity="other">Remapping “%1$s”. Press a button… (cancels in %2$d s)</item>
+    </plurals>
+    <string name="settings_capture_refused">That button is reserved for movement or the system. Press a different button.</string>
+    <string name="settings_capture_timeout">No button pressed. Remap cancelled.</string>
+    <string name="settings_capture_cancelled">Remap cancelled.</string>
+    <!-- %1$s is a controller button, %2$s the action it now performs -->
+    <string name="settings_captured">“%1$s” now does “%2$s”.</string>
+    <!-- %1$s is a controller button, %2$s the action it now performs, %3$s the action it used to perform -->
+    <string name="settings_captured_replacing">“%1$s” now does “%2$s”. It no longer does “%3$s”.</string>
+    <string name="settings_reset">Reset to defaults</string>
+    <string name="settings_reset_done">Mapping reset to defaults.</string>
+    <string name="settings_stick">Stick tuning</string>
+    <!-- Area around the stick centre where movement is ignored -->
+    <string name="settings_dead_zone">Dead zone</string>
+    <string name="settings_dead_zone_help">Stick movement smaller than this is ignored.</string>
+    <string name="settings_repeat_delay">Repeat delay</string>
+    <string name="settings_repeat_delay_help">How long to hold before movement repeats.</string>
+    <string name="settings_repeat_interval">Repeat interval</string>
+    <string name="settings_repeat_interval_help">Time between repeated moves while holding.</string>
+    <!-- Controller action: moving the focus around -->
+    <string name="settings_move">Move</string>
+    <string name="settings_move_keys">D-pad or left stick</string>
+    <!-- Mapping line: %1$s is the action ("Move"), %2$s the controls that perform it -->
+    <string name="settings_move_line">%1$s: %2$s</string>
+    <!-- Milliseconds -->
+    <string name="settings_ms">%1$d ms</string>
+    <!-- Controller action -->
+    <string name="settings_action_confirm">Open / confirm</string>
+    <!-- Controller action -->
+    <string name="settings_action_back">Back / close</string>
+    <!-- Controller action: open the actions menu for the focused app -->
+    <string name="settings_action_actions">App actions</string>
+    <!-- Controller action -->
+    <string name="settings_action_search">Search</string>
+    <!-- Controller action: open Pluto's settings -->
+    <string name="settings_action_settings">Settings</string>
+    <!-- Controller action -->
+    <string name="settings_action_prev_category">Previous category</string>
+    <!-- Controller action -->
+    <string name="settings_action_next_category">Next category</string>
+
+    <!-- Onboarding -->
+    <string name="settings_onboarding_title">Set up Pluto</string>
+    <string name="settings_welcome_title">Welcome to Pluto</string>
+    <string name="settings_welcome_text">Pluto is a home screen for everyday phone use and for gaming with a controller. It adapts when you rotate the phone or connect a controller, and keeps your favourites, folders and categories the same everywhere.</string>
+    <string name="settings_welcome_ready">Pluto is ready to use with a default layout. Everything here is optional and can be changed later in Settings.</string>
+    <plurals name="settings_apps_found">
+        <item quantity="one">%1$d app found.</item>
+        <item quantity="other">%1$d apps found.</item>
+    </plurals>
+    <string name="settings_loading_apps">Looking for apps…</string>
+    <string name="settings_no_apps_problem">Pluto could not find any apps to show. Check that apps are installed and not restricted, then reopen Pluto. Until apps appear, keep your current Home app.</string>
+    <string name="settings_step_games_title">Pick your games (optional)</string>
+    <string name="settings_step_games_text">Apps you tick go into the Games category, which console mode shows as its own shelf. You can change this any time: press and hold an app, choose More… and then Categories.</string>
+    <string name="settings_no_games_category">The Games category is not available. You can create categories later in Settings.</string>
+    <plurals name="settings_games_selected">
+        <item quantity="one">%1$d app in Games</item>
+        <item quantity="other">%1$d apps in Games</item>
+    </plurals>
+    <string name="settings_step_controller_title">Controller controls</string>
+    <string name="settings_step_controller_text">Everything in Pluto works with touch or a game controller. Connect a controller at any time; in landscape Pluto then switches to console mode.</string>
+    <string name="settings_controller_now">A controller is connected. Try moving around this screen with it.</string>
+    <string name="settings_step_home_title">Set Pluto as your Home app</string>
+    <string name="settings_step_home_text">Make Pluto open when you press Home. Android asks you to confirm.</string>
+    <string name="settings_step_home_done">Pluto is now your Home app.</string>
+    <!-- Onboarding button: skip setting Pluto as Home and finish -->
+    <string name="settings_not_now">Not now</string>
+    <!-- Onboarding button -->
+    <string name="settings_next">Next</string>
+    <!-- Onboarding button: previous step -->
+    <string name="settings_back">Back</string>
+    <!-- Onboarding button: skip this optional step -->
+    <string name="settings_skip">Skip</string>
+    <!-- Onboarding button -->
+    <string name="settings_finish">Finish</string>
+    <string name="settings_start">Start using Pluto</string>
+    <!-- Onboarding progress, e.g. "Step 2 of 4" -->
+    <string name="settings_step_of">Step %1$d of %2$d</string>
+
+    <!-- Crash reports -->
+    <string name="settings_crashes_empty">No crashes recorded. If Pluto ever crashes, the trace is kept here — on this device only — so you can decide whether to report it.</string>
+    <string name="settings_crashes_kept_locally">Kept on this device only. Nothing is sent until you open the report on GitHub and submit it yourself.</string>
+    <string name="settings_crash_report_on_github">Report on GitHub</string>
+    <!-- Button: delete every crash record -->
+    <string name="settings_crash_clear_all">Clear all</string>
+    <string name="settings_crash_trace_truncated">… the full trace is in the report.</string>
+    <!-- SimpleDateFormat pattern for a crash record's date and time, e.g. "12 Oct, 21:04". Reorder for your language; keep the letters d, MMM, HH, mm. -->
+    <string name="settings_crash_label_date_pattern">d MMM, HH:mm</string>
+
+    <!-- Optional permission disclosures -->
+    <string name="settings_access_lock_title">Allow double-tap screen locking?</string>
+    <string name="settings_access_notifications_title">Allow notification dots?</string>
+    <string name="settings_access_lock_text">Pluto uses Android’s Accessibility Service API only to lock your screen when you double-tap empty space on Home. This service cannot read screen content and does not monitor accessibility events. It does not collect, store or share personal data. Screen locking is optional. You can turn off “Pluto screen lock” in Android’s Accessibility settings at any time.</string>
+    <string name="settings_access_notifications_text">Android notification access lets Pluto receive notification information, including while Pluto is in the background. Pluto uses app and profile identifiers, notification flags and badge eligibility only to show dots. It does not read or store message text. The metadata stays in memory on your device and is never sent to a server. Notification dots are optional. You can revoke notification access in Android Settings at any time.</string>
+    <string name="settings_access_agree">Agree and continue</string>
+
+    <!-- Privacy policy -->
+    <string name="settings_privacy_byline">Pluto Launcher · Anders (andershfranzen) · Updated 12 October 2026</string>
+    <string name="settings_privacy_device_title">Your information stays on your device</string>
+    <string name="settings_privacy_device_text">Pluto has no account, ads, analytics, tracking SDKs or remote crash reporting. The developer does not receive your installed-app list, layout, searches, ROMs, notifications or launch history.</string>
+    <string name="settings_privacy_apps_title">Apps, layout and recent launches</string>
+    <string name="settings_privacy_apps_text">Pluto reads launchable app names, icons and shortcuts to display and search them. Favourites, folders, hidden apps, categories, widget IDs and settings are saved in the app’s private storage. Optional recent launches are stored locally; you can clear them or turn history off in Settings. Search queries are used locally and are not saved as a search history.</string>
+    <string name="settings_privacy_roms_title">ROM folders and artwork</string>
+    <string name="settings_privacy_roms_text">Pluto accesses only folders and images you select with Android’s file picker. It saves file references, game names and artwork locally to build your library. Opening a game gives your chosen emulator access to its selected file. Removing a ROM tab deletes Pluto’s library records, not your game files. Emulators and widget providers handle their own data under their own policies.</string>
+    <string name="settings_privacy_dots_title">Notification dots</string>
+    <string name="settings_privacy_dots_text">Optional Android notification access is used for app/profile identifiers, notification flags and badge eligibility. This metadata is held only in memory, including in the background while access is enabled. Pluto does not read or store notification message text or send notification data off the device. Revoke access in Android Settings to stop the listener.</string>
+    <string name="settings_privacy_lock_title">Double-tap screen locking</string>
+    <string name="settings_privacy_lock_text">The optional Accessibility Service API is used only to perform Android’s lock-screen action after your double tap. It cannot retrieve screen content and does not subscribe to accessibility events. No personal data is collected, stored or shared through this service. Disable “Pluto screen lock” in Android’s Accessibility settings to revoke access.</string>
+    <string name="settings_privacy_updates_title">Updates and external links</string>
+    <string name="settings_privacy_updates_text">The Google Play build has no Internet permission or GitHub updater. Google Play handles its updates under Google’s own privacy policy. The GitHub build contacts GitHub only for update checks you permit and downloads you request. GitHub receives normal connection metadata, such as your IP address and Pluto version; no launcher activity is sent. Update checks are optional and downloads require your approval. External support links open in your browser and are subject to the destination’s privacy policy.</string>
+    <string name="settings_privacy_retention_title">Retention and deletion</string>
+    <string name="settings_privacy_retention_text">Pluto’s saved data remains in its private on-device storage until you remove it, clear the app’s storage or uninstall. Android backup is disabled. Revoking file permissions stops future access. Clearing Pluto’s storage does not delete the ROM files or artwork you selected. Pluto has no server account or server-held user records to delete.</string>
+    <string name="settings_privacy_contact_title">Contact</string>
+    <string name="settings_privacy_contact_text">For privacy questions, email anders@afive.dev. You can also report issues through the Pluto Launcher GitHub issue tracker. Avoid including private information in a public issue.</string>
+    <string name="settings_privacy_email">Email the developer</string>
+    <string name="settings_privacy_website">View public privacy policy</string>
+
+    <!-- Updates (both distributions) -->
+    <!-- Section header (shown upper case) -->
+    <string name="settings_updates">Updates</string>
+    <!-- Updates, Google Play build -->
+    <string name="settings_updates_play">Google Play keeps Pluto up to date.</string>
+    <string name="settings_updates_open_play">Open in Play Store</string>
+    <!-- Updates, GitHub build -->
+    <string name="settings_updates_auto">Check automatically</string>
+    <string name="settings_updates_auto_help">Check GitHub once a day when you open Pluto. Downloads always need your approval.</string>
+    <string name="settings_updates_checking">Checking GitHub…</string>
+    <!-- %1$s is the version being downloaded -->
+    <string name="settings_updates_downloading">Downloading Pluto %1$s…</string>
+    <string name="settings_updates_verifying">Verifying update…</string>
+    <string name="settings_updates_ready">Your update is ready. Android will ask you to approve installation.</string>
+    <!-- %1$s is the new version -->
+    <string name="settings_updates_available">Pluto %1$s is available.</string>
+    <string name="settings_updates_up_to_date">You’re up to date.</string>
+    <string name="settings_updates_idle">Check for the latest stable Pluto release.</string>
+    <!-- %1$s is a date and time -->
+    <string name="settings_updates_last_checked">Last checked: %1$s</string>
+    <string name="settings_updates_check">Check for updates</string>
+    <string name="settings_updates_cancel">Cancel download</string>
+    <string name="settings_updates_install">Install update</string>
+    <string name="settings_updates_download">Download and update</string>
+    <string name="settings_updates_notes">View release notes</string>
+    <string name="settings_updates_disclosure">Update checks contact GitHub. No launcher activity or personal data is sent. Your layout stays in place.</string>
+    <string name="settings_updates_consent_title">Keep Pluto up to date?</string>
+    <!-- Consent dialog button: decline automatic update checks -->
+    <string name="settings_updates_consent_decline">No thanks</string>
+    <string name="settings_updates_consent_allow">Allow automatic checks</string>
+    <string name="settings_updates_consent_question">Automatically check GitHub for new releases?</string>
+    <string name="settings_updates_consent_daily">Once a day, when you open Pluto</string>
+    <string name="settings_updates_consent_approval">You approve downloads and installation</string>
+    <string name="settings_updates_consent_footer">No usage data is shared. Change this anytime in Settings.</string>
+    <string name="settings_updates_logo">Pluto logo</string>
+
+    <!-- Update errors (GitHub build) -->
+    <string name="settings_update_error_check">Could not check GitHub. Check your connection and try again.</string>
+    <string name="settings_update_error_download">Could not download the update. Check your connection and free storage, then try again.</string>
+    <string name="settings_update_error_installer">Android could not open the installer. Try again.</string>
+    <string name="settings_update_error_permission">To install this update, allow Pluto to install apps when Android asks. Your download is ready to retry.</string>
+    <string name="settings_update_error_response_too_large">The release response was too large.</string>
+    <string name="settings_update_error_no_stable">No stable release is available.</string>
+    <string name="settings_update_error_unsupported_version">The release has an unsupported version.</string>
+    <string name="settings_update_error_cannot_compare">This build cannot compare release versions.</string>
+    <string name="settings_update_error_no_apk_yet">This release has no APK yet. Try again later.</string>
+    <string name="settings_update_error_apk_mismatch">The downloaded APK does not match the release.</string>
+    <string name="settings_update_error_incomplete">The download was incomplete. Try again.</string>
+    <string name="settings_update_error_save">Could not save the update. Check free storage and try again.</string>
+    <string name="settings_update_error_checksum">The APK checksum does not match. Download it again.</string>
+    <string name="settings_update_error_invalid_apk">The download is not a valid Android APK.</string>
+    <string name="settings_update_error_redirect_outside">The download redirected outside GitHub.</string>
+    <string name="settings_update_error_missing_location">Missing download location.</string>
+    <string name="settings_update_error_rate_limited">GitHub is limiting requests. Try again later.</string>
+    <string name="settings_update_error_too_many_redirects">The download redirected too many times.</string>
+    <string name="settings_update_error_not_pluto_repo">The release is not from Pluto\'s GitHub repository.</string>
+    <string name="settings_update_error_no_supported_apk">The release has no supported Pluto APK.</string>
+    <string name="settings_update_error_unexpected_size">The release APK has an unexpected size.</string>
+    <string name="settings_update_error_no_checksum">The release has no verified APK checksum yet. Try again later.</string>
+    <string name="settings_update_error_not_pluto">This APK is not Pluto.</string>
+    <string name="settings_update_error_not_newer">This APK is not a newer Pluto release.</string>
+    <string name="settings_update_error_signing_key">This update uses a different signing key and cannot preserve your layout. Keep your current installation; do not uninstall it.</string>
+</resources>

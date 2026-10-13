@@ -24,17 +24,24 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import dev.pluto.launcher.ui.components.LocalGlassBackdrop
 import dev.pluto.launcher.ui.focus.controllerFocusable
 
 /** Stable sections keep settings navigable on phones and with a D-pad. */
-internal enum class SettingsPage(val title: String) {
-    APPEARANCE("Appearance"),
-    LAYOUT("Layout"),
-    APPS("Apps"),
-    GENERAL("General"),
+internal enum class SettingsPage(@StringRes val titleRes: Int, @StringRes val descriptionRes: Int) {
+    APPEARANCE(R.string.settings_page_appearance, R.string.settings_page_appearance_description),
+    LAYOUT(R.string.settings_page_layout, R.string.settings_page_layout_description),
+    APPS(R.string.settings_page_apps, R.string.settings_page_apps_description),
+    GENERAL(R.string.settings_page_general, R.string.settings_page_general_description),
+    ;
+
+    val title: String get() = UiText.get(titleRes)
 }
 
 @Composable
@@ -61,7 +68,7 @@ internal fun SettingsNavigation(selectedPage: SettingsPage, onSelect: (SettingsP
                         .controllerFocusable(
                             id = "settings:page:${page.name}",
                             onActivate = { onSelect(page) },
-                            contentDescription = "${page.title} settings",
+                            contentDescription = stringResource(page.descriptionRes),
                             shape = shape,
                         )
                         .semantics { selected = picked }
@@ -71,7 +78,7 @@ internal fun SettingsNavigation(selectedPage: SettingsPage, onSelect: (SettingsP
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        page.title,
+                        stringResource(page.titleRes),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (picked) colors.inverseOnSurface else colors.onSurfaceVariant,
                         maxLines = 1,

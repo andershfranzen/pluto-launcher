@@ -15,7 +15,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
+import dev.pluto.launcher.R
 import dev.pluto.launcher.data.prefs.ButtonMapping
+import dev.pluto.launcher.ui.UiText
 import dev.pluto.launcher.data.prefs.ControllerAction
 import dev.pluto.launcher.system.HomeRole
 
@@ -87,7 +89,7 @@ internal fun rememberVersionName(): String {
  */
 internal fun keyLabel(keyCode: Int): String {
     val raw = KeyEvent.keyCodeToString(keyCode).removePrefix("KEYCODE_").removePrefix("BUTTON_")
-    if (raw.all { it.isDigit() }) return "Key $raw"
+    if (raw.all { it.isDigit() }) return UiText.get(R.string.settings_key_number, raw)
     return raw.split('_').joinToString(" ") { part ->
         if (part.length <= 2) part else part.lowercase().replaceFirstChar { it.uppercase() }
     }

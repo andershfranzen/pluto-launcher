@@ -3,6 +3,8 @@ package dev.pluto.launcher.system
 import android.content.Context
 import android.os.Build
 import dev.pluto.launcher.BuildConfig
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import dev.pluto.launcher.domain.CrashReport
 import java.io.File
 import java.text.SimpleDateFormat
@@ -72,7 +74,7 @@ object CrashLog {
     fun label(file: File): String {
         val stamp = file.name.removePrefix(FILE_PREFIX).removeSuffix(".txt")
         val parsed = runCatching { fileFormat().parse(stamp) }.getOrNull() ?: return stamp
-        return SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(parsed)
+        return SimpleDateFormat(UiText.get(R.string.settings_crash_label_date_pattern), Locale.getDefault()).format(parsed)
     }
 
     private fun directory(context: Context) = File(context.filesDir, DIRECTORY)

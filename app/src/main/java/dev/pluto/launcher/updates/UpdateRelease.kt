@@ -1,6 +1,22 @@
 package dev.pluto.launcher.updates
 
+import androidx.annotation.StringRes
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import java.net.URI
+
+/**
+ * An update refused for a reason the user sees in Settings. The message is read in the current
+ * language only when it is shown, so validation itself stays free of Android resources.
+ */
+class UpdateRejected(@StringRes val reason: Int) : IllegalArgumentException() {
+    override val message: String get() = UiText.get(reason)
+}
+
+/** Like [require], but the failure carries a translated, user-facing [reason]. */
+internal fun requireUpdate(condition: Boolean, @StringRes reason: Int) {
+    if (!condition) throw UpdateRejected(reason)
+}
 
 /** Stable numeric release versions; previews never participate in automatic updates. */
 data class ReleaseVersion(val parts: List<Int>) : Comparable<ReleaseVersion> {
@@ -28,11 +44,11 @@ data class UpdateRelease(val tag: String, val pageUrl: String, val apkUrl: Strin
         const val MAX_APK_BYTES = 50L * 1024 * 1024
 
         fun validated(tag: String, pageUrl: String, apkUrl: String, size: Long, digest: String): UpdateRelease {
-            require(ReleaseVersion.parse(tag) != null) { "The release has an unsupported version." }
-            require(pageUrl == "$REPO_URL/releases/tag/$tag") { "The release is not from Pluto's GitHub repository." }
-            require(apkUrl == "$REPO_URL/releases/download/$tag/app-release.apk") { "The release has no supported Pluto APK." }
-            require(size in 1..MAX_APK_BYTES) { "The release APK has an unexpected size." }
-            require(digest.matches(Regex("sha256:[a-fA-F0-9]{64}"))) { "The release has no verified APK checksum yet. Try again later." }
+            requireUpdate(ReleaseVersion.parse(tag) != null, R.string.settings_update_error_unsupported_version)
+            requireUpdate(pageUrl == "$REPO_URL/releases/tag/$tag", R.string.settings_update_error_not_pluto_repo)
+            requireUpdate(apkUrl == "$REPO_URL/releases/download/$tag/app-release.apk", R.string.settings_update_error_no_supported_apk)
+            requireUpdate(size in 1..MAX_APK_BYTES, R.string.settings_update_error_unexpected_size)
+            requireUpdate(digest.matches(Regex("sha256:[a-fA-F0-9]{64}")), R.string.settings_update_error_no_checksum)
             return UpdateRelease(tag, pageUrl, apkUrl, size, digest.removePrefix("sha256:").lowercase())
         }
 

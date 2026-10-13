@@ -5,7 +5,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.annotation.StringRes
 import androidx.core.content.FileProvider
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -60,12 +63,12 @@ class UpdateRepository(context: Context) {
                                 currentCoroutineContext().ensureActive()
                                 val read = input.read(buffer)
                                 if (read == -1) break
-                                require(output.size() + read <= MAX_METADATA_BYTES) { "The release response was too large." }
+                                requireUpdate(output.size() + read <= MAX_METADATA_BYTES, R.string.settings_update_error_response_too_large)
                                 output.write(buffer, 0, read)
                             }
                             output.toByteArray()
                         }
-                        require(bytes.size <= MAX_METADATA_BYTES) { "The release response was too large." }
+                        requireUpdate(bytes.size <= MAX_METADATA_BYTES, R.string.settings_update_error_response_too_large)
                         String(bytes, Charsets.UTF_8)
                     }
                 } finally { connection.disconnect() }
@@ -78,20 +81,20 @@ class UpdateRepository(context: Context) {
         } catch (e: CancellationException) {
             _state.update { it.copy(task = UpdateTask.NONE) }; throw e
         } catch (e: Exception) {
-            _state.update { it.copy(task = UpdateTask.NONE, error = userError(e, "Could not check GitHub. Check your connection and try again.")) }
+            _state.update { it.copy(task = UpdateTask.NONE, error = userError(e, R.string.settings_update_error_check)) }
         } finally { gate.unlock() }
     }
 
     internal fun parseRelease(json: String): UpdateRelease? {
         val release = JSONObject(json)
-        require(!release.optBoolean("draft") && !release.optBoolean("prerelease")) { "No stable release is available." }
+        requireUpdate(!release.optBoolean("draft") && !release.optBoolean("prerelease"), R.string.settings_update_error_no_stable)
         val tag = release.getString("tag_name")
-        val version = ReleaseVersion.parse(tag) ?: error("The release has an unsupported version.")
-        val current = ReleaseVersion.parse(installed.versionName.orEmpty()) ?: error("This build cannot compare release versions.")
+        val version = ReleaseVersion.parse(tag) ?: throw UpdateRejected(R.string.settings_update_error_unsupported_version)
+        val current = ReleaseVersion.parse(installed.versionName.orEmpty()) ?: throw UpdateRejected(R.string.settings_update_error_cannot_compare)
         if (version <= current) return null
         val assets = release.getJSONArray("assets")
         val asset = (0 until assets.length()).map { assets.getJSONObject(it) }.singleOrNull { it.optString("name") == "app-release.apk" }
-            ?: error("This release has no APK yet. Try again later.")
+            ?: throw UpdateRejected(R.string.settings_update_error_no_apk_yet)
         return UpdateRelease.validated(tag, release.getString("html_url"), asset.getString("browser_download_url"),
             asset.getLong("size"), asset.optString("digest"))
     }
@@ -115,36 +118,36 @@ class UpdateRepository(context: Context) {
                         val read = input.read(buffer)
                         if (read == -1) break
                         count += read
-                        require(count <= release.size) { "The downloaded APK does not match the release." }
+                        requireUpdate(count <= release.size, R.string.settings_update_error_apk_mismatch)
                         output.write(buffer, 0, read)
                         _state.update { it.copy(downloadedBytes = count) }
                     }
                 } }
-                require(count == release.size) { "The download was incomplete. Try again." }
+                requireUpdate(count == release.size, R.string.settings_update_error_incomplete)
             } finally { connection.disconnect() }
             _state.update { it.copy(task = UpdateTask.VERIFYING) }
             verifyApk(downloading, release)
             val destination = apk(release)
-            require(downloading.renameTo(destination)) { "Could not save the update. Check free storage and try again." }
+            requireUpdate(downloading.renameTo(destination), R.string.settings_update_error_save)
             _state.update { it.copy(task = UpdateTask.NONE, readyToInstall = true) }
         } catch (e: CancellationException) {
             _state.update { it.copy(task = UpdateTask.NONE, error = null) }; throw e
         } catch (e: Exception) {
-            _state.update { it.copy(task = UpdateTask.NONE, error = userError(e, "Could not download the update. Check your connection and free storage, then try again.")) }
+            _state.update { it.copy(task = UpdateTask.NONE, error = userError(e, R.string.settings_update_error_download)) }
         } finally { partial?.delete(); gate.unlock() }
     }
 
     /** Android still performs its own signature verification and asks the user to approve. */
     internal fun verifyApk(file: File, release: UpdateRelease) {
-        require(file.length() == release.size) { "The downloaded APK does not match the release." }
+        requireUpdate(file.length() == release.size, R.string.settings_update_error_apk_mismatch)
         val digest = MessageDigest.getInstance("SHA-256")
         file.inputStream().use { input ->
             val buffer = ByteArray(64 * 1024)
             while (true) { val read = input.read(buffer); if (read == -1) break; digest.update(buffer, 0, read) }
         }
-        require(digest.digest().joinToString("") { "%02x".format(it) } == release.sha256) { "The APK checksum does not match. Download it again." }
+        requireUpdate(digest.digest().joinToString("") { "%02x".format(it) } == release.sha256, R.string.settings_update_error_checksum)
         val candidate = app.packageManager.getPackageArchiveInfo(file.absolutePath, PackageManager.GET_SIGNING_CERTIFICATES)
-            ?: error("The download is not a valid Android APK.")
+            ?: throw UpdateRejected(R.string.settings_update_error_invalid_apk)
         val current = app.packageManager.getPackageInfo(app.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
         fun identity(info: android.content.pm.PackageInfo) = ApkIdentity(info.packageName, info.longVersionCode, info.versionName,
             info.signingInfo?.apkContentsSigners?.map { it.toCharsString() }?.toSet().orEmpty())
@@ -168,7 +171,7 @@ class UpdateRepository(context: Context) {
         } catch (e: Exception) {
             returningFromPermission = false
             prefs.edit().remove("pending_install").apply()
-            _state.update { it.copy(error = userError(e, "Android could not open the installer. Try again.")) }
+            _state.update { it.copy(error = userError(e, R.string.settings_update_error_installer)) }
         } finally { _state.update { it.copy(task = UpdateTask.NONE) }; gate.unlock() }
     }
 
@@ -177,7 +180,7 @@ class UpdateRepository(context: Context) {
         returningFromPermission = false
         prefs.edit().remove("pending_install").apply()
         if (app.packageManager.canRequestPackageInstalls()) install()
-        else _state.update { it.copy(error = "To install this update, allow Pluto to install apps when Android asks. Your download is ready to retry.") }
+        else _state.update { it.copy(error = UiText.get(R.string.settings_update_error_permission)) }
     }
 
     internal fun installIntent(file: File): Intent = Intent(Intent.ACTION_VIEW)
@@ -185,12 +188,14 @@ class UpdateRepository(context: Context) {
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
 
     private fun apk(release: UpdateRelease) = File(directory, "pluto-${release.versionName}.apk")
-    private fun userError(e: Exception, fallback: String) = if (e is IOException) fallback else e.message ?: fallback
+    /** Network failures get [fallback]; anything else shows its own (usually [UpdateRejected]) message. */
+    private fun userError(e: Exception, @StringRes fallback: Int): String =
+        (if (e is IOException) null else e.message) ?: UiText.get(fallback)
 
     private fun open(url: String, metadata: Boolean = false): HttpURLConnection {
         var target = url
         repeat(6) {
-            require(if (metadata) target == UpdateRelease.API_URL else UpdateRelease.allowsDownloadRedirect(target)) { "The download redirected outside GitHub." }
+            requireUpdate(if (metadata) target == UpdateRelease.API_URL else UpdateRelease.allowsDownloadRedirect(target), R.string.settings_update_error_redirect_outside)
             val connection = (URL(target).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 10_000; readTimeout = 20_000; instanceFollowRedirects = false
                 setRequestProperty("User-Agent", "Pluto-Launcher/${installed.versionName}")
@@ -199,14 +204,14 @@ class UpdateRepository(context: Context) {
             try {
                 when (connection.responseCode) {
                     200 -> return connection
-                    301, 302, 303, 307, 308 -> target = URL(URL(target), connection.getHeaderField("Location") ?: error("Missing download location.")).toString()
-                    403, 429 -> error("GitHub is limiting requests. Try again later.")
+                    301, 302, 303, 307, 308 -> target = URL(URL(target), connection.getHeaderField("Location") ?: throw UpdateRejected(R.string.settings_update_error_missing_location)).toString()
+                    403, 429 -> throw UpdateRejected(R.string.settings_update_error_rate_limited)
                     else -> throw IOException("GitHub returned ${connection.responseCode}")
                 }
             } catch (e: Exception) { connection.disconnect(); throw e }
             connection.disconnect()
         }
-        error("The download redirected too many times.")
+        throw UpdateRejected(R.string.settings_update_error_too_many_redirects)
     }
 
     companion object {

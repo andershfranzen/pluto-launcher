@@ -2,6 +2,9 @@ package dev.pluto.launcher.ui.settings
 
 import android.view.KeyEvent
 import android.view.MotionEvent
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.VectorConverter
@@ -146,19 +149,26 @@ private class Diagnostics {
 
 /** "centred", "up", "down-left", ... for a stick position, given the dead zone. */
 internal fun stickDirection(x: Float, y: Float, deadZone: Float): String {
-    if (hypot(x, y) < deadZone) return "centred"
+    if (hypot(x, y) < deadZone) return UiText.get(R.string.settings_stick_centred)
     val half = deadZone / 2f
-    val vertical = when {
-        y <= -half -> "up"
-        y >= half -> "down"
-        else -> null
-    }
-    val horizontal = when {
-        x <= -half -> "left"
-        x >= half -> "right"
-        else -> null
-    }
-    return listOfNotNull(vertical, horizontal).joinToString("-")
+    val up = y <= -half
+    val down = y >= half
+    val left = x <= -half
+    val right = x >= half
+    return UiText.get(
+        when {
+            up && left -> R.string.settings_stick_up_left
+            up && right -> R.string.settings_stick_up_right
+            down && left -> R.string.settings_stick_down_left
+            down && right -> R.string.settings_stick_down_right
+            up -> R.string.settings_stick_up
+            down -> R.string.settings_stick_down
+            left -> R.string.settings_stick_left
+            right -> R.string.settings_stick_right
+            // Outside the dead zone circle but inside the half-zone square on both axes.
+            else -> R.string.settings_stick_centred
+        },
+    )
 }
 
 /** Connected controllers, live input diagnostics, dead zone/repeat tuning, button remapping. */
@@ -221,8 +231,12 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val onRawKey by rememberUpdatedState { event: KeyEvent ->
         val code = event.keyCode
         if (event.action == KeyEvent.ACTION_DOWN) {
-            val device = event.device?.name?.let { " · $it" }.orEmpty()
-            diagnostics.lastKey = "${keyLabel(code)} (${KeyEvent.keyCodeToString(code)})$device"
+            val device = event.device?.name
+            diagnostics.lastKey = if (device == null) {
+                UiText.get(R.string.settings_last_key_value, keyLabel(code), KeyEvent.keyCodeToString(code))
+            } else {
+                UiText.get(R.string.settings_last_key_value_device, keyLabel(code), KeyEvent.keyCodeToString(code), device)
+            }
             if (event.repeatCount == 0) diagnostics.keyPresses++
         }
         val action = capturing
@@ -247,15 +261,20 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)
         val hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
         val inDeadZone = hypot(x, y) < settings.stickDeadZone
-        val summary = "Left stick ${stickDirection(x, y, settings.stickDeadZone)}, right stick ${stickDirection(rx, ry, settings.stickDeadZone)}"
+        val summary = UiText.get(
+            R.string.settings_stick_summary,
+            stickDirection(x, y, settings.stickDeadZone),
+            stickDirection(rx, ry, settings.stickDeadZone),
+        )
         if (summary != diagnostics.stickSummary) diagnostics.stickSummary = summary
         diagnostics.leftX = x
         diagnostics.leftY = y
         diagnostics.rightX = rx
         diagnostics.rightY = ry
         if (!diagnostics.hasMotion) diagnostics.hasMotion = true
-        diagnostics.axes = "Left stick %+.2f, %+.2f%s\nRight stick %+.2f, %+.2f\nD-pad (hat) %+.0f, %+.0f".format(
-            x, y, if (inDeadZone) " (dead zone)" else "", rx, ry, hatX, hatY,
+        diagnostics.axes = UiText.get(
+            if (inDeadZone) R.string.settings_axes_values_dead_zone else R.string.settings_axes_values,
+            x, y, rx, ry, hatX, hatY,
         )
     }
     DisposableEffect(router) {
@@ -312,8 +331,7 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
                 id = "controller:device:$index",
                 label = info.name.ifBlank { SettingsText.CONTROLLER_TITLE },
                 icon = Icons.Rounded.SportsEsports,
-                supporting = SettingsText.ids(info.vendorId, info.productId) + " · " +
-                    SettingsText.descriptor(info.descriptor.take(8).ifBlank { "–" }),
+                supporting = SettingsText.controllerDetails(info.vendorId, info.productId, info.descriptor.take(8).ifBlank { "–" }),
                 selected = controllers.size > 1 && info == controller,
                 onClick = { selectedIndex = index },
             )
@@ -345,7 +363,7 @@ fun ControllerSettingsScreen(state: LauncherUiState, vm: LauncherViewModel) {
         ExpandingSection(visible = notice != null) {
             shownNotice?.let { NoticeCard(it, icon = Icons.Rounded.SwapHoriz) }
         }
-        BodyText("${SettingsText.MOVE}: ${SettingsText.MOVE_KEYS}")
+        BodyText(stringResource(R.string.settings_move_line, SettingsText.MOVE, SettingsText.MOVE_KEYS))
         ControllerAction.entries.forEach { action ->
             val keys = keysLabel(mapping, action)
             Row(
