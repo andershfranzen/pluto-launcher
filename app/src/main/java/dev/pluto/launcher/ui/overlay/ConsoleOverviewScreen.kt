@@ -33,11 +33,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.pluto.launcher.R
 import dev.pluto.launcher.domain.ConsoleBrowse
 import dev.pluto.launcher.domain.RomScanSummary
 import dev.pluto.launcher.domain.RomSort
@@ -87,7 +90,7 @@ fun ConsoleOverviewScreen(state: LauncherUiState, vm: LauncherViewModel) {
     val now = remember { System.currentTimeMillis() }
 
     ConsoleTheme {
-        LayerScaffold(title = "Browse ${library?.name ?: shelf.title}", idPrefix = "overview",
+        LayerScaffold(title = stringResource(R.string.console_browse_title, library?.name ?: shelf.title), idPrefix = "overview",
             onClose = { vm.back() }, trapFocus = state.session.topLayer == Layer.ConsoleOverview,
             maxWidth = 1040.dp, scrollable = false,
             headerContent = {
@@ -96,11 +99,11 @@ fun ConsoleOverviewScreen(state: LauncherUiState, vm: LauncherViewModel) {
             }) {
             Text(
                 when {
-                    entries.isEmpty() && library != null -> "No games match this filter. Change it above, or refresh games."
-                    entries.isEmpty() -> "This shelf is empty."
-                    library != null && entries.size != library.games.size ->
-                        "${entries.size} of ${library.games.size} games · Select to return to the carousel"
-                    else -> "${entries.size} ${if (entries.size == 1) "item" else "items"} · Select to return to the carousel"
+                    entries.isEmpty() && library != null -> stringResource(R.string.console_browse_no_match)
+                    entries.isEmpty() -> stringResource(R.string.console_browse_empty)
+                    library != null && entries.size != library.games.size -> pluralStringResource(
+                        R.plurals.console_browse_filtered_games, library.games.size, entries.size, library.games.size)
+                    else -> pluralStringResource(R.plurals.console_browse_items, entries.size, entries.size)
                 },
                 style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
@@ -138,13 +141,13 @@ private fun RomBrowseControls(
     val row = rememberLazyListState()
     val chips = buildList {
         if (systems.isNotEmpty()) {
-            add(Chip("all", "All systems", null, system == null) { onSystem(null) })
-            systems.forEach { add(Chip("sys:$it", it, null, system == it) { onSystem(it) }) }
+            add(Chip("all", stringResource(R.string.console_chip_all_systems), null, system == null) { onSystem(null) })
+            systems.forEach { add(Chip("sys:$it", romSystemLabel(it), null, system == it) { onSystem(it) }) }
         }
-        add(Chip("fav", "Favourites", Icons.Rounded.Star, favouritesOnly) { onFavouritesOnly(!favouritesOnly) })
-        add(Chip("sort:${RomSort.TITLE}", "Title", null, sort == RomSort.TITLE) { onSort(RomSort.TITLE) })
-        add(Chip("sort:${RomSort.RECENT}", "Recent", null, sort == RomSort.RECENT) { onSort(RomSort.RECENT) })
-        add(Chip("sort:${RomSort.FILENAME}", "File name", null, sort == RomSort.FILENAME) { onSort(RomSort.FILENAME) })
+        add(Chip("fav", stringResource(R.string.console_chip_favourites), Icons.Rounded.Star, favouritesOnly) { onFavouritesOnly(!favouritesOnly) })
+        add(Chip("sort:${RomSort.TITLE}", stringResource(R.string.console_sort_title), null, sort == RomSort.TITLE) { onSort(RomSort.TITLE) })
+        add(Chip("sort:${RomSort.RECENT}", stringResource(R.string.console_sort_recent), null, sort == RomSort.RECENT) { onSort(RomSort.RECENT) })
+        add(Chip("sort:${RomSort.FILENAME}", stringResource(R.string.console_sort_file_name), null, sort == RomSort.FILENAME) { onSort(RomSort.FILENAME) })
     }
     val ids = remember(chips) { chips.map { "$FILTER_SURFACE:${it.key}" } }
     TrackFocusOrder(FILTER_SURFACE, ids) { row.animateScrollToItem(it) }
@@ -173,7 +176,7 @@ private fun BrowseChip(id: String, label: String, icon: ImageVector?, selected: 
         Modifier
             .heightIn(min = 40.dp)
             .controllerFocusable(id = id, onActivate = onClick, shape = shape,
-                contentDescription = "$label" + if (selected) ", selected" else "")
+                contentDescription = if (selected) stringResource(R.string.console_chip_selected, label) else label)
             .clip(shape)
             .background(Color.White.copy(alpha = if (selected) 0.22f else 0.06f))
             .border(1.dp, Color.White.copy(alpha = if (selected) 0.6f else 0.12f), shape)
@@ -243,19 +246,21 @@ private fun OverviewTile(
     val isFavourite = rom != null && rom.game.uri in favourites
     val savedAt = rom?.let { saves[it.game.uri] }
     val playedAt = rom?.let { played[it.game.uri] }
+    val playedAge = playedAt?.let { romAgeText(RomScanSummary.age(now, it)) }
+    val savedAge = savedAt?.let { romAgeText(RomScanSummary.age(now, it)) }
     val shape = RoundedCornerShape(20.dp)
     Column(Modifier.fillMaxWidth()
         .background(Color.White.copy(alpha = if (isSelected) 0.10f else 0.035f), shape)
         .border(1.dp, Color.White.copy(alpha = if (isSelected) 0.45f else 0.09f), shape)
         .controllerFocusable(id = overviewId(entry), onActivate = onSelect,
             onSecondary = rom?.let { { onFavourite(it.game.uri) } },
-            secondaryLabel = if (isFavourite) "Remove favourite" else "Add favourite",
+            secondaryLabel = stringResource(if (isFavourite) R.string.console_remove_favourite else R.string.console_add_favourite),
             contentDescription = listOfNotNull(
-                "${entry.label}, select in carousel",
-                "favourite".takeIf { isFavourite },
-                playedAt?.let { "played ${RomScanSummary.age(now, it)}" },
-                savedAt?.let { "has save data from ${RomScanSummary.age(now, it)}" },
-            ).joinToString(", "),
+                stringResource(R.string.console_tile_select, entry.label),
+                stringResource(R.string.console_tile_favourite).takeIf { isFavourite },
+                playedAge?.let { stringResource(R.string.console_tile_played, it) },
+                savedAge?.let { stringResource(R.string.console_tile_save_data, it) },
+            ).joinToString(stringResource(R.string.console_list_separator)),
             shape = shape)
         .semantics { selected = isSelected }
         .padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -269,9 +274,9 @@ private fun OverviewTile(
             // One pill answers "when did this game last move?": what Pluto saw opened, or
             // failing that the save data's own date, which is the only date it has.
             when {
-                playedAt != null -> StateBadge(Icons.Rounded.History, "Played ${RomScanSummary.age(now, playedAt)}",
+                playedAge != null -> StateBadge(Icons.Rounded.History, stringResource(R.string.console_badge_played, playedAge),
                     Modifier.align(Alignment.BottomStart))
-                savedAt != null -> StateBadge(Icons.Rounded.Save, "Save · ${RomScanSummary.age(now, savedAt)}",
+                savedAge != null -> StateBadge(Icons.Rounded.Save, stringResource(R.string.console_badge_save, savedAge),
                     Modifier.align(Alignment.BottomStart))
             }
         }

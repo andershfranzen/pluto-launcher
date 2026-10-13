@@ -4,7 +4,9 @@ import dev.pluto.launcher.model.AppEntry
 import dev.pluto.launcher.model.AppKey
 import dev.pluto.launcher.model.Category
 import dev.pluto.launcher.model.RomLibrary
+import dev.pluto.launcher.R
 import dev.pluto.launcher.ui.HomeTile
+import dev.pluto.launcher.ui.UiText
 
 /**
  * Identity of one Handheld ("console") shelf: the tab row reads
@@ -45,12 +47,32 @@ sealed interface ShelfId {
 data class Shelf(val id: ShelfId, val title: String, val subtitle: String, val apps: List<AppEntry>)
 
 /**
- * Pure shelf rules for the Coverflow console layout (Android-free, unit tested).
+ * The words the shelf rules need: the fixed shelves' titles and the fallbacks for a shelf whose
+ * category or ROM tab is gone. [Resources] reads the app's translations; tests pass their own.
+ */
+interface ShelfLabels {
+    val recent: String
+    val favourites: String
+    val allApps: String
+    val roms: String
+
+    /** Translated labels, read when asked (UiText follows the current locale). */
+    object Resources : ShelfLabels {
+        override val recent: String get() = UiText.get(R.string.console_shelf_recent)
+        override val favourites: String get() = UiText.get(R.string.console_shelf_favourites)
+        override val allApps: String get() = UiText.get(R.string.console_all_apps_fallback)
+        override val roms: String get() = UiText.get(R.string.console_roms_fallback)
+    }
+}
+
+/**
+ * Pure shelf rules for the Coverflow console layout (Android-free, unit tested: the words come
+ * from a [ShelfLabels]).
  */
 object ConsoleShelves {
-    /** Spec wording: the row is called "Recent launches" (not playtime or system Recents). */
-    const val RECENT_TITLE = "Recent launches"
-    const val FAVOURITES_TITLE = "Favourites"
+    /** Spec wording: the row is called "Recent launches" (not playtime or system Recents). Translated. */
+    val RECENT_TITLE: String get() = ShelfLabels.Resources.recent
+    val FAVOURITES_TITLE: String get() = ShelfLabels.Resources.favourites
 
     /**
      * Tab order. Recent launches only exists while history is enabled (disabled history keeps
@@ -130,13 +152,14 @@ object ConsoleShelves {
         visibleApps: List<AppEntry>,
         favourites: List<AppEntry>,
         recents: List<AppEntry>,
+        labels: ShelfLabels = ShelfLabels.Resources,
     ): Shelf = when (id) {
-        is ShelfId.OfRomLibrary -> Shelf(id, "ROMs", "ROMs", emptyList())
-        ShelfId.Recent -> Shelf(id, RECENT_TITLE, RECENT_TITLE, recents)
-        ShelfId.Favourites -> Shelf(id, FAVOURITES_TITLE, FAVOURITES_TITLE, favourites)
+        is ShelfId.OfRomLibrary -> labels.roms.let { Shelf(id, it, it, emptyList()) }
+        ShelfId.Recent -> labels.recent.let { Shelf(id, it, it, recents) }
+        ShelfId.Favourites -> labels.favourites.let { Shelf(id, it, it, favourites) }
         is ShelfId.OfCategory -> {
             val category = categories.firstOrNull { it.id == id.categoryId }
-            val name = category?.name ?: "All apps"
+            val name = category?.name ?: labels.allApps
             val apps = if (category == null || category.isAll) {
                 visibleApps
             } else {
@@ -148,11 +171,16 @@ object ConsoleShelves {
     }
 
     /** Tab title of [id] (without building its app list). */
-    fun title(id: ShelfId, categories: List<Category>, romLibraries: List<RomLibrary> = emptyList()): String = when (id) {
-        is ShelfId.OfRomLibrary -> romLibraries.firstOrNull { it.id == id.libraryId }?.name ?: "ROMs"
-        ShelfId.Recent -> RECENT_TITLE
-        ShelfId.Favourites -> FAVOURITES_TITLE
-        is ShelfId.OfCategory -> categories.firstOrNull { it.id == id.categoryId }?.name ?: "All apps"
+    fun title(
+        id: ShelfId,
+        categories: List<Category>,
+        romLibraries: List<RomLibrary> = emptyList(),
+        labels: ShelfLabels = ShelfLabels.Resources,
+    ): String = when (id) {
+        is ShelfId.OfRomLibrary -> romLibraries.firstOrNull { it.id == id.libraryId }?.name ?: labels.roms
+        ShelfId.Recent -> labels.recent
+        ShelfId.Favourites -> labels.favourites
+        is ShelfId.OfCategory -> categories.firstOrNull { it.id == id.categoryId }?.name ?: labels.allApps
     }
 
     /**

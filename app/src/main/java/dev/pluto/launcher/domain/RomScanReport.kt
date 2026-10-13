@@ -13,8 +13,8 @@ data class RomScanReport(
     val gamesWithArt: Int,
     /** Files in the folder that are not games, artwork, playlists or referenced tracks. */
     val skipped: Int,
-    /** A short breakdown of [skipped] by extension, e.g. ".sav×12, .txt×3". */
-    val skippedExtensions: String?,
+    /** A short breakdown of [skipped] by extension, most common first (shown as ".sav×12, .txt×3"). */
+    val skippedExtensions: List<ExtensionCount>,
     /** Disc sheets and playlists read for track/disc references. */
     val sheets: Int,
     /** Tracks or discs a sheet names but the folder does not contain: these games cannot open. */
@@ -29,39 +29,50 @@ data class RomScanReport(
     val systems: Map<String, String> = emptyMap(),
 )
 
-/** Formatting helpers for [RomScanReport], kept off-device so they can be tested. */
+/** How many skipped files share one extension; [extension] is lower case without the dot, empty for none. */
+data class ExtensionCount(val extension: String, val count: Int)
+
+/**
+ * How long ago something happened, in the steps the UI words it: "today", "yesterday",
+ * "5 days ago", "a week ago", "3 weeks ago", "2 months ago", "a year ago". Data, not text, so the
+ * steps are tested here and the words come from string resources.
+ */
+sealed interface RomAge {
+    data object Today : RomAge
+    data object Yesterday : RomAge
+    data class Days(val days: Int) : RomAge
+    data object AWeek : RomAge
+    data class Weeks(val weeks: Int) : RomAge
+    data class Months(val months: Int) : RomAge
+    data object AYear : RomAge
+}
+
+/** Summary helpers for [RomScanReport], kept off-device so they can be tested. */
 object RomScanSummary {
     private const val MAX_TYPES = 4
 
     /**
-     * A short, stable breakdown of file extensions, most common first:
-     * ".sav×12, .txt×3". Files without an extension are counted as "no extension".
+     * A short, stable breakdown of file extensions, most common first, at most four types.
+     * Files without an extension count under the empty extension. Empty when [names] is.
      */
-    fun extensions(names: List<String>): String? {
-        if (names.isEmpty()) return null
-        return names.map { it.substringAfterLast('.', "").lowercase() }
+    fun extensions(names: List<String>): List<ExtensionCount> =
+        names.map { it.substringAfterLast('.', "").lowercase() }
             .groupingBy { it }.eachCount().entries
             .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
             .take(MAX_TYPES)
-            .joinToString(", ") { (extension, count) ->
-                if (extension.isEmpty()) "no extension×$count" else ".$extension×$count"
-            }
-    }
+            .map { (extension, count) -> ExtensionCount(extension, count) }
 
-    /**
-     * How long ago a save was written, in words: "today", "yesterday", "5 days ago",
-     * "3 weeks ago", "2 months ago", "a year ago". Kept here so the wording is tested.
-     */
-    fun age(now: Long, then: Long): String {
+    /** How long ago a save was written or a game was played, as a [RomAge] step. */
+    fun age(now: Long, then: Long): RomAge {
         val days = ((now - then).coerceAtLeast(0L) / 86_400_000L)
         return when {
-            days <= 0 -> "today"
-            days == 1L -> "yesterday"
-            days < 7 -> "$days days ago"
-            days < 14 -> "a week ago"
-            days < 60 -> "${days / 7} weeks ago"
-            days < 365 -> "${days / 30} months ago"
-            else -> "a year ago"
+            days <= 0 -> RomAge.Today
+            days == 1L -> RomAge.Yesterday
+            days < 7 -> RomAge.Days(days.toInt())
+            days < 14 -> RomAge.AWeek
+            days < 60 -> RomAge.Weeks((days / 7).toInt())
+            days < 365 -> RomAge.Months((days / 30).toInt())
+            else -> RomAge.AYear
         }
     }
 }

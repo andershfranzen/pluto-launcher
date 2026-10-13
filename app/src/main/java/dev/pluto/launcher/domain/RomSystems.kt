@@ -7,10 +7,14 @@ package dev.pluto.launcher.domain
  * be browsed a system at a time instead of all mixed together.
  */
 object RomSystems {
-    /** Shown when nothing identifies the system better. */
+    /**
+     * Key used when nothing identifies the system better. Keys are not shown as they are:
+     * this one and [DISC] are worded by the UI ("Other", "Disc image"); every other key is a
+     * system name (a proper noun) shown as is.
+     */
     const val OTHER = "Other"
 
-    /** Disc formats shared by several systems; the folder, when it names one, decides. */
+    /** Key for disc formats shared by several systems; the folder, when it names one, decides. */
     const val DISC = "Disc image"
 
     /** Folder names front ends use, punctuation and case stripped. */

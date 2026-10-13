@@ -5,9 +5,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import dev.pluto.launcher.R
 import dev.pluto.launcher.model.RomGame
 import dev.pluto.launcher.model.RomLaunchMode
 import dev.pluto.launcher.model.RomLibrary
+import dev.pluto.launcher.ui.UiText
 
 /**
  * Opens a game in the tab's emulator. DuckStation has an adapter that hands the document
@@ -63,18 +65,19 @@ object RomLauncher {
             open.setPackage(pkg)
         }
         return if (mode == RomLaunchMode.OPEN_WITH || (pkg == null && mode != RomLaunchMode.DUCKSTATION)) {
-            Intent.createChooser(open, "Open ${game.title}").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent.createChooser(open, UiText.get(R.string.rom_open_chooser, game.title)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         } else open
     }
 
+    /** Starts the game; returns a translated message for the user when it could not be opened. */
     fun launch(context: Context, library: RomLibrary, game: RomGame, emulatorPackage: String? = null): String? = try {
         context.startActivity(intent(library, game, emulatorPackage))
         null
     } catch (_: android.content.ActivityNotFoundException) {
-        "This app could not open the game. In ROM tabs, choose another default emulator or try Advanced options."
+        UiText.get(R.string.rom_launch_failed_no_app)
     } catch (_: SecurityException) {
-        "Folder access was lost. In ROM tabs, edit the tab and choose the ROM folder again."
+        UiText.get(R.string.rom_launch_failed_access)
     } catch (_: IllegalArgumentException) {
-        "This ROM is unavailable. Refresh its shelf or choose the folder again."
+        UiText.get(R.string.rom_launch_failed_unavailable)
     }
 }

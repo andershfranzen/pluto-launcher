@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.console
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import dev.pluto.launcher.ui.components.LocalNotificationApps
 import dev.pluto.launcher.ui.components.hasDot
 import dev.pluto.launcher.ui.components.drawNotificationDot
@@ -544,8 +546,13 @@ private fun CoverCard(
                 id = focusId,
                 onActivate = { onActivate(index, entry) },
                 onSecondary = { onActions(entry) },
-                secondaryLabel = "Actions for ${entry.label}",
-                contentDescription = "${entry.label}${if (hasNotifications) ", has notifications" else ""}${if (enabled) "" else ", unavailable"}, ${index + 1} of $count",
+                secondaryLabel = stringResource(R.string.console_card_actions, entry.label),
+                contentDescription = listOfNotNull(
+                    entry.label,
+                    stringResource(R.string.console_card_has_notifications).takeIf { hasNotifications },
+                    stringResource(R.string.console_card_unavailable).takeIf { !enabled },
+                    stringResource(R.string.console_position, index + 1, count),
+                ).joinToString(stringResource(R.string.console_list_separator)),
                 shape = CardShape,
                 onFocused = { onFocused(index, entry) },
             ),

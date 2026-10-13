@@ -3,6 +3,7 @@ package dev.pluto.launcher.data
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import dev.pluto.launcher.R
 import dev.pluto.launcher.data.db.RomDao
 import dev.pluto.launcher.data.db.RomGameEntity
 import dev.pluto.launcher.data.db.RomLibraryEntity
@@ -13,6 +14,7 @@ import dev.pluto.launcher.domain.RomScanReport
 import dev.pluto.launcher.domain.RomScanSummary
 import dev.pluto.launcher.domain.RomSystems
 import dev.pluto.launcher.model.RomLibrary
+import dev.pluto.launcher.ui.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -59,15 +61,15 @@ class RomRepository(context: Context, private val dao: RomDao) {
             coroutineContext.ensureActive()
             val (parent, path) = pending.removeFirst()
             if (!visited.add(parent)) continue
-            require(visited.size <= 512) { "This folder has too many subfolders. Choose a smaller folder." }
+            require(visited.size <= 512) { UiText.get(R.string.rom_scan_too_many_folders) }
             val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parent)
             val columns = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME,
                 DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.COLUMN_LAST_MODIFIED)
-            val cursor = resolver.query(children, columns, null, null, null) ?: error("The ROM folder is unavailable. Choose it again.")
+            val cursor = resolver.query(children, columns, null, null, null) ?: error(UiText.get(R.string.rom_scan_folder_unavailable))
             cursor.use {
                 while (it.moveToNext()) {
                     coroutineContext.ensureActive()
-                    require(++documents <= 20_000) { "This folder has too many files. Choose a smaller folder." }
+                    require(++documents <= 20_000) { UiText.get(R.string.rom_scan_too_many_files) }
                     val documentId = it.getString(0) ?: continue
                     val name = it.getString(1) ?: continue
                     val relative = if (path.isEmpty()) name else "$path/$name"
@@ -91,9 +93,9 @@ class RomRepository(context: Context, private val dao: RomDao) {
             coroutineContext.ensureActive()
             val text = resolver.openInputStream(file.uri)?.use { stream ->
                 val bytes = stream.buffered().takeBytes(1_048_577)
-                require(bytes.size <= 1_048_576) { "A playlist is too large to read: ${file.name}" }
+                require(bytes.size <= 1_048_576) { UiText.get(R.string.rom_scan_playlist_too_large, file.name) }
                 bytes.toString(Charsets.UTF_8)
-            } ?: error("Could not read ${file.name}")
+            } ?: error(UiText.get(R.string.rom_scan_playlist_unreadable, file.name))
             val directory = file.path.substringBeforeLast('/', "")
             RomFiles.referencedFiles(file.name, text).forEach { ref ->
                 referenced += RomMetadata.normalize(if (directory.isEmpty()) ref else "$directory/$ref")
@@ -170,7 +172,7 @@ class RomRepository(context: Context, private val dao: RomDao) {
     private companion object {
         /** gamelist.xml files are small; anything larger is not a front-end list. */
         const val GAMELIST_LIMIT = 4 * 1024 * 1024
-        val EmptyReport = RomScanReport(0, 0, 0, 0, null, 0, 0, 0, System.currentTimeMillis())
+        val EmptyReport = RomScanReport(0, 0, 0, 0, emptyList(), 0, 0, 0, System.currentTimeMillis())
     }
 }
 

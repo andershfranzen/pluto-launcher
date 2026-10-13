@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.compose.foundation.layout.BoxWithConstraints
 import dev.pluto.launcher.data.prefs.ButtonMapping
 import dev.pluto.launcher.ui.console.consoleLegendFor
@@ -475,7 +478,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                         stage = stage,
                         subtitle = library?.let { lib ->
                             val emulator = state.allApps.firstOrNull { it.key.packageName == lib.emulatorPackage }?.label
-                            listOfNotNull(shelfTitle, emulator).joinToString(" · ")
+                            if (emulator != null) stringResource(R.string.console_subtitle_with_emulator, shelfTitle, emulator) else shelfTitle
                         } ?: shelfTitle,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -504,7 +507,7 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                         } else if (apps.isNotEmpty()) {
                             // Touch has no legend: say once how to reach an app's options.
                             Text(
-                                ConsoleText.TOUCH_HINT,
+                                stringResource(R.string.console_touch_hint),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = Color.White.copy(alpha = 0.55f),
                                 maxLines = 1,
@@ -519,17 +522,17 @@ private fun HandheldStage(state: LauncherUiState, vm: LauncherViewModel) {
                         fill = Brush.verticalGradient(listOf(Color(0xFF202227).copy(alpha = 0.72f), Color(0xFF14161A).copy(alpha = 0.55f)))) {
                         Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             if (apps.isNotEmpty()) {
-                                PlutoIconButton(ID_HH_OVERVIEW, Icons.Outlined.GridView, "Browse $shelfTitle", {
+                                PlutoIconButton(ID_HH_OVERVIEW, Icons.Outlined.GridView, stringResource(R.string.console_browse_title, shelfTitle), {
                                     noteSelection(stage, active, stage.selectedIndex)
                                     vm.openLayer(Layer.ConsoleOverview)
                                 }, up)
                             }
                             if (canEdit && apps.isNotEmpty()) {
-                                PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, "Edit $shelfTitle", { vm.openLayer(editable?.let(Layer::ShelfPicker) ?: Layer.RomLibraries) }, up)
+                                PlutoIconButton(ID_HH_EDIT_SHELF, Icons.Outlined.Edit, stringResource(R.string.console_edit_shelf, shelfTitle), { vm.openLayer(editable?.let(Layer::ShelfPicker) ?: Layer.RomLibraries) }, up)
                             }
-                            PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, "Search apps", { vm.openDrawer(withSearch = true) }, up)
-                            PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, "All apps", { vm.openDrawer() }, up)
-                            PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, "Launcher settings", { vm.openLayer(Layer.Settings) }, up)
+                            PlutoIconButton(ID_HH_SEARCH, Icons.Outlined.Search, stringResource(R.string.console_search_apps), { vm.openDrawer(withSearch = true) }, up)
+                            PlutoIconButton(ID_HH_ALL_APPS, Icons.Outlined.Apps, stringResource(R.string.console_all_apps), { vm.openDrawer() }, up)
+                            PlutoIconButton(ID_HH_SETTINGS, Icons.Outlined.Settings, stringResource(R.string.console_launcher_settings), { vm.openLayer(Layer.Settings) }, up)
                         }
                     }
                 }
@@ -589,15 +592,15 @@ private fun ShelfPage(
                     modifier = Modifier.widthIn(max = 560.dp).verticalScroll(rememberScrollState()),
                 ) {
                     if (shelfId is ShelfId.OfRomLibrary) {
-                        PlutoTextButton(ID_EMPTY_ADD, "Manage ROM tab", { vm.openLayer(Layer.RomLibraries) }, emphasized = true)
+                        PlutoTextButton(ID_EMPTY_ADD, stringResource(R.string.console_manage_rom_tab), { vm.openLayer(Layer.RomLibraries) }, emphasized = true)
                     } else if (pickable != null) {
-                        PlutoTextButton(ID_EMPTY_ADD, "Add apps", { vm.openLayer(Layer.ShelfPicker(pickable)) }, emphasized = true)
+                        PlutoTextButton(ID_EMPTY_ADD, stringResource(R.string.console_add_apps), { vm.openLayer(Layer.ShelfPicker(pickable)) }, emphasized = true)
                         PlutoTextButton(
-                            ID_EMPTY_ALL_APPS, "All apps", { vm.openDrawer() },
+                            ID_EMPTY_ALL_APPS, stringResource(R.string.console_all_apps), { vm.openDrawer() },
                             outline = Color.White.copy(alpha = 0.3f),
                         )
                     } else {
-                        PlutoTextButton(ID_EMPTY_ALL_APPS, "All apps", { vm.openDrawer() }, emphasized = true)
+                        PlutoTextButton(ID_EMPTY_ALL_APPS, stringResource(R.string.console_all_apps), { vm.openDrawer() }, emphasized = true)
                     }
                 }
             }
@@ -670,17 +673,37 @@ private const val HERO_LIFT = 0.04f
 private const val HERO_LIFT_MS = 260
 
 /**
+ * The copy for an empty shelf as string resources: [title] is formatted with [name] (the shelf's
+ * name; the fixed shelves' titles ignore it), [detail] with [actionsKey] when it is set.
+ */
+internal data class EmptyCopy(
+    @StringRes val title: Int,
+    @StringRes val detail: Int,
+    val name: String,
+    val actionsKey: String? = null,
+)
+
+/**
  * Title and guidance for an empty shelf, in the words of the current input: controller
  * buttons ([actionsKey], e.g. "X") while a controller is connected, touch otherwise.
  */
-internal fun emptyTitle(id: ShelfId, name: String, actionsKey: String?): Pair<String, String> {
-    val openActions = if (actionsKey != null) "Press $actionsKey on an app" else "Press and hold an app"
-    return when (id) {
-        ShelfId.Recent -> "No recent launches yet" to "Apps you open from Pluto show up here, most recent first."
-        ShelfId.Favourites -> "No favourites yet" to "$openActions and choose Pin to home to add it here."
-        is ShelfId.OfRomLibrary -> "No games in $name yet" to "Add games to this tab’s folder, or choose another folder in ROM tabs."
-        is ShelfId.OfCategory -> "No apps in $name yet" to "Choose Add apps to pick what goes here."
+internal fun emptyCopy(id: ShelfId, name: String, actionsKey: String?): EmptyCopy = when (id) {
+    ShelfId.Recent -> EmptyCopy(R.string.console_empty_recent_title, R.string.console_empty_recent_detail, name)
+    ShelfId.Favourites -> if (actionsKey != null) {
+        EmptyCopy(R.string.console_empty_favourites_title, R.string.console_empty_favourites_detail_controller, name, actionsKey)
+    } else {
+        EmptyCopy(R.string.console_empty_favourites_title, R.string.console_empty_favourites_detail_touch, name)
     }
+    is ShelfId.OfRomLibrary -> EmptyCopy(R.string.console_empty_rom_title, R.string.console_empty_rom_detail, name)
+    is ShelfId.OfCategory -> EmptyCopy(R.string.console_empty_category_title, R.string.console_empty_category_detail, name)
+}
+
+/** [emptyCopy] in the current language: title to detail. */
+@Composable
+internal fun emptyTitle(id: ShelfId, name: String, actionsKey: String?): Pair<String, String> {
+    val copy = emptyCopy(id, name, actionsKey)
+    val detail = copy.actionsKey?.let { stringResource(copy.detail, it) } ?: stringResource(copy.detail)
+    return stringResource(copy.title, copy.name) to detail
 }
 
 /**
@@ -826,11 +849,6 @@ private fun ConsoleFocusEffects(
 private fun ConsoleButtonLegend(mapping: ButtonMapping, hasApps: Boolean) {
     val focus = LocalControllerFocus.current
     ButtonLegend(mapping, consoleLegendFor(focus.focusedId, hasApps), quiet = true)
-}
-
-/** Console copy (inline for 0.1). */
-internal object ConsoleText {
-    const val TOUCH_HINT = "Tap to open · Press and hold for options"
 }
 
 /** Frames a closing layer gets to restore focus itself before the console steps in. */

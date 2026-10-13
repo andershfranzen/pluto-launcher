@@ -18,6 +18,14 @@ class ConsoleShelvesTest {
     private val mine = Category(7, "Mine", null, 3)
     private val categories = listOf(all, games, tools, mine)
 
+    /** English labels, so the rules run without Android resources. */
+    private val labels = object : ShelfLabels {
+        override val recent = "Recent launches"
+        override val favourites = "Favourites"
+        override val allApps = "All apps"
+        override val roms = "ROMs"
+    }
+
     private fun app(name: String) = AppEntry(AppKey("pkg.$name/.Main", 0), name)
 
     @Test
@@ -27,7 +35,7 @@ class ConsoleShelvesTest {
         val id = ShelfId.OfRomLibrary(12)
         assertEquals(id, order.last())
         assertEquals(id, ShelfId.decode(id.key))
-        assertEquals("PS1", ConsoleShelves.title(id, categories, listOf(library.copy(name = "PS1"))))
+        assertEquals("PS1", ConsoleShelves.title(id, categories, listOf(library.copy(name = "PS1")), labels))
         assertEquals(ShelfId.Favourites, ConsoleShelves.step(order, id, 1))
         assertEquals(id, ConsoleShelves.resolve(id, order, ShelfId.Favourites))
         assertEquals(ShelfId.Favourites, ConsoleShelves.resolve(id, order.dropLast(1), ShelfId.Favourites))
@@ -131,7 +139,7 @@ class ConsoleShelvesTest {
         val c = app("c")
         val visible = listOf(a, b, c)
         val members = mapOf(2L to setOf(b.key))
-        fun shelf(id: ShelfId) = ConsoleShelves.shelf(id, categories, members, visible, listOf(c), listOf(b, a))
+        fun shelf(id: ShelfId) = ConsoleShelves.shelf(id, categories, members, visible, listOf(c), listOf(b, a), labels)
         assertEquals(visible, shelf(ShelfId.OfCategory(1)).apps)
         assertEquals(listOf(b), shelf(ShelfId.OfCategory(2)).apps)
         assertEquals(emptyList<AppEntry>(), shelf(ShelfId.OfCategory(3)).apps)
@@ -140,6 +148,15 @@ class ConsoleShelvesTest {
         assertEquals(listOf(b, a), recent.apps)
         assertEquals("Recent launches", recent.title)
         assertEquals("Games", shelf(ShelfId.OfCategory(2)).title)
+        assertEquals("Favourites", shelf(ShelfId.Favourites).title)
+    }
+
+    @Test
+    fun missingShelvesFallBackToTheirLabels() {
+        assertEquals("All apps", ConsoleShelves.title(ShelfId.OfCategory(99), categories, labels = labels))
+        assertEquals("ROMs", ConsoleShelves.title(ShelfId.OfRomLibrary(99), categories, labels = labels))
+        assertEquals("Recent launches", ConsoleShelves.title(ShelfId.Recent, categories, labels = labels))
+        assertEquals("All apps", ConsoleShelves.shelf(ShelfId.OfCategory(99), categories, emptyMap(), emptyList(), emptyList(), emptyList(), labels).title)
     }
 
     @Test
