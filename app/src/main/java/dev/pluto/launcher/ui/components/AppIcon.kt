@@ -1,5 +1,9 @@
 package dev.pluto.launcher.ui.components
 
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -197,7 +201,7 @@ private suspend fun safeLoad(cache: IconCache, entry: AppEntry, sizePx: Int): Im
 
 /** Screen-reader label for an app, noting when it cannot currently be opened. */
 fun appContentDescription(entry: AppEntry): String =
-    if (entry.isEnabled) entry.label else "${entry.label} (unavailable)"
+    if (entry.isEnabled) entry.label else UiText.get(R.string.common_app_unavailable, entry.label)
 
 private val TileShape = RoundedCornerShape(PlutoDimens.TileCorner)
 private val TileLabelGap = 4.dp
@@ -286,8 +290,8 @@ fun AppTile(
                     origin.report()
                     onActions()
                 },
-                secondaryLabel = "App actions",
-                contentDescription = if (actionsOnTap) appContentDescription(entry) + ", opens app actions" else appContentDescription(entry),
+                secondaryLabel = stringResource(R.string.common_app_actions),
+                contentDescription = if (actionsOnTap) stringResource(R.string.common_app_opens_actions, appContentDescription(entry)) else appContentDescription(entry),
                 shape = TileShape,
                 onFocused = onFocused,
                 interactionSource = press,
@@ -499,10 +503,10 @@ fun FolderTile(
     val origin = rememberTileOrigin(focusId)
     val count = folder.apps.size
     val hasNotifications = folder.apps.any { LocalNotificationApps.current.hasDot(it) }
-    val description = "Folder ${folder.folder.name}, " + when (count) {
-        0 -> "empty"
-        1 -> "1 app"
-        else -> "$count apps"
+    val description = if (count == 0) {
+        stringResource(R.string.common_folder_empty, folder.folder.name)
+    } else {
+        pluralStringResource(R.plurals.common_folder_apps, count, folder.folder.name, count)
     }
     Column(
         modifier
@@ -519,7 +523,7 @@ fun FolderTile(
                     origin.report()
                     onEdit()
                 },
-                secondaryLabel = "Edit folder",
+                secondaryLabel = stringResource(R.string.common_folder_edit),
                 contentDescription = description,
                 shape = TileShape,
                 onFocused = onFocused,

@@ -1,5 +1,8 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import androidx.compose.foundation.gestures.detectTapGestures
 import dev.pluto.launcher.system.ScreenLockService
 import dev.pluto.launcher.data.prefs.SwipeDownAction
@@ -80,14 +83,13 @@ import androidx.compose.ui.unit.Density
 
 internal const val HOME_SURFACE = "home"
 
-/** Home copy shared by the layouts (inline for 0.1). */
+/** Home copy shared by the layouts, for code outside composition (see [UiText]). */
 internal object HomeText {
-    const val LOCK_NEEDS_SERVICE = "To lock with a double tap, turn on “Pluto screen lock” in Accessibility settings."
-    const val EMPTY_FAVOURITES = "Swipe up to find apps, then pin favourites. " +
-        "Pressing and holding an app opens its actions; Add favourite works without gestures."
+    val LOCK_NEEDS_SERVICE: String get() = UiText.get(R.string.home_lock_needs_service)
+    val EMPTY_FAVOURITES: String get() = UiText.get(R.string.home_empty_favourites_detail)
 
     /** The drop bar that takes an app off Home or out of the dock. */
-    const val REMOVE = "Remove"
+    val REMOVE: String get() = UiText.get(R.string.home_drop_remove)
 }
 
 /** A widget row is a tile's height: the icon plus room for its label. */
@@ -228,7 +230,7 @@ internal fun DockSlot(
                         vm.setEditSelection(focusId)
                         vm.openLayer(Layer.Edit)
                     },
-                    contentDescription = "Empty dock slot ${slot + 1}. Opens Edit to choose an app",
+                    contentDescription = stringResource(R.string.home_dock_empty_slot, slot + 1),
                     shape = CircleShape,
                     onFocused = { vm.onControlFocused(focusId) },
                 ),

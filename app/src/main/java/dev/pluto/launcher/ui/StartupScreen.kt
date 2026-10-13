@@ -1,5 +1,6 @@
 package dev.pluto.launcher.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -30,13 +31,15 @@ import kotlinx.coroutines.delay
 @Composable
 internal fun StartupScreen(reducedMotion: Boolean) {
     var showProgress by remember { mutableStateOf(false) }
+    val startingLabel = stringResource(R.string.home_startup_starting)
+    val loadingLabel = stringResource(R.string.home_startup_loading_apps)
     LaunchedEffect(Unit) {
         delay(700)
         showProgress = true
     }
     Box(
         Modifier.fillMaxSize().background(Color.Black)
-            .semantics { contentDescription = "Pluto is starting" },
+            .semantics { contentDescription = startingLabel },
     ) {
         Image(
             painterResource(R.drawable.ic_launcher_foreground),
@@ -47,7 +50,7 @@ internal fun StartupScreen(reducedMotion: Boolean) {
             val progressModifier = Modifier.align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .padding(bottom = 48.dp).size(width = 56.dp, height = 2.dp)
-                .semantics { contentDescription = "Loading apps" }
+                .semantics { contentDescription = loadingLabel }
             if (reducedMotion) {
                 Box(progressModifier.background(Color.White.copy(alpha = 0.12f))) {
                     Box(Modifier.size(width = 20.dp, height = 2.dp)

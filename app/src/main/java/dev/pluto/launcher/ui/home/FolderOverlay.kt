@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import dev.pluto.launcher.ui.components.LocalLabelsOnWallpaper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -189,7 +191,7 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                                         value = draft,
                                         onValueChange = { draft = it },
                                         singleLine = true,
-                                        label = { Text("Folder name") },
+                                        label = { Text(stringResource(R.string.home_folder_name)) },
                                         keyboardOptions = KeyboardOptions(
                                             capitalization = KeyboardCapitalization.Sentences,
                                             imeAction = ImeAction.Done,
@@ -200,8 +202,8 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                                             .weight(1f)
                                             .controllerFocusTarget(FV_NAME_FIELD, onActivate = { keyboard?.show() }),
                                     )
-                                    PlutoIconButton(FV_SAVE, Icons.Outlined.Check, "Save name", { commitRename() })
-                                    PlutoIconButton(FV_CANCEL, Icons.Outlined.Close, "Cancel rename", { cancelRename() })
+                                    PlutoIconButton(FV_SAVE, Icons.Outlined.Check, stringResource(R.string.home_folder_save_name), { commitRename() })
+                                    PlutoIconButton(FV_CANCEL, Icons.Outlined.Close, stringResource(R.string.home_folder_cancel_rename), { cancelRename() })
                                 }
                             } else {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -213,18 +215,18 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                                             .padding(start = 8.dp)
                                             .semantics { heading() },
                                     )
-                                    PlutoIconButton(FV_CLOSE, Icons.Outlined.Close, "Close folder", { vm.back() })
+                                    PlutoIconButton(FV_CLOSE, Icons.Outlined.Close, stringResource(R.string.home_folder_close), { vm.back() })
                                 }
                                 FlowRow(
                                     Modifier.padding(top = 4.dp),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    PlutoTextButton(FV_RENAME, "Rename", {
+                                    PlutoTextButton(FV_RENAME, stringResource(R.string.home_folder_rename), {
                                         draft = folderUi.folder.name
                                         renaming = true
                                     }, icon = Icons.Outlined.DriveFileRenameOutline)
-                                    PlutoTextButton(FV_EDIT, "Edit", {
+                                    PlutoTextButton(FV_EDIT, stringResource(R.string.home_folder_edit), {
                                         vm.setEditSelection("folder:$folderId")
                                         vm.openLayer(Layer.Edit)
                                     }, icon = Icons.Outlined.Edit)
@@ -239,7 +241,7 @@ private fun FolderOverlayContent(state: LauncherUiState, vm: LauncherViewModel, 
                     // as soon as the rename is saved or cancelled.
                 } else if (apps.isEmpty()) {
                     Text(
-                        "This folder is empty. Drag an app onto it, or press and hold an app, choose More… and then Move to folder….",
+                        stringResource(R.string.home_folder_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 24.dp),

@@ -1,5 +1,9 @@
 package dev.pluto.launcher.ui.home
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
+import dev.pluto.launcher.domain.SearchSection
+import dev.pluto.launcher.ui.UiText
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -79,7 +83,7 @@ internal fun RichSearchResults(results: List<SearchResult>, grid: LazyGridState,
         itemsIndexed(results, key = { _, result -> result.key }, contentType = { _, result -> result.section }) { index, result ->
             Column {
                 if (index == 0 || results[index - 1].section != result.section) {
-                    Text(result.section, style = MaterialTheme.typography.labelMedium,
+                    Text(sectionTitle(result.section), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 12.dp, top = if (index == 0) 0.dp else 8.dp, bottom = 4.dp))
                 }
@@ -88,7 +92,7 @@ internal fun RichSearchResults(results: List<SearchResult>, grid: LazyGridState,
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.045f), shape)
                     .reportOrigin(origins, result.key)
                     .controllerFocusable(id = result.key, onActivate = { onActivate(result) },
-                        onSecondary = { onActions(result) }, secondaryLabel = "Options for ${result.label}",
+                        onSecondary = { onActions(result) }, secondaryLabel = stringResource(R.string.home_search_result_options, result.label),
                         contentDescription = resultDescription(result), shape = shape, onFocused = { onFocused(result) })
                     .padding(horizontal = 12.dp, vertical = if (compact) 6.dp else 10.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -101,8 +105,8 @@ internal fun RichSearchResults(results: List<SearchResult>, grid: LazyGridState,
                         Text(result.label, style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         val detail = when (result) {
-                            is SearchResult.App -> "App"
-                            is SearchResult.Shortcut -> "${result.shortcut.app.label} · Shortcut"
+                            is SearchResult.App -> stringResource(R.string.home_search_result_app_detail)
+                            is SearchResult.Shortcut -> stringResource(R.string.home_search_result_shortcut_detail, result.shortcut.app.label)
                             is SearchResult.Game -> listOfNotNull(result.library.name, emulatorName(result.library.emulatorPackage)).joinToString(" · ")
                         }
                         Text(detail, style = MaterialTheme.typography.labelMedium,
@@ -115,10 +119,19 @@ internal fun RichSearchResults(results: List<SearchResult>, grid: LazyGridState,
 }
 
 internal fun resultDescription(result: SearchResult): String = when (result) {
-    is SearchResult.App -> "${result.label}, app"
-    is SearchResult.Game -> "${result.label}, game in ${result.library.name}"
-    is SearchResult.Shortcut -> "${result.label}, ${result.shortcut.app.label} shortcut"
+    is SearchResult.App -> UiText.get(R.string.home_search_result_app, result.label)
+    is SearchResult.Game -> UiText.get(R.string.home_search_result_game, result.label, result.library.name)
+    is SearchResult.Shortcut -> UiText.get(R.string.home_search_result_shortcut, result.label, result.shortcut.app.label)
 }
+
+@Composable
+private fun sectionTitle(section: SearchSection): String = stringResource(
+    when (section) {
+        SearchSection.APPS -> R.string.home_search_section_apps
+        SearchSection.GAMES -> R.string.home_search_section_games
+        SearchSection.SHORTCUTS -> R.string.home_search_section_shortcuts
+    },
+)
 
 @Composable
 private fun GameSearchIcon(result: SearchResult.Game, compact: Boolean) {

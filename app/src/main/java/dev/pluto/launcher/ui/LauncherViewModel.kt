@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui
 
+import androidx.annotation.StringRes
+import dev.pluto.launcher.R
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
@@ -97,7 +99,7 @@ class LauncherViewModel(
             updateState.value.release?.let { release ->
                 if (announcedUpdate != release.tag) {
                     announcedUpdate = release.tag
-                    showMessage("Pluto ${release.versionName} is available. Open Settings → General to update.")
+                    showMessage(UiText.get(R.string.home_update_available, release.versionName))
                 }
             }
         }
@@ -115,7 +117,7 @@ class LauncherViewModel(
 
     private val repository get() = container.organization
     val romLibraries = container.roms.libraries
-        .catch { showMessage("Could not load ROM shelves. Restart Pluto to try again.") }
+        .catch { showMessage(UiText.get(R.string.home_rom_shelves_load_failed)) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     private val _romScanning = MutableStateFlow<Set<Long>>(emptySet())
     val romScanning = _romScanning.asStateFlow()
@@ -142,7 +144,7 @@ class LauncherViewModel(
                 onSaved(id)
                 refreshRomLibrary(id)
             } catch (e: CancellationException) { throw e
-            } catch (e: Exception) { onFailure(); showMessage(e.message ?: "Could not save this ROM shelf.") }
+            } catch (e: Exception) { onFailure(); showMessage(e.message ?: UiText.get(R.string.home_rom_shelf_save_failed)) }
         }
     }
 
@@ -155,7 +157,7 @@ class LauncherViewModel(
         viewModelScope.launch {
             try { container.roms.delete(id)
             } catch (e: CancellationException) { throw e
-            } catch (_: Exception) { showMessage("Could not remove this ROM shelf.") }
+            } catch (_: Exception) { showMessage(UiText.get(R.string.home_rom_shelf_remove_failed)) }
         }
     }
 
@@ -168,7 +170,7 @@ class LauncherViewModel(
             try { _romReports.update { it + (id to container.roms.scan(id)) }
             } catch (e: CancellationException) { throw e
             } catch (e: Exception) {
-                val error = if (e is SecurityException) "Folder access was lost. Choose the ROM folder again." else e.message ?: "Could not read this ROM folder. Choose it again."
+                val error = if (e is SecurityException) UiText.get(R.string.home_rom_folder_access_lost) else e.message ?: UiText.get(R.string.home_rom_folder_read_failed)
                 _romErrors.update { it + (id to error) }
             } finally { _romScanning.update { it - id } }
         }
@@ -577,7 +579,7 @@ class LauncherViewModel(
                 container.catalog.launch(key, sourceBounds, options)
             } catch (e: Exception) {
                 Log.w(TAG, "launch failed for $key", e)
-                LaunchResult.Failure("That app couldn't be opened.")
+                LaunchResult.Failure(UiText.get(R.string.home_app_open_failed))
             }
             when (result) {
                 LaunchResult.Success -> {
@@ -630,7 +632,7 @@ class LauncherViewModel(
             }
             if (current == null) {
                 refreshSearchShortcuts()
-                showMessage("That shortcut is no longer available.")
+                showMessage(UiText.get(R.string.home_shortcut_unavailable))
             } else {
                 launchShortcut(candidate.app.key, current)
             }
@@ -648,15 +650,15 @@ class LauncherViewModel(
     fun launchShortcut(key: AppKey, shortcut: AppShortcut, sourceBounds: Rect? = null) {
         updateSession { s -> if (s.topLayer == Layer.AppActions(key)) s.popTop() else s }
         val result = runCatching { container.catalog.launchShortcut(shortcut, sourceBounds) }
-            .getOrElse { LaunchResult.Failure("That shortcut couldn't be opened.") }
+            .getOrElse { LaunchResult.Failure(UiText.get(R.string.home_shortcut_open_failed)) }
         when (result) {
             LaunchResult.Success -> viewModelScope.launch { recordLaunch(key) }
             is LaunchResult.Failure -> postMessage(result.message)
         }
     }
 
-    fun openAppInfo(key: AppKey) = systemAction("open app info") { container.catalog.openAppInfo(key) }
-    fun requestUninstall(key: AppKey) = systemAction("request uninstall") { container.catalog.requestUninstall(key) }
+    fun openAppInfo(key: AppKey) = systemAction("open app info", R.string.home_system_app_info_failed) { container.catalog.openAppInfo(key) }
+    fun requestUninstall(key: AppKey) = systemAction("request uninstall", R.string.home_system_uninstall_failed) { container.catalog.requestUninstall(key) }
 
     // --- Layout backup and restore ------------------------------------------
 
@@ -666,9 +668,9 @@ class LauncherViewModel(
             try {
                 val text = LayoutBackupCodec.encode(container.organization.exportBackup())
                 withContext(Dispatchers.IO) { container.layoutBackups.write(uri, text) }
-                showMessage("Layout saved to the file you chose.")
+                showMessage(UiText.get(R.string.home_layout_saved))
             } catch (e: CancellationException) { throw e
-            } catch (e: Exception) { showMessage("Could not write that file. Try another location.") }
+            } catch (e: Exception) { showMessage(UiText.get(R.string.home_layout_write_failed)) }
         }
     }
 
@@ -686,15 +688,15 @@ class LauncherViewModel(
                         val restored = try { container.organization.importBackup(read.backup); true
                         } catch (e: CancellationException) { throw e
                         } catch (e: Exception) { false }
-                        showMessage(if (restored) "Layout restored." else "Could not restore that layout. Your current layout is unchanged.")
+                        showMessage(UiText.get(if (restored) R.string.home_layout_restored else R.string.home_layout_restore_failed))
                     }
                     is LayoutBackupRead.TooNew ->
-                        showMessage("That backup was written by a newer Pluto. Update Pluto, then restore it.")
+                        showMessage(UiText.get(R.string.home_layout_too_new))
                     LayoutBackupRead.Unreadable ->
-                        showMessage("That file is not a Pluto layout backup.")
+                        showMessage(UiText.get(R.string.home_layout_not_backup))
                 }
             } catch (e: CancellationException) { throw e
-            } catch (e: Exception) { showMessage("Could not read that file.") }
+            } catch (e: Exception) { showMessage(UiText.get(R.string.home_layout_read_failed)) }
         }
     }
 
@@ -1046,12 +1048,13 @@ class LauncherViewModel(
         message.value = UserMessage(messageIds.incrementAndGet(), text)
     }
 
-    private fun systemAction(what: String, action: () -> LaunchResult) {
+    /** [what] names the action in the log; [failure] is the message shown if it throws. */
+    private fun systemAction(what: String, @StringRes failure: Int, action: () -> LaunchResult) {
         val result = try {
             action()
         } catch (e: Exception) {
             Log.w(TAG, "$what failed", e)
-            LaunchResult.Failure("Android couldn't $what right now.")
+            LaunchResult.Failure(UiText.get(failure))
         }
         if (result is LaunchResult.Failure) postMessage(result.message)
     }
@@ -1076,7 +1079,7 @@ class LauncherViewModel(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "saving launcher configuration failed", e)
-            postMessage("Couldn't save that change. Please try again.")
+            postMessage(UiText.get(R.string.home_save_failed))
         }
     }
 
@@ -1103,13 +1106,13 @@ class LauncherViewModel(
         private const val KEY_SHELF = "handheld.shelf"
         private const val KEY_SHELF_SEL_SHELVES = "handheld.shelfSelection.shelves"
         private const val KEY_SHELF_SEL_APPS = "handheld.shelfSelection.apps"
-        private const val DEFAULT_FOLDER_NAME = "Folder"
-        private const val DEFAULT_CATEGORY_NAME = "New category"
-        private const val DOCK_FULL_MESSAGE = "Dock is full. Remove an app from the dock first."
-        private const val SETTINGS_RESET_MESSAGE =
-            "Pluto's settings file was damaged and has been reset. Recent launches is off until you turn it on again."
-        private const val SETTINGS_UNREADABLE_MESSAGE =
-            "Pluto can't read its settings right now, so defaults are in use and Recent launches is paused."
+        /** Name given to a new folder (stored, so in the language it was created in). */
+        private val DEFAULT_FOLDER_NAME: String get() = UiText.get(R.string.home_default_folder_name)
+        /** Name given to a new category left unnamed (stored, like [DEFAULT_FOLDER_NAME]). */
+        private val DEFAULT_CATEGORY_NAME: String get() = UiText.get(R.string.home_default_category_name)
+        private val DOCK_FULL_MESSAGE: String get() = UiText.get(R.string.home_dock_full)
+        private val SETTINGS_RESET_MESSAGE: String get() = UiText.get(R.string.home_settings_reset)
+        private val SETTINGS_UNREADABLE_MESSAGE: String get() = UiText.get(R.string.home_settings_unreadable)
 
         fun factory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {
             initializer { LauncherViewModel(container, createSavedStateHandle()) }

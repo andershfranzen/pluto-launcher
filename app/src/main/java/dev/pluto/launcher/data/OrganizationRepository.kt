@@ -371,11 +371,8 @@ class OrganizationRepository(private val dao: LauncherDao) {
         /** Built-in categories a fresh install starts with, in order. */
         val SEEDED = listOf(BuiltInCategory.ALL, BuiltInCategory.GAMES)
 
-        val DEFAULT_NAMES: Map<BuiltInCategory, String> = mapOf(
-            BuiltInCategory.ALL to "All apps",
-            BuiltInCategory.GAMES to "Games",
-            BuiltInCategory.TOOLS to "Tools",
-        )
+        /** English names stored for new built-in categories (shown translated until renamed). */
+        val DEFAULT_NAMES: Map<BuiltInCategory, String> = BuiltInCategory.entries.associateWith { it.defaultName }
 
         /** Decodes rows into the model, dropping anything undecodable and repairing invariants. */
         private fun buildOrganization(s: StructureRows, m: MembershipRows): Organization {

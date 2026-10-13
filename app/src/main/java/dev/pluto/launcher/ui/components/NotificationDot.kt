@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.components
 
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -23,4 +25,4 @@ internal fun DrawScope.drawNotificationDot() {
     drawCircle(Color(0xFFFF453A), radius, center)
 }
 internal fun Modifier.notificationDot(visible: Boolean): Modifier = if (!visible) this else
-    semantics { stateDescription = "Has notifications" }.drawWithContent { drawContent(); drawNotificationDot() }
+    semantics { stateDescription = UiText.get(R.string.common_has_notifications) }.drawWithContent { drawContent(); drawNotificationDot() }

@@ -7,25 +7,28 @@ import dev.pluto.launcher.model.RomLibrary
 /** Shortcut metadata only; Android's launch handle stays in the app catalog/view model. */
 data class SearchShortcut(val app: AppEntry, val id: String, val label: String)
 
+/** The heading a search result is listed under; the UI turns it into text. */
+enum class SearchSection { APPS, GAMES, SHORTCUTS }
+
 sealed interface SearchResult {
     val key: String
     val label: String
-    val section: String
+    val section: SearchSection
 
     data class App(val entry: AppEntry) : SearchResult {
         override val key = "drawer:${entry.key.encode()}"
         override val label get() = entry.label
-        override val section = "Apps"
+        override val section = SearchSection.APPS
     }
     data class Game(val library: RomLibrary, val game: RomGame) : SearchResult {
         override val key = "search:rom:${library.id}:${game.uri}"
         override val label get() = game.title
-        override val section = "Games"
+        override val section = SearchSection.GAMES
     }
     data class Shortcut(val shortcut: SearchShortcut) : SearchResult {
         override val key = "search:shortcut:${shortcut.app.key.encode()}:${shortcut.id}"
         override val label get() = shortcut.label
-        override val section = "Shortcuts"
+        override val section = SearchSection.SHORTCUTS
     }
 }
 

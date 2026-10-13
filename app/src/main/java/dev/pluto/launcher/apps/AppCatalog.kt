@@ -1,5 +1,7 @@
 package dev.pluto.launcher.apps
 
+import dev.pluto.launcher.R
+import dev.pluto.launcher.ui.UiText
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
@@ -345,10 +347,10 @@ class AppCatalog(context: Context) {
         val info = resolve(key)
         if (info == null) {
             refresh()
-            return LaunchResult.Failure("$label is no longer installed.", targetMissing = true)
+            return LaunchResult.Failure(UiText.get(R.string.common_app_not_installed, label), targetMissing = true)
         }
         if ((info.applicationInfo.flags and ApplicationInfo.FLAG_SUSPENDED) != 0) {
-            return LaunchResult.Failure("$label is paused right now.")
+            return LaunchResult.Failure(UiText.get(R.string.common_app_paused, label))
         }
         return try {
             try {
@@ -364,7 +366,7 @@ class AppCatalog(context: Context) {
             // ActivityNotFoundException, SecurityException, IllegalStateException, ...
             Log.w(TAG, "Launch failed for $key", e)
             refresh()
-            LaunchResult.Failure("$label couldn't be opened.")
+            LaunchResult.Failure(UiText.get(R.string.common_app_open_failed, label))
         }
     }
 
@@ -372,21 +374,21 @@ class AppCatalog(context: Context) {
     fun openAppInfo(key: AppKey): LaunchResult {
         val component = ComponentName.unflattenFromString(key.component)
         if (component == null || key.userSerial != mySerial) {
-            return LaunchResult.Failure("App info isn't available for ${labelFor(key)}.")
+            return LaunchResult.Failure(UiText.get(R.string.common_app_info_unavailable, labelFor(key)))
         }
         return try {
             launcherApps.startAppDetailsActivity(component, myUser, null, null)
             LaunchResult.Success
         } catch (e: Exception) {
             Log.w(TAG, "App info failed for $key", e)
-            LaunchResult.Failure("App info for ${labelFor(key)} couldn't be opened.")
+            LaunchResult.Failure(UiText.get(R.string.common_app_info_failed, labelFor(key)))
         }
     }
 
     /** Starts system uninstall confirmation (ACTION_DELETE). */
     fun requestUninstall(key: AppKey): LaunchResult {
         if (key.userSerial != mySerial) {
-            return LaunchResult.Failure("${labelFor(key)} can't be uninstalled from here.")
+            return LaunchResult.Failure(UiText.get(R.string.common_uninstall_not_here, labelFor(key)))
         }
         val intent = Intent(Intent.ACTION_DELETE, Uri.fromParts("package", key.packageName, null))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -394,10 +396,10 @@ class AppCatalog(context: Context) {
             appContext.startActivity(intent)
             LaunchResult.Success
         } catch (e: ActivityNotFoundException) {
-            LaunchResult.Failure("Uninstall isn't available on this device.")
+            LaunchResult.Failure(UiText.get(R.string.common_uninstall_unavailable))
         } catch (e: Exception) {
             Log.w(TAG, "Uninstall request failed for $key", e)
-            LaunchResult.Failure("${labelFor(key)} couldn't be uninstalled.")
+            LaunchResult.Failure(UiText.get(R.string.common_uninstall_failed, labelFor(key)))
         }
     }
 
@@ -475,7 +477,7 @@ class AppCatalog(context: Context) {
     } catch (e: Exception) {
         // ActivityNotFoundException, SecurityException, IllegalStateException (disabled since).
         Log.w(TAG, "Shortcut ${shortcut.id} failed", e)
-        LaunchResult.Failure("“${shortcut.label}” couldn't be opened.")
+        LaunchResult.Failure(UiText.get(R.string.common_shortcut_open_failed, shortcut.label))
     }
 
     private companion object {

@@ -1,5 +1,7 @@
 package dev.pluto.launcher.ui.components
 
+import androidx.compose.ui.res.stringResource
+import dev.pluto.launcher.R
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.runtime.CompositionLocalProvider
@@ -111,7 +113,8 @@ fun ClockHeader(modifier: Modifier = Modifier, compact: Boolean = false, quiet: 
     val day = remember(now, locale) {
         DateFormat.format(DateFormat.getBestDateTimePattern(locale, "EEEEMMMMd"), date).toString()
     }
-    val semanticsModifier = modifier.clearAndSetSemantics { contentDescription = "$time, $day" }
+    val spoken = stringResource(R.string.common_clock_description, time, day)
+    val semanticsModifier = modifier.clearAndSetSemantics { contentDescription = spoken }
     if (compact) {
         val shortDay = remember(now, locale) {
             DateFormat.format(DateFormat.getBestDateTimePattern(locale, "EEEMMMd"), date).toString()
